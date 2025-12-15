@@ -67,11 +67,11 @@ chmod +x install-dd-pipeline.sh
    /dd-arch ─────────► 架構設計 (ARCHITECTURE.md, ADR-XXX.md, EXAMPLES.md)
       │
       ▼
-┌─────────────────────┐
-│  🔒 人工審核 Checkpoint │
-│  /dd-approve 批准     │
-│  /dd-revise 修改      │
-└──────────┬──────────┘
+┌─────────────────────────┐
+│  🔒 人工審核 Checkpoint  │
+│  /dd-approve 批准       │
+│  /dd-revise 修改        │
+└──────────┬──────────────┘
            │
            ▼
    /dd-dev ──────────► 開發實作 (並行前後端開發)
@@ -101,31 +101,35 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 來源：[claude-code-tresor](https://github.com/alirezarezvani/claude-code-tresor)
 
-- systems-architect
-- test-engineer
-- security-auditor
-- docs-writer
-- refactor-expert
-- performance-tuner
-- root-cause-analyzer
-- config-safety-reviewer
+| Agent | 說明 |
+|-------|------|
+| systems-architect | 系統架構師 |
+| test-engineer | 測試工程師 |
+| security-auditor | 安全審計員 |
+| docs-writer | 文件撰寫員 |
+| refactor-expert | 重構專家 |
+| performance-tuner | 效能調校專家 |
+| root-cause-analyzer | 根因分析專家 |
+| config-safety-reviewer | 配置安全審查員 |
 
 ### 必要 Skills
 
 來源：[claude-skills](https://github.com/alirezarezvani/claude-skills)
 
-- senior-architect
-- senior-backend
-- senior-frontend
-- senior-fullstack
-- senior-qa
-- senior-devops
-- senior-secops
-- senior-security
-- senior-prompt-engineer
-- code-reviewer
-- ui-design-system
-- ux-researcher-designer
+| Skill | 說明 |
+|-------|------|
+| senior-architect | 資深架構師 |
+| senior-backend | 資深後端工程師 |
+| senior-frontend | 資深前端工程師 |
+| senior-fullstack | 資深全端工程師 |
+| senior-qa | 資深品質保證工程師 |
+| senior-devops | 資深 DevOps 工程師 |
+| senior-secops | 資深安全運維工程師 |
+| senior-security | 資深安全工程師 |
+| senior-prompt-engineer | 資深提示工程師 |
+| code-reviewer | 程式碼審查員 |
+| ui-design-system | UI 設計系統專家 |
+| ux-researcher-designer | UX 研究設計師 |
 
 ### 必要 MCP
 
@@ -139,10 +143,10 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 |-----|------|------|
 | sequential-thinking | 循序思考推理 | [@modelcontextprotocol/server-sequential-thinking](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking) |
 | serena | 智能程式碼助手 | [serena](https://github.com/oraios/serena) |
-| cipher | 加密解密工具 | cipher |
-| zeabur | 雲端部署平台 | [zeabur](https://zeabur.com) |
-| google-docs | Google 文件整合 | google-docs |
-| googleDrive | Google 雲端硬碟整合 | googleDrive |
+| cipher | AI 程式碼記憶層 | [@byterover/cipher](https://github.com/campfirein/cipher) |
+| zeabur | 雲端部署平台 | [zeabur-mcp](https://zeabur.com/docs/en-US/mcp) |
+| google-docs | Google 文件整合 | [google-docs-mcp](https://github.com/a-bonus/google-docs-mcp) |
+| googleDrive | Google 雲端硬碟整合 | [gdrive-mcp-server](https://github.com/felores/gdrive-mcp-server) |
 | claude-mem | 跨對話記憶系統 | [claude-mem](https://github.com/thedotmack/claude-mem) |
 
 ## 授權

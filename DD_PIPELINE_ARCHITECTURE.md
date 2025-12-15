@@ -249,7 +249,7 @@
 | sequential-thinking | 複雜推理 |
 | claude-mem | 跨 session 記憶 |
 | serena | 程式碼分析 |
-| cipher | 加密處理 |
+| cipher | AI 程式碼記憶層 |
 | zeabur | 部署整合 |
 | google-docs | 文檔協作 |
 | googleDrive | 檔案儲存 |
