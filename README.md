@@ -98,6 +98,9 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 ## 依賴需求
 
 ### 必要 Agents
+
+來源：[claude-code-tresor](https://github.com/alirezarezvani/claude-code-tresor)
+
 - systems-architect
 - test-engineer
 - security-auditor
@@ -108,6 +111,9 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 - config-safety-reviewer
 
 ### 必要 Skills
+
+來源：[claude-skills](https://github.com/alirezarezvani/claude-skills)
+
 - senior-architect
 - senior-backend
 - senior-frontend
