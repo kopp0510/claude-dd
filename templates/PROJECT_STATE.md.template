@@ -1,0 +1,58 @@
+# {{PROJECT_NAME}} - DD Pipeline 狀態
+
+## 整體進度
+- [ ] 初始化 - 待開始
+- [ ] 需求分析 (RDD) - 待開始
+- [ ] 架構設計 (SDD/DDD/ADD/EDD) - 待開始
+- [ ] 架構確認 - 待開始
+- [ ] 後端開發 (DbC/CDD/PDD) - 待開始
+- [ ] 前端開發 (CDD/PDD) - 待開始
+- [ ] 後端測試 (TDD/BDD/ATDD/FDD) - 待開始
+- [ ] 前端測試 (TDD/BDD/E2E) - 待開始
+- [ ] 整合測試 - 待開始
+- [ ] 發布 - 待開始
+
+## 當前階段
+尚未開始
+
+## 進度條
+[░░░░░░░░░░░░░░░░░░░░] 0%
+
+## 最近活動
+- {{INIT_TIMESTAMP}} - 初始化 DD Pipeline
+
+## 迭代記錄
+<!-- 測試失敗時會記錄在這裡 -->
+（無）
+
+## Git 記錄
+<!-- 自動記錄 commit 歷史 -->
+（無）
+
+## 文檔狀態
+- [ ] claude_docs/requirements/REQUIREMENTS.md
+- [ ] claude_docs/architecture/ARCHITECTURE.md
+- [ ] claude_docs/contracts/API_CONTRACT.md
+- [ ] claude_docs/design/DESIGN_SPEC.md
+- [ ] claude_docs/examples/EXAMPLES.md
+- [ ] claude_docs/decisions/ADR-*.md
+- [ ] claude_docs/reports/TEST_REPORT.md
+
+## 中斷資訊
+<!-- 如果流程被中斷，會記錄在這裡 -->
+（無）
+
+## 下一步
+/dd-start <需求描述>
+
+---
+
+## 狀態說明
+
+| 符號 | 說明 |
+|------|------|
+| [ ] | 待開始 |
+| [x] | 已完成 |
+| [~] | 進行中 |
+| [!] | 需要注意 |
+| [?] | 等待確認 |

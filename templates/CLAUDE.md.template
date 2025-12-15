@@ -1,0 +1,85 @@
+# {{PROJECT_NAME}}
+
+## 專案概述
+{{PROJECT_DESCRIPTION}}
+
+## 技術棧
+- 後端：{{BACKEND_TECH}}
+- 前端：{{FRONTEND_TECH}}
+- 資料庫：{{DATABASE_TECH}}
+- 測試框架：{{TEST_FRAMEWORK}}
+
+## DD 流程設定
+
+### 啟用的 DD
+- [x] RDD - 需求驅動
+- [x] SDD - 架構驅動
+- [x] DDD - 領域驅動
+- [x] ADD - 架構決策記錄
+- [x] EDD - 範例驅動
+- [x] DbC - 契約驅動
+- [x] CDD - 組件驅動
+- [x] PDD - 提示詞驅動
+- [x] TDD - 測試驅動
+- [x] BDD - 行為驅動
+- [x] ATDD - 驗收測試
+- [x] FDD - 失敗情境測試
+
+### 開發模式
+{{DEV_MODE}}
+<!-- 可選值：純後端 | 純前端 | 全端應用 | CLI 工具 -->
+
+### 測試設定
+- 最大重試次數：3
+- 需要 E2E 測試：{{NEED_E2E}}
+- 需要 UI/UX 審查：{{NEED_UX_REVIEW}}
+
+## 目錄結構
+```
+{{PROJECT_ROOT}}/
+├── {{BACKEND_DIR}}/         # 後端程式碼
+├── {{FRONTEND_DIR}}/        # 前端程式碼
+└── shared/                  # 共用程式碼
+
+claude_docs/
+├── requirements/            # 需求文檔 (RDD)
+├── architecture/            # 架構文檔 (SDD/DDD)
+├── contracts/               # API 契約 (DbC)
+├── decisions/               # ADR 決策記錄 (ADD)
+├── examples/                # 行為範例 (EDD)
+├── design/                  # UI/UX 設計
+└── reports/                 # 測試報告
+```
+
+## 程式碼規範
+- 使用 {{LINTER}}
+- 程式碼註解使用繁體中文
+- Commit message 格式：conventional commits
+  - feat: 新功能
+  - fix: 修復
+  - docs: 文檔
+  - refactor: 重構
+  - test: 測試
+  - chore: 雜項
+
+## 特殊規則
+{{SPECIAL_RULES}}
+<!-- 專案特定的規則，例如：
+- API 路由必須以 /api 開頭
+- 所有 API 必須有錯誤處理
+- 前端組件必須有 TypeScript 定義
+-->
+
+## Agent/Skill 偏好
+<!-- 可選：指定特定 Agent/Skill 的使用偏好 -->
+- 後端開發優先使用：senior-backend
+- 前端開發優先使用：senior-frontend
+- 測試優先使用：test-engineer
+
+## 排除項目
+<!-- DD 流程不應修改的檔案或目錄 -->
+- node_modules/
+- .env
+- .env.local
+- dist/
+- build/

@@ -1,0 +1,1861 @@
+#!/bin/bash
+
+# ═══════════════════════════════════════════════════════════════════
+# DD Pipeline 安裝程式
+# 基於多種 Driven Development 方法論的自動化開發流程
+# ═══════════════════════════════════════════════════════════════════
+
+set -e
+
+# 顏色定義
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# 符號定義
+CHECK="✅"
+CROSS="❌"
+WARN="⚠️"
+INFO="📋"
+ROCKET="🚀"
+
+# 路徑定義
+CLAUDE_DIR="$HOME/.claude"
+COMMANDS_DIR="$CLAUDE_DIR/commands"
+TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
+AGENTS_DIR="$CLAUDE_DIR/agents"
+SKILLS_DIR="$CLAUDE_DIR/skills"
+
+# Git 倉庫
+TRESOR_REPO="https://github.com/alirezarezvani/claude-code-tresor.git"
+SKILLS_REPO="https://github.com/alirezarezvani/claude-skills.git"
+
+# 必要的 Agents
+REQUIRED_AGENTS=(
+    "systems-architect"
+    "test-engineer"
+    "security-auditor"
+    "docs-writer"
+    "refactor-expert"
+    "performance-tuner"
+    "root-cause-analyzer"
+    "config-safety-reviewer"
+)
+
+# 必要的 Skills
+REQUIRED_SKILLS=(
+    "senior-architect"
+    "senior-backend"
+    "senior-frontend"
+    "senior-fullstack"
+    "senior-qa"
+    "senior-devops"
+    "senior-secops"
+    "senior-security"
+    "senior-prompt-engineer"
+    "code-reviewer"
+    "ui-design-system"
+    "ux-researcher-designer"
+)
+
+# 必要的 MCP
+REQUIRED_MCP=(
+    "playwright"
+)
+
+# 可選的 MCP
+OPTIONAL_MCP=(
+    "sequential-thinking"
+    "serena"
+    "cipher"
+    "zeabur"
+    "google-docs"
+    "googleDrive"
+    "claude-mem"
+)
+
+# 輔助函數
+print_header() {
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}$1${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════════${NC}"
+    echo ""
+}
+
+print_step() {
+    echo -e "${BLUE}${INFO} 步驟 $1：$2${NC}"
+}
+
+print_success() {
+    echo -e "├── $1: ${GREEN}${CHECK}${NC}"
+}
+
+print_fail() {
+    echo -e "├── $1: ${RED}${CROSS}${NC}"
+}
+
+print_warn() {
+    echo -e "├── $1: ${YELLOW}${WARN}${NC}"
+}
+
+print_last_success() {
+    echo -e "└── $1: ${GREEN}${CHECK}${NC}"
+}
+
+print_last_fail() {
+    echo -e "└── $1: ${RED}${CROSS}${NC}"
+}
+
+# 檢查指令是否存在
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# 檢查目錄是否存在
+dir_exists() {
+    [ -d "$1" ]
+}
+
+# 檢查檔案是否存在
+file_exists() {
+    [ -f "$1" ]
+}
+
+# 顯示使用說明
+show_help() {
+    echo "DD Pipeline 安裝程式"
+    echo ""
+    echo "用法: $0 [選項]"
+    echo ""
+    echo "選項:"
+    echo "  --check         只檢查環境（不安裝）"
+    echo "  --force         強制重新安裝（覆蓋現有檔案）"
+    echo "  --commands-only 只安裝 DD Commands"
+    echo "  --uninstall     移除 DD Pipeline"
+    echo "  --update        更新 agents/skills 到最新版"
+    echo "  --help          顯示此說明"
+    echo ""
+}
+
+# 檢查基礎環境
+check_environment() {
+    print_step "1/6" "檢查基礎環境"
+
+    local all_ok=true
+
+    # 檢查 Claude Code CLI
+    if command_exists "claude"; then
+        print_success "Claude Code CLI"
+    else
+        print_fail "Claude Code CLI"
+        all_ok=false
+    fi
+
+    # 檢查 Node.js
+    if command_exists "node"; then
+        print_success "Node.js ($(node -v))"
+    else
+        print_fail "Node.js"
+        all_ok=false
+    fi
+
+    # 檢查 Git
+    if command_exists "git"; then
+        print_success "Git"
+    else
+        print_fail "Git"
+        all_ok=false
+    fi
+
+    # 檢查 Bash
+    if command_exists "bash"; then
+        print_last_success "Bash"
+    else
+        print_last_fail "Bash"
+        all_ok=false
+    fi
+
+    echo ""
+
+    if [ "$all_ok" = false ]; then
+        echo -e "${RED}基礎環境檢查失敗，請先安裝缺少的工具${NC}"
+        exit 1
+    fi
+}
+
+# 檢查 Agents
+check_agents() {
+    print_step "2/6" "檢查 Agents (claude-code-tresor)"
+    echo -e "├── 來源：${CYAN}github.com/alirezarezvani/claude-code-tresor${NC}"
+
+    local missing_agents=()
+    local count=${#REQUIRED_AGENTS[@]}
+    local i=0
+
+    for agent in "${REQUIRED_AGENTS[@]}"; do
+        i=$((i + 1))
+        if dir_exists "$AGENTS_DIR/$agent"; then
+            if [ $i -eq $count ]; then
+                print_last_success "$agent"
+            else
+                print_success "$agent"
+            fi
+        else
+            if [ $i -eq $count ]; then
+                print_last_fail "$agent"
+            else
+                print_fail "$agent"
+            fi
+            missing_agents+=("$agent")
+        fi
+    done
+
+    echo ""
+
+    if [ ${#missing_agents[@]} -gt 0 ]; then
+        echo -e "${YELLOW}缺少 ${#missing_agents[@]} 個 agents${NC}"
+        read -p "是否要安裝 claude-code-tresor？[Y/n] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
+            install_tresor
+        fi
+    fi
+}
+
+# 安裝 Tresor
+install_tresor() {
+    echo -e "${BLUE}正在安裝 claude-code-tresor...${NC}"
+
+    local temp_dir=$(mktemp -d)
+    git clone "$TRESOR_REPO" "$temp_dir/claude-code-tresor"
+
+    cd "$temp_dir/claude-code-tresor"
+    if [ -f "scripts/install.sh" ]; then
+        chmod +x scripts/install.sh
+        ./scripts/install.sh
+    fi
+
+    cd - > /dev/null
+    rm -rf "$temp_dir"
+
+    echo -e "${GREEN}claude-code-tresor 安裝完成${NC}"
+}
+
+# 檢查 Skills
+check_skills() {
+    print_step "3/6" "檢查 Skills (claude-skills)"
+    echo -e "├── 來源：${CYAN}github.com/alirezarezvani/claude-skills${NC}"
+
+    local missing_skills=()
+    local count=${#REQUIRED_SKILLS[@]}
+    local i=0
+
+    for skill in "${REQUIRED_SKILLS[@]}"; do
+        i=$((i + 1))
+        if dir_exists "$SKILLS_DIR/$skill"; then
+            if [ $i -eq $count ]; then
+                print_last_success "$skill"
+            else
+                print_success "$skill"
+            fi
+        else
+            if [ $i -eq $count ]; then
+                print_last_fail "$skill"
+            else
+                print_fail "$skill"
+            fi
+            missing_skills+=("$skill")
+        fi
+    done
+
+    echo ""
+
+    if [ ${#missing_skills[@]} -gt 0 ]; then
+        echo -e "${YELLOW}缺少 ${#missing_skills[@]} 個 skills${NC}"
+        read -p "是否要安裝 claude-skills？[Y/n] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
+            install_skills
+        fi
+    fi
+}
+
+# 安裝 Skills
+install_skills() {
+    echo -e "${BLUE}正在安裝 claude-skills...${NC}"
+
+    local temp_dir=$(mktemp -d)
+    git clone "$SKILLS_REPO" "$temp_dir/claude-skills"
+
+    # 複製 skills 到 ~/.claude/skills/
+    mkdir -p "$SKILLS_DIR"
+
+    # 根據 repo 結構複製
+    if [ -d "$temp_dir/claude-skills/engineering-team" ]; then
+        cp -r "$temp_dir/claude-skills/engineering-team"/* "$SKILLS_DIR/" 2>/dev/null || true
+    fi
+    if [ -d "$temp_dir/claude-skills/product-team" ]; then
+        cp -r "$temp_dir/claude-skills/product-team"/* "$SKILLS_DIR/" 2>/dev/null || true
+    fi
+
+    rm -rf "$temp_dir"
+
+    echo -e "${GREEN}claude-skills 安裝完成${NC}"
+}
+
+# 檢查 MCP
+check_mcp() {
+    print_step "4/6" "檢查 MCP"
+
+    local claude_json="$HOME/.claude.json"
+
+    echo "│"
+    echo -e "├── ${CYAN}必要：${NC}"
+
+    for mcp in "${REQUIRED_MCP[@]}"; do
+        if file_exists "$claude_json" && grep -q "\"$mcp\"" "$claude_json"; then
+            print_success "$mcp"
+        else
+            print_fail "$mcp (需要手動設定)"
+        fi
+    done
+
+    echo "│"
+    echo -e "└── ${CYAN}可選（推薦）：${NC}"
+
+    local count=${#OPTIONAL_MCP[@]}
+    local i=0
+
+    for mcp in "${OPTIONAL_MCP[@]}"; do
+        i=$((i + 1))
+        if file_exists "$claude_json" && grep -q "\"$mcp\"" "$claude_json"; then
+            if [ $i -eq $count ]; then
+                echo -e "    └── $mcp: ${GREEN}${CHECK}${NC}"
+            else
+                echo -e "    ├── $mcp: ${GREEN}${CHECK}${NC}"
+            fi
+        else
+            if [ $i -eq $count ]; then
+                echo -e "    └── $mcp: ${YELLOW}未安裝${NC}"
+            else
+                echo -e "    ├── $mcp: ${YELLOW}未安裝${NC}"
+            fi
+        fi
+    done
+
+    echo ""
+}
+
+# 建立 DD Commands
+create_commands() {
+    print_step "5/6" "建立 DD Commands"
+
+    mkdir -p "$COMMANDS_DIR"
+
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    # 定義所有 commands
+    local commands=(
+        "dd-help"
+        "dd-init"
+        "dd-start"
+        "dd-arch"
+        "dd-approve"
+        "dd-revise"
+        "dd-dev"
+        "dd-test"
+        "dd-status"
+        "dd-stop"
+    )
+
+    local count=${#commands[@]}
+    local i=0
+
+    for cmd in "${commands[@]}"; do
+        i=$((i + 1))
+        local target="$COMMANDS_DIR/$cmd.md"
+        local source="$script_dir/commands/$cmd.md"
+
+        if [ "$FORCE" = true ] || [ ! -f "$target" ]; then
+            if [ -f "$source" ]; then
+                cp "$source" "$target"
+            else
+                # 如果來源檔案不存在，使用內嵌內容
+                create_command_content "$cmd" > "$target"
+            fi
+
+            if [ $i -eq $count ]; then
+                print_last_success "$target"
+            else
+                print_success "$target"
+            fi
+        else
+            if [ $i -eq $count ]; then
+                echo -e "└── $target: ${YELLOW}已存在（跳過）${NC}"
+            else
+                echo -e "├── $target: ${YELLOW}已存在（跳過）${NC}"
+            fi
+        fi
+    done
+
+    echo ""
+}
+
+# 建立 command 內容
+create_command_content() {
+    local cmd=$1
+
+    case $cmd in
+        "dd-help")
+            cat << 'DDHELP'
+# DD Pipeline 使用手冊
+
+顯示 DD Pipeline 的完整使用說明、DD 模式介紹、可用命令和流程結構。
+
+---
+
+## 執行方式
+
+當用戶執行此命令時，請顯示以下內容：
+
+```
+═══════════════════════════════════════════════════════════════════
+📚 DD Pipeline 使用手冊
+═══════════════════════════════════════════════════════════════════
+
+## 什麼是 DD Pipeline？
+
+DD (Driven Development) Pipeline 是一套基於多種開發方法論的
+自動化開發流程，透過多 Agent 協作確保 Vibe Coding 的準確性。
+
+## 包含的 DD 模式
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 階段          │ DD 模式                    │ 說明              │
+├─────────────────────────────────────────────────────────────────┤
+│ 需求分析      │ RDD (Requirements)         │ 需求驅動          │
+│ 架構設計      │ SDD + DDD + ADD + EDD      │ 架構/領域/決策/範例│
+│ 開發實作      │ DbC + CDD + PDD            │ 契約/組件/提示詞   │
+│ 測試審查      │ TDD + BDD + ATDD + FDD     │ 測試/行為/驗收/失敗│
+└─────────────────────────────────────────────────────────────────┘
+
+## 可用命令
+
+┌──────────────┬────────────────────────────────────────────────┐
+│ 命令          │ 說明                                          │
+├──────────────┼────────────────────────────────────────────────┤
+│ /dd-help     │ 顯示此說明                                     │
+│ /dd-init     │ 初始化專案結構                                 │
+│ /dd-start    │ 啟動流程（需求分析）                            │
+│ /dd-arch     │ 進入架構設計                                   │
+│ /dd-approve  │ 確認架構，開始自動開發                          │
+│ /dd-revise   │ 修改架構設計                                   │
+│ /dd-dev      │ 手動觸發開發（通常自動執行）                    │
+│ /dd-test     │ 手動觸發測試（通常自動執行）                    │
+│ /dd-status   │ 查看目前進度                                   │
+│ /dd-stop     │ 中斷流程                                       │
+└──────────────┴────────────────────────────────────────────────┘
+
+## 流程圖
+
+  /dd-init ──▶ /dd-start ──▶ /dd-arch ──▶ ⏸️ 等待確認
+                                              │
+                    ┌─────────────────────────┴─────────────────┐
+                    │                                           │
+               /dd-approve                                /dd-revise
+                    │                                           │
+                    ▼                                           │
+              自動開發測試 ◀────────────────────────────────────┘
+                    │
+                    ▼
+           ✅ 完成 或 ❌ 失敗重試
+
+## 使用的 Agent/Skill
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 架構：systems-architect, senior-architect                      │
+│ 後端：senior-backend, performance-tuner, security-auditor      │
+│ 前端：senior-frontend, ui-design-system, ux-researcher-designer│
+│ 測試：test-engineer, senior-qa, code-reviewer, Playwright MCP  │
+│ 文檔：docs-writer                                              │
+│ 優化：refactor-expert, senior-prompt-engineer                  │
+│ 除錯：root-cause-analyzer                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+## 專案結構（/dd-init 後產生）
+
+  your-project/
+  ├── CLAUDE.md              # 專案設定
+  ├── PROJECT_STATE.md       # 流程狀態
+  └── claude_docs/
+      ├── requirements/      # 需求文檔
+      ├── architecture/      # 架構文檔
+      ├── contracts/         # API 契約
+      ├── decisions/         # ADR 決策記錄
+      ├── examples/          # 行為範例
+      ├── design/            # UI/UX 設計
+      └── reports/           # 測試報告
+
+## 快速開始
+
+  1. /dd-init              # 初始化專案
+  2. /dd-start <需求描述>   # 開始需求分析
+  3. /dd-arch              # 進入架構設計
+  4. /dd-approve           # 確認後自動完成
+
+═══════════════════════════════════════════════════════════════════
+```
+DDHELP
+            ;;
+        "dd-init")
+            cat << 'DDINIT'
+# DD Pipeline 初始化
+
+初始化專案的 DD Pipeline 結構，建立必要的目錄和設定檔。
+
+---
+
+## 執行步驟
+
+1. **詢問專案類型**：
+   - 純後端 API
+   - 純前端 SPA
+   - 全端應用
+   - CLI 工具
+
+2. **詢問技術棧**（根據專案類型）：
+   - 後端：Node.js/Go/Python/其他
+   - 前端：React/Vue/Svelte/其他
+   - 資料庫：PostgreSQL/MongoDB/MySQL/其他
+
+3. **建立目錄結構**：
+```
+./
+├── CLAUDE.md                    # 專案設定
+├── PROJECT_STATE.md             # 流程狀態追蹤
+└── claude_docs/
+    ├── requirements/            # 需求文檔 (RDD)
+    ├── architecture/            # 架構文檔 (SDD/DDD)
+    ├── contracts/               # API 契約 (DbC)
+    ├── decisions/               # 架構決策記錄 (ADD)
+    ├── examples/                # 行為範例 (EDD)
+    ├── design/                  # UI/UX 設計
+    └── reports/                 # 測試報告
+```
+
+4. **產生 CLAUDE.md** 模板，包含：
+   - 專案概述
+   - 技術棧設定
+   - DD 流程設定
+   - 目錄結構說明
+   - 程式碼規範
+
+5. **產生 PROJECT_STATE.md** 初始狀態
+
+6. **Git commit**（如果在 git repo 中）：
+   ```
+   git add .
+   git commit -m "chore: 初始化 DD Pipeline 專案結構"
+   ```
+
+7. **顯示下一步提示**：
+   ```
+   ✅ DD Pipeline 初始化完成！
+
+   📌 下一步：
+   /dd-start <需求描述>
+   ```
+
+---
+
+## 使用的工具
+
+- 無需調用 Agent/Skill
+- 使用 Write 工具建立檔案
+- 使用 Bash 工具執行 git 命令
+DDINIT
+            ;;
+        "dd-start")
+            cat << 'DDSTART'
+# DD Pipeline 啟動 - 需求分析 (RDD)
+
+啟動 DD Pipeline 流程，進入需求分析階段。
+
+---
+
+## 輸入
+
+用戶應提供需求描述，例如：
+```
+/dd-start 建立一個 Todo List 應用，支援 CRUD 操作
+```
+
+---
+
+## 執行步驟
+
+1. **讀取專案設定**：
+   - 讀取 `./CLAUDE.md` 取得專案設定
+   - 如果不存在，提示用戶先執行 `/dd-init`
+
+2. **需求分析** (RDD)：
+
+   調用 Skill: `ux-researcher-designer`
+   - 分析用戶需求
+   - 識別核心功能
+   - 定義使用者故事
+
+   調用 Skill: `senior-prompt-engineer`
+   - 釐清模糊需求
+   - 確認技術可行性
+   - 建立需求邊界
+
+3. **產出需求文檔**：
+   - 建立 `claude_docs/requirements/REQUIREMENTS.md`
+   - 包含：
+     - 專案目標
+     - 功能需求清單
+     - 非功能需求
+     - 使用者故事
+     - 驗收標準
+
+4. **更新狀態**：
+   - 更新 `PROJECT_STATE.md`
+   - 設定當前階段為「需求分析完成」
+
+5. **Git commit**：
+   ```
+   git add .
+   git commit -m "docs(requirements): 完成需求分析"
+   ```
+
+6. **自動進入下一階段**：
+   - 顯示需求摘要
+   - 自動執行 `/dd-arch` 進入架構設計
+
+---
+
+## 使用的 Agent/Skill
+
+| 類型 | 名稱 | 用途 |
+|------|------|------|
+| Skill | `ux-researcher-designer` | 用戶研究、需求分析 |
+| Skill | `senior-prompt-engineer` | 需求釐清、問題定義 |
+| Agent | `docs-writer` | 產出需求文檔 |
+DDSTART
+            ;;
+        "dd-arch")
+            cat << 'DDARCH'
+# DD Pipeline 架構設計 (SDD + DDD + ADD + EDD)
+
+進入架構設計階段，設計系統架構、領域模型、記錄決策、定義範例。
+
+---
+
+## 執行步驟
+
+1. **讀取需求**：
+   - 讀取 `claude_docs/requirements/REQUIREMENTS.md`
+   - 讀取 `./CLAUDE.md` 取得技術棧設定
+
+2. **系統架構設計** (SDD)：
+
+   調用 Agent: `systems-architect`
+   - 設計整體系統架構
+   - 定義模組劃分
+   - 設計資料流
+
+3. **技術選型與決策** (ADD)：
+
+   調用 Skill: `senior-architect`
+   - 技術選型決策
+   - 記錄決策原因
+   - 評估替代方案
+
+   產出：`claude_docs/decisions/ADR-XXX-*.md`
+
+4. **領域模型設計** (DDD)：
+
+   調用 Skill: `senior-architect`
+   - 識別領域邊界
+   - 設計領域模型
+   - 定義聚合根
+
+5. **UI/UX 設計**（如果是前端/全端）：
+
+   調用 Skill: `ux-researcher-designer`
+   - 設計使用者流程
+   - 定義 UI 元件
+
+   產出：`claude_docs/design/DESIGN_SPEC.md`
+
+6. **行為範例定義** (EDD)：
+
+   調用 Skill: `senior-qa`
+   - 定義行為範例
+   - 描述預期結果
+
+   產出：`claude_docs/examples/EXAMPLES.md`
+
+7. **API 契約定義** (DbC)：
+
+   調用 Skill: `senior-backend`
+   - 定義 API 端點
+   - 定義請求/回應格式
+
+   產出：`claude_docs/contracts/API_CONTRACT.md`
+
+8. **產出架構文檔**：
+
+   調用 Agent: `docs-writer`
+   - 整合所有設計
+   - 產出 `claude_docs/architecture/ARCHITECTURE.md`
+
+9. **更新狀態並等待確認**：
+   - 更新 `PROJECT_STATE.md`
+   - 顯示架構摘要
+   - **暫停等待用戶確認**
+
+   ```
+   ⏸️ 架構設計完成，等待確認
+
+   請審閱以下文檔：
+   ├── claude_docs/architecture/ARCHITECTURE.md
+   ├── claude_docs/contracts/API_CONTRACT.md
+   ├── claude_docs/design/DESIGN_SPEC.md
+   ├── claude_docs/examples/EXAMPLES.md
+   └── claude_docs/decisions/ADR-*.md
+
+   📌 下一步：
+   ├── /dd-approve  確認架構，開始開發
+   └── /dd-revise   修改架構
+   ```
+
+---
+
+## 使用的 Agent/Skill
+
+| 類型 | 名稱 | 用途 |
+|------|------|------|
+| Agent | `systems-architect` | 系統架構設計 |
+| Skill | `senior-architect` | 技術選型、領域模型 |
+| Skill | `ux-researcher-designer` | UI/UX 設計 |
+| Skill | `senior-backend` | API 契約定義 |
+| Skill | `senior-qa` | 行為範例定義 |
+| Agent | `docs-writer` | 文檔產出 |
+DDARCH
+            ;;
+        "dd-approve")
+            cat << 'DDAPPROVE'
+# DD Pipeline 確認架構
+
+確認架構設計，開始自動執行開發和測試流程。
+
+---
+
+## 執行步驟
+
+1. **確認架構文檔存在**：
+   - 檢查必要文檔是否存在
+   - 如果缺少，提示用戶先執行 `/dd-arch`
+
+2. **Git commit 架構**：
+   ```
+   git add .
+   git commit -m "docs(architecture): 確認架構設計"
+   ```
+
+3. **更新狀態**：
+   - 更新 `PROJECT_STATE.md`
+   - 設定狀態為「架構已確認」
+
+4. **根據專案類型啟動開發**：
+
+   **全端應用**（並行執行）：
+   ```
+   ┌─────────────────┐    ┌─────────────────┐
+   │   後端開發       │    │   前端開發       │
+   │   /dd-dev       │    │   /dd-dev       │
+   │   --backend     │    │   --frontend    │
+   └────────┬────────┘    └────────┬────────┘
+            │                      │
+            ▼                      ▼
+   ┌─────────────────┐    ┌─────────────────┐
+   │   後端測試       │    │   前端測試       │
+   │   /dd-test      │    │   /dd-test      │
+   │   --backend     │    │   --frontend    │
+   └────────┬────────┘    └────────┬────────┘
+            │                      │
+            └──────────┬───────────┘
+                       ▼
+              ┌─────────────────┐
+              │   整合測試       │
+              └─────────────────┘
+   ```
+
+   **純後端**：
+   ```
+   /dd-dev --backend → /dd-test --backend → 完成
+   ```
+
+   **純前端**：
+   ```
+   /dd-dev --frontend → /dd-test --frontend → 完成
+   ```
+
+5. **監控進度**：
+   - 持續更新 `PROJECT_STATE.md`
+   - 失敗時自動重試（最多 3 次）
+   - 超過重試次數時暫停並報告
+
+6. **完成後**：
+   - 產出 `claude_docs/reports/RELEASE_NOTES.md`
+   - Git merge/tag
+   - 顯示完成報告
+
+---
+
+## 自動化流程
+
+此命令會觸發完整的自動化流程，用戶**無需手動執行後續命令**。
+
+流程中的每個階段都會：
+- 自動調用對應的 Agent/Skill
+- 自動更新狀態
+- 自動 Git commit
+- 失敗時自動修正並重試
+DDAPPROVE
+            ;;
+        "dd-revise")
+            cat << 'DDREVISE'
+# DD Pipeline 修改架構
+
+根據用戶反饋修改架構設計。
+
+---
+
+## 輸入
+
+用戶應提供修改意見，例如：
+```
+/dd-revise 我想用 GraphQL 而不是 REST API
+```
+
+---
+
+## 執行步驟
+
+1. **讀取現有架構**：
+   - 讀取所有架構相關文檔
+   - 理解當前設計
+
+2. **分析修改需求**：
+
+   調用 Skill: `senior-architect`
+   - 分析修改影響範圍
+   - 評估可行性
+   - 識別需要更新的文檔
+
+3. **執行修改**：
+
+   調用 Agent: `systems-architect`
+   - 更新系統架構
+   - 調整相關設計
+
+   調用 Agent: `docs-writer`
+   - 更新所有受影響的文檔
+   - 新增 ADR 記錄此次變更
+
+4. **Git commit**：
+   ```
+   git add .
+   git commit -m "refactor(architecture): <修改摘要>"
+   ```
+
+5. **顯示更新內容**：
+   ```
+   🔄 架構已更新
+
+   變更內容：
+   ├── claude_docs/architecture/ARCHITECTURE.md（已更新）
+   ├── claude_docs/contracts/API_CONTRACT.md（已更新）
+   └── claude_docs/decisions/ADR-XXX-*.md（新增）
+
+   📌 下一步：
+   ├── /dd-approve  確認架構，開始開發
+   └── /dd-revise   繼續修改
+   ```
+
+---
+
+## 使用的 Agent/Skill
+
+| 類型 | 名稱 | 用途 |
+|------|------|------|
+| Agent | `systems-architect` | 架構調整 |
+| Skill | `senior-architect` | 影響評估 |
+| Agent | `docs-writer` | 文檔更新 |
+DDREVISE
+            ;;
+        "dd-dev")
+            cat << 'DDDEV'
+# DD Pipeline 開發實作 (DbC + CDD + PDD)
+
+執行開發實作階段，依照契約進行組件化開發。
+
+---
+
+## 參數
+
+- `--backend`：只執行後端開發
+- `--frontend`：只執行前端開發
+- `--fix`：修正模式（讀取失敗原因並修正）
+
+---
+
+## 執行步驟
+
+### 後端開發流程
+
+1. **讀取架構和契約**：
+   - 讀取 `claude_docs/architecture/ARCHITECTURE.md`
+   - 讀取 `claude_docs/contracts/API_CONTRACT.md`
+
+2. **優化開發 Prompt** (PDD)：
+
+   調用 Skill: `senior-prompt-engineer`
+   - 優化開發指令
+   - 確保 AI 準確理解任務
+
+3. **後端實作** (DbC + CDD)：
+
+   調用 Skill: `senior-backend`
+   - 依照 API 契約實作
+   - 建立資料模型
+   - 實作業務邏輯
+   - 組件化/模組化開發
+
+4. **效能優化**：
+
+   調用 Agent: `performance-tuner`
+   - 檢查效能問題
+   - 優化查詢和演算法
+
+5. **安全檢查**：
+
+   調用 Agent: `security-auditor`
+   - 檢查安全漏洞
+   - 驗證輸入處理
+
+6. **程式碼重構**：
+
+   調用 Agent: `refactor-expert`
+   - 優化程式碼結構
+   - 提升可維護性
+
+7. **產出文檔**：
+
+   調用 Agent: `docs-writer`
+   - 產出 API 文檔
+   - 更新技術文檔
+
+8. **Git commit**：
+   ```
+   git add .
+   git commit -m "feat(backend): 實作後端功能"
+   ```
+
+9. **自動進入測試**：
+   - 執行 `/dd-test --backend`
+
+---
+
+### 前端開發流程
+
+1. **讀取設計規格**：
+   - 讀取 `claude_docs/design/DESIGN_SPEC.md`
+   - 讀取 `claude_docs/contracts/API_CONTRACT.md`
+
+2. **優化開發 Prompt** (PDD)：
+
+   調用 Skill: `senior-prompt-engineer`
+
+3. **前端實作** (CDD)：
+
+   調用 Skill: `senior-frontend`
+   - 建立組件結構
+   - 實作 UI 組件
+   - 串接 API
+
+4. **設計一致性檢查**：
+
+   調用 Skill: `ui-design-system`
+   - 檢查設計一致性
+   - 套用 Design Token
+
+5. **UX 審查**：
+
+   調用 Skill: `ux-researcher-designer`
+   - 審查使用者體驗
+   - 提出改進建議
+
+6. **程式碼重構**：
+
+   調用 Agent: `refactor-expert`
+
+7. **產出文檔**：
+
+   調用 Agent: `docs-writer`
+   - 產出組件文檔
+
+8. **Git commit**：
+   ```
+   git add .
+   git commit -m "feat(frontend): 實作前端功能"
+   ```
+
+9. **自動進入測試**：
+   - 執行 `/dd-test --frontend`
+
+---
+
+## 修正模式 (--fix)
+
+當測試失敗需要修正時：
+
+1. **讀取失敗原因**：
+   - 從 `PROJECT_STATE.md` 讀取失敗記錄
+
+2. **分析問題**：
+
+   調用 Agent: `root-cause-analyzer`
+   - 分析根本原因
+   - 制定修正方案
+
+3. **執行修正**：
+
+   調用對應 Skill 進行修正
+
+4. **Git commit**：
+   ```
+   git add .
+   git commit -m "fix(backend/frontend): <修正摘要>"
+   ```
+
+5. **重新執行測試**
+DDDEV
+            ;;
+        "dd-test")
+            cat << 'DDTEST'
+# DD Pipeline 測試審查 (TDD + BDD + ATDD + FDD)
+
+執行測試審查階段，包含單元測試、行為測試、驗收測試和失敗情境測試。
+
+---
+
+## 參數
+
+- `--backend`：只執行後端測試
+- `--frontend`：只執行前端測試
+- `--integrate`：執行整合測試
+
+---
+
+## 執行步驟
+
+### 後端測試流程
+
+1. **讀取測試範例**：
+   - 讀取 `claude_docs/examples/EXAMPLES.md`
+   - 讀取 `claude_docs/contracts/API_CONTRACT.md`
+
+2. **撰寫測試** (TDD)：
+
+   調用 Agent: `test-engineer`
+   - 撰寫單元測試
+   - 撰寫整合測試
+   - 依照範例撰寫行為測試 (BDD)
+
+3. **執行測試**：
+
+   調用 Agent: `test-engineer`
+   - 執行所有測試
+   - 收集測試結果
+
+4. **失敗情境測試** (FDD)：
+
+   調用 Agent: `test-engineer`
+   - 測試錯誤處理
+   - 測試邊界條件
+   - 測試異常情況
+
+5. **程式碼審查**：
+
+   調用 Skill: `code-reviewer`
+   - 審查程式碼品質
+   - 檢查最佳實踐
+
+6. **QA 驗收** (ATDD)：
+
+   調用 Skill: `senior-qa`
+   - 驗收測試
+   - 確認符合需求
+
+7. **結果處理**：
+
+   **如果通過**：
+   ```
+   git add .
+   git commit -m "test(backend): 後端測試通過"
+   ```
+   → 等待前端測試 或 進入整合測試
+
+   **如果失敗**：
+   - 記錄失敗原因到 `PROJECT_STATE.md`
+   - 自動執行 `/dd-dev --backend --fix`
+   - 重新測試（最多 3 次）
+
+---
+
+### 前端測試流程
+
+1. **撰寫組件測試**：
+
+   調用 Agent: `test-engineer`
+   - 撰寫組件測試
+   - 撰寫快照測試
+
+2. **E2E 測試**：
+
+   調用 MCP: `Playwright`
+   - 開啟瀏覽器
+   - 執行 E2E 測試腳本
+   - 模擬使用者操作
+   - 截圖保存
+
+3. **UI/UX 審查**：
+
+   調用 Skill: `ux-researcher-designer`
+   - 審查截圖
+   - 檢查使用者體驗
+   - 提出改進建議
+
+4. **QA 驗收**：
+
+   調用 Skill: `senior-qa`
+
+5. **結果處理**：
+
+   同後端測試
+
+---
+
+### 整合測試流程
+
+當後端和前端測試都通過後：
+
+1. **完整 E2E 測試**：
+
+   調用 MCP: `Playwright`
+   - 執行完整使用者流程
+   - 測試前後端整合
+
+2. **最終 QA 驗收**：
+
+   調用 Skill: `senior-qa`
+
+3. **產出測試報告**：
+
+   調用 Agent: `docs-writer`
+   - 產出 `claude_docs/reports/TEST_REPORT.md`
+
+4. **完成處理**：
+   ```
+   git add .
+   git commit -m "test: 整合測試通過"
+   ```
+   → 產出 Release Notes → Git merge/tag
+
+---
+
+## 使用的 Agent/Skill/MCP
+
+| 類型 | 名稱 | 用途 |
+|------|------|------|
+| Agent | `test-engineer` | 撰寫和執行測試 |
+| Agent | `root-cause-analyzer` | 分析失敗原因 |
+| Skill | `senior-qa` | QA 驗收 |
+| Skill | `code-reviewer` | 程式碼審查 |
+| Skill | `ux-researcher-designer` | UI/UX 審查 |
+| MCP | `Playwright` | E2E 網頁測試 |
+| Agent | `docs-writer` | 測試報告 |
+DDTEST
+            ;;
+        "dd-status")
+            cat << 'DDSTATUS'
+# DD Pipeline 狀態查詢
+
+顯示目前的專案狀態和進度。
+
+---
+
+## 執行步驟
+
+1. **讀取狀態檔**：
+   - 讀取 `PROJECT_STATE.md`
+
+2. **顯示狀態**：
+   ```
+   ═══════════════════════════════════════════════════════════════════
+   📊 DD Pipeline 狀態
+   ═══════════════════════════════════════════════════════════════════
+
+   ## 整體進度
+   - [x] 初始化 - 完成
+   - [x] 需求分析 - 完成
+   - [x] 架構設計 - 完成
+   - [ ] 架構確認 - 等待中
+   - [ ] 後端開發 - 待開始
+   - [ ] 前端開發 - 待開始
+   - [ ] 後端測試 - 待開始
+   - [ ] 前端測試 - 待開始
+   - [ ] 整合測試 - 待開始
+   - [ ] 發布 - 待開始
+
+   ## 當前階段
+   架構設計完成，等待確認
+
+   ## 最近活動
+   - 2024-01-15 10:30 - 完成架構設計
+   - 2024-01-15 10:00 - 完成需求分析
+   - 2024-01-15 09:30 - 初始化專案
+
+   ## 迭代記錄
+   （無）
+
+   ## 下一步
+   /dd-approve 或 /dd-revise
+
+   ═══════════════════════════════════════════════════════════════════
+   ```
+
+---
+
+## 無需調用 Agent/Skill
+
+此命令只讀取和顯示狀態，不執行任何開發操作。
+DDSTATUS
+            ;;
+        "dd-stop")
+            cat << 'DDSTOP'
+# DD Pipeline 中斷流程
+
+中斷目前正在執行的 DD Pipeline 流程。
+
+---
+
+## 執行步驟
+
+1. **確認中斷**：
+   ```
+   ⚠️ 確定要中斷 DD Pipeline 流程嗎？
+
+   當前狀態：後端測試中（第 2 次迭代）
+
+   中斷後：
+   - 進度會保存到 PROJECT_STATE.md
+   - 可以使用 /dd-status 查看狀態
+   - 可以使用 /dd-approve 繼續流程
+
+   [Y/n]
+   ```
+
+2. **保存狀態**：
+   - 更新 `PROJECT_STATE.md`
+   - 記錄中斷時間和原因
+
+3. **Git commit**（如果有未提交的變更）：
+   ```
+   git add .
+   git commit -m "wip: DD Pipeline 中斷 - <當前階段>"
+   ```
+
+4. **顯示恢復指引**：
+   ```
+   ⏸️ DD Pipeline 已中斷
+
+   恢復方式：
+   - /dd-approve  從當前階段繼續
+   - /dd-status   查看詳細狀態
+   ```
+
+---
+
+## 無需調用 Agent/Skill
+
+此命令只處理流程控制，不執行任何開發操作。
+DDSTOP
+            ;;
+    esac
+}
+
+# 建立 Templates
+create_templates() {
+    print_step "6/6" "建立 Templates"
+
+    mkdir -p "$TEMPLATES_DIR"
+
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    # 定義所有 templates
+    local templates=(
+        "CLAUDE.md.template"
+        "PROJECT_STATE.md.template"
+        "REQUIREMENTS.md.template"
+        "ARCHITECTURE.md.template"
+        "API_CONTRACT.md.template"
+        "EXAMPLES.md.template"
+        "ADR.md.template"
+    )
+
+    local count=${#templates[@]}
+    local i=0
+
+    for tpl in "${templates[@]}"; do
+        i=$((i + 1))
+        local target="$TEMPLATES_DIR/$tpl"
+        local source="$script_dir/templates/$tpl"
+
+        if [ "$FORCE" = true ] || [ ! -f "$target" ]; then
+            if [ -f "$source" ]; then
+                cp "$source" "$target"
+            else
+                create_template_content "$tpl" > "$target"
+            fi
+
+            if [ $i -eq $count ]; then
+                print_last_success "$target"
+            else
+                print_success "$target"
+            fi
+        else
+            if [ $i -eq $count ]; then
+                echo -e "└── $target: ${YELLOW}已存在（跳過）${NC}"
+            else
+                echo -e "├── $target: ${YELLOW}已存在（跳過）${NC}"
+            fi
+        fi
+    done
+
+    echo ""
+}
+
+# 建立 template 內容
+create_template_content() {
+    local tpl=$1
+
+    case $tpl in
+        "CLAUDE.md.template")
+            cat << 'CLAUDEMD'
+# {{PROJECT_NAME}}
+
+## 專案概述
+{{PROJECT_DESCRIPTION}}
+
+## 技術棧
+- 後端：{{BACKEND_TECH}}
+- 前端：{{FRONTEND_TECH}}
+- 資料庫：{{DATABASE_TECH}}
+- 測試框架：{{TEST_FRAMEWORK}}
+
+## DD 流程設定
+
+### 啟用的 DD
+- [x] RDD - 需求驅動
+- [x] SDD - 架構驅動
+- [x] DDD - 領域驅動
+- [x] ADD - 架構決策記錄
+- [x] EDD - 範例驅動
+- [x] DbC - 契約驅動
+- [x] CDD - 組件驅動
+- [x] PDD - 提示詞驅動
+- [x] TDD - 測試驅動
+- [x] BDD - 行為驅動
+- [x] ATDD - 驗收測試
+- [x] FDD - 失敗情境測試
+
+### 開發模式
+{{DEV_MODE}}
+
+### 測試設定
+- 最大重試次數：3
+- 需要 E2E 測試：{{NEED_E2E}}
+- 需要 UI/UX 審查：{{NEED_UX_REVIEW}}
+
+## 目錄結構
+```
+src/
+├── {{BACKEND_DIR}}/     # 後端程式碼
+├── {{FRONTEND_DIR}}/    # 前端程式碼
+└── shared/              # 共用程式碼
+
+claude_docs/
+├── requirements/        # 需求文檔
+├── architecture/        # 架構文檔
+├── contracts/           # API 契約
+├── decisions/           # ADR 決策記錄
+├── examples/            # 行為範例
+├── design/              # UI/UX 設計
+└── reports/             # 測試報告
+```
+
+## 程式碼規範
+- 使用 {{LINTER}}
+- 程式碼註解使用繁體中文
+- Commit message 格式：conventional commits
+
+## 特殊規則
+{{SPECIAL_RULES}}
+CLAUDEMD
+            ;;
+        "PROJECT_STATE.md.template")
+            cat << 'PROJECTSTATE'
+# {{PROJECT_NAME}} - DD Pipeline 狀態
+
+## 整體進度
+- [ ] 初始化 - 待開始
+- [ ] 需求分析 (RDD) - 待開始
+- [ ] 架構設計 (SDD/DDD/ADD/EDD) - 待開始
+- [ ] 架構確認 - 待開始
+- [ ] 後端開發 (DbC/CDD/PDD) - 待開始
+- [ ] 前端開發 (CDD/PDD) - 待開始
+- [ ] 後端測試 (TDD/BDD/ATDD/FDD) - 待開始
+- [ ] 前端測試 (TDD/BDD/E2E) - 待開始
+- [ ] 整合測試 - 待開始
+- [ ] 發布 - 待開始
+
+## 當前階段
+尚未開始
+
+## 最近活動
+- {{TIMESTAMP}} - 初始化專案
+
+## 迭代記錄
+（無）
+
+## Git 記錄
+（無）
+
+## 下一步
+/dd-start <需求描述>
+PROJECTSTATE
+            ;;
+        "REQUIREMENTS.md.template")
+            cat << 'REQUIREMENTS'
+# {{PROJECT_NAME}} - 需求文檔
+
+## 專案目標
+{{PROJECT_GOAL}}
+
+## 功能需求
+
+### 核心功能
+1. {{FEATURE_1}}
+2. {{FEATURE_2}}
+3. {{FEATURE_3}}
+
+### 次要功能
+1. {{SECONDARY_FEATURE_1}}
+
+## 非功能需求
+- 效能：{{PERFORMANCE_REQ}}
+- 安全：{{SECURITY_REQ}}
+- 可用性：{{AVAILABILITY_REQ}}
+
+## 使用者故事
+
+### 故事 1：{{STORY_1_TITLE}}
+**作為** {{ACTOR}}
+**我想要** {{ACTION}}
+**以便** {{BENEFIT}}
+
+**驗收標準：**
+- [ ] {{CRITERIA_1}}
+- [ ] {{CRITERIA_2}}
+
+## 範圍邊界
+
+### 包含
+- {{IN_SCOPE_1}}
+
+### 不包含
+- {{OUT_SCOPE_1}}
+
+## 假設與限制
+- {{ASSUMPTION_1}}
+REQUIREMENTS
+            ;;
+        "ARCHITECTURE.md.template")
+            cat << 'ARCHITECTURE'
+# {{PROJECT_NAME}} - 系統架構
+
+## 系統概覽
+
+### 架構圖
+```
+{{ARCHITECTURE_DIAGRAM}}
+```
+
+## 技術選型
+
+| 層級 | 技術 | 原因 |
+|------|------|------|
+| 後端 | {{BACKEND_TECH}} | {{BACKEND_REASON}} |
+| 前端 | {{FRONTEND_TECH}} | {{FRONTEND_REASON}} |
+| 資料庫 | {{DATABASE_TECH}} | {{DATABASE_REASON}} |
+
+## 模組劃分
+
+### 後端模組
+```
+src/server/
+├── controllers/     # 控制器
+├── services/        # 業務邏輯
+├── models/          # 資料模型
+├── middleware/      # 中間件
+└── utils/           # 工具函數
+```
+
+### 前端模組
+```
+src/client/
+├── components/      # UI 組件
+├── pages/           # 頁面
+├── hooks/           # 自定義 Hooks
+├── services/        # API 服務
+└── utils/           # 工具函數
+```
+
+## 資料流
+
+```
+{{DATA_FLOW_DIAGRAM}}
+```
+
+## 安全設計
+- 認證方式：{{AUTH_METHOD}}
+- 授權機制：{{AUTHZ_METHOD}}
+- 資料加密：{{ENCRYPTION}}
+
+## 擴展性考量
+{{SCALABILITY_NOTES}}
+ARCHITECTURE
+            ;;
+        "API_CONTRACT.md.template")
+            cat << 'APICONTRACT'
+# {{PROJECT_NAME}} - API 契約
+
+## 基本資訊
+- Base URL: `{{BASE_URL}}`
+- 版本: `{{API_VERSION}}`
+- 格式: JSON
+
+## 認證
+{{AUTH_DESCRIPTION}}
+
+## 端點
+
+### {{RESOURCE_NAME}}
+
+#### 取得列表
+```
+GET /api/{{RESOURCE_PATH}}
+```
+
+**回應：**
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      ...
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100
+  }
+}
+```
+
+#### 取得單一
+```
+GET /api/{{RESOURCE_PATH}}/:id
+```
+
+#### 新增
+```
+POST /api/{{RESOURCE_PATH}}
+```
+
+**請求：**
+```json
+{
+  ...
+}
+```
+
+#### 更新
+```
+PUT /api/{{RESOURCE_PATH}}/:id
+```
+
+#### 刪除
+```
+DELETE /api/{{RESOURCE_PATH}}/:id
+```
+
+## 錯誤格式
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "錯誤訊息"
+  }
+}
+```
+
+## 狀態碼
+| 狀態碼 | 說明 |
+|--------|------|
+| 200 | 成功 |
+| 201 | 建立成功 |
+| 400 | 請求錯誤 |
+| 401 | 未認證 |
+| 403 | 無權限 |
+| 404 | 找不到資源 |
+| 500 | 伺服器錯誤 |
+APICONTRACT
+            ;;
+        "EXAMPLES.md.template")
+            cat << 'EXAMPLES'
+# {{PROJECT_NAME}} - 行為範例 (EDD)
+
+## 範例 1：{{EXAMPLE_1_TITLE}}
+
+### 前置條件
+- {{PRECONDITION_1}}
+
+### 操作步驟
+1. {{STEP_1}}
+2. {{STEP_2}}
+3. {{STEP_3}}
+
+### 預期結果
+- {{EXPECTED_RESULT_1}}
+- {{EXPECTED_RESULT_2}}
+
+### 範例資料
+**輸入：**
+```json
+{{INPUT_DATA}}
+```
+
+**輸出：**
+```json
+{{OUTPUT_DATA}}
+```
+
+---
+
+## 範例 2：{{EXAMPLE_2_TITLE}}
+
+### 前置條件
+- {{PRECONDITION}}
+
+### 操作步驟
+1. {{STEP}}
+
+### 預期結果
+- {{EXPECTED_RESULT}}
+
+---
+
+## 邊界情況
+
+### 情況 1：{{EDGE_CASE_1}}
+- 輸入：{{EDGE_INPUT}}
+- 預期：{{EDGE_EXPECTED}}
+
+### 情況 2：空資料
+- 輸入：空
+- 預期：回傳空列表或適當錯誤
+
+### 情況 3：無效資料
+- 輸入：無效格式
+- 預期：回傳 400 錯誤
+EXAMPLES
+            ;;
+        "ADR.md.template")
+            cat << 'ADR'
+# ADR-{{NUMBER}}: {{TITLE}}
+
+## 狀態
+{{STATUS}} <!-- 提議中 | 已接受 | 已棄用 | 已取代 -->
+
+## 背景
+{{CONTEXT}}
+
+## 決策
+{{DECISION}}
+
+## 原因
+{{RATIONALE}}
+
+## 替代方案
+
+### 方案 A：{{ALTERNATIVE_A}}
+- 優點：{{A_PROS}}
+- 缺點：{{A_CONS}}
+
+### 方案 B：{{ALTERNATIVE_B}}
+- 優點：{{B_PROS}}
+- 缺點：{{B_CONS}}
+
+## 影響
+- {{CONSEQUENCE_1}}
+- {{CONSEQUENCE_2}}
+
+## 相關決策
+- ADR-{{RELATED_ADR}}
+
+## 日期
+{{DATE}}
+ADR
+            ;;
+    esac
+}
+
+# 移除安裝
+uninstall() {
+    print_header "${ROCKET} DD Pipeline 移除程式"
+
+    echo "即將移除以下內容："
+    echo "├── ~/.claude/commands/dd-*.md"
+    echo "└── ~/.claude/templates/dd/"
+    echo ""
+
+    read -p "確定要移除嗎？[y/N] " -n 1 -r
+    echo
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        rm -f "$COMMANDS_DIR"/dd-*.md
+        rm -rf "$TEMPLATES_DIR"
+        echo -e "${GREEN}DD Pipeline 已移除${NC}"
+    else
+        echo "取消移除"
+    fi
+}
+
+# 顯示完成訊息
+show_completion() {
+    print_header "✅ DD Pipeline 安裝完成！"
+
+    echo -e "${GREEN}📌 快速開始：${NC}"
+    echo "   1. cd your-project"
+    echo "   2. /dd-init"
+    echo "   3. /dd-start \"你的需求\""
+    echo ""
+    echo -e "${GREEN}📌 查看說明：${NC}"
+    echo "   /dd-help"
+    echo ""
+}
+
+# 主程式
+main() {
+    local CHECK_ONLY=false
+    local FORCE=false
+    local COMMANDS_ONLY=false
+    local UNINSTALL=false
+
+    # 解析參數
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --check)
+                CHECK_ONLY=true
+                shift
+                ;;
+            --force)
+                FORCE=true
+                shift
+                ;;
+            --commands-only)
+                COMMANDS_ONLY=true
+                shift
+                ;;
+            --uninstall)
+                UNINSTALL=true
+                shift
+                ;;
+            --update)
+                install_tresor
+                install_skills
+                exit 0
+                ;;
+            --help)
+                show_help
+                exit 0
+                ;;
+            *)
+                echo "未知選項: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+
+    # 移除模式
+    if [ "$UNINSTALL" = true ]; then
+        uninstall
+        exit 0
+    fi
+
+    print_header "${ROCKET} DD Pipeline 安裝程式"
+
+    # 檢查環境
+    check_environment
+
+    # 檢查 Agents
+    check_agents
+
+    # 檢查 Skills
+    check_skills
+
+    # 檢查 MCP
+    check_mcp
+
+    # 如果只是檢查模式，到此結束
+    if [ "$CHECK_ONLY" = true ]; then
+        echo -e "${GREEN}環境檢查完成${NC}"
+        exit 0
+    fi
+
+    # 建立 Commands
+    create_commands
+
+    # 建立 Templates（除非只安裝 commands）
+    if [ "$COMMANDS_ONLY" = false ]; then
+        create_templates
+    fi
+
+    # 顯示完成訊息
+    show_completion
+}
+
+# 執行主程式
+main "$@"
