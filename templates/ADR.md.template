@@ -1,0 +1,143 @@
+# ADR-{{NUMBER}}: {{TITLE}}
+
+> Architecture Decision Record (架構決策記錄)
+> 由 DD Pipeline 的 ADD（架構決策記錄驅動）階段產生
+
+## 狀態
+
+**{{STATUS}}**
+
+<!-- 可選狀態：
+- 提議中 (Proposed)
+- 已接受 (Accepted)
+- 已棄用 (Deprecated)
+- 已取代 (Superseded by ADR-XXX)
+-->
+
+## 背景
+
+{{CONTEXT}}
+
+<!-- 描述做出此決策的背景和原因，包括：
+- 當前面臨的問題或需求
+- 相關的技術限制
+- 團隊能力和資源
+- 時間限制
+-->
+
+## 決策
+
+{{DECISION}}
+
+<!-- 清楚說明所做的決策，例如：
+- 我們決定使用 XXX 技術
+- 我們決定採用 YYY 架構模式
+-->
+
+## 原因
+
+{{RATIONALE}}
+
+<!-- 解釋為什麼做出這個決策：
+- 這個選擇如何解決背景中提到的問題
+- 相比其他選項的優勢
+-->
+
+## 替代方案
+
+### 方案 A：{{ALTERNATIVE_A_NAME}}
+
+{{ALTERNATIVE_A_DESCRIPTION}}
+
+**優點：**
+- {{A_PRO_1}}
+- {{A_PRO_2}}
+
+**缺點：**
+- {{A_CON_1}}
+- {{A_CON_2}}
+
+**未選擇原因**：{{A_REJECTION_REASON}}
+
+---
+
+### 方案 B：{{ALTERNATIVE_B_NAME}}
+
+{{ALTERNATIVE_B_DESCRIPTION}}
+
+**優點：**
+- {{B_PRO_1}}
+- {{B_PRO_2}}
+
+**缺點：**
+- {{B_CON_1}}
+- {{B_CON_2}}
+
+**未選擇原因**：{{B_REJECTION_REASON}}
+
+---
+
+### 方案 C：{{ALTERNATIVE_C_NAME}}（已選擇）
+
+{{ALTERNATIVE_C_DESCRIPTION}}
+
+**優點：**
+- {{C_PRO_1}}
+- {{C_PRO_2}}
+
+**缺點：**
+- {{C_CON_1}}
+- {{C_CON_2}}
+
+**選擇原因**：{{C_SELECTION_REASON}}
+
+## 影響
+
+### 正面影響
+- {{POSITIVE_CONSEQUENCE_1}}
+- {{POSITIVE_CONSEQUENCE_2}}
+
+### 負面影響
+- {{NEGATIVE_CONSEQUENCE_1}}
+- {{NEGATIVE_CONSEQUENCE_2}}
+
+### 風險
+- {{RISK_1}}
+- {{RISK_2}}
+
+### 需要的變更
+- {{REQUIRED_CHANGE_1}}
+- {{REQUIRED_CHANGE_2}}
+
+## 實施注意事項
+
+{{IMPLEMENTATION_NOTES}}
+
+<!-- 實施此決策時需要注意的事項，例如：
+- 需要安裝的依賴
+- 需要修改的配置
+- 需要遷移的資料
+-->
+
+## 相關文檔
+
+- {{RELATED_DOC_1}}
+- {{RELATED_DOC_2}}
+
+## 相關決策
+
+- {{RELATED_ADR_1}}
+- {{RELATED_ADR_2}}
+
+## 修訂歷史
+
+| 日期 | 版本 | 變更內容 | 作者 |
+|------|------|----------|------|
+| {{DATE}} | 1.0 | 初始版本 | DD Pipeline |
+
+---
+
+**文檔編號**：ADR-{{NUMBER}}
+**建立日期**：{{CREATED_DATE}}
+**最後更新**：{{UPDATED_DATE}}
+**決策者**：{{DECISION_MAKER}}

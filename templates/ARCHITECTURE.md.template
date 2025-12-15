@@ -1,0 +1,182 @@
+# {{PROJECT_NAME}} - 系統架構
+
+> 此文檔由 DD Pipeline 的 SDD/DDD（架構驅動/領域驅動）階段產生
+
+## 系統概覽
+
+### 架構圖
+```
+{{ARCHITECTURE_DIAGRAM}}
+```
+
+### 架構風格
+{{ARCHITECTURE_STYLE}}
+<!-- 例如：分層架構、微服務、事件驅動等 -->
+
+## 技術選型
+
+| 層級 | 技術 | 版本 | 選擇原因 |
+|------|------|------|----------|
+| 後端框架 | {{BACKEND_FRAMEWORK}} | {{BACKEND_VERSION}} | {{BACKEND_REASON}} |
+| 前端框架 | {{FRONTEND_FRAMEWORK}} | {{FRONTEND_VERSION}} | {{FRONTEND_REASON}} |
+| 資料庫 | {{DATABASE}} | {{DB_VERSION}} | {{DB_REASON}} |
+| 快取 | {{CACHE}} | {{CACHE_VERSION}} | {{CACHE_REASON}} |
+| 訊息佇列 | {{MESSAGE_QUEUE}} | {{MQ_VERSION}} | {{MQ_REASON}} |
+
+## 模組劃分
+
+### 後端模組
+```
+{{BACKEND_DIR}}/
+├── controllers/         # 控制器 - 處理 HTTP 請求
+│   ├── {{RESOURCE_1}}Controller.{{EXT}}
+│   └── {{RESOURCE_2}}Controller.{{EXT}}
+├── services/            # 服務層 - 業務邏輯
+│   ├── {{RESOURCE_1}}Service.{{EXT}}
+│   └── {{RESOURCE_2}}Service.{{EXT}}
+├── models/              # 資料模型 - ORM 定義
+│   ├── {{RESOURCE_1}}.{{EXT}}
+│   └── {{RESOURCE_2}}.{{EXT}}
+├── middleware/          # 中間件 - 認證、日誌等
+│   ├── auth.{{EXT}}
+│   └── errorHandler.{{EXT}}
+├── repositories/        # 資料存取層
+│   └── {{RESOURCE_1}}Repository.{{EXT}}
+├── utils/               # 工具函數
+│   └── helpers.{{EXT}}
+└── config/              # 配置檔
+    └── database.{{EXT}}
+```
+
+### 前端模組
+```
+{{FRONTEND_DIR}}/
+├── components/          # UI 組件
+│   ├── common/          # 通用組件
+│   │   ├── Button/
+│   │   └── Input/
+│   └── features/        # 功能組件
+│       └── {{FEATURE_1}}/
+├── pages/               # 頁面組件
+│   ├── Home/
+│   └── {{PAGE_1}}/
+├── hooks/               # 自定義 Hooks
+│   └── use{{HOOK_1}}.{{EXT}}
+├── services/            # API 服務
+│   └── api.{{EXT}}
+├── stores/              # 狀態管理
+│   └── {{STORE_1}}Store.{{EXT}}
+├── utils/               # 工具函數
+│   └── helpers.{{EXT}}
+└── styles/              # 樣式檔
+    └── globals.css
+```
+
+## 資料流
+
+### 請求流程
+```
+{{DATA_FLOW_DIAGRAM}}
+```
+
+### 狀態管理流程
+```
+{{STATE_FLOW_DIAGRAM}}
+```
+
+## 領域模型 (DDD)
+
+### 領域邊界
+```
+{{DOMAIN_BOUNDARY_DIAGRAM}}
+```
+
+### 聚合根
+| 聚合根 | 包含實體 | 說明 |
+|--------|----------|------|
+| {{AGGREGATE_1}} | {{ENTITIES_1}} | {{AGG_DESC_1}} |
+| {{AGGREGATE_2}} | {{ENTITIES_2}} | {{AGG_DESC_2}} |
+
+### 實體關係
+```
+{{ENTITY_RELATIONSHIP_DIAGRAM}}
+```
+
+## 資料庫設計
+
+### 資料表結構
+```sql
+{{DATABASE_SCHEMA}}
+```
+
+### 索引策略
+| 資料表 | 索引欄位 | 類型 | 原因 |
+|--------|----------|------|------|
+| {{TABLE_1}} | {{INDEX_COLUMNS_1}} | {{INDEX_TYPE_1}} | {{INDEX_REASON_1}} |
+
+## 安全設計
+
+### 認證機制
+- 方式：{{AUTH_MECHANISM}}
+- Token 類型：{{TOKEN_TYPE}}
+- 過期時間：{{TOKEN_EXPIRY}}
+
+### 授權機制
+- 模式：{{AUTHZ_MODEL}}
+- 角色定義：{{ROLES}}
+
+### 資料保護
+- 傳輸加密：{{TRANSPORT_ENCRYPTION}}
+- 儲存加密：{{STORAGE_ENCRYPTION}}
+- 敏感資料處理：{{SENSITIVE_DATA_HANDLING}}
+
+## 錯誤處理
+
+### 錯誤碼定義
+| 錯誤碼 | HTTP 狀態 | 說明 |
+|--------|-----------|------|
+| {{ERROR_CODE_1}} | {{HTTP_STATUS_1}} | {{ERROR_DESC_1}} |
+| {{ERROR_CODE_2}} | {{HTTP_STATUS_2}} | {{ERROR_DESC_2}} |
+
+### 錯誤回應格式
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "使用者可讀的錯誤訊息",
+    "details": {}
+  }
+}
+```
+
+## 擴展性考量
+
+### 水平擴展
+{{HORIZONTAL_SCALING}}
+
+### 快取策略
+{{CACHING_STRATEGY}}
+
+### 效能優化
+{{PERFORMANCE_OPTIMIZATION}}
+
+## 部署架構
+
+### 部署圖
+```
+{{DEPLOYMENT_DIAGRAM}}
+```
+
+### 環境配置
+| 環境 | 用途 | 配置 |
+|------|------|------|
+| Development | 本地開發 | {{DEV_CONFIG}} |
+| Staging | 測試環境 | {{STAGING_CONFIG}} |
+| Production | 正式環境 | {{PROD_CONFIG}} |
+
+---
+
+**文檔版本**：{{VERSION}}
+**建立日期**：{{CREATED_DATE}}
+**最後更新**：{{UPDATED_DATE}}
+**相關 ADR**：{{RELATED_ADRS}}

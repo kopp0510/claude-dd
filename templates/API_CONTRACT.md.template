@@ -1,0 +1,245 @@
+# {{PROJECT_NAME}} - API 契約
+
+> 此文檔由 DD Pipeline 的 DbC（契約驅動）階段產生
+
+## 基本資訊
+
+| 項目 | 值 |
+|------|-----|
+| Base URL | `{{BASE_URL}}` |
+| API 版本 | `{{API_VERSION}}` |
+| 格式 | JSON |
+| 編碼 | UTF-8 |
+
+## 認證
+
+### 認證方式
+{{AUTH_DESCRIPTION}}
+
+### 請求標頭
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+### 取得 Token
+```
+POST /api/auth/login
+```
+
+**請求：**
+```json
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+```
+
+**回應：**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 3600
+}
+```
+
+---
+
+## 端點
+
+### {{RESOURCE_NAME_1}}
+
+#### 取得列表
+```
+GET /api/{{RESOURCE_PATH_1}}
+```
+
+**查詢參數：**
+| 參數 | 類型 | 必填 | 說明 |
+|------|------|------|------|
+| page | number | 否 | 頁碼，預設 1 |
+| limit | number | 否 | 每頁數量，預設 20 |
+| sort | string | 否 | 排序欄位 |
+| order | string | 否 | 排序方向 (asc/desc) |
+
+**回應：**
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "{{FIELD_1}}": "{{TYPE_1}}",
+      "{{FIELD_2}}": "{{TYPE_2}}",
+      "createdAt": "2024-01-15T10:00:00Z",
+      "updatedAt": "2024-01-15T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "totalPages": 5
+  }
+}
+```
+
+#### 取得單一
+```
+GET /api/{{RESOURCE_PATH_1}}/:id
+```
+
+**路徑參數：**
+| 參數 | 類型 | 說明 |
+|------|------|------|
+| id | string | 資源 ID |
+
+**回應：**
+```json
+{
+  "data": {
+    "id": "string",
+    "{{FIELD_1}}": "{{TYPE_1}}",
+    "{{FIELD_2}}": "{{TYPE_2}}",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  }
+}
+```
+
+#### 新增
+```
+POST /api/{{RESOURCE_PATH_1}}
+```
+
+**請求：**
+```json
+{
+  "{{FIELD_1}}": "{{TYPE_1}}",
+  "{{FIELD_2}}": "{{TYPE_2}}"
+}
+```
+
+**驗證規則：**
+| 欄位 | 規則 |
+|------|------|
+| {{FIELD_1}} | {{VALIDATION_1}} |
+| {{FIELD_2}} | {{VALIDATION_2}} |
+
+**回應：** `201 Created`
+```json
+{
+  "data": {
+    "id": "string",
+    "{{FIELD_1}}": "{{TYPE_1}}",
+    "{{FIELD_2}}": "{{TYPE_2}}",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  }
+}
+```
+
+#### 更新
+```
+PUT /api/{{RESOURCE_PATH_1}}/:id
+```
+
+**請求：**
+```json
+{
+  "{{FIELD_1}}": "{{TYPE_1}}",
+  "{{FIELD_2}}": "{{TYPE_2}}"
+}
+```
+
+**回應：** `200 OK`
+```json
+{
+  "data": {
+    "id": "string",
+    "{{FIELD_1}}": "{{TYPE_1}}",
+    "{{FIELD_2}}": "{{TYPE_2}}",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+#### 刪除
+```
+DELETE /api/{{RESOURCE_PATH_1}}/:id
+```
+
+**回應：** `204 No Content`
+
+---
+
+### {{RESOURCE_NAME_2}}
+
+<!-- 重複上述格式 -->
+
+---
+
+## 錯誤格式
+
+所有錯誤回應都遵循以下格式：
+
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "錯誤訊息",
+    "details": {
+      "field": "欄位名稱",
+      "reason": "錯誤原因"
+    }
+  }
+}
+```
+
+## 錯誤碼
+
+| 錯誤碼 | HTTP 狀態 | 說明 |
+|--------|-----------|------|
+| VALIDATION_ERROR | 400 | 請求資料驗證失敗 |
+| UNAUTHORIZED | 401 | 未認證或 Token 無效 |
+| FORBIDDEN | 403 | 無權限存取此資源 |
+| NOT_FOUND | 404 | 資源不存在 |
+| CONFLICT | 409 | 資源衝突（如重複） |
+| INTERNAL_ERROR | 500 | 伺服器內部錯誤 |
+
+## HTTP 狀態碼
+
+| 狀態碼 | 說明 | 使用情境 |
+|--------|------|----------|
+| 200 | OK | 成功取得或更新資源 |
+| 201 | Created | 成功建立資源 |
+| 204 | No Content | 成功刪除資源 |
+| 400 | Bad Request | 請求格式錯誤或驗證失敗 |
+| 401 | Unauthorized | 未提供或無效的認證資訊 |
+| 403 | Forbidden | 認證成功但無權限 |
+| 404 | Not Found | 資源不存在 |
+| 409 | Conflict | 資源衝突 |
+| 422 | Unprocessable Entity | 語義錯誤 |
+| 429 | Too Many Requests | 請求過於頻繁 |
+| 500 | Internal Server Error | 伺服器錯誤 |
+
+## 限流
+
+| 端點 | 限制 |
+|------|------|
+| 所有端點 | {{RATE_LIMIT}} 請求/分鐘 |
+| 認證端點 | {{AUTH_RATE_LIMIT}} 請求/分鐘 |
+
+超過限制時回傳 `429 Too Many Requests`
+
+## 版本控制
+
+API 版本透過 URL 路徑指定：
+- v1: `/api/v1/...`
+- v2: `/api/v2/...`
+
+---
+
+**文檔版本**：{{VERSION}}
+**建立日期**：{{CREATED_DATE}}
+**最後更新**：{{UPDATED_DATE}}

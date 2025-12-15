@@ -1,0 +1,25 @@
+# Claude 本地設定
+.claude/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 暫存檔案
+*.tmp
+*.temp
+*.log
+
+# 編輯器
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# 環境變數
+.env
+.env.local
+.env.*.local

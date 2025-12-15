@@ -1,0 +1,287 @@
+# {{PROJECT_NAME}} - 行為範例 (EDD)
+
+> 此文檔由 DD Pipeline 的 EDD（範例驅動）階段產生
+> 這些範例將作為測試的基礎
+
+## 範例格式說明
+
+每個範例包含：
+- **前置條件**：執行前必須滿足的狀態
+- **操作步驟**：具體的操作流程
+- **預期結果**：操作後的預期狀態
+- **範例資料**：具體的輸入輸出資料
+
+---
+
+## 核心功能範例
+
+### 範例 1：{{EXAMPLE_1_TITLE}}
+
+**場景描述**：{{EXAMPLE_1_DESCRIPTION}}
+
+**前置條件**：
+- {{PRECONDITION_1_1}}
+- {{PRECONDITION_1_2}}
+
+**操作步驟**：
+1. {{STEP_1_1}}
+2. {{STEP_1_2}}
+3. {{STEP_1_3}}
+
+**預期結果**：
+- {{EXPECTED_1_1}}
+- {{EXPECTED_1_2}}
+
+**範例資料**：
+
+輸入：
+```json
+{{INPUT_1}}
+```
+
+輸出：
+```json
+{{OUTPUT_1}}
+```
+
+---
+
+### 範例 2：{{EXAMPLE_2_TITLE}}
+
+**場景描述**：{{EXAMPLE_2_DESCRIPTION}}
+
+**前置條件**：
+- {{PRECONDITION_2_1}}
+
+**操作步驟**：
+1. {{STEP_2_1}}
+2. {{STEP_2_2}}
+
+**預期結果**：
+- {{EXPECTED_2_1}}
+
+**範例資料**：
+
+輸入：
+```json
+{{INPUT_2}}
+```
+
+輸出：
+```json
+{{OUTPUT_2}}
+```
+
+---
+
+### 範例 3：{{EXAMPLE_3_TITLE}}
+
+**場景描述**：{{EXAMPLE_3_DESCRIPTION}}
+
+**前置條件**：
+- {{PRECONDITION_3_1}}
+
+**操作步驟**：
+1. {{STEP_3_1}}
+2. {{STEP_3_2}}
+
+**預期結果**：
+- {{EXPECTED_3_1}}
+
+---
+
+## 邊界情況
+
+### 情況 1：空資料處理
+
+**場景**：當資料庫中沒有任何資料時
+
+**操作**：
+```
+GET /api/{{RESOURCE_PATH}}
+```
+
+**預期**：
+```json
+{
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
+
+---
+
+### 情況 2：無效輸入
+
+**場景**：提供無效的資料格式
+
+**操作**：
+```
+POST /api/{{RESOURCE_PATH}}
+Content-Type: application/json
+
+{
+  "{{FIELD_1}}": ""
+}
+```
+
+**預期**：
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "{{FIELD_1}} 不能為空",
+    "details": {
+      "field": "{{FIELD_1}}",
+      "reason": "required"
+    }
+  }
+}
+```
+
+HTTP 狀態碼：`400 Bad Request`
+
+---
+
+### 情況 3：資源不存在
+
+**場景**：嘗試存取不存在的資源
+
+**操作**：
+```
+GET /api/{{RESOURCE_PATH}}/non-existent-id
+```
+
+**預期**：
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "找不到指定的 {{RESOURCE_NAME}}"
+  }
+}
+```
+
+HTTP 狀態碼：`404 Not Found`
+
+---
+
+### 情況 4：未認證存取
+
+**場景**：未提供認證 Token
+
+**操作**：
+```
+GET /api/{{RESOURCE_PATH}}
+# 未包含 Authorization 標頭
+```
+
+**預期**：
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "請先登入"
+  }
+}
+```
+
+HTTP 狀態碼：`401 Unauthorized`
+
+---
+
+### 情況 5：無權限操作
+
+**場景**：嘗試操作不屬於自己的資源
+
+**操作**：
+```
+DELETE /api/{{RESOURCE_PATH}}/other-users-resource-id
+Authorization: Bearer <valid-token>
+```
+
+**預期**：
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "您沒有權限執行此操作"
+  }
+}
+```
+
+HTTP 狀態碼：`403 Forbidden`
+
+---
+
+### 情況 6：重複資源
+
+**場景**：嘗試建立已存在的唯一資源
+
+**操作**：
+```
+POST /api/{{RESOURCE_PATH}}
+Content-Type: application/json
+
+{
+  "{{UNIQUE_FIELD}}": "already-exists"
+}
+```
+
+**預期**：
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "{{UNIQUE_FIELD}} 已存在"
+  }
+}
+```
+
+HTTP 狀態碼：`409 Conflict`
+
+---
+
+## UI 互動範例
+
+### 範例 1：{{UI_EXAMPLE_1_TITLE}}
+
+**使用者操作流程**：
+1. 使用者進入 {{PAGE_NAME}}
+2. 點擊「{{BUTTON_NAME}}」按鈕
+3. 填入 {{FIELD_NAME}}
+4. 點擊「確認」
+
+**預期 UI 變化**：
+- {{UI_CHANGE_1}}
+- {{UI_CHANGE_2}}
+
+**預期 API 呼叫**：
+```
+{{API_CALL}}
+```
+
+---
+
+## 測試矩陣
+
+| 場景 | 輸入 | 預期結果 | 優先級 |
+|------|------|----------|--------|
+| 正常流程 | 有效資料 | 成功 | P0 |
+| 空資料 | 空 | 空列表 | P1 |
+| 無效輸入 | 無效格式 | 400 錯誤 | P1 |
+| 資源不存在 | 無效 ID | 404 錯誤 | P1 |
+| 未認證 | 無 Token | 401 錯誤 | P0 |
+| 無權限 | 他人資源 | 403 錯誤 | P1 |
+| 重複資源 | 已存在值 | 409 錯誤 | P2 |
+
+---
+
+**文檔版本**：{{VERSION}}
+**建立日期**：{{CREATED_DATE}}
+**最後更新**：{{UPDATED_DATE}}

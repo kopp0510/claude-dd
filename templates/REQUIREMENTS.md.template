@@ -1,0 +1,121 @@
+# {{PROJECT_NAME}} - 需求文檔
+
+> 此文檔由 DD Pipeline 的 RDD（需求驅動開發）階段產生
+
+## 專案目標
+{{PROJECT_GOAL}}
+<!-- 一句話描述專案的核心目的 -->
+
+## 目標用戶
+{{TARGET_USERS}}
+<!-- 描述主要使用者群體 -->
+
+## 功能需求
+
+### 核心功能
+<!-- 必須實作的功能 -->
+1. {{CORE_FEATURE_1}}
+2. {{CORE_FEATURE_2}}
+3. {{CORE_FEATURE_3}}
+
+### 次要功能
+<!-- 可選實作的功能 -->
+1. {{SECONDARY_FEATURE_1}}
+2. {{SECONDARY_FEATURE_2}}
+
+### 未來功能
+<!-- 未來版本考慮的功能 -->
+1. {{FUTURE_FEATURE_1}}
+
+## 非功能需求
+
+### 效能要求
+- 頁面載入時間：{{LOAD_TIME}}
+- API 回應時間：{{API_RESPONSE_TIME}}
+- 支援並發數：{{CONCURRENT_USERS}}
+
+### 安全要求
+- 認證方式：{{AUTH_METHOD}}
+- 資料加密：{{ENCRYPTION}}
+- 其他：{{OTHER_SECURITY}}
+
+### 可用性要求
+- 目標可用率：{{AVAILABILITY}}
+- 備份策略：{{BACKUP_STRATEGY}}
+
+### 相容性要求
+- 支援瀏覽器：{{BROWSERS}}
+- 支援裝置：{{DEVICES}}
+
+## 使用者故事
+
+### 故事 1：{{STORY_1_TITLE}}
+**作為** {{STORY_1_ACTOR}}
+**我想要** {{STORY_1_ACTION}}
+**以便** {{STORY_1_BENEFIT}}
+
+**驗收標準：**
+- [ ] {{STORY_1_CRITERIA_1}}
+- [ ] {{STORY_1_CRITERIA_2}}
+- [ ] {{STORY_1_CRITERIA_3}}
+
+### 故事 2：{{STORY_2_TITLE}}
+**作為** {{STORY_2_ACTOR}}
+**我想要** {{STORY_2_ACTION}}
+**以便** {{STORY_2_BENEFIT}}
+
+**驗收標準：**
+- [ ] {{STORY_2_CRITERIA_1}}
+- [ ] {{STORY_2_CRITERIA_2}}
+
+### 故事 3：{{STORY_3_TITLE}}
+**作為** {{STORY_3_ACTOR}}
+**我想要** {{STORY_3_ACTION}}
+**以便** {{STORY_3_BENEFIT}}
+
+**驗收標準：**
+- [ ] {{STORY_3_CRITERIA_1}}
+- [ ] {{STORY_3_CRITERIA_2}}
+
+## 範圍邊界
+
+### 包含（In Scope）
+- {{IN_SCOPE_1}}
+- {{IN_SCOPE_2}}
+- {{IN_SCOPE_3}}
+
+### 不包含（Out of Scope）
+- {{OUT_SCOPE_1}}
+- {{OUT_SCOPE_2}}
+
+## 假設與限制
+
+### 假設
+- {{ASSUMPTION_1}}
+- {{ASSUMPTION_2}}
+
+### 限制
+- {{CONSTRAINT_1}}
+- {{CONSTRAINT_2}}
+
+## 風險識別
+
+| 風險 | 影響 | 機率 | 緩解措施 |
+|------|------|------|----------|
+| {{RISK_1}} | {{IMPACT_1}} | {{PROBABILITY_1}} | {{MITIGATION_1}} |
+| {{RISK_2}} | {{IMPACT_2}} | {{PROBABILITY_2}} | {{MITIGATION_2}} |
+
+## 驗收標準總覽
+
+完成此專案需要滿足以下標準：
+- [ ] 所有核心功能已實作
+- [ ] 所有使用者故事的驗收標準已通過
+- [ ] 效能符合非功能需求
+- [ ] 安全審計通過
+- [ ] 測試覆蓋率達到 {{TEST_COVERAGE}}%
+
+---
+
+**文檔版本**：{{VERSION}}
+**建立日期**：{{CREATED_DATE}}
+**最後更新**：{{UPDATED_DATE}}
