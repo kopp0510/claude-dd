@@ -128,7 +128,22 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 - ux-researcher-designer
 
 ### 必要 MCP
-- playwright
+
+| MCP | 說明 | 來源 |
+|-----|------|------|
+| playwright | 瀏覽器自動化測試 | [playwright-mcp](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-servers/playwright) |
+
+### 可選 MCP
+
+| MCP | 說明 | 來源 |
+|-----|------|------|
+| sequential-thinking | 循序思考推理 | [@modelcontextprotocol/server-sequential-thinking](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking) |
+| serena | 智能程式碼助手 | [serena](https://github.com/oraios/serena) |
+| cipher | 加密解密工具 | cipher |
+| zeabur | 雲端部署平台 | [zeabur](https://zeabur.com) |
+| google-docs | Google 文件整合 | google-docs |
+| googleDrive | Google 雲端硬碟整合 | googleDrive |
+| claude-mem | 跨對話記憶系統 | [claude-mem](https://github.com/thedotmack/claude-mem) |
 
 ## 授權
 
