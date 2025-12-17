@@ -362,6 +362,7 @@ create_commands() {
     local commands=(
         "dd-help"
         "dd-init"
+        "dd-docs"
         "dd-start"
         "dd-arch"
         "dd-approve"
@@ -449,7 +450,8 @@ DD (Driven Development) Pipeline 是一套基於多種開發方法論的
 │ 命令          │ 說明                                          │
 ├──────────────┼────────────────────────────────────────────────┤
 │ /dd-help     │ 顯示此說明                                     │
-│ /dd-init     │ 初始化專案結構                                 │
+│ /dd-init     │ 初始化專案結構（自動偵測現有專案）              │
+│ /dd-docs     │ 為現有程式碼產生 DD 文檔                        │
 │ /dd-start    │ 啟動流程（需求分析）                            │
 │ /dd-arch     │ 進入架構設計                                   │
 │ /dd-approve  │ 確認架構，開始自動開發                          │
@@ -578,6 +580,90 @@ DDHELP
 - 使用 Write 工具建立檔案
 - 使用 Bash 工具執行 git 命令
 DDINIT
+            ;;
+        "dd-docs")
+            cat << 'DDDOCS'
+# DD Pipeline 文檔產生
+
+為現有程式碼分析並產生 DD Pipeline 文檔。
+適用於已有程式碼但尚未建立完整文檔的專案。
+
+---
+
+## 使用方式
+
+```bash
+# 產生所有文檔
+/dd-docs
+
+# 產生特定類型文檔
+/dd-docs --requirements    # 需求文檔
+/dd-docs --architecture    # 架構文檔
+/dd-docs --api             # API 契約文檔
+/dd-docs --examples        # 行為範例文檔
+/dd-docs --design          # UI/UX 設計文檔
+
+# 組合使用
+/dd-docs --api --examples
+```
+
+---
+
+## 執行步驟
+
+### Phase 0: 前置檢查
+
+1. 檢查 DD Pipeline 是否已初始化
+2. 讀取專案設定（CLAUDE.md, PROJECT_STATE.md）
+3. 判斷要產生的文檔類型
+
+### Phase 1: 選擇文檔類型（無參數時）
+
+使用 AskUserQuestion 詢問要產生哪些文檔
+
+### Phase 2: 程式碼分析
+
+根據選擇的文檔類型，啟動對應的分析流程：
+- 需求分析 → REQUIREMENTS.md
+- 架構分析 → ARCHITECTURE.md
+- API 契約分析 → API_CONTRACT.md
+- 架構決策記錄 → ADR-XXX.md
+- 行為範例分析 → EXAMPLES.md
+- UI/UX 設計分析 → DESIGN_SPEC.md
+
+### Phase 3: 文檔產生
+
+使用 docs-writer Agent 和對應 Skill 產生文檔
+
+### Phase 4: 用戶確認
+
+顯示產生的文檔摘要
+
+### Phase 5: 更新狀態
+
+更新 PROJECT_STATE.md 並 Git commit
+
+---
+
+## 文檔輸出位置
+
+claude_docs/
+├── requirements/REQUIREMENTS.md
+├── architecture/ARCHITECTURE.md
+├── contracts/API_CONTRACT.md
+├── decisions/ADR-XXX.md
+├── examples/EXAMPLES.md
+└── design/DESIGN_SPEC.md
+
+---
+
+## 使用的 Agent/Skill
+
+- docs-writer：撰寫各類文檔
+- systems-architect：架構分析和 ADR 產生
+- senior-architect, senior-backend, senior-frontend
+- senior-qa, ui-design-system
+DDDOCS
             ;;
         "dd-start")
             cat << 'DDSTART'
