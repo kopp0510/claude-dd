@@ -35,7 +35,8 @@ DD (Driven Development) Pipeline 是一套基於多種開發方法論的
 │ 命令          │ 說明                                          │
 ├──────────────┼────────────────────────────────────────────────┤
 │ /dd-help     │ 顯示此說明                                     │
-│ /dd-init     │ 初始化專案結構                                 │
+│ /dd-init     │ 初始化專案結構（自動偵測現有專案）              │
+│ /dd-docs     │ 為現有程式碼產生 DD 文檔                        │
 │ /dd-start    │ 啟動流程（需求分析）                            │
 │ /dd-arch     │ 進入架構設計                                   │
 │ /dd-approve  │ 確認架構，開始自動開發                          │
@@ -45,6 +46,15 @@ DD (Driven Development) Pipeline 是一套基於多種開發方法論的
 │ /dd-status   │ 查看目前進度                                   │
 │ /dd-stop     │ 中斷流程                                       │
 └──────────────┴────────────────────────────────────────────────┘
+
+## /dd-docs 選項
+
+  /dd-docs                 # 選擇要產生的文檔
+  /dd-docs --requirements  # 產生需求文檔
+  /dd-docs --architecture  # 產生架構文檔
+  /dd-docs --api           # 產生 API 契約文檔
+  /dd-docs --examples      # 產生行為範例文檔
+  /dd-docs --design        # 產生 UI/UX 設計文檔
 
 ## 流程圖
 
@@ -88,10 +98,19 @@ DD (Driven Development) Pipeline 是一套基於多種開發方法論的
 
 ## 快速開始
 
+### 新專案
+
   1. /dd-init              # 初始化專案
   2. /dd-start <需求描述>   # 開始需求分析
   3. /dd-arch              # 進入架構設計
   4. /dd-approve           # 確認後自動完成
+
+### 現有專案
+
+  1. /dd-init              # 初始化（自動偵測技術棧）
+  2. /dd-docs              # 為現有程式碼產生文檔
+  3. /dd-start <新功能>    # 定義新功能需求
+  4. (後續流程相同)
 
 ═══════════════════════════════════════════════════════════════════
 ```
