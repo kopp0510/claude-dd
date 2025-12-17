@@ -380,27 +380,61 @@ create_commands() {
         i=$((i + 1))
         local target="$COMMANDS_DIR/$cmd.md"
         local source="$script_dir/commands/$cmd.md"
+        local status=""
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
 
-        if [ "$FORCE" = true ] || [ ! -f "$target" ]; then
+        if [ ! -f "$target" ]; then
+            # 目標檔案不存在 → 新安裝
             if [ -f "$source" ]; then
                 cp "$source" "$target"
             else
-                # 如果來源檔案不存在，使用內嵌內容
                 create_command_content "$cmd" > "$target"
             fi
-
-            if [ $i -eq $count ]; then
-                print_last_success "$target"
+            status="new"
+        elif [ "$FORCE" = true ]; then
+            # 強制更新
+            if [ -f "$source" ]; then
+                cp "$source" "$target"
             else
-                print_success "$target"
+                create_command_content "$cmd" > "$target"
             fi
+            status="forced"
         else
-            if [ $i -eq $count ]; then
-                echo -e "└── $target: ${YELLOW}已存在（跳過）${NC}"
+            # 比較檔案內容，偵測變更
+            local temp_content=$(mktemp)
+            if [ -f "$source" ]; then
+                cp "$source" "$temp_content"
             else
-                echo -e "├── $target: ${YELLOW}已存在（跳過）${NC}"
+                create_command_content "$cmd" > "$temp_content"
             fi
+
+            if ! cmp -s "$target" "$temp_content"; then
+                # 內容不同 → 更新
+                cp "$temp_content" "$target"
+                status="updated"
+            else
+                # 內容相同 → 已是最新
+                status="uptodate"
+            fi
+            rm -f "$temp_content"
         fi
+
+        # 顯示狀態
+        case $status in
+            new)
+                echo -e "$tree_char $target: ${GREEN}已安裝（新）${NC}"
+                ;;
+            forced)
+                echo -e "$tree_char $target: ${GREEN}已更新（強制）${NC}"
+                ;;
+            updated)
+                echo -e "$tree_char $target: ${CYAN}已更新${NC}"
+                ;;
+            uptodate)
+                echo -e "$tree_char $target: ${YELLOW}已是最新${NC}"
+                ;;
+        esac
     done
 
     echo ""
@@ -1415,26 +1449,61 @@ create_templates() {
         i=$((i + 1))
         local target="$TEMPLATES_DIR/$tpl"
         local source="$script_dir/templates/$tpl"
+        local status=""
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
 
-        if [ "$FORCE" = true ] || [ ! -f "$target" ]; then
+        if [ ! -f "$target" ]; then
+            # 目標檔案不存在 → 新安裝
             if [ -f "$source" ]; then
                 cp "$source" "$target"
             else
                 create_template_content "$tpl" > "$target"
             fi
-
-            if [ $i -eq $count ]; then
-                print_last_success "$target"
+            status="new"
+        elif [ "$FORCE" = true ]; then
+            # 強制更新
+            if [ -f "$source" ]; then
+                cp "$source" "$target"
             else
-                print_success "$target"
+                create_template_content "$tpl" > "$target"
             fi
+            status="forced"
         else
-            if [ $i -eq $count ]; then
-                echo -e "└── $target: ${YELLOW}已存在（跳過）${NC}"
+            # 比較檔案內容，偵測變更
+            local temp_content=$(mktemp)
+            if [ -f "$source" ]; then
+                cp "$source" "$temp_content"
             else
-                echo -e "├── $target: ${YELLOW}已存在（跳過）${NC}"
+                create_template_content "$tpl" > "$temp_content"
             fi
+
+            if ! cmp -s "$target" "$temp_content"; then
+                # 內容不同 → 更新
+                cp "$temp_content" "$target"
+                status="updated"
+            else
+                # 內容相同 → 已是最新
+                status="uptodate"
+            fi
+            rm -f "$temp_content"
         fi
+
+        # 顯示狀態
+        case $status in
+            new)
+                echo -e "$tree_char $target: ${GREEN}已安裝（新）${NC}"
+                ;;
+            forced)
+                echo -e "$tree_char $target: ${GREEN}已更新（強制）${NC}"
+                ;;
+            updated)
+                echo -e "$tree_char $target: ${CYAN}已更新${NC}"
+                ;;
+            uptodate)
+                echo -e "$tree_char $target: ${YELLOW}已是最新${NC}"
+                ;;
+        esac
     done
 
     echo ""
