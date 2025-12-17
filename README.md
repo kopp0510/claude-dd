@@ -41,7 +41,8 @@ chmod +x install-dd-pipeline.sh
 
 | 指令 | 說明 |
 |------|------|
-| `/dd-init` | 初始化專案，建立 `claude_docs/` 目錄與專案設定 |
+| `/dd-init` | 初始化專案，建立 `claude_docs/` 目錄與專案設定（支援自動偵測現有專案） |
+| `/dd-docs` | 為現有程式碼分析並產生 DD 文檔 |
 | `/dd-start` | 啟動需求分析階段 (RDD) |
 | `/dd-arch` | 執行架構設計階段 (SDD + DDD + ADD + EDD) |
 | `/dd-approve` | 批准架構設計，進入開發階段 |
@@ -53,6 +54,8 @@ chmod +x install-dd-pipeline.sh
 | `/dd-help` | 顯示幫助資訊 |
 
 ## 開發流程
+
+### 新專案流程
 
 ```
 用戶輸入需求
@@ -81,6 +84,28 @@ chmod +x install-dd-pipeline.sh
       │
       ▼
      完成
+```
+
+### 現有專案流程
+
+```
+現有專案（已有程式碼）
+      │
+      ▼
+   /dd-init ─────────► 自動偵測技術棧，補充 DD 設定
+      │
+      ▼
+   /dd-docs ─────────► 分析程式碼，產生 DD 文檔
+      │                 ├── REQUIREMENTS.md
+      │                 ├── ARCHITECTURE.md
+      │                 ├── API_CONTRACT.md
+      │                 ├── ADR-XXX.md
+      │                 └── EXAMPLES.md
+      ▼
+   /dd-start ────────► 定義新功能需求
+      │
+      ▼
+   (後續流程相同)
 ```
 
 ## 產出文件
