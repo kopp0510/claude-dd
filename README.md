@@ -59,8 +59,14 @@ chmod +x install-dd-pipeline.sh
 # 顯示幫助
 ./install-dd-pipeline.sh --help
 
+# 只檢查環境（不安裝）
+./install-dd-pipeline.sh --check
+
 # 強制重新安裝（覆蓋所有檔案）
 ./install-dd-pipeline.sh --force
+
+# 只安裝 DD Commands（跳過 Agents/Skills 檢查）
+./install-dd-pipeline.sh --commands-only
 
 # 解除安裝
 ./install-dd-pipeline.sh --uninstall
