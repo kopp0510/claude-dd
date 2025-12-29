@@ -29,12 +29,8 @@ TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 
-# Git 倉庫
-TRESOR_REPO="https://github.com/alirezarezvani/claude-code-tresor.git"
-SKILLS_REPO="https://github.com/alirezarezvani/claude-skills.git"
-
-# 必要的 Agents
-REQUIRED_AGENTS=(
+# 內建 Skills（從 claude-dd/skills/ 安裝）
+BUILTIN_SKILLS=(
     "systems-architect"
     "test-engineer"
     "security-auditor"
@@ -45,8 +41,8 @@ REQUIRED_AGENTS=(
     "config-safety-reviewer"
 )
 
-# 必要的 Skills
-REQUIRED_SKILLS=(
+# 可選的外部 Skills（從 github 安裝）
+OPTIONAL_SKILLS=(
     "senior-architect"
     "senior-backend"
     "senior-frontend"
@@ -60,6 +56,9 @@ REQUIRED_SKILLS=(
     "ui-design-system"
     "ux-researcher-designer"
 )
+
+# 外部 Skills 來源
+SKILLS_REPO="https://github.com/alirezarezvani/claude-skills.git"
 
 # 必要的 MCP
 REQUIRED_MCP=(
@@ -134,10 +133,15 @@ show_help() {
     echo "選項:"
     echo "  --check         只檢查環境（不安裝）"
     echo "  --force         強制重新安裝（覆蓋現有檔案）"
-    echo "  --commands-only 只安裝 DD Commands"
+    echo "  --commands-only 只安裝 DD Commands（不安裝 skills）"
     echo "  --uninstall     移除 DD Pipeline"
-    echo "  --update        更新 agents/skills 到最新版"
+    echo "  --update        更新 skills 到最新版"
     echo "  --help          顯示此說明"
+    echo ""
+    echo "安裝內容："
+    echo "  - 8 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
+    echo "  - 7 個 Templates（文檔模板）"
     echo ""
 }
 
@@ -187,74 +191,61 @@ check_environment() {
     fi
 }
 
-# 檢查 Agents
-check_agents() {
-    print_step "2/6" "檢查 Agents (claude-code-tresor)"
-    echo -e "├── 來源：${CYAN}github.com/alirezarezvani/claude-code-tresor${NC}"
+# 安裝內建 Skills
+install_builtin_skills() {
+    print_step "2/6" "安裝內建 Skills"
+    echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
-    local missing_agents=()
-    local count=${#REQUIRED_AGENTS[@]}
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local count=${#BUILTIN_SKILLS[@]}
     local i=0
 
-    for agent in "${REQUIRED_AGENTS[@]}"; do
+    mkdir -p "$SKILLS_DIR"
+
+    for skill in "${BUILTIN_SKILLS[@]}"; do
         i=$((i + 1))
-        if dir_exists "$AGENTS_DIR/$agent"; then
-            if [ $i -eq $count ]; then
-                print_last_success "$agent"
+        local source="$script_dir/skills/$skill"
+        local target="$SKILLS_DIR/$skill"
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        if [ -d "$source" ]; then
+            if [ ! -d "$target" ]; then
+                cp -r "$source" "$target"
+                echo -e "$tree_char $skill: ${GREEN}已安裝（新）${NC}"
+            elif [ "$FORCE" = true ]; then
+                rm -rf "$target"
+                cp -r "$source" "$target"
+                echo -e "$tree_char $skill: ${GREEN}已更新（強制）${NC}"
             else
-                print_success "$agent"
+                # 比較是否有更新
+                if ! diff -rq "$source" "$target" > /dev/null 2>&1; then
+                    rm -rf "$target"
+                    cp -r "$source" "$target"
+                    echo -e "$tree_char $skill: ${CYAN}已更新${NC}"
+                else
+                    echo -e "$tree_char $skill: ${YELLOW}已是最新${NC}"
+                fi
             fi
         else
-            if [ $i -eq $count ]; then
-                print_last_fail "$agent"
-            else
-                print_fail "$agent"
-            fi
-            missing_agents+=("$agent")
+            echo -e "$tree_char $skill: ${RED}來源不存在${NC}"
         fi
     done
 
     echo ""
-
-    if [ ${#missing_agents[@]} -gt 0 ]; then
-        echo -e "${YELLOW}缺少 ${#missing_agents[@]} 個 agents${NC}"
-        read -p "是否要安裝 claude-code-tresor？[Y/n] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
-            install_tresor
-        fi
-    fi
 }
 
-# 安裝 Tresor
-install_tresor() {
-    echo -e "${BLUE}正在安裝 claude-code-tresor...${NC}"
-
-    local temp_dir=$(mktemp -d)
-    git clone "$TRESOR_REPO" "$temp_dir/claude-code-tresor"
-
-    cd "$temp_dir/claude-code-tresor"
-    if [ -f "scripts/install.sh" ]; then
-        chmod +x scripts/install.sh
-        ./scripts/install.sh
-    fi
-
-    cd - > /dev/null
-    rm -rf "$temp_dir"
-
-    echo -e "${GREEN}claude-code-tresor 安裝完成${NC}"
-}
-
-# 檢查 Skills
-check_skills() {
-    print_step "3/6" "檢查 Skills (claude-skills)"
+# 檢查可選的外部 Skills
+check_optional_skills() {
+    print_step "3/6" "檢查可選 Skills (claude-skills)"
     echo -e "├── 來源：${CYAN}github.com/alirezarezvani/claude-skills${NC}"
+    echo -e "├── ${YELLOW}這些是可選的額外 skills${NC}"
 
     local missing_skills=()
-    local count=${#REQUIRED_SKILLS[@]}
+    local count=${#OPTIONAL_SKILLS[@]}
     local i=0
 
-    for skill in "${REQUIRED_SKILLS[@]}"; do
+    for skill in "${OPTIONAL_SKILLS[@]}"; do
         i=$((i + 1))
         if dir_exists "$SKILLS_DIR/$skill"; then
             if [ $i -eq $count ]; then
@@ -264,9 +255,9 @@ check_skills() {
             fi
         else
             if [ $i -eq $count ]; then
-                print_last_fail "$skill"
+                echo -e "└── $skill: ${YELLOW}未安裝${NC}"
             else
-                print_fail "$skill"
+                echo -e "├── $skill: ${YELLOW}未安裝${NC}"
             fi
             missing_skills+=("$skill")
         fi
@@ -275,17 +266,17 @@ check_skills() {
     echo ""
 
     if [ ${#missing_skills[@]} -gt 0 ]; then
-        echo -e "${YELLOW}缺少 ${#missing_skills[@]} 個 skills${NC}"
-        read -p "是否要安裝 claude-skills？[Y/n] " -n 1 -r
+        echo -e "${YELLOW}有 ${#missing_skills[@]} 個可選 skills 未安裝${NC}"
+        read -p "是否要安裝這些額外 skills？[y/N] " -n 1 -r
         echo
-        if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
-            install_skills
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            install_optional_skills
         fi
     fi
 }
 
-# 安裝 Skills
-install_skills() {
+# 安裝可選的外部 Skills
+install_optional_skills() {
     echo -e "${BLUE}正在安裝 claude-skills...${NC}"
 
     local temp_dir=$(mktemp -d)
@@ -1958,8 +1949,9 @@ main() {
                 shift
                 ;;
             --update)
-                install_tresor
-                install_skills
+                FORCE=true
+                install_builtin_skills
+                install_optional_skills
                 exit 0
                 ;;
             --help)
@@ -1985,11 +1977,11 @@ main() {
     # 檢查環境
     check_environment
 
-    # 檢查 Agents
-    check_agents
+    # 安裝內建 Skills（核心功能）
+    install_builtin_skills
 
-    # 檢查 Skills
-    check_skills
+    # 檢查可選的外部 Skills
+    check_optional_skills
 
     # 檢查 MCP
     check_mcp
