@@ -6,7 +6,8 @@ DD Pipeline 是一套專為 Claude Code 設計的開發流程工具，整合了�
 
 ## 特色
 
-- **多 Agent 協作** - 利用 Claude Code 的 Agent 系統進行專業分工
+- **Skills 自動觸發** - 專家知識在對話中自動載入，無需手動呼叫
+- **Commands 手動控制** - 開發流程由使用者明確控制
 - **驅動開發整合** - 結合 RDD、SDD、DDD、ADD、EDD、DbC、CDD、TDD、PDD 等方法論
 - **人工審核機制** - 在關鍵節點設置 Checkpoint，確保開發品質
 - **自動化流程** - 批准後自動執行開發、測試、驗證流程
@@ -35,9 +36,10 @@ chmod +x install-dd-pipeline.sh
 ```
 
 安裝程式會：
-1. 檢查必要的 Agents 和 Skills
+1. 安裝內建 Skills 到 `~/.claude/skills/`（自動觸發專家知識）
 2. 安裝 DD Pipeline 指令到 `~/.claude/commands/`
 3. 安裝文件模板到 `~/.claude/templates/dd/`
+4. 檢查可選的外部 Skills（提示安裝方式）
 
 ### 更新安裝
 
@@ -65,13 +67,13 @@ chmod +x install-dd-pipeline.sh
 # 強制重新安裝（覆蓋所有檔案）
 ./install-dd-pipeline.sh --force
 
-# 只安裝 DD Commands（跳過 Agents/Skills 檢查）
+# 只安裝 DD Commands（跳過 Skills 安裝）
 ./install-dd-pipeline.sh --commands-only
 
 # 解除安裝
 ./install-dd-pipeline.sh --uninstall
 
-# 更新 Agents/Skills 到最新版
+# 更新內建 Skills 到最新版
 ./install-dd-pipeline.sh --update
 ```
 
@@ -160,24 +162,26 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 ## 依賴需求
 
-### 必要 Agents
+### 內建 Skills（DD Pipeline 安裝）
 
-來源：[claude-code-tresor](https://github.com/alirezarezvani/claude-code-tresor)
+安裝腳本會自動安裝以下 Skills 到 `~/.claude/skills/`，這些 Skills 會在對話中自動觸發：
 
-| Agent | 說明 |
-|-------|------|
-| systems-architect | 系統架構師 |
-| test-engineer | 測試工程師 |
-| security-auditor | 安全審計員 |
-| docs-writer | 文件撰寫員 |
-| refactor-expert | 重構專家 |
-| performance-tuner | 效能調校專家 |
-| root-cause-analyzer | 根因分析專家 |
-| config-safety-reviewer | 配置安全審查員 |
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| systems-architect | 系統架構師 | 討論系統設計、架構決策時 |
+| test-engineer | 測試工程師 | 需要撰寫測試、測試策略時 |
+| security-auditor | 安全審計員 | 安全審查、漏洞分析時 |
+| docs-writer | 文件撰寫員 | 撰寫技術文件時 |
+| refactor-expert | 重構專家 | 程式碼重構、技術債處理時 |
+| performance-tuner | 效能調校專家 | 效能優化、瓶頸分析時 |
+| root-cause-analyzer | 根因分析專家 | 除錯、問題調查時 |
+| config-safety-reviewer | 配置安全審查員 | 審查設定檔、生產環境配置時 |
 
-### 必要 Skills
+### 可選 Skills（外部安裝）
 
 來源：[claude-skills](https://github.com/alirezarezvani/claude-skills)
+
+這些 Skills 為可選，可依需求自行安裝：
 
 | Skill | 說明 |
 |-------|------|
