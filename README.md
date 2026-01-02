@@ -176,6 +176,9 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | performance-tuner | 效能調校專家 | 效能優化、瓶頸分析時 |
 | root-cause-analyzer | 根因分析專家 | 除錯、問題調查時 |
 | config-safety-reviewer | 配置安全審查員 | 審查設定檔、生產環境配置時 |
+| senior-database | 資料庫專家 | 資料庫設計、SQL 優化、效能調校時 |
+| api-designer | API 設計專家 | 設計 API、定義契約、撰寫規格時 |
+| i18n-expert | 國際化專家 | 實作多語言、本地化功能時 |
 
 ### 可選 Skills（外部安裝）
 
@@ -198,9 +201,6 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | senior-data-scientist | 資深資料科學家 |
 | senior-ml-engineer | 資深機器學習工程師 |
 | senior-computer-vision | 資深電腦視覺工程師 |
-| senior-database | 資深資料庫專家 |
-| api-designer | API 設計專家 |
-| i18n-expert | 國際化專家 |
 | code-reviewer | 程式碼審查員 |
 | ui-design-system | UI 設計系統專家 |
 | ux-researcher-designer | UX 研究設計師 |
