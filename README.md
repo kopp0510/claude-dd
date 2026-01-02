@@ -194,6 +194,10 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | senior-secops | 資深安全運維工程師 |
 | senior-security | 資深安全工程師 |
 | senior-prompt-engineer | 資深提示工程師 |
+| senior-data-engineer | 資深資料工程師 |
+| senior-data-scientist | 資深資料科學家 |
+| senior-ml-engineer | 資深機器學習工程師 |
+| senior-computer-vision | 資深電腦視覺工程師 |
 | code-reviewer | 程式碼審查員 |
 | ui-design-system | UI 設計系統專家 |
 | ux-researcher-designer | UX 研究設計師 |
