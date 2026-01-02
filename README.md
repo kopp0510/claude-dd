@@ -171,14 +171,14 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | systems-architect | 系統架構師 | 討論系統設計、架構決策時 |
 | test-engineer | 測試工程師 | 需要撰寫測試、測試策略時 |
 | security-auditor | 安全審計員 | 安全審查、漏洞分析時 |
-| docs-writer | 文件撰寫員 | 撰寫技術文件時 |
+| docs-writer ⭐ | 文件撰寫專家 | 撰寫技術文件時（4 階段結構化工作流程） |
 | refactor-expert | 重構專家 | 程式碼重構、技術債處理時 |
 | performance-tuner | 效能調校專家 | 效能優化、瓶頸分析時 |
 | root-cause-analyzer | 根因分析專家 | 除錯、問題調查時 |
 | config-safety-reviewer | 配置安全審查員 | 審查設定檔、生產環境配置時 |
-| senior-database | 資料庫專家 | 資料庫設計、SQL 優化、效能調校時 |
-| api-designer | API 設計專家 | 設計 API、定義契約、撰寫規格時 |
-| i18n-expert | 國際化專家 | 實作多語言、本地化功能時 |
+| senior-database ⭐ | 資料庫專家 | Schema 設計、查詢優化、索引策略（4 情境工作流程） |
+| api-designer ⭐ | API 設計專家 | REST/GraphQL 設計、OpenAPI 規格（7 階段工作流程） |
+| i18n-expert ⭐ | 國際化專家 | 多語言架構、RTL 支援、翻譯管理（5 情境工作流程） |
 
 ### 可選 Skills（外部安裝）
 
