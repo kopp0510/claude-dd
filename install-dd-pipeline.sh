@@ -39,6 +39,9 @@ BUILTIN_SKILLS=(
     "performance-tuner"
     "root-cause-analyzer"
     "config-safety-reviewer"
+    "senior-database"
+    "api-designer"
+    "i18n-expert"
 )
 
 # 可選的外部 Skills（從 github 安裝）
@@ -56,9 +59,6 @@ OPTIONAL_SKILLS=(
     "senior-data-scientist"
     "senior-ml-engineer"
     "senior-computer-vision"
-    "senior-database"
-    "api-designer"
-    "i18n-expert"
     "code-reviewer"
     "ui-design-system"
     "ux-researcher-designer"
@@ -146,7 +146,7 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 8 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 11 個內建 Skills（自動觸發的專家知識）"
     echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
     echo "  - 7 個 Templates（文檔模板）"
     echo ""
