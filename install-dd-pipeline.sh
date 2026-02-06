@@ -42,6 +42,9 @@ BUILTIN_SKILLS=(
     "senior-database"
     "api-designer"
     "i18n-expert"
+    "task-planner"
+    "worktree-manager"
+    "subagent-orchestrator"
 )
 
 # 可選的外部 Skills（從 github 安裝）
@@ -146,9 +149,9 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 11 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 14 個內建 Skills（自動觸發的專家知識）"
     echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
-    echo "  - 7 個 Templates（文檔模板）"
+    echo "  - 8 個 Templates（文檔模板）"
     echo ""
 }
 
@@ -875,77 +878,36 @@ DDARCH
 
 ---
 
+## 參數
+
+- `--worktree`：使用 Git Worktree 隔離環境進行開發（可選）
+- `--batch`：批次模式，每 3 個任務暫停等人工回饋（可選）
+- `--classic`：使用舊版一次性實作模式（可選）
+
+---
+
 ## 執行步驟
 
-1. **確認架構文檔存在**：
-   - 檢查必要文檔是否存在
-   - 如果缺少，提示用戶先執行 `/dd-arch`
+1. **確認架構文檔存在**
 
-2. **Git commit 架構**：
-   ```
-   git add .
-   git commit -m "docs(architecture): 確認架構設計"
-   ```
+2. **Git commit 架構**
 
-3. **更新狀態**：
-   - 更新 `PROJECT_STATE.md`
-   - 設定狀態為「架構已確認」
+3. **更新狀態**
 
 4. **根據專案類型啟動開發**：
+   - 傳遞 `--worktree` / `--batch` / `--classic` 參數給 `/dd-dev`
+   - 預設不帶額外參數 = 自動使用微任務 + Subagent 模式
 
-   **全端應用**（並行執行）：
-   ```
-   ┌─────────────────┐    ┌─────────────────┐
-   │   後端開發       │    │   前端開發       │
-   │   /dd-dev       │    │   /dd-dev       │
-   │   --backend     │    │   --frontend    │
-   └────────┬────────┘    └────────┬────────┘
-            │                      │
-            ▼                      ▼
-   ┌─────────────────┐    ┌─────────────────┐
-   │   後端測試       │    │   前端測試       │
-   │   /dd-test      │    │   /dd-test      │
-   │   --backend     │    │   --frontend    │
-   └────────┬────────┘    └────────┬────────┘
-            │                      │
-            └──────────┬───────────┘
-                       ▼
-              ┌─────────────────┐
-              │   整合測試       │
-              └─────────────────┘
-   ```
+5. **監控進度**：失敗自動重試（最多 3 次）
 
-   **純後端**：
-   ```
-   /dd-dev --backend → /dd-test --backend → 完成
-   ```
-
-   **純前端**：
-   ```
-   /dd-dev --frontend → /dd-test --frontend → 完成
-   ```
-
-5. **監控進度**：
-   - 持續更新 `PROJECT_STATE.md`
-   - 失敗時自動重試（最多 3 次）
-   - 超過重試次數時暫停並報告
-
-6. **完成後**：
-   - 產出 `claude_docs/reports/RELEASE_NOTES.md`
-   - Git merge/tag
-   - 顯示完成報告
+6. **完成後**：產出報告、Git tag
 
 ---
 
 ## 自動化流程
 
-此命令會觸發完整的自動化流程，用戶**無需手動執行後續命令**。
-
-流程中的每個階段都會：
-- 自動調用對應的 Agent/Skill
-- 自動更新狀態
-- 自動 Git commit
-- 失敗時自動修正並重試
+此命令會觸發完整的自動化流程，用戶無需手動執行後續命令。
+預設使用 SADD（微任務 + Subagent 驅動）模式。
 DDAPPROVE
             ;;
         "dd-revise")
@@ -1032,139 +994,43 @@ DDREVISE
 - `--backend`：只執行後端開發
 - `--frontend`：只執行前端開發
 - `--fix`：修正模式（讀取失敗原因並修正）
+- `--worktree`：建立 Git Worktree 隔離環境（可選）
+- `--batch`：批次模式，每 3 個任務暫停等人工回饋（可選）
+- `--classic`：使用舊版一次性實作模式（向後相容）
 
 ---
 
-## 執行步驟
+## 預設模式：微任務 + Subagent 驅動 (SADD)
 
-### 後端開發流程
+### 後端/前端開發流程
 
-1. **讀取架構和契約**：
-   - 讀取 `claude_docs/architecture/ARCHITECTURE.md`
-   - 讀取 `claude_docs/contracts/API_CONTRACT.md`
+0. **Worktree 設定**（僅 --worktree 時）：
+   調用 Skill: `worktree-manager`
 
-2. **優化開發 Prompt** (PDD)：
+1. **讀取架構和契約**
 
-   調用 Skill: `senior-prompt-engineer`
-   - 優化開發指令
-   - 確保 AI 準確理解任務
+2. **微任務規劃**：
+   調用 Skill: `task-planner`
+   → 產出 claude_docs/plans/YYYY-MM-DD-<feature>.md
 
-3. **後端實作** (DbC + CDD)：
+3. **執行策略**：
+   - 預設 → 調用 Skill: `subagent-orchestrator`（全自動逐任務執行+審查）
+   - --batch → 批次模式（每 3 個任務暫停）
+   - --classic → 舊版一次性實作模式
 
-   調用 Skill: `senior-backend`
-   - 依照 API 契約實作
-   - 建立資料模型
-   - 實作業務邏輯
-   - 組件化/模組化開發
-
-4. **效能優化**：
-
-   調用 Agent: `performance-tuner`
-   - 檢查效能問題
-   - 優化查詢和演算法
-
-5. **安全檢查**：
-
-   調用 Agent: `security-auditor`
-   - 檢查安全漏洞
-   - 驗證輸入處理
-
-6. **程式碼重構**：
-
-   調用 Agent: `refactor-expert`
-   - 優化程式碼結構
-   - 提升可維護性
-
-7. **產出文檔**：
-
-   調用 Agent: `docs-writer`
-   - 產出 API 文檔
-   - 更新技術文檔
-
-8. **Git commit**：
-   ```
-   git add .
-   git commit -m "feat(backend): 實作後端功能"
-   ```
-
-9. **自動進入測試**：
-   - 執行 `/dd-test --backend`
-
----
-
-### 前端開發流程
-
-1. **讀取設計規格**：
-   - 讀取 `claude_docs/design/DESIGN_SPEC.md`
-   - 讀取 `claude_docs/contracts/API_CONTRACT.md`
-
-2. **優化開發 Prompt** (PDD)：
-
-   調用 Skill: `senior-prompt-engineer`
-
-3. **前端實作** (CDD)：
-
-   調用 Skill: `senior-frontend`
-   - 建立組件結構
-   - 實作 UI 組件
-   - 串接 API
-
-4. **設計一致性檢查**：
-
-   調用 Skill: `ui-design-system`
-   - 檢查設計一致性
-   - 套用 Design Token
-
-5. **UX 審查**：
-
-   調用 Skill: `ux-researcher-designer`
-   - 審查使用者體驗
-   - 提出改進建議
-
-6. **程式碼重構**：
-
-   調用 Agent: `refactor-expert`
-
-7. **產出文檔**：
-
-   調用 Agent: `docs-writer`
-   - 產出組件文檔
-
-8. **Git commit**：
-   ```
-   git add .
-   git commit -m "feat(frontend): 實作前端功能"
-   ```
-
-9. **自動進入測試**：
-   - 執行 `/dd-test --frontend`
+4-7. 效能/安全/重構/文檔（不變）
+8. Git commit
+9. 自動觸發 /dd-test
 
 ---
 
 ## 修正模式 (--fix)
 
-當測試失敗需要修正時：
-
-1. **讀取失敗原因**：
-   - 從 `PROJECT_STATE.md` 讀取失敗記錄
-
-2. **分析問題**：
-
-   調用 Agent: `root-cause-analyzer`
-   - 分析根本原因
-   - 制定修正方案
-
-3. **執行修正**：
-
-   調用對應 Skill 進行修正
-
-4. **Git commit**：
-   ```
-   git add .
-   git commit -m "fix(backend/frontend): <修正摘要>"
-   ```
-
-5. **重新執行測試**
+1. 讀取失敗原因
+2. 調用 Agent: `root-cause-analyzer`
+3. 執行修正
+4. Git commit
+5. 重新執行測試
 DDDEV
             ;;
         "dd-test")
@@ -1438,6 +1304,7 @@ create_templates() {
         "API_CONTRACT.md.template"
         "EXAMPLES.md.template"
         "ADR.md.template"
+        "TASK_PLAN.md.template"
     )
 
     local count=${#templates[@]}
@@ -1890,6 +1757,60 @@ EXAMPLES
 ## 日期
 {{DATE}}
 ADR
+            ;;
+        "TASK_PLAN.md.template")
+            cat << 'TASKPLAN'
+# 微任務計畫：{{FEATURE_NAME}}
+
+## 基本資訊
+- **建立日期**：{{DATE}}
+- **來源架構**：claude_docs/architecture/ARCHITECTURE.md
+- **總任務數**：{{TOTAL_TASKS}} 個
+- **預估時間**：約 {{ESTIMATED_MINUTES}} 分鐘（每任務 2-5 分鐘）
+- **執行模式**：{{EXECUTION_MODE}}
+
+## 依賴圖
+
+```
+{{DEPENDENCY_GRAPH}}
+```
+
+## 任務列表
+
+### 任務 1: {{TASK_1_NAME}}
+
+**檔案路徑：** `{{TASK_1_FILE_PATH}}`
+**依賴：** 無
+
+**TDD 五步驟：**
+
+1. **寫失敗測試**
+   - 測試檔案：`{{TASK_1_TEST_PATH}}`
+   - 測試內容：{{TASK_1_TEST_DESCRIPTION}}
+
+2. **驗證測試失敗**
+   - 執行：`{{TEST_COMMAND}}`
+
+3. **實作功能**
+   - 檔案：`{{TASK_1_FILE_PATH}}`
+   - 實作內容：{{TASK_1_IMPL_DESCRIPTION}}
+
+4. **驗證測試通過**
+   - 執行：`{{TEST_COMMAND}}`
+
+5. **提交**
+   - `git commit -m "{{TASK_1_COMMIT_MSG}}"`
+
+---
+
+## 驗證清單
+
+- [ ] 所有任務都有明確的檔案路徑
+- [ ] 每個任務都有完整的 TDD 五步驟
+- [ ] 依賴關係無循環
+- [ ] 測試程式碼可直接執行
+- [ ] 所有架構功能都被覆蓋
+TASKPLAN
             ;;
     esac
 }
