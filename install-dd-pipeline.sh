@@ -45,6 +45,7 @@ BUILTIN_SKILLS=(
     "task-planner"
     "worktree-manager"
     "subagent-orchestrator"
+    "code-simplifier"
 )
 
 # 可選的外部 Skills（從 github 安裝）
