@@ -150,7 +150,7 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 14 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 15 個內建 Skills（自動觸發的專家知識）"
     echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
     echo "  - 8 個 Templates（文檔模板）"
     echo ""
