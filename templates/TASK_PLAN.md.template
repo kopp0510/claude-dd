@@ -1,0 +1,86 @@
+# 微任務計畫：{{FEATURE_NAME}}
+
+## 基本資訊
+- **建立日期**：{{DATE}}
+- **來源架構**：claude_docs/architecture/ARCHITECTURE.md
+- **總任務數**：{{TOTAL_TASKS}} 個
+- **預估時間**：約 {{ESTIMATED_MINUTES}} 分鐘（每任務 2-5 分鐘）
+- **執行模式**：{{EXECUTION_MODE}}
+
+## 依賴圖
+
+```
+{{DEPENDENCY_GRAPH}}
+```
+
+## 任務列表
+
+### 任務 1: {{TASK_1_NAME}}
+
+**檔案路徑：** `{{TASK_1_FILE_PATH}}`
+**依賴：** 無
+
+**TDD 五步驟：**
+
+1. **寫失敗測試**
+   - 測試檔案：`{{TASK_1_TEST_PATH}}`
+   - 測試內容：{{TASK_1_TEST_DESCRIPTION}}
+   ```{{LANGUAGE}}
+   {{TASK_1_TEST_CODE}}
+   ```
+
+2. **驗證測試失敗**
+   - 執行：`{{TEST_COMMAND}}`
+   - 預期：測試失敗，因為功能尚未實作
+
+3. **實作功能**
+   - 檔案：`{{TASK_1_FILE_PATH}}`
+   - 實作內容：{{TASK_1_IMPL_DESCRIPTION}}
+   ```{{LANGUAGE}}
+   {{TASK_1_IMPL_CODE}}
+   ```
+
+4. **驗證測試通過**
+   - 執行：`{{TEST_COMMAND}}`
+   - 預期：所有測試通過
+
+5. **提交**
+   - `git add {{TASK_1_FILES}}`
+   - `git commit -m "{{TASK_1_COMMIT_MSG}}"`
+
+---
+
+### 任務 2: {{TASK_2_NAME}}
+
+**檔案路徑：** `{{TASK_2_FILE_PATH}}`
+**依賴：** 任務 1
+
+**TDD 五步驟：**
+
+1. **寫失敗測試**
+   - 測試檔案：`{{TASK_2_TEST_PATH}}`
+   - 測試內容：{{TASK_2_TEST_DESCRIPTION}}
+
+2. **驗證測試失敗**
+   - 執行：`{{TEST_COMMAND}}`
+
+3. **實作功能**
+   - 檔案：`{{TASK_2_FILE_PATH}}`
+   - 實作內容：{{TASK_2_IMPL_DESCRIPTION}}
+
+4. **驗證測試通過**
+   - 執行：`{{TEST_COMMAND}}`
+
+5. **提交**
+   - `git commit -m "{{TASK_2_COMMIT_MSG}}"`
+
+---
+
+## 驗證清單
+
+- [ ] 所有任務都有明確的檔案路徑
+- [ ] 每個任務都有完整的 TDD 五步驟
+- [ ] 依賴關係無循環
+- [ ] 測試程式碼可直接執行
+- [ ] 所有架構功能都被覆蓋
+- [ ] Commit message 遵循 Conventional Commits

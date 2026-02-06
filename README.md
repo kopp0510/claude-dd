@@ -8,9 +8,11 @@ DD Pipeline 是一套專為 Claude Code 設計的開發流程工具，整合了�
 
 - **Skills 自動觸發** - 專家知識在對話中自動載入，無需手動呼叫
 - **Commands 手動控制** - 開發流程由使用者明確控制
-- **驅動開發整合** - 結合 RDD、SDD、DDD、ADD、EDD、DbC、CDD、TDD、PDD 等方法論
+- **驅動開發整合** - 結合 RDD、SDD、DDD、ADD、EDD、DbC、CDD、TDD、PDD、SADD 等方法論
 - **人工審核機制** - 在關鍵節點設置 Checkpoint，確保開發品質
 - **自動化流程** - 批准後自動執行開發、測試、驗證流程
+- **微任務拆解** - 自動將架構拆分為最小可執行任務
+- **Subagent 驅動** - 逐任務分派 subagent 執行，兩階段審查確保品質
 
 ## 支援的開發方法論
 
@@ -25,6 +27,7 @@ DD Pipeline 是一套專為 Claude Code 設計的開發流程工具，整合了�
 | CDD | Component-Driven Development | 元件驅動開發 |
 | TDD | Test-Driven Development | 測試驅動開發 |
 | PDD | Prompt-Driven Development | 提示驅動開發 |
+| SADD | Subagent-Driven Development | 子代理驅動開發 |
 
 ## 安裝
 
@@ -87,11 +90,20 @@ chmod +x install-dd-pipeline.sh
 | `/dd-arch` | 執行架構設計階段 (SDD + DDD + ADD + EDD) |
 | `/dd-approve` | 批准架構設計，進入開發階段 |
 | `/dd-revise` | 修改架構設計 |
-| `/dd-dev` | 執行開發實作階段 (DbC + CDD + PDD) |
+| `/dd-dev` | 執行開發實作階段 (SADD + DbC + CDD + PDD) |
 | `/dd-test` | 執行測試驗證階段 (TDD) |
 | `/dd-status` | 查看專案開發狀態 |
 | `/dd-stop` | 暫停開發流程 |
 | `/dd-help` | 顯示幫助資訊 |
+
+## 開發模式
+
+| 模式 | 觸發方式 | 說明 |
+|------|----------|------|
+| **預設 (SADD)** | `/dd-dev` | 微任務拆解 → Subagent 逐任務執行 → 兩階段審查 |
+| **Worktree** | `/dd-dev --worktree` | 在 Git Worktree 隔離環境中執行預設模式 |
+| **批次** | `/dd-dev --batch` | 每 3 個任務暫停等待人工回饋 |
+| **經典** | `/dd-dev --classic` | 舊版一次性實作模式（PDD + 整體實作） |
 
 ## 開發流程
 
@@ -117,7 +129,13 @@ chmod +x install-dd-pipeline.sh
 └──────────┬──────────────┘
            │
            ▼
-   /dd-dev ──────────► 開發實作 (並行前後端開發)
+   /dd-dev ──────────► 微任務拆解 → Subagent 逐任務執行
+      │                 ├── task-planner: 架構 → 微任務清單
+      │                 ├── subagent-orchestrator:
+      │                 │   ├── 實作者 subagent (TDD)
+      │                 │   ├── 規格審查 subagent
+      │                 │   └── 品質審查 subagent
+      │                 └── 效能/安全/重構/文檔 檢查
       │
       ▼
    /dd-test ─────────► 測試驗證
@@ -159,6 +177,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 - `ADR-XXX.md` - 架構決策記錄
 - `EXAMPLES.md` - 使用範例文件
 - `API_CONTRACT.md` - API 契約文件
+- `plans/<feature>.md` - 微任務計畫（SADD 模式）
 
 ## 依賴需求
 
@@ -179,6 +198,9 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | senior-database ⭐ | 資料庫專家 | Schema 設計、查詢優化、索引策略（4 情境工作流程） |
 | api-designer ⭐ | API 設計專家 | REST/GraphQL 設計、OpenAPI 規格（7 階段工作流程） |
 | i18n-expert ⭐ | 國際化專家 | 多語言架構、RTL 支援、翻譯管理（5 情境工作流程） |
+| task-planner ⭐ | 微任務規劃專家 | dd-dev 自動調用，架構 → 微任務清單（4 階段工作流程） |
+| worktree-manager ⭐ | Git Worktree 管理 | dd-dev --worktree 時，隔離環境建立（3 階段工作流程） |
+| subagent-orchestrator ⭐ | Subagent 調度專家 | dd-dev 自動調用，逐任務 subagent 執行+審查（3 階段工作流程） |
 
 ### 可選 Skills（外部安裝）
 
