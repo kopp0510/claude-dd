@@ -201,6 +201,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | task-planner ⭐ | 微任務規劃專家 | dd-dev 自動調用，架構 → 微任務清單（4 階段工作流程） |
 | worktree-manager ⭐ | Git Worktree 管理 | dd-dev --worktree 時，隔離環境建立（3 階段工作流程） |
 | subagent-orchestrator ⭐ | Subagent 調度專家 | dd-dev 自動調用，逐任務 subagent 執行+審查（3 階段工作流程） |
+| code-simplifier ⭐ | 程式碼簡化專家 | 簡化程式碼、降低複雜度時（3 階段包裝器工作流程） |
 
 ### 可選 Skills（外部安裝）
 
