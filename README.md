@@ -40,9 +40,10 @@ chmod +x install-dd-pipeline.sh
 
 安裝程式會：
 1. 安裝內建 Skills 到 `~/.claude/skills/`（自動觸發專家知識）
-2. 安裝 DD Pipeline 指令到 `~/.claude/commands/`
-3. 安裝文件模板到 `~/.claude/templates/dd/`
-4. 檢查可選的外部 Skills（提示安裝方式）
+2. 啟用官方 Plugins（claude-md-management）
+3. 安裝 DD Pipeline 指令到 `~/.claude/commands/`
+4. 安裝文件模板到 `~/.claude/templates/dd/`
+5. 檢查可選的外部 Skills（提示安裝方式）
 
 ### 更新安裝
 
@@ -202,6 +203,19 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | worktree-manager ⭐ | Git Worktree 管理 | dd-dev --worktree 時，隔離環境建立（3 階段工作流程） |
 | subagent-orchestrator ⭐ | Subagent 調度專家 | dd-dev 自動調用，逐任務 subagent 執行+審查（3 階段工作流程） |
 | code-simplifier ⭐ | 程式碼簡化專家 | 簡化程式碼、降低複雜度時（3 階段包裝器工作流程） |
+| frontend-design | 前端視覺設計專家 | 建立前端介面、UI 元件、頁面時 |
+
+### 官方 Plugins（DD Pipeline 安裝）
+
+安裝腳本會自動啟用以下 Anthropic 官方 Plugins：
+
+| Plugin | 說明 | 功能 |
+|--------|------|------|
+| claude-md-management | CLAUDE.md 管理工具 | 審計 CLAUDE.md 品質、捕捉工作階段學習內容 |
+
+提供的工具：
+- **claude-md-improver** (Skill) — 審計 CLAUDE.md 是否與程式碼庫同步
+- **/revise-claude-md** (Command) — 在工作階段結束時捕捉學習內容並更新 CLAUDE.md
 
 ### 可選 Skills（外部安裝）
 

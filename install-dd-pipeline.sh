@@ -46,6 +46,7 @@ BUILTIN_SKILLS=(
     "worktree-manager"
     "subagent-orchestrator"
     "code-simplifier"
+    "frontend-design"
 )
 
 # 可選的外部 Skills（從 github 安裝）
@@ -86,6 +87,13 @@ OPTIONAL_MCP=(
     "googleDrive"
     "claude-mem"
 )
+
+# 官方 Plugins
+OFFICIAL_PLUGINS=(
+    "claude-md-management"
+)
+
+PLUGINS_MARKETPLACE="claude-plugins-official"
 
 # 輔助函數
 print_header() {
@@ -150,7 +158,8 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 15 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 16 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
     echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
     echo "  - 8 個 Templates（文檔模板）"
     echo ""
@@ -158,7 +167,7 @@ show_help() {
 
 # 檢查基礎環境
 check_environment() {
-    print_step "1/6" "檢查基礎環境"
+    print_step "1/7" "檢查基礎環境"
 
     local all_ok=true
 
@@ -204,7 +213,7 @@ check_environment() {
 
 # 安裝內建 Skills
 install_builtin_skills() {
-    print_step "2/6" "安裝內建 Skills"
+    print_step "2/7" "安裝內建 Skills"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -248,7 +257,7 @@ install_builtin_skills() {
 
 # 檢查可選的外部 Skills
 check_optional_skills() {
-    print_step "3/6" "檢查可選 Skills (claude-skills)"
+    print_step "3/7" "檢查可選 Skills (claude-skills)"
     echo -e "├── 來源：${CYAN}github.com/alirezarezvani/claude-skills${NC}"
     echo -e "├── ${YELLOW}這些是可選的額外 skills${NC}"
 
@@ -311,7 +320,7 @@ install_optional_skills() {
 
 # 檢查 MCP
 check_mcp() {
-    print_step "4/6" "檢查 MCP"
+    print_step "4/7" "檢查 MCP"
 
     local claude_json="$HOME/.claude.json"
 
@@ -352,9 +361,175 @@ check_mcp() {
     echo ""
 }
 
+# 安裝官方 Plugins
+install_plugins() {
+    print_step "5/7" "啟用官方 Plugins"
+
+    local settings_file="$CLAUDE_DIR/settings.json"
+    local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
+    local plugins_base="$CLAUDE_DIR/plugins/marketplaces/$PLUGINS_MARKETPLACE/plugins"
+
+    local count=${#OFFICIAL_PLUGINS[@]}
+    local i=0
+
+    for plugin in "${OFFICIAL_PLUGINS[@]}"; do
+        i=$((i + 1))
+        local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"
+        local plugin_dir="$plugins_base/$plugin"
+        local plugin_json="$plugin_dir/.claude-plugin/plugin.json"
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        # 檢查 Plugin 檔案是否存在
+        if [ ! -f "$plugin_json" ]; then
+            echo -e "$tree_char $plugin: ${RED}Plugin 檔案不存在${NC}"
+            continue
+        fi
+
+        # 讀取版本號
+        local version=""
+        if command_exists "jq"; then
+            version=$(jq -r '.version' "$plugin_json")
+        else
+            version=$(python3 -c "import json; print(json.load(open('$plugin_json'))['version'])")
+        fi
+
+        # 更新 settings.json — 啟用 Plugin
+        if [ -f "$settings_file" ]; then
+            if command_exists "jq"; then
+                local tmp=$(mktemp)
+                jq --arg key "$plugin_key" '.enabledPlugins[$key] = true' "$settings_file" > "$tmp" && mv "$tmp" "$settings_file"
+            else
+                python3 -c "
+import json, sys
+with open('$settings_file', 'r') as f:
+    data = json.load(f)
+if 'enabledPlugins' not in data:
+    data['enabledPlugins'] = {}
+data['enabledPlugins']['$plugin_key'] = True
+with open('$settings_file', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+            fi
+        else
+            # settings.json 不存在，建立新檔
+            if command_exists "jq"; then
+                echo "{}" | jq --arg key "$plugin_key" '{enabledPlugins: {($key): true}}' > "$settings_file"
+            else
+                python3 -c "
+import json
+data = {'enabledPlugins': {'$plugin_key': True}}
+with open('$settings_file', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+            fi
+        fi
+
+        # 更新 installed_plugins.json — 登記 Plugin
+        mkdir -p "$(dirname "$installed_file")"
+        local install_path="$CLAUDE_DIR/plugins/cache/$PLUGINS_MARKETPLACE/$plugin/$version"
+        local now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+
+        if [ -f "$installed_file" ]; then
+            if command_exists "jq"; then
+                local tmp=$(mktemp)
+                jq --arg key "$plugin_key" \
+                   --arg path "$install_path" \
+                   --arg ver "$version" \
+                   --arg ts "$now" \
+                   '
+                   if .plugins[$key] then
+                       .plugins[$key][0].version = $ver |
+                       .plugins[$key][0].lastUpdated = $ts |
+                       .plugins[$key][0].installPath = $path
+                   else
+                       .plugins[$key] = [{
+                           "scope": "global",
+                           "projectPath": "",
+                           "installPath": $path,
+                           "version": $ver,
+                           "installedAt": $ts,
+                           "lastUpdated": $ts
+                       }]
+                   end
+                   ' "$installed_file" > "$tmp" && mv "$tmp" "$installed_file"
+            else
+                python3 -c "
+import json
+with open('$installed_file', 'r') as f:
+    data = json.load(f)
+key = '$plugin_key'
+entry = {
+    'scope': 'global',
+    'projectPath': '',
+    'installPath': '$install_path',
+    'version': '$version',
+    'installedAt': '$now',
+    'lastUpdated': '$now'
+}
+if key in data.get('plugins', {}):
+    data['plugins'][key][0]['version'] = '$version'
+    data['plugins'][key][0]['lastUpdated'] = '$now'
+    data['plugins'][key][0]['installPath'] = '$install_path'
+else:
+    if 'plugins' not in data:
+        data['plugins'] = {}
+    data['plugins'][key] = [entry]
+with open('$installed_file', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+            fi
+        else
+            # installed_plugins.json 不存在，建立新檔
+            if command_exists "jq"; then
+                echo '{"version":2,"plugins":{}}' | jq \
+                    --arg key "$plugin_key" \
+                    --arg path "$install_path" \
+                    --arg ver "$version" \
+                    --arg ts "$now" \
+                    '.plugins[$key] = [{
+                        "scope": "global",
+                        "projectPath": "",
+                        "installPath": $path,
+                        "version": $ver,
+                        "installedAt": $ts,
+                        "lastUpdated": $ts
+                    }]' > "$installed_file"
+            else
+                python3 -c "
+import json
+data = {
+    'version': 2,
+    'plugins': {
+        '$plugin_key': [{
+            'scope': 'global',
+            'projectPath': '',
+            'installPath': '$install_path',
+            'version': '$version',
+            'installedAt': '$now',
+            'lastUpdated': '$now'
+        }]
+    }
+}
+with open('$installed_file', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+            fi
+        fi
+
+        echo -e "$tree_char $plugin (v$version): ${GREEN}${CHECK} 已啟用${NC}"
+    done
+
+    echo ""
+}
+
 # 建立 DD Commands
 create_commands() {
-    print_step "5/6" "建立 DD Commands"
+    print_step "6/7" "建立 DD Commands"
 
     mkdir -p "$COMMANDS_DIR"
 
@@ -1290,7 +1465,7 @@ DDSTOP
 
 # 建立 Templates
 create_templates() {
-    print_step "6/6" "建立 Templates"
+    print_step "7/7" "建立 Templates"
 
     mkdir -p "$TEMPLATES_DIR"
 
@@ -1822,7 +1997,8 @@ uninstall() {
 
     echo "即將移除以下內容："
     echo "├── ~/.claude/commands/dd-*.md"
-    echo "└── ~/.claude/templates/dd/"
+    echo "├── ~/.claude/templates/dd/"
+    echo "└── 官方 Plugins 設定（claude-md-management）"
     echo ""
 
     read -p "確定要移除嗎？[y/N] " -n 1 -r
@@ -1831,6 +2007,51 @@ uninstall() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         rm -f "$COMMANDS_DIR"/dd-*.md
         rm -rf "$TEMPLATES_DIR"
+
+        # 清理 Plugin 設定
+        local settings_file="$CLAUDE_DIR/settings.json"
+        local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
+
+        for plugin in "${OFFICIAL_PLUGINS[@]}"; do
+            local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"
+
+            # 從 settings.json 移除
+            if [ -f "$settings_file" ]; then
+                if command_exists "jq"; then
+                    local tmp=$(mktemp)
+                    jq --arg key "$plugin_key" 'del(.enabledPlugins[$key])' "$settings_file" > "$tmp" && mv "$tmp" "$settings_file"
+                else
+                    python3 -c "
+import json
+with open('$settings_file', 'r') as f:
+    data = json.load(f)
+data.get('enabledPlugins', {}).pop('$plugin_key', None)
+with open('$settings_file', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+                fi
+            fi
+
+            # 從 installed_plugins.json 移除
+            if [ -f "$installed_file" ]; then
+                if command_exists "jq"; then
+                    local tmp=$(mktemp)
+                    jq --arg key "$plugin_key" 'del(.plugins[$key])' "$installed_file" > "$tmp" && mv "$tmp" "$installed_file"
+                else
+                    python3 -c "
+import json
+with open('$installed_file', 'r') as f:
+    data = json.load(f)
+data.get('plugins', {}).pop('$plugin_key', None)
+with open('$installed_file', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+                fi
+            fi
+        done
+
         echo -e "${GREEN}DD Pipeline 已移除${NC}"
     else
         echo "取消移除"
@@ -1845,6 +2066,9 @@ show_completion() {
     echo "   1. cd your-project"
     echo "   2. /dd-init"
     echo "   3. /dd-start \"你的需求\""
+    echo ""
+    echo -e "${GREEN}📌 已啟用的 Plugin：${NC}"
+    echo "   claude-md-management — 使用 /revise-claude-md 管理 CLAUDE.md"
     echo ""
     echo -e "${GREEN}📌 查看說明：${NC}"
     echo "   /dd-help"
@@ -1914,6 +2138,9 @@ main() {
 
     # 檢查 MCP
     check_mcp
+
+    # 啟用官方 Plugins
+    install_plugins
 
     # 如果只是檢查模式，到此結束
     if [ "$CHECK_ONLY" = true ]; then
