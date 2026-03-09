@@ -205,6 +205,68 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | code-simplifier ⭐ | 程式碼簡化專家 | 簡化程式碼、降低複雜度時（3 階段包裝器工作流程） |
 | frontend-design | 前端視覺設計專家 | 建立前端介面、UI 元件、頁面時 |
 
+### 整合包裝器 Skills（DD Pipeline 安裝）
+
+透過包裝外部 Agent 或 Skill 命令，提供關鍵詞自動觸發能力：
+
+#### 開發類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| senior-backend | 資深後端工程師 | Express、Fastify、Node.js API、後端、認證 |
+| senior-frontend | 資深前端工程師 | React 元件、Next.js、Tailwind、前端開發 |
+| senior-devops | 資深 DevOps 工程師 | CI/CD、Docker、Kubernetes、部署 |
+| senior-fullstack | 資深全端工程師 | 全端、scaffold 專案、tech stack |
+| tdd-guide | TDD 引導專家 | TDD、測試驅動、紅綠重構 |
+| claude-api | Claude API 專家 | anthropic SDK、Claude API、Agent SDK |
+
+#### 品質與審查類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| code-reviewer | 程式碼審查員 | review PR、程式碼品質、SOLID 違規、code smell |
+| review | 綜合程式碼審查 | 審查程式碼、comprehensive review、code review |
+| code-health | 程式碼健康度 | 程式碼健康、可維護性、品質指標 |
+| debt-analysis | 技術債分析 | 技術債、債務分析、重構路線圖 |
+| test-gen | 測試產生器 | 產生測試、generate tests、測試覆蓋 |
+
+#### 安全類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| vulnerability-scan | 漏洞掃描 | 漏洞掃描、CVE、依賴安全 |
+| security-audit | 全面安全審計 | 全面安全審計、security audit |
+| compliance-check | 合規檢查 | GDPR、SOC2、HIPAA、PCI-DSS、合規 |
+| senior-secops | 資深安全運維 | SecOps、安全自動化、合規掃描 |
+
+#### 效能類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| performance-profile | 效能分析 | 效能分析、profiling、瓶頸定位 |
+| benchmark | 負載測試 | 負載測試、benchmark、壓力測試 |
+
+#### 維運類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| deploy-validate | 部署驗證 | 部署驗證、上線前檢查、pre-deploy |
+| health-check | 系統健康檢查 | 系統健康、監控、health check |
+| incident-response | 生產事件回應 | 生產事件、incident、緊急回應、RCA |
+
+#### 測試類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| senior-qa | 資深 QA 工程師 | QA、E2E 測試、Jest 設定、Playwright 測試 |
+| playwright-pro | Playwright 測試專家 | Playwright、瀏覽器測試、E2E 自動化 |
+
+#### 文件類
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| docs-gen | 自動文件產生 | 自動產生文件、generate docs、API 文件產生 |
+
 ### 官方 Plugins（DD Pipeline 安裝）
 
 安裝腳本會自動啟用以下 Anthropic 官方 Plugins：
@@ -221,24 +283,17 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 來源：[claude-skills](https://github.com/alirezarezvani/claude-skills)
 
-這些 Skills 為可選，可依需求自行安裝：
+這些 Skills 為可選，可依需求自行安裝（已升級為內建的 Skills 不在此列）：
 
 | Skill | 說明 |
 |-------|------|
 | senior-architect | 資深架構師 |
-| senior-backend | 資深後端工程師 |
-| senior-frontend | 資深前端工程師 |
-| senior-fullstack | 資深全端工程師 |
-| senior-qa | 資深品質保證工程師 |
-| senior-devops | 資深 DevOps 工程師 |
-| senior-secops | 資深安全運維工程師 |
 | senior-security | 資深安全工程師 |
 | senior-prompt-engineer | 資深提示工程師 |
 | senior-data-engineer | 資深資料工程師 |
 | senior-data-scientist | 資深資料科學家 |
 | senior-ml-engineer | 資深機器學習工程師 |
 | senior-computer-vision | 資深電腦視覺工程師 |
-| code-reviewer | 程式碼審查員 |
 | ui-design-system | UI 設計系統專家 |
 | ux-researcher-designer | UX 研究設計師 |
 
