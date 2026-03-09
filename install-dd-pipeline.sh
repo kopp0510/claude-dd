@@ -31,6 +31,7 @@ SKILLS_DIR="$CLAUDE_DIR/skills"
 
 # 內建 Skills（從 claude-dd/skills/ 安裝）
 BUILTIN_SKILLS=(
+    # 核心 Skills（16 個）
     "systems-architect"
     "test-engineer"
     "security-auditor"
@@ -47,24 +48,49 @@ BUILTIN_SKILLS=(
     "subagent-orchestrator"
     "code-simplifier"
     "frontend-design"
+    # 整合包裝器 Skills（23 個）
+    # 開發類
+    "senior-backend"
+    "senior-frontend"
+    "senior-devops"
+    "senior-fullstack"
+    "tdd-guide"
+    "claude-api"
+    # 品質與審查類
+    "code-reviewer"
+    "review"
+    "code-health"
+    "debt-analysis"
+    "test-gen"
+    # 安全類
+    "vulnerability-scan"
+    "security-audit"
+    "compliance-check"
+    "senior-secops"
+    # 效能類
+    "performance-profile"
+    "benchmark"
+    # 維運類
+    "deploy-validate"
+    "health-check"
+    "incident-response"
+    # 測試類
+    "senior-qa"
+    "playwright-pro"
+    # 文件類
+    "docs-gen"
 )
 
 # 可選的外部 Skills（從 github 安裝）
+# 注意：已升級為 builtin 的 Skills 已從此清單移除
 OPTIONAL_SKILLS=(
     "senior-architect"
-    "senior-backend"
-    "senior-frontend"
-    "senior-fullstack"
-    "senior-qa"
-    "senior-devops"
-    "senior-secops"
     "senior-security"
     "senior-prompt-engineer"
     "senior-data-engineer"
     "senior-data-scientist"
     "senior-ml-engineer"
     "senior-computer-vision"
-    "code-reviewer"
     "ui-design-system"
     "ux-researcher-designer"
 )
@@ -158,7 +184,7 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 16 個內建 Skills（自動觸發的專家知識）"
+    echo "  - 39 個內建 Skills（16 個核心 + 23 個整合包裝器）"
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
     echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
     echo "  - 8 個 Templates（文檔模板）"
@@ -209,6 +235,64 @@ check_environment() {
         echo -e "${RED}基礎環境檢查失敗，請先安裝缺少的工具${NC}"
         exit 1
     fi
+}
+
+# 檢查內建 Skills（僅檢查，不安裝）
+check_builtin_skills() {
+    print_step "2/7" "檢查內建 Skills"
+    echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
+
+    local count=${#BUILTIN_SKILLS[@]}
+    local i=0
+    local installed=0
+    local missing=0
+
+    for skill in "${BUILTIN_SKILLS[@]}"; do
+        i=$((i + 1))
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        if dir_exists "$SKILLS_DIR/$skill"; then
+            echo -e "$tree_char $skill: ${GREEN}${CHECK} 已安裝${NC}"
+            installed=$((installed + 1))
+        else
+            echo -e "$tree_char $skill: ${YELLOW}未安裝${NC}"
+            missing=$((missing + 1))
+        fi
+    done
+
+    echo ""
+    echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
+    if [ $missing -gt 0 ]; then
+        echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
+    else
+        echo -e "└── ${GREEN}全部已安裝${NC}"
+    fi
+    echo ""
+}
+
+# 檢查 Plugins（僅檢查，不安裝）
+check_plugins() {
+    print_step "5/7" "檢查官方 Plugins"
+
+    local settings_file="$CLAUDE_DIR/settings.json"
+    local count=${#OFFICIAL_PLUGINS[@]}
+    local i=0
+
+    for plugin in "${OFFICIAL_PLUGINS[@]}"; do
+        i=$((i + 1))
+        local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        if [ -f "$settings_file" ] && grep -q "\"$plugin_key\"" "$settings_file"; then
+            echo -e "$tree_char $plugin: ${GREEN}${CHECK} 已啟用${NC}"
+        else
+            echo -e "$tree_char $plugin: ${YELLOW}未啟用${NC}"
+        fi
+    done
+
+    echo ""
 }
 
 # 安裝內建 Skills
@@ -2130,6 +2214,16 @@ main() {
     # 檢查環境
     check_environment
 
+    if [ "$CHECK_ONLY" = true ]; then
+        # 檢查模式：只檢查狀態，不實際安裝
+        check_builtin_skills
+        check_optional_skills
+        check_mcp
+        check_plugins
+        echo -e "${GREEN}環境檢查完成${NC}"
+        exit 0
+    fi
+
     # 安裝內建 Skills（核心功能）
     install_builtin_skills
 
@@ -2141,12 +2235,6 @@ main() {
 
     # 啟用官方 Plugins
     install_plugins
-
-    # 如果只是檢查模式，到此結束
-    if [ "$CHECK_ONLY" = true ]; then
-        echo -e "${GREEN}環境檢查完成${NC}"
-        exit 0
-    fi
 
     # 建立 Commands
     create_commands
