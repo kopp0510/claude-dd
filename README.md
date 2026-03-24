@@ -39,11 +39,10 @@ chmod +x install-dd-pipeline.sh
 ```
 
 安裝程式會：
-1. 安裝內建 Skills 到 `~/.claude/skills/`（自動觸發專家知識）
+1. 安裝 60 個內建 Skills 到 `~/.claude/skills/`（自動觸發專家知識）
 2. 啟用官方 Plugins（claude-md-management）
-3. 安裝 DD Pipeline 指令到 `~/.claude/commands/`
+3. 安裝 DD Pipeline 指令 + 命名空間 Commands 到 `~/.claude/commands/`
 4. 安裝文件模板到 `~/.claude/templates/dd/`
-5. 檢查可選的外部 Skills（提示安裝方式）
 
 ### 更新安裝
 
@@ -96,6 +95,58 @@ chmod +x install-dd-pipeline.sh
 | `/dd-status` | 查看專案開發狀態 |
 | `/dd-stop` | 暫停開發流程 |
 | `/dd-help` | 顯示幫助資訊 |
+
+## 命名空間 Commands
+
+除了 DD Pipeline 指令外，還包含 19 個可直接呼叫的命名空間 Commands：
+
+#### 安全類
+
+| 指令 | 說明 |
+|------|------|
+| `/audit` | 全面安全審計 |
+| `/vulnerability-scan` | 深度漏洞掃描與 CVE 分析 |
+| `/compliance-check` | 法規合規驗證（GDPR、SOC2、HIPAA、PCI-DSS） |
+
+#### 效能類
+
+| 指令 | 說明 |
+|------|------|
+| `/profile` | 效能分析與瓶頸識別 |
+| `/benchmark` | 負載測試與效能基準 |
+
+#### 品質類
+
+| 指令 | 說明 |
+|------|------|
+| `/code-health` | 程式碼健康度評估 |
+| `/debt-analysis` | 技術債識別與重構路線圖 |
+| `/review` | 綜合程式碼審查（安全、效能、配置） |
+
+#### 維運類
+
+| 指令 | 說明 |
+|------|------|
+| `/incident-response` | 生產事件協調與 RCA |
+| `/deploy-validate` | 部署前驗證 |
+| `/health-check` | 系統健康檢查 |
+
+#### 開發與測試類
+
+| 指令 | 說明 |
+|------|------|
+| `/test-gen` | 自動產生測試案例 |
+| `/docs-gen` | 自動產生文件 |
+
+#### 工作流程類
+
+| 指令 | 說明 |
+|------|------|
+| `/handoff-create` | 建立交接文件 |
+| `/prompt-create` | 建立最佳化提示 |
+| `/prompt-run` | 委派提示到子任務執行 |
+| `/todo-add` | 新增待辦事項 |
+| `/todo-check` | 檢視待辦事項 |
 
 ## 開發模式
 
@@ -182,7 +233,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 ## 依賴需求
 
-### 內建 Skills（DD Pipeline 安裝）
+### 核心 Skills（DD Pipeline 安裝，16 個）
 
 安裝腳本會自動安裝以下 Skills 到 `~/.claude/skills/`，這些 Skills 會在對話中自動觸發：
 
@@ -205,7 +256,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | code-simplifier ⭐ | 程式碼簡化專家 | 簡化程式碼、降低複雜度時（3 階段包裝器工作流程） |
 | frontend-design | 前端視覺設計專家 | 建立前端介面、UI 元件、頁面時 |
 
-### 整合包裝器 Skills（DD Pipeline 安裝）
+### 整合包裝器 Skills（DD Pipeline 安裝，23 個）
 
 透過包裝外部 Agent 或 Skill 命令，提供關鍵詞自動觸發能力：
 
@@ -279,23 +330,40 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 - **claude-md-improver** (Skill) — 審計 CLAUDE.md 是否與程式碼庫同步
 - **/revise-claude-md** (Command) — 在工作階段結束時捕捉學習內容並更新 CLAUDE.md
 
-### 可選 Skills（外部安裝）
+### 工程團隊 Skills（DD Pipeline 安裝）
 
-來源：[claude-skills](https://github.com/alirezarezvani/claude-skills)
+進階工程專家角色，涵蓋架構、安全、AI/ML、設計等領域：
 
-這些 Skills 為可選，可依需求自行安裝（已升級為內建的 Skills 不在此列）：
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| senior-architect | 系統架構設計 | 設計架構、評估微服務、架構圖表 |
+| senior-security | 安全工程 | 威脅建模、STRIDE 分析、安全架構 |
+| senior-prompt-engineer | 提示工程 | 優化提示、LLM 評估、Agent 架構 |
+| senior-data-engineer | 資料工程 | 資料管線、ETL/ELT、Spark、Airflow |
+| senior-data-scientist | 資料科學 | 統計建模、A/B 測試、因果推論 |
+| senior-ml-engineer | 機器學習工程 | ML 部署、MLOps、RAG、模型監控 |
+| senior-computer-vision | 電腦視覺 | 物件偵測、影像分割、YOLO、SAM |
+| ui-design-system | UI 設計系統 | Design Token、元件文件、響應式設計 |
+| ux-researcher-designer | UX 研究設計 | 使用者研究、Persona、旅程地圖 |
 
-| Skill | 說明 |
-|-------|------|
-| senior-architect | 資深架構師 |
-| senior-security | 資深安全工程師 |
-| senior-prompt-engineer | 資深提示工程師 |
-| senior-data-engineer | 資深資料工程師 |
-| senior-data-scientist | 資深資料科學家 |
-| senior-ml-engineer | 資深機器學習工程師 |
-| senior-computer-vision | 資深電腦視覺工程師 |
-| ui-design-system | UI 設計系統專家 |
-| ux-researcher-designer | UX 研究設計師 |
+### 產品與商業 Skills（DD Pipeline 安裝）
+
+產品管理、商業策略與專業整合工具：
+
+| Skill | 說明 | 自動觸發時機 |
+|-------|------|-------------|
+| agile-product-owner | Agile 產品負責人 | 使用者故事、Sprint 規劃、Backlog |
+| aws-solution-architect | AWS 架構師 | 無伺服器架構、CloudFormation、成本優化 |
+| competitive-teardown | 競品分析 | 競品拆解、市場定位分析 |
+| email-template-builder | Email 範本建置 | Email 設計、範本產生 |
+| incident-commander | 事件指揮官 | SRE 事件管理、PIR、Runbook |
+| landing-page-generator | Landing Page 產生 | 著陸頁設計與產生 |
+| product-manager-toolkit | 產品經理工具箱 | RICE 排序、PRD、GTM 策略 |
+| product-strategist | 產品策略 | OKR、市場分析、願景設定 |
+| saas-scaffolder | SaaS 腳手架 | SaaS 專案快速建置 |
+| self-improving-agent | 自動記憶管理 | 記憶審計、知識提升、規則畢業 |
+| stripe-integration-expert | Stripe 整合 | 支付整合、訂閱管理 |
+| tech-stack-evaluator | 技術棧評估 | TCO 分析、框架比較、生態評分 |
 
 ### 必要 MCP
 

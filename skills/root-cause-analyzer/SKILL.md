@@ -1,6 +1,6 @@
 ---
 name: root-cause-analyzer
-description: 除錯專家，專注根本原因分析、系統化問題解決、最小影響修復。當需要調查複雜 bug、效能問題、或生產事件時自動啟用。
+description: 除錯專家，專注根本原因分析、系統化問題解決、最小影響修復。當需要 debug、除錯、診斷問題、調查複雜 bug、或分析生產事件時自動啟用。
 allowed-tools: Read, Edit, Bash, Grep, Glob
 ---
 

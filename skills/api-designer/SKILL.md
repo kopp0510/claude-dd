@@ -1,6 +1,6 @@
 ---
 name: api-designer
-description: API 設計專家，專注 REST/GraphQL API 設計、版本策略、錯誤處理、文件規範。當需要設計 API、定義契約、撰寫 API 規格時自動啟用。透過結構化工作流程引導完成 API 設計。
+description: API 設計專家，專注 REST/GraphQL API 規格設計、版本策略、錯誤處理規範。當需要設計 API 規格、定義 OpenAPI spec、API 版本策略、endpoint 契約時自動啟用。透過結構化工作流程引導完成 API 設計。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 

@@ -29,9 +29,9 @@ TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 
-# 內建 Skills（從 claude-dd/skills/ 安裝）
+# 所有 Skills（從 claude-dd/skills/ 安裝，共 61 個）
 BUILTIN_SKILLS=(
-    # 核心 Skills（16 個）
+    # ── 核心 Skills（16 個）──
     "systems-architect"
     "test-engineer"
     "security-auditor"
@@ -48,7 +48,7 @@ BUILTIN_SKILLS=(
     "subagent-orchestrator"
     "code-simplifier"
     "frontend-design"
-    # 整合包裝器 Skills（23 個）
+    # ── 整合包裝器 Skills（23 個）──
     # 開發類
     "senior-backend"
     "senior-frontend"
@@ -79,11 +79,7 @@ BUILTIN_SKILLS=(
     "playwright-pro"
     # 文件類
     "docs-gen"
-)
-
-# 可選的外部 Skills（從 github 安裝）
-# 注意：已升級為 builtin 的 Skills 已從此清單移除
-OPTIONAL_SKILLS=(
+    # ── 工程團隊 Skills（9 個，原 OPTIONAL_SKILLS）──
     "senior-architect"
     "senior-security"
     "senior-prompt-engineer"
@@ -93,10 +89,20 @@ OPTIONAL_SKILLS=(
     "senior-computer-vision"
     "ui-design-system"
     "ux-researcher-designer"
+    # ── 產品與商業 Skills（13 個）──
+    "agile-product-owner"
+    "aws-solution-architect"
+    "competitive-teardown"
+    "email-template-builder"
+    "incident-commander"
+    "landing-page-generator"
+    "product-manager-toolkit"
+    "product-strategist"
+    "saas-scaffolder"
+    "self-improving-agent"
+    "stripe-integration-expert"
+    "tech-stack-evaluator"
 )
-
-# 外部 Skills 來源
-SKILLS_REPO="https://github.com/alirezarezvani/claude-skills.git"
 
 # 必要的 MCP
 REQUIRED_MCP=(
@@ -184,9 +190,9 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 39 個內建 Skills（16 個核心 + 23 個整合包裝器）"
+    echo "  - 60 個內建 Skills（16 個核心 + 23 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
-    echo "  - 11 個 DD Commands（手動呼叫的流程控制）"
+    echo "  - 11 個 DD Commands + 19 個命名空間 Commands"
     echo "  - 8 個 Templates（文檔模板）"
     echo ""
 }
@@ -339,68 +345,6 @@ install_builtin_skills() {
     echo ""
 }
 
-# 檢查可選的外部 Skills
-check_optional_skills() {
-    print_step "3/7" "檢查可選 Skills (claude-skills)"
-    echo -e "├── 來源：${CYAN}github.com/alirezarezvani/claude-skills${NC}"
-    echo -e "├── ${YELLOW}這些是可選的額外 skills${NC}"
-
-    local missing_skills=()
-    local count=${#OPTIONAL_SKILLS[@]}
-    local i=0
-
-    for skill in "${OPTIONAL_SKILLS[@]}"; do
-        i=$((i + 1))
-        if dir_exists "$SKILLS_DIR/$skill"; then
-            if [ $i -eq $count ]; then
-                print_last_success "$skill"
-            else
-                print_success "$skill"
-            fi
-        else
-            if [ $i -eq $count ]; then
-                echo -e "└── $skill: ${YELLOW}未安裝${NC}"
-            else
-                echo -e "├── $skill: ${YELLOW}未安裝${NC}"
-            fi
-            missing_skills+=("$skill")
-        fi
-    done
-
-    echo ""
-
-    if [ ${#missing_skills[@]} -gt 0 ]; then
-        echo -e "${YELLOW}有 ${#missing_skills[@]} 個可選 skills 未安裝${NC}"
-        read -p "是否要安裝這些額外 skills？[y/N] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            install_optional_skills
-        fi
-    fi
-}
-
-# 安裝可選的外部 Skills
-install_optional_skills() {
-    echo -e "${BLUE}正在安裝 claude-skills...${NC}"
-
-    local temp_dir=$(mktemp -d)
-    git clone "$SKILLS_REPO" "$temp_dir/claude-skills"
-
-    # 複製 skills 到 ~/.claude/skills/
-    mkdir -p "$SKILLS_DIR"
-
-    # 根據 repo 結構複製
-    if [ -d "$temp_dir/claude-skills/engineering-team" ]; then
-        cp -r "$temp_dir/claude-skills/engineering-team"/* "$SKILLS_DIR/" 2>/dev/null || true
-    fi
-    if [ -d "$temp_dir/claude-skills/product-team" ]; then
-        cp -r "$temp_dir/claude-skills/product-team"/* "$SKILLS_DIR/" 2>/dev/null || true
-    fi
-
-    rm -rf "$temp_dir"
-
-    echo -e "${GREEN}claude-skills 安裝完成${NC}"
-}
 
 # 檢查 MCP
 check_mcp() {
@@ -613,14 +557,14 @@ with open('$installed_file', 'w') as f:
 
 # 建立 DD Commands
 create_commands() {
-    print_step "6/7" "建立 DD Commands"
+    print_step "6/7" "建立 Commands"
 
     mkdir -p "$COMMANDS_DIR"
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    # 定義所有 commands
-    local commands=(
+    # DD Pipeline commands（平面 .md 檔案）
+    local dd_commands=(
         "dd-help"
         "dd-init"
         "dd-docs"
@@ -634,19 +578,43 @@ create_commands() {
         "dd-stop"
     )
 
-    local count=${#commands[@]}
+    # 命名空間 commands（目錄型）
+    local ns_commands=(
+        "development-scaffold"
+        "documentation-docs-gen"
+        "operations-deploy-validate"
+        "operations-health-check"
+        "operations-incident-response"
+        "performance-benchmark"
+        "performance-profile"
+        "quality-code-health"
+        "quality-debt-analysis"
+        "security-audit"
+        "security-compliance-check"
+        "security-vulnerability-scan"
+        "testing-test-gen"
+        "workflow-handoff-create"
+        "workflow-prompt-create"
+        "workflow-prompt-run"
+        "workflow-review"
+        "workflow-todo-add"
+        "workflow-todo-check"
+    )
+
+    local total=$(( ${#dd_commands[@]} + ${#ns_commands[@]} ))
     local i=0
 
-    for cmd in "${commands[@]}"; do
+    echo -e "├── ${BLUE}DD Pipeline Commands (${#dd_commands[@]} 個)${NC}"
+
+    for cmd in "${dd_commands[@]}"; do
         i=$((i + 1))
         local target="$COMMANDS_DIR/$cmd.md"
         local source="$script_dir/commands/$cmd.md"
         local status=""
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ $i -eq $total ] && tree_char="└──"
 
         if [ ! -f "$target" ]; then
-            # 目標檔案不存在 → 新安裝
             if [ -f "$source" ]; then
                 cp "$source" "$target"
             else
@@ -654,7 +622,6 @@ create_commands() {
             fi
             status="new"
         elif [ "$FORCE" = true ]; then
-            # 強制更新
             if [ -f "$source" ]; then
                 cp "$source" "$target"
             else
@@ -662,7 +629,6 @@ create_commands() {
             fi
             status="forced"
         else
-            # 比較檔案內容，偵測變更
             local temp_content=$(mktemp)
             if [ -f "$source" ]; then
                 cp "$source" "$temp_content"
@@ -671,30 +637,60 @@ create_commands() {
             fi
 
             if ! cmp -s "$target" "$temp_content"; then
-                # 內容不同 → 更新
                 cp "$temp_content" "$target"
                 status="updated"
             else
-                # 內容相同 → 已是最新
                 status="uptodate"
             fi
             rm -f "$temp_content"
         fi
 
-        # 顯示狀態
         case $status in
-            new)
-                echo -e "$tree_char $target: ${GREEN}已安裝（新）${NC}"
-                ;;
-            forced)
-                echo -e "$tree_char $target: ${GREEN}已更新（強制）${NC}"
-                ;;
-            updated)
-                echo -e "$tree_char $target: ${CYAN}已更新${NC}"
-                ;;
-            uptodate)
-                echo -e "$tree_char $target: ${YELLOW}已是最新${NC}"
-                ;;
+            new)     echo -e "$tree_char $cmd: ${GREEN}已安裝（新）${NC}" ;;
+            forced)  echo -e "$tree_char $cmd: ${GREEN}已更新（強制）${NC}" ;;
+            updated) echo -e "$tree_char $cmd: ${CYAN}已更新${NC}" ;;
+            uptodate) echo -e "$tree_char $cmd: ${YELLOW}已是最新${NC}" ;;
+        esac
+    done
+
+    echo -e "├── ${BLUE}命名空間 Commands (${#ns_commands[@]} 個)${NC}"
+
+    for ns_cmd in "${ns_commands[@]}"; do
+        i=$((i + 1))
+        local target_dir="$COMMANDS_DIR/$ns_cmd"
+        local source_dir="$script_dir/commands/$ns_cmd"
+        local status=""
+        local tree_char="├──"
+        [ $i -eq $total ] && tree_char="└──"
+
+        if [ ! -d "$target_dir" ]; then
+            if [ -d "$source_dir" ]; then
+                cp -r "$source_dir" "$target_dir"
+                status="new"
+            else
+                echo -e "$tree_char $ns_cmd: ${RED}源檔案不存在${NC}"
+                continue
+            fi
+        elif [ "$FORCE" = true ]; then
+            rm -rf "$target_dir"
+            cp -r "$source_dir" "$target_dir"
+            status="forced"
+        else
+            # 比較目錄內容
+            if diff -rq "$source_dir" "$target_dir" >/dev/null 2>&1; then
+                status="uptodate"
+            else
+                rm -rf "$target_dir"
+                cp -r "$source_dir" "$target_dir"
+                status="updated"
+            fi
+        fi
+
+        case $status in
+            new)     echo -e "$tree_char $ns_cmd: ${GREEN}已安裝（新）${NC}" ;;
+            forced)  echo -e "$tree_char $ns_cmd: ${GREEN}已更新（強制）${NC}" ;;
+            updated) echo -e "$tree_char $ns_cmd: ${CYAN}已更新${NC}" ;;
+            uptodate) echo -e "$tree_char $ns_cmd: ${YELLOW}已是最新${NC}" ;;
         esac
     done
 
@@ -2188,7 +2184,6 @@ main() {
             --update)
                 FORCE=true
                 install_builtin_skills
-                install_optional_skills
                 exit 0
                 ;;
             --help)
@@ -2217,7 +2212,6 @@ main() {
     if [ "$CHECK_ONLY" = true ]; then
         # 檢查模式：只檢查狀態，不實際安裝
         check_builtin_skills
-        check_optional_skills
         check_mcp
         check_plugins
         echo -e "${GREEN}環境檢查完成${NC}"
@@ -2226,9 +2220,6 @@ main() {
 
     # 安裝內建 Skills（核心功能）
     install_builtin_skills
-
-    # 檢查可選的外部 Skills
-    check_optional_skills
 
     # 檢查 MCP
     check_mcp

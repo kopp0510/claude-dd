@@ -239,24 +239,83 @@
 | root-cause-analyzer | 測試 | 問題分析 |
 | config-safety-reviewer | 開發 | 配置審查 |
 
-### Skills（15 個）
+### Skills（60 個，按分類）
+
+#### 核心 Skills（16 個）
 | Skill | 主要階段 | 職責 |
 |-------|----------|------|
-| senior-architect | 需求/架構 | 架構設計專家 |
-| senior-backend | 架構/開發 | 後端開發專家 |
-| senior-frontend | 架構/開發 | 前端開發專家 |
-| senior-fullstack | 開發 | 全端開發專家 |
-| senior-qa | 測試 | 品質保證專家 |
-| senior-devops | 完成 | DevOps 專家 |
-| senior-secops | 測試/完成 | 安全運維專家 |
-| senior-security | 完成 | 安全專家 |
-| senior-prompt-engineer | 開發 | 提示工程專家 |
-| code-reviewer | 開發 | 程式碼審查 |
-| ui-design-system | 測試 | UI 設計系統 |
-| ux-researcher-designer | 需求/測試 | UX 研究設計 |
+| systems-architect | 需求/架構 | 系統架構策略 |
+| test-engineer | 開發/測試 | 測試架構設計 |
+| security-auditor | 開發/測試 | OWASP 應用審計 |
+| docs-writer | 完成 | 技術文件撰寫 |
+| refactor-expert | 完成 | 程式碼重構 |
+| performance-tuner | 完成 | 效能優化 |
+| root-cause-analyzer | 測試 | 除錯與根因分析 |
+| config-safety-reviewer | 開發 | 配置安全審查 |
+| senior-database | 架構/開發 | 資料庫設計與優化 |
+| api-designer | 架構 | API 規格設計 |
+| i18n-expert | 開發 | 國際化 |
 | task-planner | 開發 | 微任務規劃 |
 | worktree-manager | 開發 | Git Worktree 管理 |
 | subagent-orchestrator | 開發 | Subagent 調度 |
+| code-simplifier | 完成 | 程式碼簡化 |
+| frontend-design | 開發 | 前端視覺設計 |
+
+#### 整合包裝器 Skills（23 個）
+| Skill | 主要階段 | 職責 |
+|-------|----------|------|
+| senior-backend | 開發 | 後端開發 |
+| senior-frontend | 開發 | 前端開發 |
+| senior-devops | 完成 | DevOps |
+| senior-fullstack | 開發 | 全端開發 |
+| tdd-guide | 測試 | TDD 引導 |
+| claude-api | 開發 | Claude API 整合 |
+| code-reviewer | 開發 | PR 審查 |
+| review | 開發/完成 | 多維度綜合審查 |
+| code-health | 完成 | 程式碼健康度 |
+| debt-analysis | 完成 | 技術債分析 |
+| test-gen | 測試 | 自動產生測試 |
+| vulnerability-scan | 測試 | CVE 漏洞掃描 |
+| security-audit | 測試 | 全面安全審計 |
+| compliance-check | 測試 | 合規檢查 |
+| senior-secops | 測試 | 安全運維 |
+| performance-profile | 測試 | 效能分析 |
+| benchmark | 測試 | 負載測試 |
+| deploy-validate | 完成 | 部署驗證 |
+| health-check | 完成 | 系統健康檢查 |
+| incident-response | 完成 | 事件回應 |
+| senior-qa | 測試 | QA 策略 |
+| playwright-pro | 測試 | Playwright 測試 |
+| docs-gen | 完成 | 自動文件產生 |
+
+#### 工程團隊 Skills（9 個）
+| Skill | 職責 |
+|-------|------|
+| senior-architect | 架構圖產生、ADR、依賴分析 |
+| senior-security | STRIDE 威脅建模、滲透測試、密碼學 |
+| senior-prompt-engineer | 提示工程、LLM 評估 |
+| senior-data-engineer | 資料管線、ETL/ELT |
+| senior-data-scientist | 統計建模、A/B 測試 |
+| senior-ml-engineer | ML 部署、MLOps |
+| senior-computer-vision | 物件偵測、影像分割 |
+| ui-design-system | Design Token、元件文件 |
+| ux-researcher-designer | 使用者研究、旅程地圖 |
+
+#### 產品與商業 Skills（12 個）
+| Skill | 職責 |
+|-------|------|
+| agile-product-owner | 使用者故事、Sprint 規劃 |
+| aws-solution-architect | AWS 無伺服器架構 |
+| competitive-teardown | 競品分析 |
+| email-template-builder | Email 範本建置 |
+| incident-commander | SRE 事件指揮 |
+| landing-page-generator | Landing Page 產生 |
+| product-manager-toolkit | RICE 排序、PRD |
+| product-strategist | OKR、產品策略 |
+| saas-scaffolder | SaaS 專案腳手架 |
+| self-improving-agent | 自動記憶管理 |
+| stripe-integration-expert | Stripe 支付整合 |
+| tech-stack-evaluator | 技術棧評估 |
 
 ### MCP（必要）
 | MCP | 用途 |
@@ -290,6 +349,7 @@
 | `/dd-test` | 測試審查 | 自動（開發後） |
 | `/dd-status` | 查看進度 | 手動 |
 | `/dd-stop` | 中斷流程 | 手動 |
+| `/dd-docs` | 為現有程式碼產生文檔 | 手動 |
 
 ---
 
@@ -315,10 +375,10 @@
 
 ## 來源
 
-- **Agents**: https://github.com/alirezarezvani/claude-code-tresor
-- **Skills**: https://github.com/alirezarezvani/claude-skills
+所有 Skills 和 Commands 已整合至本專案，不再依賴外部 repo。
 
 ---
 
 **建立日期**：2025-12-15
-**版本**：1.1.0
+**最後更新**：2026-03-24
+**版本**：2.0.0

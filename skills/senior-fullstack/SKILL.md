@@ -1,6 +1,6 @@
 ---
 name: senior-fullstack
-description: 資深全端工程師包裝器，調用官方 senior-fullstack agent。當提到全端開發、scaffold 專案、tech stack 選擇時自動啟用。
+description: 資深全端工程師包裝器，調用官方 senior-fullstack agent。當提到全端開發、前後端整合、tech stack 選擇、全端 scaffold 時自動啟用。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

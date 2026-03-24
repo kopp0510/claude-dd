@@ -1,6 +1,6 @@
 ---
 name: worktree-manager
-description: Git Worktree 隔離管理專家，建立獨立的開發環境分支避免影響主分支。透過結構化工作流程管理 worktree 的建立、驗證和清理。
+description: Git Worktree 隔離管理專家，建立獨立開發環境避免影響主分支。當提到 worktree、分支隔離、隔離開發環境、獨立分支開發時自動啟用。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
