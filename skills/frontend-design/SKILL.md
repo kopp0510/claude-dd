@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. Generates creative, polished code that avoids generic AI aesthetics.
+description: 前端視覺設計專家，建立獨特、生產級的前端介面。當提到前端設計、UI 開發、頁面設計、Web 元件、建立網頁應用時自動啟用。
 license: Complete terms in LICENSE.txt
 ---
 

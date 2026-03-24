@@ -1,6 +1,6 @@
 ---
 name: health-check
-description: 系統健康檢查包裝器，調用 operations-health-check 命令。當提到系統健康、監控、health check 時自動啟用。
+description: 系統健康檢查包裝器，調用 operations-health-check 命令。當提到系統健康檢查、health check、服務狀態驗證、運行狀態確認時自動啟用。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: docs-gen
-description: 自動文件產生包裝器，調用 documentation-docs-gen 命令。當提到自動產生文件、generate docs、API 文件產生時自動啟用。
+description: 自動文件產生包裝器，調用 documentation-docs-gen 命令。當提到自動產生文件、generate docs、批量產生 API 文件、JSDoc 產生時自動啟用。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

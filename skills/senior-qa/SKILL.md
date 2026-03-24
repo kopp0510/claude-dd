@@ -1,6 +1,6 @@
 ---
 name: senior-qa
-description: 資深品質保證工程師包裝器，調用官方 senior-qa agent。當提到 QA、E2E 測試、Jest 設定、Playwright 測試時自動啟用。
+description: 資深品質保證工程師包裝器，調用官方 senior-qa agent。當提到 QA 策略、測試計畫、Jest 設定、測試覆蓋率策略時自動啟用。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

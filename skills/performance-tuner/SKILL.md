@@ -1,6 +1,6 @@
 ---
 name: performance-tuner
-description: 效能工程專家，專注應用程式分析、優化、擴展性。當需要效能調優、瓶頸分析、或優化任務時自動啟用。
+description: 效能工程專家，專注應用程式優化與擴展性。當需要效能調優、優化回應時間、記憶體優化、擴展性改善時自動啟用。
 allowed-tools: Read, Edit, Bash, Grep, Glob
 ---
 

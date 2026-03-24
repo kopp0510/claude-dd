@@ -1,6 +1,6 @@
 ---
 name: systems-architect
-description: 系統架構專家，專注證據導向設計、可擴展系統模式、長期技術策略。當需要架構審查、系統設計、或技術決策時自動啟用。
+description: 系統架構策略專家，專注證據導向設計、可擴展系統模式、長期技術策略。當需要架構審查、系統設計原則、技術決策權衡、風險評估時自動啟用。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 ---
 

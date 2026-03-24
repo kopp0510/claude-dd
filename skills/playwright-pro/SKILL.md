@@ -1,6 +1,6 @@
 ---
 name: playwright-pro
-description: Playwright 測試專家包裝器，調用官方 playwright-pro agent。當提到 Playwright、瀏覽器測試、E2E 自動化、Cypress 遷移時自動啟用。
+description: Playwright 測試專家包裝器，調用官方 playwright-pro agent。當提到 Playwright、瀏覽器自動化、E2E 腳本、Cypress 遷移、page object 時自動啟用。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: task-planner
-description: 微任務規劃專家，將架構設計拆分為最小可執行任務。透過結構化工作流程產出依賴排序的 TDD 微任務計畫，供 subagent-orchestrator 逐任務執行。
+description: 微任務規劃專家，將架構設計拆分為最小可執行任務。當提到任務拆解、微任務規劃、task breakdown、工作分解時自動啟用。透過結構化工作流程產出依賴排序的 TDD 微任務計畫。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 

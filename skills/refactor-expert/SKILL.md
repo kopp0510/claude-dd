@@ -1,6 +1,6 @@
 ---
 name: refactor-expert
-description: 重構專家，專注 SOLID 原則、設計模式、技術債減少。當需要改善程式碼品質、重構或減少技術債時自動啟用。
+description: 重構專家，專注 SOLID 原則、設計模式、技術債減少。當需要重構程式碼、減少技術債、改善設計模式、消除重複邏輯時自動啟用。
 allowed-tools: Read, Edit, Grep, Glob, Bash
 ---
 

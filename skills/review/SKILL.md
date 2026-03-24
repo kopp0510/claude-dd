@@ -1,6 +1,6 @@
 ---
 name: review
-description: 綜合程式碼審查包裝器，調用 workflow-review 命令執行多維度審查。當提到審查程式碼、comprehensive review、code review 時自動啟用。
+description: 多維度綜合審查包裝器，調用 workflow-review 命令同時執行安全、效能、配置審查。當提到全面審查、comprehensive review、多維度審查、安全+效能審查時自動啟用。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

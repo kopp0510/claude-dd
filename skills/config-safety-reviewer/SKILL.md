@@ -1,6 +1,6 @@
 ---
 name: config-safety-reviewer
-description: 設定安全專家，專注生產可靠性、魔術數字、連線池大小、超時設定。當需要審查設定變更或生產安全性時自動啟用。
+description: 設定安全專家，專注生產可靠性、魔術數字、連線池大小、超時設定。當提到設定檔審查、超時設定、連線池大小、環境變數安全、生產配置時自動啟用。
 allowed-tools: Read, Edit, Grep, Glob, Bash
 ---
 

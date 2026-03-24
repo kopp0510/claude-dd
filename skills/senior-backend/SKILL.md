@@ -1,6 +1,6 @@
 ---
 name: senior-backend
-description: 資深後端工程師包裝器，調用官方 senior-backend agent。當提到 Express、Fastify、Node.js API、後端開發、認證機制、GraphQL backend 時自動啟用。
+description: 資深後端工程師包裝器，調用官方 senior-backend agent。當提到 Express、Fastify、Node.js API、後端開發、認證機制、middleware 時自動啟用。
 allowed-tools: Task, Read, Grep, Glob
 ---
 
