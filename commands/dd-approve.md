@@ -1,6 +1,6 @@
 # DD Pipeline 確認架構
 
-確認架構設計，開始自動執行開發和測試流程。
+確認架構設計，從 plan file 建立正式文件，開始自動執行開發和測試流程。
 
 ---
 
@@ -14,32 +14,43 @@
 
 ## 前置條件
 
-- 必須先完成 `/dd-arch`
-- 以下文檔必須存在：
-  - `claude_docs/architecture/ARCHITECTURE.md`
-  - `claude_docs/contracts/API_CONTRACT.md`
+- 必須先完成 `/dd-start` 和 `/dd-arch`
+- Plan file 中必須包含需求分析和架構設計內容
 
 ---
 
 ## 執行步驟
 
-1. **確認架構文檔存在**：
-   - 檢查必要文檔
-   - 如果缺少，提示用戶先執行 `/dd-arch`
+1. **從 plan file 建立正式文件**：
 
-2. **Git commit 架構確認**：
-   ```bash
-   git add .
-   git commit -m "docs(architecture): 架構設計已確認，開始開發"
-   ```
+   讀取 plan file 中的設計內容，建立以下正式文件：
 
-3. **更新狀態**：
+   | Plan file 區段 | 正式文件路徑 |
+   |---------------|-------------|
+   | 需求分析 (RDD) | `claude_docs/requirements/REQUIREMENTS.md` |
+   | 系統架構 (SDD) | `claude_docs/architecture/ARCHITECTURE.md` |
+   | API 契約 (DbC) | `claude_docs/contracts/API_CONTRACT.md` |
+   | 設計規範 | `claude_docs/design/DESIGN_SPEC.md` |
+   | 行為範例 (EDD) | `claude_docs/examples/EXAMPLES.md` |
+   | 架構決策 (ADD) | `claude_docs/decisions/ADR-*.md` |
+
+   > 只建立 plan file 中有對應內容的文件。
+
+2. **更新狀態**：
 
    更新 `PROJECT_STATE.md`：
    ```markdown
+   - [x] 需求分析 (RDD) - 完成
+   - [x] 架構設計 (SDD/DDD/ADD/EDD) - 完成
    - [x] 架構確認 - 完成
    - [ ] 後端開發 - 進行中
    - [ ] 前端開發 - 進行中
+   ```
+
+3. **Git commit 設計文件**：
+   ```bash
+   git add claude_docs/ PROJECT_STATE.md
+   git commit -m "docs(architecture): 架構設計已確認，建立正式文件"
    ```
 
 4. **讀取專案類型**：

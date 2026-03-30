@@ -4,10 +4,19 @@
 
 ---
 
+## Plan 模式
+
+此指令應在 Plan 模式下執行（由 `/dd-start` 進入）。
+如果尚未在 Plan 模式中，先調用 `EnterPlanMode`。
+
+> 所有設計結果寫入 plan file，正式文件待 `/dd-approve` 建立。
+
+---
+
 ## 執行步驟
 
 1. **讀取需求**：
-   - 讀取 `claude_docs/requirements/REQUIREMENTS.md`
+   - 讀取 plan file 中的需求分析結果（由 `/dd-start` 寫入）
    - 讀取 `./CLAUDE.md` 取得技術棧設定
 
 2. **系統架構設計** (SDD)：
@@ -67,12 +76,10 @@
 
    **產出**：`claude_docs/contracts/API_CONTRACT.md`
 
-8. **產出架構文檔**：
+8. **產出架構文檔（寫入 plan file）**：
 
-   **調用 Agent: `docs-writer`**
-   - 整合所有設計
-
-   **產出**：`claude_docs/architecture/ARCHITECTURE.md`
+   將以下所有設計內容整合寫入 plan file（追加到需求分析結果之後）。
+   **不要建立 `claude_docs/` 文件** — 正式文件在 `/dd-approve` 建立。
 
    ```markdown
    # 專案名稱 - 系統架構
@@ -101,41 +108,27 @@
    - 授權機制
    ```
 
-9. **更新狀態**：
+9. **調用 ExitPlanMode 等待用戶審閱**：
 
-   更新 `PROJECT_STATE.md`：
-   ```markdown
-   - [x] 架構設計 (SDD/DDD/ADD/EDD) - 完成
-   - [ ] 架構確認 - 等待中
+   架構設計完成後，調用 `ExitPlanMode` 讓用戶審閱 plan file 中的完整設計。
+
    ```
+   ═══════════════════════════════════════════════════════════════════
+   ⏸️ 架構設計完成，等待確認
+   ═══════════════════════════════════════════════════════════════════
 
-10. **Git commit**：
-    ```bash
-    git add .
-    git commit -m "docs(architecture): 完成架構設計 - SDD/DDD/ADD/EDD"
-    ```
+   所有設計已寫入 plan file，請審閱。
 
-11. **暫停等待確認**：
-    ```
-    ═══════════════════════════════════════════════════════════════════
-    ⏸️ 架構設計完成，等待確認
-    ═══════════════════════════════════════════════════════════════════
+   ⚠️ 此時尚未建立正式文件或寫任何程式碼。
 
-    請審閱以下文檔：
-    ├── claude_docs/architecture/ARCHITECTURE.md
-    ├── claude_docs/contracts/API_CONTRACT.md
-    ├── claude_docs/design/DESIGN_SPEC.md
-    ├── claude_docs/examples/EXAMPLES.md
-    └── claude_docs/decisions/ADR-*.md
+   📌 下一步：
+   ├── /dd-approve        確認架構，建立正式文件並開始開發
+   └── /dd-revise <意見>  修改架構（重新進入 Plan 模式）
 
-    📌 下一步：
-    ├── /dd-approve        確認架構，開始自動開發
-    └── /dd-revise <意見>  修改架構
-
-    範例：
-    /dd-revise 我想用 GraphQL 而不是 REST API
-    ═══════════════════════════════════════════════════════════════════
-    ```
+   範例：
+   /dd-revise 我想用 GraphQL 而不是 REST API
+   ═══════════════════════════════════════════════════════════════════
+   ```
 
 ---
 

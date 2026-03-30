@@ -17,12 +17,19 @@
 
 ## 執行步驟
 
-1. **檢查專案設定**：
+1. **進入 Plan 模式**：
+
+   **調用 `EnterPlanMode`** — 設計階段禁止寫任何實作程式碼。
+
+   > Plan 模式下只能讀取檔案和寫入 plan file。
+   > 所有需求分析結果都寫入 plan file，待 `/dd-approve` 後才建立正式文件。
+
+2. **檢查專案設定**：
    - 讀取 `./CLAUDE.md` 取得專案設定
    - 如果不存在，提示用戶先執行 `/dd-init`
    - 讀取 `./PROJECT_STATE.md` 確認狀態
 
-2. **需求分析** (RDD)：
+3. **需求分析** (RDD)：
 
    **調用 Skill: `ux-researcher-designer`**
    - 分析用戶需求
@@ -36,9 +43,12 @@
    - 建立需求邊界
    - 識別潛在風險
 
-3. **產出需求文檔**：
+4. **產出需求文檔（寫入 plan file）**：
 
-   建立 `claude_docs/requirements/REQUIREMENTS.md`，包含：
+   **注意**：在 Plan 模式下，將以下內容寫入 plan file（非 `claude_docs/`）。
+   正式文件將在 `/dd-approve` 階段建立。
+
+   將以下格式的需求內容寫入 plan file：
 
    ```markdown
    # 專案名稱 - 需求文檔
@@ -81,34 +91,25 @@
    - 限制 1
    ```
 
-4. **更新狀態**：
+5. **顯示摘要並引導下一步**：
 
-   更新 `PROJECT_STATE.md`：
-   ```markdown
-   - [x] 初始化 - 完成
-   - [x] 需求分析 (RDD) - 完成
-   - [ ] 架構設計 - 進行中
    ```
-
-5. **Git commit**：
-   ```bash
-   git add .
-   git commit -m "docs(requirements): 完成需求分析 - RDD"
-   ```
-
-6. **自動進入下一階段**：
-
-   顯示需求摘要後，自動執行架構設計：
-   ```
-   ✅ 需求分析完成！
+   ✅ 需求分析完成！（已寫入 plan file）
 
    📋 需求摘要：
    ├── 核心功能：3 項
    ├── 使用者故事：5 個
    └── 驗收標準：12 條
 
-   🔄 自動進入架構設計階段...
+   ⚠️ 目前處於 Plan 模式（設計階段，不寫實作程式碼）
+
+   📌 下一步：
+   ├── /dd-arch          進入架構設計（仍在 Plan 模式）
+   └── /dd-approve       確認需求並開始開發（退出 Plan 模式）
    ```
+
+   **注意**：不要在此階段 commit 或建立 `claude_docs/` 文件。
+   所有文件建立和 commit 將在 `/dd-approve` 統一執行。
 
 ---
 
