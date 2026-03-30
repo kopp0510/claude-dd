@@ -31,7 +31,7 @@ SKILLS_DIR="$CLAUDE_DIR/skills"
 
 # 所有 Skills（從 claude-dd/skills/ 安裝，共 61 個）
 BUILTIN_SKILLS=(
-    # ── 核心 Skills（16 個）──
+    # ── 核心 Skills（19 個）──
     "systems-architect"
     "test-engineer"
     "security-auditor"
@@ -48,6 +48,9 @@ BUILTIN_SKILLS=(
     "subagent-orchestrator"
     "code-simplifier"
     "frontend-design"
+    "verification-gate"
+    "design-brainstorm"
+    "branch-finisher"
     # ── 整合包裝器 Skills（23 個）──
     # 開發類
     "senior-backend"

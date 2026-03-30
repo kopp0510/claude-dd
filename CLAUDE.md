@@ -12,7 +12,7 @@
 
 ## 目錄結構
 
-- `skills/` — 60 個 Skills（每個子目錄含 SKILL.md 定義檔）
+- `skills/` — 63 個 Skills（每個子目錄含 SKILL.md 定義檔）
 - `commands/` — 11 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
 - `templates/` — 8 個文件模板
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）

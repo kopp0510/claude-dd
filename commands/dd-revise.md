@@ -4,6 +4,14 @@
 
 ---
 
+## Plan 模式
+
+此指令會重新進入 Plan 模式。調用 `EnterPlanMode` 後修改 plan file 中的設計內容。
+
+> 修改完成後調用 `ExitPlanMode`，讓用戶重新審閱。
+
+---
+
 ## 輸入
 
 用戶應提供修改意見，例如：
@@ -19,11 +27,9 @@
 
 ## 執行步驟
 
-1. **讀取現有架構**：
-   - 讀取 `claude_docs/architecture/ARCHITECTURE.md`
-   - 讀取 `claude_docs/contracts/API_CONTRACT.md`
-   - 讀取 `claude_docs/design/DESIGN_SPEC.md`
-   - 讀取 `claude_docs/decisions/ADR-*.md`
+1. **進入 Plan 模式並讀取現有設計**：
+
+   調用 `EnterPlanMode`，然後讀取 plan file 中的現有設計內容。
 
 2. **分析修改需求**：
 
@@ -87,38 +93,27 @@
    - 需要加入 GraphQL 相關依賴
    ```
 
-6. **更新狀態**：
+6. **更新 plan file 中的迭代記錄**：
 
-   更新 `PROJECT_STATE.md`：
+   在 plan file 追加修改記錄：
    ```markdown
    ## 迭代記錄
    ### 架構修改 - 第 1 次
-   - 時間：2024-01-15 10:30
    - 內容：REST API → GraphQL
-   - 狀態：完成
+   - 影響範圍：API 契約、範例文件
    ```
 
-7. **Git commit**：
-   ```bash
-   git add .
-   git commit -m "refactor(architecture): REST API 改為 GraphQL"
-   ```
+7. **調用 ExitPlanMode 等待審閱**：
 
-8. **顯示更新結果**：
    ```
    ═══════════════════════════════════════════════════════════════════
-   🔄 架構已更新
+   🔄 架構已更新（plan file 已修改）
    ═══════════════════════════════════════════════════════════════════
 
-   變更內容：
-   ├── claude_docs/architecture/ARCHITECTURE.md（已更新）
-   ├── claude_docs/contracts/API_CONTRACT.md（已更新）
-   │   └── 改為 GraphQL Schema 格式
-   ├── claude_docs/examples/EXAMPLES.md（已更新）
-   └── claude_docs/decisions/ADR-002-改用GraphQL.md（新增）
+   ⚠️ 尚未建立正式文件或寫任何程式碼。
 
    📌 下一步：
-   ├── /dd-approve        確認架構，開始開發
+   ├── /dd-approve        確認架構，建立正式文件並開始開發
    └── /dd-revise <意見>  繼續修改
 
    ═══════════════════════════════════════════════════════════════════
