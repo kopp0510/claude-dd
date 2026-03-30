@@ -55,7 +55,7 @@ BUILTIN_SKILLS=(
     "senior-devops"
     "senior-fullstack"
     "tdd-guide"
-    "claude-api"
+    "claude-api-expert"
     # 品質與審查類
     "code-reviewer"
     "review"

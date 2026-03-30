@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: 全面安全審計包裝器，調用 security-audit 命令。當提到全面安全審計、security audit 時自動啟用。
+description: 一鍵自動化全面安全審計包裝器，調用 security-audit 命令執行多階段自動掃描。當需要一鍵全面安全審計、自動化安全掃描、完整安全評估報告時自動啟用。不適用於手動逐項審查（用 security-auditor）或特定 CVE 掃描（用 vulnerability-scan）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

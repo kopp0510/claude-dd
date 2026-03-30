@@ -1,6 +1,6 @@
 ---
 name: debt-analysis
-description: 技術債分析包裝器，調用 quality-debt-analysis 命令。當提到技術債、債務分析、重構路線圖時自動啟用。
+description: 技術債盤點與規劃包裝器，調用 quality-debt-analysis 命令。當需要技術債盤點、債務優先排序、重構路線圖規劃、技術債務量化評估時自動啟用。不適用於實際重構執行（用 refactor-expert）或程式碼健康指標（用 code-health）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

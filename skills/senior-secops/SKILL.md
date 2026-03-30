@@ -1,6 +1,6 @@
 ---
 name: senior-secops
-description: 資深安全運維工程師包裝器，調用官方 senior-secops agent。當提到 SecOps、安全自動化、合規掃描時自動啟用。
+description: 安全運維自動化專家包裝器，調用官方 senior-secops agent。當需要 SecOps 管線建置、SIEM 整合、安全監控自動化、安全事件自動回應時自動啟用。不適用於手動安全審查（用 security-auditor）或合規驗證（用 compliance-check）。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

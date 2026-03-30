@@ -1,6 +1,6 @@
 ---
 name: senior-architect
-description: 系統架構設計工具，專注架構圖產生（Mermaid/PlantUML）、依賴分析、ADR 撰寫、技術棧評估。當提到架構圖、ADR、依賴分析、微服務 vs 單體、資料庫選型、擴展性規劃時自動啟用。
+description: 架構圖與 ADR 產出工具，專注產生 Mermaid/PlantUML 架構圖、撰寫 ADR、依賴分析視覺化。當需要畫架構圖、產生 Mermaid 圖表、撰寫 ADR 文件、依賴關係視覺化時自動啟用。不適用於架構決策權衡（用 systems-architect）。
 ---
 
 # Senior Architect

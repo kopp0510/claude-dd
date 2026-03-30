@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 程式碼審查專家包裝器，調用官方 code-reviewer agent。當提到 review PR、code smell、SOLID 違規、pull request 審查時自動啟用。
+description: PR 級別程式碼審查專家包裝器，調用官方 code-reviewer agent。當需要審查 PR、review pull request、檢測 code smell、SOLID 違規檢查時自動啟用。不適用於跨維度綜合審查（用 review）或程式碼簡化（用 code-simplifier）。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

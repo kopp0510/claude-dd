@@ -1,6 +1,6 @@
 ---
 name: code-simplifier
-description: 程式碼簡化專家，調用官方 code-simplifier agent。當需要簡化程式碼、降低複雜度、Clean Code、消除 code smell、移除冗餘邏輯時自動啟用。
+description: 程式碼簡化與複雜度降低專家，調用官方 code-simplifier agent。當需要簡化複雜函式、降低認知複雜度、套用 Clean Code 原則、移除冗餘邏輯時自動啟用。不適用於架構層重構（用 refactor-expert）或 PR 審查（用 code-reviewer）。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
-name: claude-api
-description: Claude API 專家包裝器，調用官方 claude-api agent。當引用 anthropic SDK、提到 Claude API、Agent SDK 時自動啟用。
+name: claude-api-expert
+description: Claude API 整合專家，提供結構化需求確認與報告產出，調用官方 claude-api agent。當需要以結構化流程整合 Claude API、建立 Anthropic SDK 應用、設計 Agent SDK 架構時自動啟用。不適用於簡單 API 查詢（由內建 claude-api 處理）。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: performance-profile
-description: 效能分析包裝器，調用 performance-profile 命令。當提到效能分析、profiling、CPU profiling、火焰圖、瓶頸定位時自動啟用。
+description: Profiling 效能分析包裝器，調用 performance-profile 命令。當需要 profiling 分析、CPU profiling、火焰圖產生、瓶頸定位、效能熱點識別時自動啟用。不適用於實際效能調優（用 performance-tuner）或負載測試（用 benchmark）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 
