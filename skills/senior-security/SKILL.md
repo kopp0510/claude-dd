@@ -1,6 +1,6 @@
 ---
 name: senior-security
-description: 安全工程專家，專注 STRIDE 威脅建模、安全架構設計、滲透測試、密碼學實作。當提到 STRIDE、滲透測試、安全架構、密碼學、零信任、secret scanning 時自動啟用。
+description: 安全工程專家，專注安全設計與威脅建模（非掃描工具）。當需要 STRIDE 威脅建模、安全架構設計、滲透測試規劃、密碼學實作、零信任架構設計時自動啟用。不適用於自動化掃描（用 security-audit）或合規檢查（用 compliance-check）。
 triggers:
   - security architecture
   - threat modeling

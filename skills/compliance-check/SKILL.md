@@ -1,6 +1,6 @@
 ---
 name: compliance-check
-description: 合規檢查包裝器，調用 security-compliance-check 命令。當提到 GDPR、SOC2、HIPAA、PCI-DSS、合規時自動啟用。
+description: 法規合規驗證包裝器，調用 security-compliance-check 命令。當需要 GDPR、SOC2、HIPAA、PCI-DSS 合規驗證、法規遵循檢查、合規報告產出時自動啟用。不適用於技術安全掃描（用 security-audit）或漏洞檢查（用 vulnerability-scan）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

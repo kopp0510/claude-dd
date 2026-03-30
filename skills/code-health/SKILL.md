@@ -1,6 +1,6 @@
 ---
 name: code-health
-description: 程式碼健康度評估包裝器，調用 quality-code-health 命令。當提到程式碼健康、可維護性、品質指標、codebase health 時自動啟用。
+description: 程式碼健康度量化評估包裝器，調用 quality-code-health 命令。當需要量化程式碼健康指標、可維護性分數、測試覆蓋率統計、品質指標報告、codebase health score 時自動啟用。不適用於程式碼審查（用 code-reviewer）或技術債分析（用 debt-analysis）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

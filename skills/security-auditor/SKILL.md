@@ -1,6 +1,6 @@
 ---
 name: security-auditor
-description: 應用安全審計專家，專注 OWASP Top 10 漏洞掃描、認證/授權流程審查。當需要 OWASP 審計、認證流程分析、授權審查、輸入驗證檢查時自動啟用。
+description: 應用安全手動審查專家，逐項檢查程式碼安全問題。當需要 OWASP Top 10 逐項檢查、認證流程審查、授權邏輯分析、輸入驗證檢查、XSS/SQL injection 手動審查時自動啟用。不適用於自動化全面掃描（用 security-audit）或威脅建模（用 senior-security）。
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

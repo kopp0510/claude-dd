@@ -1,6 +1,6 @@
 ---
 name: benchmark
-description: 負載測試與基準測試包裝器，調用 performance-benchmark 命令。當提到負載測試、benchmark、壓力測試時自動啟用。
+description: 負載測試與壓力測試包裝器，調用 performance-benchmark 命令。當需要負載測試、壓力測試、基準測試數據收集、併發量測試、throughput 測量時自動啟用。不適用於 profiling 分析（用 performance-profile）或程式碼調優（用 performance-tuner）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 
