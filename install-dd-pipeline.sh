@@ -195,7 +195,7 @@ show_help() {
     echo "安裝內容："
     echo "  - 63 個內建 Skills（19 個核心 + 23 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
-    echo "  - 11 個 DD Commands + 19 個命名空間 Commands"
+    echo "  - 6 個 DD Commands + 19 個命名空間 Commands"
     echo "  - 8 個 Templates（文檔模板）"
     echo ""
 }
@@ -566,20 +566,24 @@ create_commands() {
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    # DD Pipeline commands（平面 .md 檔案）
+    # DD Pipeline commands（平面 .md 檔案，2026-04 精簡後 6 個核心）
     local dd_commands=(
-        "dd-help"
         "dd-init"
-        "dd-docs"
         "dd-start"
         "dd-arch"
         "dd-approve"
-        "dd-revise"
         "dd-dev"
         "dd-test"
-        "dd-status"
-        "dd-stop"
     )
+
+    # 清理已移除的 DD Commands（2026-04 精簡）
+    local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status" "dd-stop")
+    for old in "${deprecated_dd[@]}"; do
+        if [ -f "$COMMANDS_DIR/$old.md" ]; then
+            rm "$COMMANDS_DIR/$old.md"
+            echo -e "├── ${YELLOW}🧹 已清理舊命令：$old${NC}"
+        fi
+    done
 
     # 命名空間 commands（目錄型）
     local ns_commands=(
@@ -705,108 +709,6 @@ create_command_content() {
     local cmd=$1
 
     case $cmd in
-        "dd-help")
-            cat << 'DDHELP'
-# DD Pipeline 使用手冊
-
-顯示 DD Pipeline 的完整使用說明、DD 模式介紹、可用命令和流程結構。
-
----
-
-## 執行方式
-
-當用戶執行此命令時，請顯示以下內容：
-
-```
-═══════════════════════════════════════════════════════════════════
-📚 DD Pipeline 使用手冊
-═══════════════════════════════════════════════════════════════════
-
-## 什麼是 DD Pipeline？
-
-DD (Driven Development) Pipeline 是一套基於多種開發方法論的
-自動化開發流程，透過多 Agent 協作確保 Vibe Coding 的準確性。
-
-## 包含的 DD 模式
-
-┌─────────────────────────────────────────────────────────────────┐
-│ 階段          │ DD 模式                    │ 說明              │
-├─────────────────────────────────────────────────────────────────┤
-│ 需求分析      │ RDD (Requirements)         │ 需求驅動          │
-│ 架構設計      │ SDD + DDD + ADD + EDD      │ 架構/領域/決策/範例│
-│ 開發實作      │ DbC + CDD + PDD            │ 契約/組件/提示詞   │
-│ 測試審查      │ TDD + BDD + ATDD + FDD     │ 測試/行為/驗收/失敗│
-└─────────────────────────────────────────────────────────────────┘
-
-## 可用命令
-
-┌──────────────┬────────────────────────────────────────────────┐
-│ 命令          │ 說明                                          │
-├──────────────┼────────────────────────────────────────────────┤
-│ /dd-help     │ 顯示此說明                                     │
-│ /dd-init     │ 初始化專案結構（自動偵測現有專案）              │
-│ /dd-docs     │ 為現有程式碼產生 DD 文檔                        │
-│ /dd-start    │ 啟動流程（需求分析）                            │
-│ /dd-arch     │ 進入架構設計                                   │
-│ /dd-approve  │ 確認架構，開始自動開發                          │
-│ /dd-revise   │ 修改架構設計                                   │
-│ /dd-dev      │ 手動觸發開發（通常自動執行）                    │
-│ /dd-test     │ 手動觸發測試（通常自動執行）                    │
-│ /dd-status   │ 查看目前進度                                   │
-│ /dd-stop     │ 中斷流程                                       │
-└──────────────┴────────────────────────────────────────────────┘
-
-## 流程圖
-
-  /dd-init ──▶ /dd-start ──▶ /dd-arch ──▶ ⏸️ 等待確認
-                                              │
-                    ┌─────────────────────────┴─────────────────┐
-                    │                                           │
-               /dd-approve                                /dd-revise
-                    │                                           │
-                    ▼                                           │
-              自動開發測試 ◀────────────────────────────────────┘
-                    │
-                    ▼
-           ✅ 完成 或 ❌ 失敗重試
-
-## 使用的 Agent/Skill
-
-┌─────────────────────────────────────────────────────────────────┐
-│ 架構：systems-architect, senior-architect                      │
-│ 後端：senior-backend, performance-tuner, security-auditor      │
-│ 前端：senior-frontend, ui-design-system, ux-researcher-designer│
-│ 測試：test-engineer, senior-qa, code-reviewer, Playwright MCP  │
-│ 文檔：docs-writer                                              │
-│ 優化：refactor-expert, senior-prompt-engineer                  │
-│ 除錯：root-cause-analyzer                                      │
-└─────────────────────────────────────────────────────────────────┘
-
-## 專案結構（/dd-init 後產生）
-
-  your-project/
-  ├── CLAUDE.md              # 專案設定
-  ├── PROJECT_STATE.md       # 流程狀態
-  └── claude_docs/
-      ├── requirements/      # 需求文檔
-      ├── architecture/      # 架構文檔
-      ├── contracts/         # API 契約
-      ├── decisions/         # ADR 決策記錄
-      ├── examples/          # 行為範例
-      ├── design/            # UI/UX 設計
-      └── reports/           # 測試報告
-
-## 快速開始
-
-  1. /dd-init              # 初始化專案
-  2. /dd-start <需求描述>   # 開始需求分析
-  3. /dd-arch              # 進入架構設計
-  4. /dd-approve           # 確認後自動完成
-
-═══════════════════════════════════════════════════════════════════
-```
-DDHELP
-            ;;
         "dd-init")
             cat << 'DDINIT'
 # DD Pipeline 初始化
@@ -874,90 +776,6 @@ DDHELP
 - 使用 Write 工具建立檔案
 - 使用 Bash 工具執行 git 命令
 DDINIT
-            ;;
-        "dd-docs")
-            cat << 'DDDOCS'
-# DD Pipeline 文檔產生
-
-為現有程式碼分析並產生 DD Pipeline 文檔。
-適用於已有程式碼但尚未建立完整文檔的專案。
-
----
-
-## 使用方式
-
-```bash
-# 產生所有文檔
-/dd-docs
-
-# 產生特定類型文檔
-/dd-docs --requirements    # 需求文檔
-/dd-docs --architecture    # 架構文檔
-/dd-docs --api             # API 契約文檔
-/dd-docs --examples        # 行為範例文檔
-/dd-docs --design          # UI/UX 設計文檔
-
-# 組合使用
-/dd-docs --api --examples
-```
-
----
-
-## 執行步驟
-
-### Phase 0: 前置檢查
-
-1. 檢查 DD Pipeline 是否已初始化
-2. 讀取專案設定（CLAUDE.md, PROJECT_STATE.md）
-3. 判斷要產生的文檔類型
-
-### Phase 1: 選擇文檔類型（無參數時）
-
-使用 AskUserQuestion 詢問要產生哪些文檔
-
-### Phase 2: 程式碼分析
-
-根據選擇的文檔類型，啟動對應的分析流程：
-- 需求分析 → REQUIREMENTS.md
-- 架構分析 → ARCHITECTURE.md
-- API 契約分析 → API_CONTRACT.md
-- 架構決策記錄 → ADR-XXX.md
-- 行為範例分析 → EXAMPLES.md
-- UI/UX 設計分析 → DESIGN_SPEC.md
-
-### Phase 3: 文檔產生
-
-使用 docs-writer Agent 和對應 Skill 產生文檔
-
-### Phase 4: 用戶確認
-
-顯示產生的文檔摘要
-
-### Phase 5: 更新狀態
-
-更新 PROJECT_STATE.md 並 Git commit
-
----
-
-## 文檔輸出位置
-
-claude_docs/
-├── requirements/REQUIREMENTS.md
-├── architecture/ARCHITECTURE.md
-├── contracts/API_CONTRACT.md
-├── decisions/ADR-XXX.md
-├── examples/EXAMPLES.md
-└── design/DESIGN_SPEC.md
-
----
-
-## 使用的 Agent/Skill
-
-- docs-writer：撰寫各類文檔
-- systems-architect：架構分析和 ADR 產生
-- senior-architect, senior-backend, senior-frontend
-- senior-qa, ui-design-system
-DDDOCS
             ;;
         "dd-start")
             cat << 'DDSTART'
@@ -1169,77 +987,6 @@ DDARCH
 預設使用 SADD（微任務 + Subagent 驅動）模式。
 DDAPPROVE
             ;;
-        "dd-revise")
-            cat << 'DDREVISE'
-# DD Pipeline 修改架構
-
-根據用戶反饋修改架構設計。
-
----
-
-## 輸入
-
-用戶應提供修改意見，例如：
-```
-/dd-revise 我想用 GraphQL 而不是 REST API
-```
-
----
-
-## 執行步驟
-
-1. **讀取現有架構**：
-   - 讀取所有架構相關文檔
-   - 理解當前設計
-
-2. **分析修改需求**：
-
-   調用 Skill: `senior-architect`
-   - 分析修改影響範圍
-   - 評估可行性
-   - 識別需要更新的文檔
-
-3. **執行修改**：
-
-   調用 Agent: `systems-architect`
-   - 更新系統架構
-   - 調整相關設計
-
-   調用 Agent: `docs-writer`
-   - 更新所有受影響的文檔
-   - 新增 ADR 記錄此次變更
-
-4. **Git commit**：
-   ```
-   git add .
-   git commit -m "refactor(architecture): <修改摘要>"
-   ```
-
-5. **顯示更新內容**：
-   ```
-   🔄 架構已更新
-
-   變更內容：
-   ├── claude_docs/architecture/ARCHITECTURE.md（已更新）
-   ├── claude_docs/contracts/API_CONTRACT.md（已更新）
-   └── claude_docs/decisions/ADR-XXX-*.md（新增）
-
-   📌 下一步：
-   ├── /dd-approve  確認架構，開始開發
-   └── /dd-revise   繼續修改
-   ```
-
----
-
-## 使用的 Agent/Skill
-
-| 類型 | 名稱 | 用途 |
-|------|------|------|
-| Agent | `systems-architect` | 架構調整 |
-| Skill | `senior-architect` | 影響評估 |
-| Agent | `docs-writer` | 文檔更新 |
-DDREVISE
-            ;;
         "dd-dev")
             cat << 'DDDEV'
 # DD Pipeline 開發實作 (DbC + CDD + PDD)
@@ -1437,111 +1184,6 @@ DDDEV
 | MCP | `Playwright` | E2E 網頁測試 |
 | Agent | `docs-writer` | 測試報告 |
 DDTEST
-            ;;
-        "dd-status")
-            cat << 'DDSTATUS'
-# DD Pipeline 狀態查詢
-
-顯示目前的專案狀態和進度。
-
----
-
-## 執行步驟
-
-1. **讀取狀態檔**：
-   - 讀取 `PROJECT_STATE.md`
-
-2. **顯示狀態**：
-   ```
-   ═══════════════════════════════════════════════════════════════════
-   📊 DD Pipeline 狀態
-   ═══════════════════════════════════════════════════════════════════
-
-   ## 整體進度
-   - [x] 初始化 - 完成
-   - [x] 需求分析 - 完成
-   - [x] 架構設計 - 完成
-   - [ ] 架構確認 - 等待中
-   - [ ] 後端開發 - 待開始
-   - [ ] 前端開發 - 待開始
-   - [ ] 後端測試 - 待開始
-   - [ ] 前端測試 - 待開始
-   - [ ] 整合測試 - 待開始
-   - [ ] 發布 - 待開始
-
-   ## 當前階段
-   架構設計完成，等待確認
-
-   ## 最近活動
-   - 2024-01-15 10:30 - 完成架構設計
-   - 2024-01-15 10:00 - 完成需求分析
-   - 2024-01-15 09:30 - 初始化專案
-
-   ## 迭代記錄
-   （無）
-
-   ## 下一步
-   /dd-approve 或 /dd-revise
-
-   ═══════════════════════════════════════════════════════════════════
-   ```
-
----
-
-## 無需調用 Agent/Skill
-
-此命令只讀取和顯示狀態，不執行任何開發操作。
-DDSTATUS
-            ;;
-        "dd-stop")
-            cat << 'DDSTOP'
-# DD Pipeline 中斷流程
-
-中斷目前正在執行的 DD Pipeline 流程。
-
----
-
-## 執行步驟
-
-1. **確認中斷**：
-   ```
-   ⚠️ 確定要中斷 DD Pipeline 流程嗎？
-
-   當前狀態：後端測試中（第 2 次迭代）
-
-   中斷後：
-   - 進度會保存到 PROJECT_STATE.md
-   - 可以使用 /dd-status 查看狀態
-   - 可以使用 /dd-approve 繼續流程
-
-   [Y/n]
-   ```
-
-2. **保存狀態**：
-   - 更新 `PROJECT_STATE.md`
-   - 記錄中斷時間和原因
-
-3. **Git commit**（如果有未提交的變更）：
-   ```
-   git add .
-   git commit -m "wip: DD Pipeline 中斷 - <當前階段>"
-   ```
-
-4. **顯示恢復指引**：
-   ```
-   ⏸️ DD Pipeline 已中斷
-
-   恢復方式：
-   - /dd-approve  從當前階段繼續
-   - /dd-status   查看詳細狀態
-   ```
-
----
-
-## 無需調用 Agent/Skill
-
-此命令只處理流程控制，不執行任何開發操作。
-DDSTOP
             ;;
     esac
 }
@@ -2154,7 +1796,7 @@ show_completion() {
     echo "   claude-md-management — 使用 /revise-claude-md 管理 CLAUDE.md"
     echo ""
     echo -e "${GREEN}📌 查看說明：${NC}"
-    echo "   /dd-help"
+    echo "   參閱 README.md"
     echo ""
 }
 
