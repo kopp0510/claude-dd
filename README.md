@@ -43,6 +43,19 @@ chmod +x install-dd-pipeline.sh
 2. 啟用官方 Plugins（claude-md-management）
 3. 安裝 DD Pipeline 指令 + 命名空間 Commands 到 `~/.claude/commands/`
 4. 安裝文件模板到 `~/.claude/templates/dd/`
+5. **互動式比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）
+
+### 全域 CLAUDE.md（新增 2026-04）
+
+`templates/global/CLAUDE.md` 是一份可攜的全域設定模板，包含零幻覺政策、Karpathy 四原則等通用開發守則。install 時會比對本機版本：
+
+- **首次安裝**（本機無檔）：詢問是否套用
+- **已存在且相同**：跳過
+- **已存在但不同**：顯示 diff 摘要，提供 [覆蓋 / 保留 / 看完整 diff] 選單（預設保留）
+- **`--force`**：靜默覆蓋，本地版本自動備份為 `~/.claude/CLAUDE.md.backup.YYYY-MM-DD-HHMMSS`
+- **`--commands-only`**：跳過此步驟
+
+**客製化個人偏好**：選擇「保留」即可，本地修改不會被自動推送。
 
 ### 更新安裝
 
