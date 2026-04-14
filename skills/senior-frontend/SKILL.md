@@ -1,6 +1,6 @@
 ---
 name: senior-frontend
-description: 資深前端工程師包裝器，調用官方 senior-frontend agent。當提到 React 元件、Next.js、Tailwind、前端開發、bundle size 時自動啟用。
+description: 資深前端工程師包裝器，調用官方 senior-frontend agent。當提到 React 元件實作、Next.js、Tailwind、bundle size 優化、前端工程開發時自動啟用。不適用於視覺設計（用 frontend-design）或設計系統 Token（用 ui-design-system）。
 allowed-tools: Task, Read, Grep, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: docs-writer
-description: 技術文件撰寫專家，專注手動撰寫 API 文件、使用者指南、架構文件。當需要撰寫技術文件、更新 README、寫使用者指南時自動啟用。透過結構化工作流程引導完成高品質文件撰寫。
+description: 技術文件撰寫專家，專注手動撰寫 API 文件、使用者指南、架構文件。當需要手動撰寫技術文件、更新 README、寫使用者指南時自動啟用。不適用於批量自動產生文件（用 docs-gen）。透過結構化工作流程引導完成高品質文件撰寫。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 ---
 

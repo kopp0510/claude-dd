@@ -1,6 +1,6 @@
 ---
 name: incident-response
-description: 生產事件回應包裝器，調用 operations-incident-response 命令。當提到生產事件、incident、緊急回應、RCA 時自動啟用。
+description: 生產事件即時回應包裝器，調用 operations-incident-response 命令。當提到生產事件、incident、緊急回應、即時 triage 時自動啟用。不適用於完整 SRE 框架與事後檢討（用 incident-commander）或一般 bug 根因分析（用 root-cause-analyzer）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

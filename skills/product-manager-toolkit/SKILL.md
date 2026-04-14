@@ -1,6 +1,6 @@
 ---
 name: product-manager-toolkit
-description: 產品經理工具箱，專注 RICE 排序、客戶訪談分析、PRD 範本、產品發現框架。當提到 feature prioritization、PRD、客戶訪談、RICE 排序、產品需求文件、GTM 策略時自動啟用。
+description: 產品經理工具箱，專注 RICE 排序、客戶訪談分析、PRD 範本、產品發現框架。當提到 feature prioritization、PRD、客戶訪談、RICE 排序、產品需求文件、GTM 策略時自動啟用。不適用於 backlog/user story/sprint 執行（用 agile-product-owner）或 OKR/產品願景/組織擴展（用 product-strategist）。
 ---
 
 # Product Manager Toolkit

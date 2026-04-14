@@ -1,6 +1,6 @@
 ---
 name: incident-commander
-description: 事件指揮官，完整 SRE 事件管理框架，專注嚴重性分類、時間線重建、事後檢討、溝通範本、Runbook。當提到事件指揮、PIR、postmortem、嚴重性分級、Runbook 時自動啟用。
+description: 事件指揮官，完整 SRE 事件管理框架，專注嚴重性分類、時間線重建、事後檢討、溝通範本、Runbook。當提到事件指揮、PIR、postmortem、嚴重性分級、Runbook 時自動啟用。不適用於即時緊急回應調度（用 incident-response）或單一 bug 根因分析（用 root-cause-analyzer）。
 ---
 
 # Incident Commander Skill

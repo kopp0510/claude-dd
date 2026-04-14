@@ -29,7 +29,7 @@ TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 
-# 所有 Skills（從 claude-dd/skills/ 安裝，共 61 個）
+# 所有 Skills（從 claude-dd/skills/ 安裝，共 63 個）
 BUILTIN_SKILLS=(
     # ── 核心 Skills（19 個）──
     "systems-architect"
@@ -92,7 +92,7 @@ BUILTIN_SKILLS=(
     "senior-computer-vision"
     "ui-design-system"
     "ux-researcher-designer"
-    # ── 產品與商業 Skills（13 個）──
+    # ── 產品與商業 Skills（12 個）──
     "agile-product-owner"
     "aws-solution-architect"
     "competitive-teardown"
@@ -193,7 +193,7 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 60 個內建 Skills（16 個核心 + 23 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
+    echo "  - 63 個內建 Skills（19 個核心 + 23 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
     echo "  - 11 個 DD Commands + 19 個命名空間 Commands"
     echo "  - 8 個 Templates（文檔模板）"
