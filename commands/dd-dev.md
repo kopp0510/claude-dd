@@ -41,6 +41,20 @@
 - 為每個任務撰寫 TDD 五步驟
 - 產出 `claude_docs/plans/YYYY-MM-DD-<feature>.md`
 
+#### 2.5 微任務清單審核（Plan 模式）
+
+**調用 `EnterPlanMode`** — 讓用戶審閱微任務清單與依賴順序，避免 subagent 批次執行時走錯方向。
+
+Plan 內容應涵蓋：
+- 微任務清單（任務名稱、TDD 五步驟摘要）
+- 依賴關係拓撲圖
+- 每個任務的驗收條件
+- 預估的 subagent 調用次數與 worktree 影響範圍
+
+**調用 `ExitPlanMode`** 等待用戶確認後，才進入 subagent-orchestrator 執行。
+
+若用戶在 Plan 模式中要求調整任務拆解，重跑 `task-planner` 並更新 plan file，再重新調用 `ExitPlanMode`。
+
 #### 3. 執行策略
 
 **預設 → 調用 Skill: `subagent-orchestrator`**
