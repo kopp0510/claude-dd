@@ -197,12 +197,13 @@ show_help() {
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
     echo "  - 6 個 DD Commands + 19 個命名空間 Commands"
     echo "  - 8 個 Templates（文檔模板）"
+    echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
 }
 
 # 檢查基礎環境
 check_environment() {
-    print_step "1/7" "檢查基礎環境"
+    print_step "1/8" "檢查基礎環境"
 
     local all_ok=true
 
@@ -248,7 +249,7 @@ check_environment() {
 
 # 檢查內建 Skills（僅檢查，不安裝）
 check_builtin_skills() {
-    print_step "2/7" "檢查內建 Skills"
+    print_step "2/8" "檢查內建 Skills"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local count=${#BUILTIN_SKILLS[@]}
@@ -282,7 +283,7 @@ check_builtin_skills() {
 
 # 檢查 Plugins（僅檢查，不安裝）
 check_plugins() {
-    print_step "5/7" "檢查官方 Plugins"
+    print_step "5/8" "檢查官方 Plugins"
 
     local settings_file="$CLAUDE_DIR/settings.json"
     local count=${#OFFICIAL_PLUGINS[@]}
@@ -306,7 +307,7 @@ check_plugins() {
 
 # 安裝內建 Skills
 install_builtin_skills() {
-    print_step "2/7" "安裝內建 Skills"
+    print_step "2/8" "安裝內建 Skills"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -351,7 +352,7 @@ install_builtin_skills() {
 
 # 檢查 MCP
 check_mcp() {
-    print_step "4/7" "檢查 MCP"
+    print_step "4/8" "檢查 MCP"
 
     local claude_json="$HOME/.claude.json"
 
@@ -394,7 +395,7 @@ check_mcp() {
 
 # 安裝官方 Plugins
 install_plugins() {
-    print_step "5/7" "啟用官方 Plugins"
+    print_step "5/8" "啟用官方 Plugins"
 
     local settings_file="$CLAUDE_DIR/settings.json"
     local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
@@ -560,7 +561,7 @@ with open('$installed_file', 'w') as f:
 
 # 建立 DD Commands
 create_commands() {
-    print_step "6/7" "建立 Commands"
+    print_step "6/8" "建立 Commands"
 
     mkdir -p "$COMMANDS_DIR"
 
@@ -1190,7 +1191,7 @@ DDTEST
 
 # 建立 Templates
 create_templates() {
-    print_step "7/7" "建立 Templates"
+    print_step "7/8" "建立 Templates"
 
     mkdir -p "$TEMPLATES_DIR"
 
@@ -1783,6 +1784,93 @@ with open('$installed_file', 'w') as f:
     fi
 }
 
+# 建立 / 比對全域 CLAUDE.md
+create_global_claude_md() {
+    print_step "8/8" "檢查全域 CLAUDE.md"
+
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local source="$script_dir/templates/global/CLAUDE.md"
+    local target="$CLAUDE_DIR/CLAUDE.md"
+
+    if [ ! -f "$source" ]; then
+        echo -e "└── ${YELLOW}⚠️ repo 內無 templates/global/CLAUDE.md，跳過${NC}"
+        return
+    fi
+
+    # 情境 1：本機無檔案
+    if [ ! -f "$target" ]; then
+        if [ "$FORCE" = true ]; then
+            cp "$source" "$target"
+            echo -e "└── ${GREEN}✅ 已從 repo 模板安裝全域 CLAUDE.md（--force）${NC}"
+        else
+            echo -e "├── ${CYAN}全域 CLAUDE.md 不存在${NC}"
+            read -p "│   是否從 repo 模板安裝？[y/N]: " answer
+            if [[ "$answer" =~ ^[Yy]$ ]]; then
+                cp "$source" "$target"
+                echo -e "└── ${GREEN}✅ 已安裝${NC}"
+            else
+                echo -e "└── ${YELLOW}跳過，保持無全域 CLAUDE.md${NC}"
+            fi
+        fi
+        return
+    fi
+
+    # 情境 2：內容一致
+    if cmp -s "$source" "$target"; then
+        echo -e "└── ${GREEN}✅ 與 repo 版本一致${NC}"
+        return
+    fi
+
+    # 情境 3：內容不同 — --force 靜默覆蓋
+    if [ "$FORCE" = true ]; then
+        local backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
+        cp "$target" "$backup"
+        cp "$source" "$target"
+        echo -e "├── ${YELLOW}已備份至 $(basename "$backup")${NC}"
+        echo -e "└── ${GREEN}✅ 已用 repo 版本覆蓋（--force）${NC}"
+        return
+    fi
+
+    # 情境 4：內容不同 — 互動選單
+    echo -e "├── ${YELLOW}⚠️ 全域 CLAUDE.md 與 repo 版本不同${NC}"
+    echo ""
+    echo "差異摘要（前 30 行）："
+    diff "$target" "$source" | head -30
+    echo ""
+    echo "選項："
+    echo "  o) 覆蓋（自動備份為 CLAUDE.md.backup.YYYY-MM-DD-HHMMSS）"
+    echo "  k) 保留本地版本（推薦，預設）"
+    echo "  s) 顯示完整 diff 後再決定"
+    echo ""
+    read -p "選擇 [o/k/s，預設 k]: " choice
+    choice=${choice:-k}
+
+    case $choice in
+        o|O)
+            local backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
+            cp "$target" "$backup"
+            cp "$source" "$target"
+            echo -e "└── ${GREEN}✅ 已覆蓋，本地版本備份為 $(basename "$backup")${NC}"
+            ;;
+        s|S)
+            diff "$target" "$source"
+            echo ""
+            read -p "看完後要覆蓋嗎？[y/N]: " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                local backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
+                cp "$target" "$backup"
+                cp "$source" "$target"
+                echo -e "└── ${GREEN}✅ 已覆蓋，本地版本備份為 $(basename "$backup")${NC}"
+            else
+                echo -e "└── ${YELLOW}已保留本地版本${NC}"
+            fi
+            ;;
+        *)
+            echo -e "└── ${YELLOW}已保留本地版本${NC}"
+            ;;
+    esac
+}
+
 # 顯示完成訊息
 show_completion() {
     print_header "✅ DD Pipeline 安裝完成！"
@@ -1878,6 +1966,11 @@ main() {
     # 建立 Templates（除非只安裝 commands）
     if [ "$COMMANDS_ONLY" = false ]; then
         create_templates
+    fi
+
+    # 檢查 / 安裝全域 CLAUDE.md（除非只安裝 commands）
+    if [ "$COMMANDS_ONLY" = false ]; then
+        create_global_claude_md
     fi
 
     # 顯示完成訊息
