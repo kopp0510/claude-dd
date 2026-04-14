@@ -1,6 +1,6 @@
 ---
 name: senior-data-scientist
-description: 資料科學專家，專注統計建模、實驗設計、因果推論、進階分析。當提到 A/B 測試、實驗設計、統計建模、因果推論、預測模型、特徵工程時自動啟用。
+description: 資料科學專家，專注統計建模、實驗設計、因果推論、進階分析。當提到 A/B 測試、實驗設計、統計建模、因果推論、預測模型、特徵工程時自動啟用。不適用於模型部署/MLOps（用 senior-ml-engineer）或資料管線建置（用 senior-data-engineer）。
 ---
 
 # Senior Data Scientist

@@ -1,6 +1,6 @@
 ---
 name: test-engineer
-description: 測試工程專家，專注測試策略設計、框架選擇、測試架構。當需要設計測試架構、選擇測試框架、規劃測試金字塔時自動啟用。
+description: 測試工程專家，專注測試策略設計、框架選擇、測試架構。當需要設計測試架構、選擇測試框架、規劃測試金字塔時自動啟用。不適用於 QA 策略與覆蓋率規劃（用 senior-qa）或自動產生測試案例（用 test-gen）。
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 

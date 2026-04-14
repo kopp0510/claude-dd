@@ -1,6 +1,6 @@
 ---
 name: test-gen
-description: 測試產生器包裝器，調用 testing-test-gen 命令。當提到自動產生測試、generate tests、test harness、批量產生測試案例時自動啟用。
+description: 測試產生器包裝器，調用 testing-test-gen 命令。當提到自動產生測試、generate tests、test harness、批量產生測試案例時自動啟用。不適用於測試架構設計（用 test-engineer）或 QA 策略規劃（用 senior-qa）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 

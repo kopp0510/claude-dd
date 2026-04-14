@@ -39,7 +39,7 @@ chmod +x install-dd-pipeline.sh
 ```
 
 安裝程式會：
-1. 安裝 60 個內建 Skills 到 `~/.claude/skills/`（自動觸發專家知識）
+1. 安裝 63 個內建 Skills 到 `~/.claude/skills/`（自動觸發專家知識）
 2. 啟用官方 Plugins（claude-md-management）
 3. 安裝 DD Pipeline 指令 + 命名空間 Commands 到 `~/.claude/commands/`
 4. 安裝文件模板到 `~/.claude/templates/dd/`
@@ -233,28 +233,28 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 ## 依賴需求
 
-### 核心 Skills（DD Pipeline 安裝，16 個）
+### 核心 Skills（DD Pipeline 安裝，19 個）
 
 安裝腳本會自動安裝以下 Skills 到 `~/.claude/skills/`，這些 Skills 會在對話中自動觸發：
 
 | Skill | 說明 | 自動觸發時機 |
 |-------|------|-------------|
 | systems-architect | 系統架構師 | 討論系統設計、架構決策時 |
-| test-engineer | 測試工程師 | 需要撰寫測試、測試策略時 |
+| test-engineer | 測試工程師 | 測試架構、框架選型（非 QA 策略用 senior-qa；非自動產生用 test-gen） |
 | security-auditor | 安全審計員 | 安全審查、漏洞分析時 |
-| docs-writer ⭐ | 文件撰寫專家 | 撰寫技術文件時（4 階段結構化工作流程） |
+| docs-writer ⭐ | 文件撰寫專家 | 手動撰寫技術文件（非批量產生用 docs-gen；4 階段工作流程） |
 | refactor-expert | 重構專家 | 程式碼重構、技術債處理時 |
 | performance-tuner | 效能調校專家 | 效能優化、瓶頸分析時 |
-| root-cause-analyzer | 根因分析專家 | 除錯、問題調查時 |
+| root-cause-analyzer | 根因分析專家 | 除錯、複雜 bug 調查（非生產事件用 incident-response） |
 | config-safety-reviewer | 配置安全審查員 | 審查設定檔、生產環境配置時 |
-| senior-database ⭐ | 資料庫專家 | Schema 設計、查詢優化、索引策略（4 情境工作流程） |
+| senior-database ⭐ | 資料庫專家 | Schema 設計、查詢優化、索引（非資料管線用 senior-data-engineer；4 情境工作流程） |
 | api-designer ⭐ | API 設計專家 | REST/GraphQL 設計、OpenAPI 規格（7 階段工作流程） |
 | i18n-expert ⭐ | 國際化專家 | 多語言架構、RTL 支援、翻譯管理（5 情境工作流程） |
 | task-planner ⭐ | 微任務規劃專家 | dd-dev 自動調用，架構 → 微任務清單（4 階段工作流程） |
 | worktree-manager ⭐ | Git Worktree 管理 | dd-dev --worktree 時，隔離環境建立（3 階段工作流程） |
 | subagent-orchestrator ⭐ | Subagent 調度專家 | dd-dev 自動調用，逐任務 subagent 執行+審查（3 階段工作流程） |
 | code-simplifier ⭐ | 程式碼簡化專家 | 簡化程式碼、降低複雜度時（3 階段包裝器工作流程） |
-| frontend-design | 前端視覺設計專家 | 建立前端介面、UI 元件、頁面時 |
+| frontend-design | 前端視覺設計專家 | 視覺風格、頁面視覺設計（非 React 實作用 senior-frontend；非 Design Token 用 ui-design-system） |
 
 ### 整合包裝器 Skills（DD Pipeline 安裝，23 個）
 
@@ -265,7 +265,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | Skill | 說明 | 自動觸發時機 |
 |-------|------|-------------|
 | senior-backend | 資深後端工程師 | Express、Fastify、Node.js API、後端、認證 |
-| senior-frontend | 資深前端工程師 | React 元件、Next.js、Tailwind、前端開發 |
+| senior-frontend | 資深前端工程師 | React 元件實作、Next.js、Tailwind（非視覺設計用 frontend-design） |
 | senior-devops | 資深 DevOps 工程師 | CI/CD、Docker、Kubernetes、部署 |
 | senior-fullstack | 資深全端工程師 | 全端、scaffold 專案、tech stack |
 | tdd-guide | TDD 引導專家 | TDD、測試驅動、紅綠重構 |
@@ -279,7 +279,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | review | 綜合程式碼審查 | 審查程式碼、comprehensive review、code review |
 | code-health | 程式碼健康度 | 程式碼健康、可維護性、品質指標 |
 | debt-analysis | 技術債分析 | 技術債、債務分析、重構路線圖 |
-| test-gen | 測試產生器 | 產生測試、generate tests、測試覆蓋 |
+| test-gen | 測試產生器 | 自動產生測試案例（非測試架構用 test-engineer） |
 
 #### 安全類
 
@@ -303,20 +303,20 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 |-------|------|-------------|
 | deploy-validate | 部署驗證 | 部署驗證、上線前檢查、pre-deploy |
 | health-check | 系統健康檢查 | 系統健康、監控、health check |
-| incident-response | 生產事件回應 | 生產事件、incident、緊急回應、RCA |
+| incident-response | 生產事件回應 | 生產事件、緊急 triage（非事後檢討用 incident-commander；非一般 bug 用 root-cause-analyzer） |
 
 #### 測試類
 
 | Skill | 說明 | 自動觸發時機 |
 |-------|------|-------------|
-| senior-qa | 資深 QA 工程師 | QA、E2E 測試、Jest 設定、Playwright 測試 |
+| senior-qa | 資深 QA 工程師 | QA 策略、測試計畫、覆蓋率（非架構設計用 test-engineer） |
 | playwright-pro | Playwright 測試專家 | Playwright、瀏覽器測試、E2E 自動化 |
 
 #### 文件類
 
 | Skill | 說明 | 自動觸發時機 |
 |-------|------|-------------|
-| docs-gen | 自動文件產生 | 自動產生文件、generate docs、API 文件產生 |
+| docs-gen | 自動文件產生 | 自動產生文件、JSDoc（非手動撰寫用 docs-writer） |
 
 ### 官方 Plugins（DD Pipeline 安裝）
 
@@ -338,12 +338,12 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 |-------|------|-------------|
 | senior-architect | 系統架構設計 | 設計架構、評估微服務、架構圖表 |
 | senior-security | 安全工程 | 威脅建模、STRIDE 分析、安全架構 |
-| senior-prompt-engineer | 提示工程 | 優化提示、LLM 評估、Agent 架構 |
-| senior-data-engineer | 資料工程 | 資料管線、ETL/ELT、Spark、Airflow |
-| senior-data-scientist | 資料科學 | 統計建模、A/B 測試、因果推論 |
-| senior-ml-engineer | 機器學習工程 | ML 部署、MLOps、RAG、模型監控 |
+| senior-prompt-engineer | 提示工程 | Prompt 優化、LLM 評估、RAG prompt（非 RAG 基礎設施用 senior-ml-engineer） |
+| senior-data-engineer | 資料工程 | 資料管線、ETL/ELT、Spark、Airflow（非 SQL 優化用 senior-database；非 MLOps 用 senior-ml-engineer） |
+| senior-data-scientist | 資料科學 | 統計建模、A/B 測試、因果推論（非 MLOps 用 senior-ml-engineer） |
+| senior-ml-engineer | 機器學習工程 | MLOps、RAG 基礎設施、模型部署（非 prompt 設計用 senior-prompt-engineer） |
 | senior-computer-vision | 電腦視覺 | 物件偵測、影像分割、YOLO、SAM |
-| ui-design-system | UI 設計系統 | Design Token、元件文件、響應式設計 |
+| ui-design-system | UI 設計系統 | Design Token、元件文件、響應式設計(非視覺設計用 frontend-design) |
 | ux-researcher-designer | UX 研究設計 | 使用者研究、Persona、旅程地圖 |
 
 ### 產品與商業 Skills（DD Pipeline 安裝）
@@ -352,14 +352,14 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 | Skill | 說明 | 自動觸發時機 |
 |-------|------|-------------|
-| agile-product-owner | Agile 產品負責人 | 使用者故事、Sprint 規劃、Backlog |
+| agile-product-owner | Agile 產品負責人 | user story、Sprint、Backlog（非 PRD/RICE 用 product-manager-toolkit；非 OKR 用 product-strategist） |
 | aws-solution-architect | AWS 架構師 | 無伺服器架構、CloudFormation、成本優化 |
 | competitive-teardown | 競品分析 | 競品拆解、市場定位分析 |
 | email-template-builder | Email 範本建置 | Email 設計、範本產生 |
-| incident-commander | 事件指揮官 | SRE 事件管理、PIR、Runbook |
+| incident-commander | 事件指揮官 | SRE 事件管理、PIR、Runbook（非即時回應用 incident-response） |
 | landing-page-generator | Landing Page 產生 | 著陸頁設計與產生 |
-| product-manager-toolkit | 產品經理工具箱 | RICE 排序、PRD、GTM 策略 |
-| product-strategist | 產品策略 | OKR、市場分析、願景設定 |
+| product-manager-toolkit | 產品經理工具箱 | RICE、PRD、客戶訪談（非 Sprint/story 用 agile-product-owner；非 OKR 用 product-strategist） |
+| product-strategist | 產品策略 | OKR、市場分析、產品願景（非 PRD 用 product-manager-toolkit；非競品拆解用 competitive-teardown） |
 | saas-scaffolder | SaaS 腳手架 | SaaS 專案快速建置 |
 | self-improving-agent | 自動記憶管理 | 記憶審計、知識提升、規則畢業 |
 | stripe-integration-expert | Stripe 整合 | 支付整合、訂閱管理 |

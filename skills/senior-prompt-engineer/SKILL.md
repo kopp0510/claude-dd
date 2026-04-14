@@ -1,6 +1,6 @@
 ---
 name: senior-prompt-engineer
-description: 提示工程專家，專注 Prompt 優化、LLM 評估、Agent 架構、RAG 實作。當提到 optimize prompts、prompt template、LLM 評估、agentic systems、RAG、few-shot、token 分析時自動啟用。
+description: 提示工程專家，專注 Prompt 優化、LLM 評估、Agent 架構、RAG prompt 設計。當提到 optimize prompts、prompt template、LLM 評估、agentic systems、RAG prompt、few-shot、token 分析時自動啟用。不適用於 RAG 基礎設施/向量資料庫/模型部署（用 senior-ml-engineer）。
 ---
 
 # Senior Prompt Engineer

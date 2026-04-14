@@ -1,6 +1,6 @@
 ---
 name: product-strategist
-description: 產品策略專家，專注 OKR 級聯、市場分析、願景設定、團隊擴展。當提到產品策略、OKR、市場分析、產品願景、競爭分析、組織設計時自動啟用。
+description: 產品策略專家，專注 OKR 級聯、市場分析、願景設定、團隊擴展。當提到產品策略、OKR、市場分析、產品願景、組織設計時自動啟用。不適用於 PRD/RICE 排序/客戶訪談（用 product-manager-toolkit）、backlog/sprint 執行（用 agile-product-owner）或詳細競品拆解（用 competitive-teardown）。
 ---
 
 # Product Strategist

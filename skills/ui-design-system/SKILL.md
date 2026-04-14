@@ -1,6 +1,6 @@
 ---
 name: ui-design-system
-description: UI design system toolkit for Senior UI Designer including design token generation, component documentation, responsive design calculations, and developer handoff tools. Use for creating design systems, maintaining visual consistency, and facilitating design-dev collaboration.
+description: UI design system toolkit for Senior UI Designer including design token generation, component documentation, responsive design calculations, and developer handoff tools. Use for creating design systems, design tokens, component libraries, and facilitating design-dev collaboration. Not for bespoke visual page design (use frontend-design); not for React/Next.js/Tailwind implementation (use senior-frontend); not for UX research or persona/journey mapping (use ux-researcher-designer).
 ---
 
 # UI Design System

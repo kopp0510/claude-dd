@@ -1,6 +1,6 @@
 ---
 name: senior-database
-description: 資料庫專家，專注 SQL 優化、Schema 設計、索引策略、效能調校。當需要資料庫設計、查詢優化、slow query 分析、索引優化、資料遷移時自動啟用。透過結構化工作流程引導完成資料庫設計與優化。
+description: 資料庫專家，專注 SQL 優化、Schema 設計、索引策略、效能調校。當需要資料庫設計、查詢優化、slow query 分析、索引優化、資料遷移時自動啟用。不適用於資料管線/ETL/Spark/Airflow（用 senior-data-engineer）。透過結構化工作流程引導完成資料庫設計與優化。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
