@@ -166,6 +166,23 @@ chmod +x install-dd-pipeline.sh
 | **批次** | `/dd-dev --batch` | 每 3 個任務暫停等待人工回饋 |
 | **經典** | `/dd-dev --classic` | 舊版一次性實作模式（PDD + 整體實作） |
 
+## 模型策略
+
+DD Pipeline 主 session 使用使用者當下設定的模型（預設 Sonnet），但在**委派 subagent / Agent 時**建議依任務性質切換以優化成本/品質：
+
+| 階段 / Agent | 建議 model | 理由 |
+|---|---|---|
+| `/dd-init` Explore subagent | **haiku** | 檔案搜尋、技術棧偵測，低推理 |
+| `/dd-arch` systems-architect | **opus** | 系統架構決策，錯誤會讓後續全歪 |
+| `/dd-arch` senior-architect（ADR/DDD） | **opus** | 技術選型權衡與領域建模需深度推理 |
+| `/dd-dev` 失敗修復 root-cause-analyzer | **opus** | 根因分析需深度推理，避免 workaround 掩蓋真因 |
+| `/dd-dev` subagent-orchestrator worker | **sonnet** | 實作任務量大，批量用 Opus 成本高 |
+| 其他 Agent/Skill（test/QA/審查/文件） | **sonnet**（預設） | 中等推理，品質與成本平衡 |
+
+**為何不寫在 command frontmatter？** 避免覆蓋使用者手動 `/model` 設定。模型建議內嵌在 command 的 Agent 調用段落（如「建議 `model: "opus"`」），由 Claude 在委派時決定是否傳入，使用者可隨時覆蓋。
+
+**成本參考**（每 1M token）：Opus $15 / Sonnet $3 / Haiku $0.80。`/dd-dev` 批量 subagent 用 Sonnet 比 Opus 省 5 倍。
+
 ## 開發流程
 
 ### 新專案流程

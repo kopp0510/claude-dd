@@ -38,7 +38,7 @@
 
 1. **啟動 Explore Agent 分析專案**：
 
-   使用 **Task** 工具（subagent_type: `Explore`）：
+   使用 **Task** 工具（subagent_type: `Explore`，建議 `model: "haiku"` — 檔案搜尋低推理，省成本）：
    ```
    分析此專案並提供以下資訊，以結構化格式回報：
 

@@ -252,7 +252,7 @@ git commit -m "feat(frontend): 實作前端功能"
 
 ### 2. 分析問題
 
-**調用 Agent: `root-cause-analyzer`**
+**調用 Agent: `root-cause-analyzer`**（建議 `model: "opus"` — 根因分析需深度推理，避免 workaround 掩蓋真因）
 - 分析根本原因
 - 識別問題範圍
 - 制定修正方案
