@@ -100,8 +100,23 @@ git commit -m "test(backend): 後端測試通過 - 覆蓋率 87%"
 ```
 
 - 記錄失敗原因到 `PROJECT_STATE.md`
+
+**失敗修復策略審核（Plan 模式）**：
+
+**調用 `EnterPlanMode`** — 僅在測試失敗時進入，成功路徑跳過此步驟。
+
+Plan 內容應涵蓋：
+- 失敗測試的根因分析（調用 `root-cause-analyzer` skill）
+- 候選修復方案（最多 3 個，附 tradeoff）
+- 推薦方案與影響範圍評估
+- 是否為 workaround 的明確標示（避免用繞道方式掩蓋根因）
+
+**調用 `ExitPlanMode`** 等待用戶選擇修復方案，才執行下列步驟。
+
+若用戶在 Plan 模式中拒絕所有方案，中止自動修復迴圈，將控制權交回用戶。
+
 - 自動執行 `/dd-dev --backend --fix`
-- 重新測試（最多 3 次）
+- 重新測試（最多 3 次，每次修復前重新進入 Plan 模式審核）
 
 ---
 
