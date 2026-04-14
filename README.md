@@ -85,16 +85,25 @@ chmod +x install-dd-pipeline.sh
 | 指令 | 說明 |
 |------|------|
 | `/dd-init` | 初始化專案，建立 `claude_docs/` 目錄與專案設定（支援自動偵測現有專案） |
-| `/dd-docs` | 為現有程式碼分析並產生 DD 文檔 |
 | `/dd-start` | 啟動需求分析階段 (RDD) |
 | `/dd-arch` | 執行架構設計階段 (SDD + DDD + ADD + EDD) |
 | `/dd-approve` | 批准架構設計，進入開發階段 |
-| `/dd-revise` | 修改架構設計 |
 | `/dd-dev` | 執行開發實作階段 (SADD + DbC + CDD + PDD) |
 | `/dd-test` | 執行測試驗證階段 (TDD) |
-| `/dd-status` | 查看專案開發狀態 |
-| `/dd-stop` | 暫停開發流程 |
-| `/dd-help` | 顯示幫助資訊 |
+
+> **2026-04 精簡**：`/dd-revise`、`/dd-stop`、`/dd-status`、`/dd-help`、`/dd-docs` 已移除，改用原生能力替代。
+
+### 已精簡命令遷移指引
+
+| 舊命令 | 替代方案 |
+|---|---|
+| `/dd-revise` | 直接編輯 `claude_docs/*.md` 後重跑 `/dd-approve` |
+| `/dd-stop` | `git add . && git commit -m "wip: <階段>"` 手動保存進度 |
+| `/dd-status` | `cat claude_docs/PROJECT_STATE.md` + `git log` 檢視進度 |
+| `/dd-help` | 閱讀 `README.md`（本檔） |
+| `/dd-docs` | 改用 `/docs-gen` skill（自動產生）或 `/docs-writer` skill（手動撰寫） |
+
+**為何精簡**：這 5 個命令功能已被 Claude Code 原生能力（Plan 模式、git、內建 skills）完全覆蓋，移除後降低維護負擔與使用者選擇困惑。舊安裝執行 `./install-dd-pipeline.sh --force` 會自動清理 `~/.claude/commands/` 中的殘留檔案。
 
 ## 命名空間 Commands
 
@@ -174,11 +183,12 @@ chmod +x install-dd-pipeline.sh
    /dd-arch ─────────► 架構設計 (ARCHITECTURE.md, ADR-XXX.md, EXAMPLES.md)
       │
       ▼
-┌─────────────────────────┐
-│  🔒 人工審核 Checkpoint  │
-│  /dd-approve 批准       │
-│  /dd-revise 修改        │
-└──────────┬──────────────┘
+┌─────────────────────────────────────┐
+│  🔒 人工審核 Checkpoint              │
+│  /dd-approve 批准                   │
+│  （需修改時：直接編輯 claude_docs/   │
+│   *.md，再重跑 /dd-approve）         │
+└──────────┬──────────────────────────┘
            │
            ▼
    /dd-dev ──────────► 微任務拆解 → Subagent 逐任務執行
@@ -205,7 +215,8 @@ chmod +x install-dd-pipeline.sh
    /dd-init ─────────► 自動偵測技術棧，補充 DD 設定
       │
       ▼
-   /dd-docs ─────────► 分析程式碼，產生 DD 文檔
+   /docs-gen ────────► 分析程式碼，產生 DD 文檔
+      │                 （改用內建 skill 取代 /dd-docs）
       │                 ├── REQUIREMENTS.md
       │                 ├── ARCHITECTURE.md
       │                 ├── API_CONTRACT.md

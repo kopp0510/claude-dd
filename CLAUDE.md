@@ -13,7 +13,7 @@
 ## 目錄結構
 
 - `skills/` — 63 個 Skills（每個子目錄含 SKILL.md 定義檔）
-- `commands/` — 11 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
+- `commands/` — 6 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
 - `templates/` — 8 個文件模板
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
 
@@ -32,7 +32,7 @@
 
 ```
 /dd-init → /dd-start(RDD) → /dd-arch(SDD/DDD/ADD/EDD)
-→ [人工審核: /dd-approve 或 /dd-revise]
+→ [人工審核: /dd-approve，需修改時直接編輯 claude_docs/*.md 後重跑 /dd-approve]
 → /dd-dev(DbC/CDD/PDD) → /dd-test(TDD/BDD/ATDD/FDD)
 ```
 
