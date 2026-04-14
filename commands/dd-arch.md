@@ -21,7 +21,7 @@
 
 2. **系統架構設計** (SDD)：
 
-   **調用 Agent: `systems-architect`**
+   **調用 Agent: `systems-architect`**（建議 `model: "opus"` — 架構決策錯誤會讓後續全歪）
    - 設計整體系統架構
    - 定義模組劃分
    - 設計資料流
@@ -29,7 +29,7 @@
 
 3. **技術選型與決策** (ADD)：
 
-   **調用 Skill: `senior-architect`**
+   **調用 Skill: `senior-architect`**（建議 `model: "opus"` — 技術選型權衡需深度推理）
    - 確認技術選型
    - 記錄決策原因
    - 評估替代方案
@@ -39,7 +39,7 @@
 
 4. **領域模型設計** (DDD)：
 
-   **調用 Skill: `senior-architect`**
+   **調用 Skill: `senior-architect`**（建議 `model: "opus"` — 領域建模需深度推理）
    - 識別領域邊界
    - 設計領域模型
    - 定義聚合根
