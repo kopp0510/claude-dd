@@ -21,7 +21,7 @@
 
 2. **系統架構設計** (SDD)：
 
-   **調用 Agent: `systems-architect`**（建議 `model: "opus"` — 架構決策錯誤會讓後續全歪）
+   **調用 Agent: `systems-architect`**（建議 `model: "opus"` — 架構決策錯誤會讓後續全歪；大型 codebase 可用 Opus 1M context 變體一次納入完整脈絡）
    - 設計整體系統架構
    - 定義模組劃分
    - 設計資料流
@@ -29,7 +29,7 @@
 
 3. **技術選型與決策** (ADD)：
 
-   **調用 Skill: `senior-architect`**（建議 `model: "opus"` — 技術選型權衡需深度推理）
+   **調用 Skill: `senior-architect`**（建議 `model: "opus"` — 技術選型權衡需深度推理；技術棧複雜時可用 Opus 1M context 變體完整比對多個候選方案）
    - 確認技術選型
    - 記錄決策原因
    - 評估替代方案
