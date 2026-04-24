@@ -12,7 +12,7 @@ allowed-tools: Task, Read, Grep, Glob
 
 **這是官方 code-reviewer agent 的包裝器 (Wrapper)**
 
-- **實作方式**：透過 `Task(subagent_type="code-reviewer", ...)` 調用官方 agent
+- **實作方式**：透過 `Task(subagent_type="code-reviewer:code-reviewer" 或 "code-reviewer", ...)` 調用官方 agent（優先 plugin 命名空間，失敗 fallback 本地 `~/.claude/agents/code-reviewer.md`，若皆不存在則 marketplace 的其他 plugin 也可能提供此 agent）
 - **Skill 職責**：提供自動觸發、需求確認、結構化報告產出
 - **Agent 職責**：執行實際的程式碼審查（由外部 Skill 維護）
 
@@ -35,6 +35,9 @@ allowed-tools: Task, Read, Grep, Glob
 詢問使用者要審查的範圍（PR、檔案、目錄）。
 
 ### Stage 2: 調用官方 Agent
+
+**Agent 調用策略**：先試 plugin 命名空間 `subagent_type="code-reviewer:code-reviewer"`，若收到 `Agent type '...' not found` 錯誤則 fallback 短名稱 `subagent_type="code-reviewer"`（從 `~/.claude/agents/code-reviewer.md` 讀取；marketplace 多個 plugin 也可能提供此 agent）。兩者皆失敗時停下，告訴使用者執行 `./install-dd-pipeline.sh` 或安裝對應 plugin。
+
 ```
 Task(
   subagent_type="code-reviewer",

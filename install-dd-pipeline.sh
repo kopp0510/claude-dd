@@ -107,6 +107,23 @@ BUILTIN_SKILLS=(
     "tech-stack-evaluator"
 )
 
+# 所有 Agents（從 claude-dd/agents/ 安裝，共 11 個）
+# - 9 個為自製 agent（補齊 marketplace 缺失的官方 agent）
+# - 2 個為官方 agent 的本地備份（code-simplifier、code-reviewer；作為 plugin 未裝時的 fallback，確保離線/新環境也能運作）
+BUILTIN_AGENTS=(
+    "senior-frontend"
+    "senior-backend"
+    "senior-devops"
+    "senior-fullstack"
+    "senior-qa"
+    "senior-secops"
+    "tdd-guide"
+    "playwright-pro"
+    "claude-api"
+    "code-simplifier"
+    "code-reviewer"
+)
+
 # 必要的 MCP
 REQUIRED_MCP=(
     "playwright"
@@ -194,6 +211,7 @@ show_help() {
     echo ""
     echo "安裝內容："
     echo "  - 63 個內建 Skills（19 個核心 + 23 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
+    echo "  - 11 個內建 Agents（9 個自製 + 2 個官方備份，供 wrapper skills 調用）"
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
     echo "  - 6 個 DD Commands + 19 個命名空間 Commands"
     echo "  - 8 個 Templates（文檔模板）"
@@ -343,6 +361,82 @@ install_builtin_skills() {
             fi
         else
             echo -e "$tree_char $skill: ${RED}來源不存在${NC}"
+        fi
+    done
+
+    echo ""
+}
+
+
+# 檢查內建 Agents（僅檢查，不安裝）
+check_builtin_agents() {
+    print_step "3/8" "檢查內建 Agents"
+    echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
+
+    local count=${#BUILTIN_AGENTS[@]}
+    local i=0
+    local installed=0
+    local missing=0
+
+    for agent in "${BUILTIN_AGENTS[@]}"; do
+        i=$((i + 1))
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        if file_exists "$AGENTS_DIR/$agent.md"; then
+            echo -e "$tree_char $agent: ${GREEN}${CHECK} 已安裝${NC}"
+            installed=$((installed + 1))
+        else
+            echo -e "$tree_char $agent: ${YELLOW}未安裝${NC}"
+            missing=$((missing + 1))
+        fi
+    done
+
+    echo ""
+    echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
+    if [ $missing -gt 0 ]; then
+        echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
+    else
+        echo -e "└── ${GREEN}全部已安裝${NC}"
+    fi
+    echo ""
+}
+
+# 安裝內建 Agents
+install_builtin_agents() {
+    print_step "3/8" "安裝內建 Agents"
+    echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
+
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local count=${#BUILTIN_AGENTS[@]}
+    local i=0
+
+    mkdir -p "$AGENTS_DIR"
+
+    for agent in "${BUILTIN_AGENTS[@]}"; do
+        i=$((i + 1))
+        local source="$script_dir/agents/$agent.md"
+        local target="$AGENTS_DIR/$agent.md"
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        if [ -f "$source" ]; then
+            if [ ! -f "$target" ]; then
+                cp "$source" "$target"
+                echo -e "$tree_char $agent: ${GREEN}已安裝（新）${NC}"
+            elif [ "$FORCE" = true ]; then
+                cp "$source" "$target"
+                echo -e "$tree_char $agent: ${GREEN}已更新（強制）${NC}"
+            else
+                if ! cmp -s "$source" "$target"; then
+                    cp "$source" "$target"
+                    echo -e "$tree_char $agent: ${CYAN}已更新${NC}"
+                else
+                    echo -e "$tree_char $agent: ${YELLOW}已是最新${NC}"
+                fi
+            fi
+        else
+            echo -e "$tree_char $agent: ${RED}來源不存在${NC}"
         fi
     done
 
@@ -1724,6 +1818,7 @@ uninstall() {
     echo "即將移除以下內容："
     echo "├── ~/.claude/commands/dd-*.md"
     echo "├── ~/.claude/templates/dd/"
+    echo "├── ~/.claude/agents/ 中的 11 個內建 agent"
     echo "└── 官方 Plugins 設定（claude-md-management）"
     echo ""
 
@@ -1733,6 +1828,11 @@ uninstall() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         rm -f "$COMMANDS_DIR"/dd-*.md
         rm -rf "$TEMPLATES_DIR"
+
+        # 僅移除 BUILTIN_AGENTS 列表中的 agent（不動使用者自己的）
+        for agent in "${BUILTIN_AGENTS[@]}"; do
+            rm -f "$AGENTS_DIR/$agent.md"
+        done
 
         # 清理 Plugin 設定
         local settings_file="$CLAUDE_DIR/settings.json"
@@ -1880,6 +1980,9 @@ show_completion() {
     echo "   2. /dd-init"
     echo "   3. /dd-start \"你的需求\""
     echo ""
+    echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
+    echo "   供 wrapper skills 透過 Task tool 調用"
+    echo ""
     echo -e "${GREEN}📌 已啟用的 Plugin：${NC}"
     echo "   claude-md-management — 使用 /revise-claude-md 管理 CLAUDE.md"
     echo ""
@@ -1917,6 +2020,7 @@ main() {
             --update)
                 FORCE=true
                 install_builtin_skills
+                install_builtin_agents
                 exit 0
                 ;;
             --help)
@@ -1945,6 +2049,7 @@ main() {
     if [ "$CHECK_ONLY" = true ]; then
         # 檢查模式：只檢查狀態，不實際安裝
         check_builtin_skills
+        check_builtin_agents
         check_mcp
         check_plugins
         echo -e "${GREEN}環境檢查完成${NC}"
@@ -1953,6 +2058,9 @@ main() {
 
     # 安裝內建 Skills（核心功能）
     install_builtin_skills
+
+    # 安裝內建 Agents（補齊 wrapper skills 依賴）
+    install_builtin_agents
 
     # 檢查 MCP
     check_mcp

@@ -12,7 +12,7 @@ allowed-tools: Task, Read, Grep, Glob
 
 **這是官方 code-simplifier agent 的包裝器 (Wrapper)**
 
-- **實作方式**：透過 `Task(subagent_type="code-simplifier", ...)` 調用官方 agent
+- **實作方式**：透過 `Task(subagent_type="code-simplifier:code-simplifier" 或 "code-simplifier", ...)` 調用官方 agent（優先 plugin 命名空間，失敗 fallback 本地 `~/.claude/agents/code-simplifier.md`，若皆不存在則 marketplace 的其他 plugin 也可能提供此 agent）
 - **Skill 職責**：提供自動觸發、互動式範圍確認、結構化報告產出
 - **Agent 職責**：執行實際的程式碼簡化邏輯（由 Claude Code 官方維護）
 
@@ -95,6 +95,8 @@ allowed-tools: Task, Read, Grep, Glob
 ### Stage 2: 調用官方 Agent（自動執行）
 
 **目標：** 將工作委託給官方 code-simplifier agent
+
+**Agent 調用策略**：先試 plugin 命名空間 `subagent_type="code-simplifier:code-simplifier"`，若收到 `Agent type '...' not found` 錯誤則 fallback 短名稱 `subagent_type="code-simplifier"`（從 `~/.claude/agents/code-simplifier.md` 讀取；marketplace 多個 plugin 也可能提供此 agent）。兩者皆失敗時停下，告訴使用者執行 `./install-dd-pipeline.sh` 或安裝對應 plugin 補齊 agent。
 
 #### 準備 Agent 調用參數
 

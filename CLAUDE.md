@@ -13,6 +13,7 @@
 ## 目錄結構
 
 - `skills/` — 63 個 Skills（每個子目錄含 SKILL.md 定義檔）
+- `agents/` — 11 個 Agents（9 個自製補齊 + 2 個官方備份 code-simplifier/code-reviewer，部署到 `~/.claude/agents/`）
 - `commands/` — 6 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
 - `templates/` — 8 個文件模板
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
@@ -22,6 +23,13 @@
 1. 在 `skills/<skill-name>/` 建立 `SKILL.md`
 2. 在 `install-dd-pipeline.sh` 的 `BUILTIN_SKILLS` 陣列加入名稱
 3. 執行 `./install-dd-pipeline.sh --force` 部署
+
+## 新增 Agent 步驟
+
+1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model: inherit`）
+2. 在 `install-dd-pipeline.sh` 的 `BUILTIN_AGENTS` 陣列加入名稱
+3. 執行 `./install-dd-pipeline.sh --force` 部署
+4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
 
 ## 新增 Command 步驟
 
@@ -41,4 +49,4 @@
 - 所有回應和註解使用繁體中文
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
-- 修改 skills/commands 後務必同步更新 install-dd-pipeline.sh
+- 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh
