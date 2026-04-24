@@ -12,7 +12,7 @@ Claude API 專家 Skill，透過調用官方 claude-api agent 提供 Claude API 
 
 **這是官方 claude-api agent 的包裝器 (Wrapper)**
 
-- **實作方式**：透過 `Task(subagent_type="claude-api", ...)` 調用官方 agent
+- **實作方式**：透過 `Task(subagent_type="claude-api:claude-api" 或 "claude-api", ...)` 調用官方 agent（優先 plugin 命名空間，失敗 fallback 本地 `~/.claude/agents/claude-api.md`）
 - **Skill 職責**：提供自動觸發、需求確認、結構化報告產出
 - **Agent 職責**：執行實際的 API 整合任務（由外部 Skill 維護）
 
@@ -34,6 +34,9 @@ Claude API 專家 Skill，透過調用官方 claude-api agent 提供 Claude API 
 詢問使用者具體的 API 整合需求。
 
 ### Stage 2: 調用官方 Agent
+
+**Agent 調用策略**：先試 plugin 命名空間 `subagent_type="claude-api:claude-api"`，若收到 `Agent type '...' not found` 錯誤則 fallback 短名稱 `subagent_type="claude-api"`（從 `~/.claude/agents/claude-api.md` 讀取，由 `install-dd-pipeline.sh` 部署）。兩者皆失敗時停下，告訴使用者執行 `./install-dd-pipeline.sh` 補齊本地 agent。
+
 ```
 Task(
   subagent_type="claude-api",

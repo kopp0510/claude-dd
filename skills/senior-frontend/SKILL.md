@@ -12,7 +12,7 @@ allowed-tools: Task, Read, Grep, Glob
 
 **這是官方 senior-frontend agent 的包裝器 (Wrapper)**
 
-- **實作方式**：透過 `Task(subagent_type="senior-frontend", ...)` 調用官方 agent
+- **實作方式**：透過 `Task(subagent_type="senior-frontend:senior-frontend" 或 "senior-frontend", ...)` 調用官方 agent（優先 plugin 命名空間，失敗 fallback 本地 `~/.claude/agents/senior-frontend.md`）
 - **Skill 職責**：提供自動觸發、需求確認、結構化報告產出
 - **Agent 職責**：執行實際的前端開發任務（由外部 Skill 維護）
 
@@ -36,6 +36,9 @@ allowed-tools: Task, Read, Grep, Glob
 詢問使用者具體的前端開發需求。
 
 ### Stage 2: 調用官方 Agent
+
+**Agent 調用策略**：先試 plugin 命名空間 `subagent_type="senior-frontend:senior-frontend"`，若收到 `Agent type '...' not found` 錯誤則 fallback 短名稱 `subagent_type="senior-frontend"`（從 `~/.claude/agents/senior-frontend.md` 讀取，由 `install-dd-pipeline.sh` 部署）。兩者皆失敗時停下，告訴使用者執行 `./install-dd-pipeline.sh` 補齊本地 agent。
+
 ```
 Task(
   subagent_type="senior-frontend",
