@@ -93,6 +93,22 @@ chmod +x install-dd-pipeline.sh
 ./install-dd-pipeline.sh --update
 ```
 
+### 清理外部殘留（手動）
+
+`install-dd-pipeline.sh` 只負責部署 DD pipeline 自己的 `BUILTIN_SKILLS`，**不會清理**其他來源（如 tresor、舊版安裝包）寫進 `~/.claude/skills/` 的內容。常見殘留：
+
+- 舊版 zip 安裝包 — `~/.claude/skills/*.zip`
+- 分類子目錄 `communication/`、`development/`、`documentation/`、`git/`、`security/` — 內含與 DD wrapper 同名的 `code-reviewer`、`security-auditor` 等，會因 skill 載入優先序造成「載入到非預期版本」
+
+排查：
+
+```bash
+ls ~/.claude/skills/*.zip 2>/dev/null
+ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null
+```
+
+確認非自己使用後再 `rm` / `rm -rf` 清掉。
+
 ## 指令一覽
 
 | 指令 | 說明 |
