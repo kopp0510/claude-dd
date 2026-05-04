@@ -50,3 +50,21 @@
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
 - 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh
+
+## 殘留清理（手動）
+
+`install-dd-pipeline.sh` 只「部署」`BUILTIN_SKILLS`，**不會清掉**外部來源（如 tresor、舊版安裝包）放進 `~/.claude/skills/` 的殘留。已知會污染目錄的型態：
+
+| 類型 | 範例 | 風險 |
+|---|---|---|
+| 安裝包 zip | `~/.claude/skills/*.zip` | 純垃圾，不會載入但佔空間 |
+| 分類子目錄 | `~/.claude/skills/{communication,development,documentation,git,security}/` | 內含同名 skill（如 `code-reviewer`、`security-auditor`），與 DD wrapper 撞名 |
+
+排查指令：
+
+```bash
+ls ~/.claude/skills/*.zip 2>/dev/null                              # 查 zip 殘留
+ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null  # 查分類目錄殘留
+```
+
+確認非 DD pipeline 內容後手動 `rm` / `rm -rf` 清掉。
