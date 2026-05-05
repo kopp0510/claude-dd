@@ -21,19 +21,17 @@
 
 ## 執行步驟
 
-1. **從 plan file 建立正式文件**：
+1. **從 plan file 建立 contract 類正式文件**：
 
-   讀取 plan file 中的設計內容，建立以下正式文件：
+   讀取 plan file 中的設計內容，僅建立以下兩份**跨界面契約**正式文件:
 
    | Plan file 區段 | 正式文件路徑 |
    |---------------|-------------|
    | 需求分析 (RDD) | `claude_docs/requirements/REQUIREMENTS.md` |
-   | 系統架構 (SDD) | `claude_docs/architecture/ARCHITECTURE.md` |
    | API 契約 (DbC) | `claude_docs/contracts/API_CONTRACT.md` |
-   | 設計規範 | `claude_docs/design/DESIGN_SPEC.md` |
-   | 行為範例 (EDD) | `claude_docs/examples/EXAMPLES.md` |
-   | 架構決策 (ADD) | `claude_docs/decisions/ADR-*.md` |
 
+   > 系統架構 (SDD)、領域模型 (DDD)、設計規範、行為範例 (EDD)、架構決策 (ADD) 等設計內容**全部留在 plan file**,不再轉檔。
+   > 理由:1M context 下,實作階段可直接讀 plan file;只有跨界面契約(需求、API)需要持久化文件以便後端、前端、測試引用。
    > 只建立 plan file 中有對應內容的文件。
 
 2. **更新狀態**：
@@ -47,10 +45,10 @@
    - [ ] 前端開發 - 進行中
    ```
 
-3. **Git commit 設計文件**：
+3. **Git commit 契約文件**：
    ```bash
    git add claude_docs/ PROJECT_STATE.md
-   git commit -m "docs(architecture): 架構設計已確認，建立正式文件"
+   git commit -m "docs(contracts): 確認需求與 API 契約,啟動開發"
    ```
 
 4. **讀取專案類型**：
@@ -153,12 +151,9 @@
    └── Git commits：8 個
 
    📁 產出文檔
-   ├── claude_docs/architecture/ARCHITECTURE.md
+   ├── claude_docs/requirements/REQUIREMENTS.md
    ├── claude_docs/contracts/API_CONTRACT.md
-   ├── claude_docs/design/DESIGN_SPEC.md
-   ├── claude_docs/examples/EXAMPLES.md
-   ├── claude_docs/decisions/ADR-*.md
-   ├── claude_docs/plans/<feature>.md
+   ├── claude_docs/plans/<feature>.md      （含完整設計:SDD/DDD/ADD/EDD/UI 設計）
    └── claude_docs/reports/RELEASE_NOTES.md
 
    📌 開發模式
