@@ -30,12 +30,13 @@
 （無）
 
 ## 文檔狀態
+
+> 設計類內容(SDD/DDD/ADD/EDD/UI 設計)留在 plan file,不再轉檔到 claude_docs/。
+> claude_docs/ 只持久化跨界面契約(REQUIREMENTS、API_CONTRACT)與最終報告。
+
 - [ ] claude_docs/requirements/REQUIREMENTS.md
-- [ ] claude_docs/architecture/ARCHITECTURE.md
 - [ ] claude_docs/contracts/API_CONTRACT.md
-- [ ] claude_docs/design/DESIGN_SPEC.md
-- [ ] claude_docs/examples/EXAMPLES.md
-- [ ] claude_docs/decisions/ADR-*.md
+- [ ] claude_docs/plans/<feature>.md
 - [ ] claude_docs/reports/TEST_REPORT.md
 
 ## 中斷資訊

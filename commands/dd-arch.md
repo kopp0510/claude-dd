@@ -35,7 +35,7 @@
    - 評估替代方案
    - 分析技術風險
 
-   **產出**：`claude_docs/decisions/ADR-001-技術選型.md`
+   **寫入 plan file**：技術選型決策段落（ADR 格式）。
 
 4. **領域模型設計** (DDD)：
 
@@ -56,25 +56,25 @@
    - 定義設計規範
    - 設定 Design Token
 
-   **產出**：`claude_docs/design/DESIGN_SPEC.md`
+   **寫入 plan file**：UI/UX 設計段落（含設計規範與 Design Token）。
 
 6. **行為範例定義** (EDD)：
 
-   **調用 Skill: `senior-qa`**
+   **調用 Agent: `senior-qa`**
    - 定義行為範例
    - 描述輸入輸出
    - 定義邊界情況
 
-   **產出**：`claude_docs/examples/EXAMPLES.md`
+   **寫入 plan file**：行為範例段落（含邊界情況）。
 
 7. **API 契約定義** (DbC)：
 
-   **調用 Skill: `senior-backend`**
+   **調用 Agent: `senior-backend`**
    - 定義 API 端點
    - 定義請求/回應格式
    - 定義錯誤處理
 
-   **產出**：`claude_docs/contracts/API_CONTRACT.md`
+   **寫入 plan file**：API 契約段落（將於 `/dd-approve` 建立 `claude_docs/contracts/API_CONTRACT.md` 正式文件）。
 
 8. **產出架構文檔（寫入 plan file）**：
 
@@ -137,6 +137,5 @@
 | Skill | `senior-architect` | 技術選型、領域模型 |
 | Skill | `ux-researcher-designer` | UI/UX 設計 |
 | Skill | `ui-design-system` | 設計系統規範 |
-| Skill | `senior-backend` | API 契約定義 |
-| Skill | `senior-qa` | 行為範例定義 |
-| Agent | `docs-writer` | 文檔產出 |
+| Agent | `senior-backend` | API 契約定義 |
+| Agent | `senior-qa` | 行為範例定義 |
