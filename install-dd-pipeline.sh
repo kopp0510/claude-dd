@@ -98,16 +98,24 @@ BUILTIN_SKILLS=(
     "tech-stack-evaluator"
 )
 
-# 所有 Agents（從 claude-dd/agents/ 安裝，共 12 個）
-# - 10 個為自製 agent（補齊 marketplace 缺失的官方 agent）
+# 所有 Agents（從 claude-dd/agents/ 安裝，共 20 個）
+# - 18 個為自製 agent（補齊 marketplace 缺失的官方 agent，含 senior-* 全家族）
 # - 2 個為官方 agent 的本地備份（code-simplifier、code-reviewer；作為 plugin 未裝時的 fallback，確保離線/新環境也能運作）
 BUILTIN_AGENTS=(
     "senior-frontend"
     "senior-backend"
+    "senior-database"
     "senior-devops"
     "senior-fullstack"
     "senior-qa"
     "senior-secops"
+    "senior-architect"
+    "senior-data-engineer"
+    "senior-data-scientist"
+    "senior-ml-engineer"
+    "senior-security"
+    "senior-prompt-engineer"
+    "senior-computer-vision"
     "security-auditor"
     "tdd-guide"
     "playwright-pro"
@@ -203,7 +211,7 @@ show_help() {
     echo ""
     echo "安裝內容："
     echo "  - 53 個內建 Skills（19 個核心 + 13 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
-    echo "  - 12 個內建 Agents（10 個自製 + 2 個官方備份，供 wrapper skills 調用）"
+    echo "  - 20 個內建 Agents（18 個自製含 senior-* 全家族 + 2 個官方備份，供 wrapper skills 調用）"
     echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
     echo "  - 6 個 DD Commands + 19 個命名空間 Commands"
     echo "  - 8 個 Templates（文檔模板）"
@@ -855,7 +863,7 @@ uninstall() {
     echo "即將移除以下內容："
     echo "├── ~/.claude/commands/dd-*.md"
     echo "├── ~/.claude/templates/dd/"
-    echo "├── ~/.claude/agents/ 中的 12 個內建 agent"
+    echo "├── ~/.claude/agents/ 中的 20 個內建 agent"
     echo "└── 官方 Plugins 設定（claude-md-management）"
     echo ""
 
