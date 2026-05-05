@@ -121,7 +121,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 #### 產出格式
 
-寫入 `claude_docs/plans/YYYY-MM-DD-<feature-name>.md`，使用 TASK_PLAN.md.template 格式：
+寫入 `claude_docs/plans/YYYY-MM-DD-<feature-name>.md`，使用以下格式：
 
 ```markdown
 # 微任務計畫：<功能名稱>
