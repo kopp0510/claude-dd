@@ -361,3 +361,63 @@ C) 先停下討論
 - `Read` 大檔先用 offset/limit 分段
 - 指令輸出過長時截斷,說明截斷位置
 - 不把整份 log 貼進回答,抽關鍵錯誤即可
+
+---
+
+## 7. Skill 主動觸發
+
+每輪 user prompt 入站時,system-reminder 列出可用 skills。**第一個 tool_use 之前必須跑 §7.1 流程**,不可跳過。
+
+### 7.1 入站流程(每輪必跑)
+
+1. **抽 prompt 的「動詞 + 受詞」key phrase**(例:`fix CLAUDE.md` = `fix` + `CLAUDE.md`)
+2. 對照 §7.2 表格的 prompt pattern
+3. **命中 §7.2 → 第一個 tool_use 必須是 `Skill`**;後續 Read/Edit/Bash 都要在 Skill 之後
+4. 命中其他 skill description(非 §7.2)→ 同上原則,優先呼叫 Skill
+5. 模糊 → 用 ExitPlanMode 或 AskUserQuestion 列選項
+6. 無命中 → 直接動手
+
+### 7.2 必觸發 prompt pattern(命中即必呼叫,不可跳過)
+
+| User prompt 含這類字 | 必呼叫 |
+|---|---|
+| `fix` / `修` / `改` / `改善` / `audit` / `審查` **+ 任何 `.md` 檔** | `claude-md-management:claude-md-improver` |
+| `簡化` / `降複雜度` / `清冗餘` / `refactor 簡化` + (code/檔案) | `code-simplifier` |
+| `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer` |
+| `整理 memory` / `沉澱規則` / `把學到的寫成 skill` / `優化 skill` | `self-improving-agent` |
+| `拆任務` / `微任務` / `task breakdown` / `工作分解` | `task-planner` |
+| `測試策略` / `QA 計畫` / `測試覆蓋率規劃` | `senior-qa` |
+| `測試架構` / `測試框架選型` / `測試金字塔` | `test-engineer` |
+| `TDD` / `紅綠重構` / `Red-Green-Refactor` | `tdd-guide` |
+| `自動產生測試` / `generate tests` / `test harness` | `test-gen` |
+
+### 7.3 不該觸發的場景
+
+- meta 對話(在問 skill / 工具機制本身,不是請求做事)
+- 純文字回答(沒實際工具操作)
+- 任務範圍極小(typo fix、單行改動)
+- 已在跑某 skill 的內部流程(不重入)
+
+### 7.4 與其他章節的衝突
+
+- **§2 零幻覺優先**:skill description 對應 ≠ 跳過事實驗證
+- **§4.2 破壞性指令必先確認**:就算 skill 該觸發,破壞性動作仍要等使用者批准
+
+### 7.5 強制顯性化(命中 §7.2 時必跑)
+
+命中 §7.2 表格的 prompt,**文字回應第一段必須**用一句話表態:
+
+- 觸發:「✓ 命中 §7.2:`<key phrase>` → 呼叫 `<skill-name>`」 → 接著呼叫 Skill 工具
+- 不觸發:「△ §7.2 命中 `<skill-name>` 但**不**呼叫,理由:`<具體可驗證的理由>`」 → 然後動手
+
+**目的**:讓「跳過 skill」這個決策從黑箱變顯性,使用者能在 timeline / Overseer 看到。**沒寫這句就動手 = §7 違規**。
+
+### 7.6 反合理化清單(以下理由不能用來跳過 §7.2)
+
+| 不能用的藉口 | 為什麼不行 |
+|---|---|
+| 「我已經有具體計畫了,直接動手比較快」 | 計畫不衝突 — 呼叫 skill 是讓 skill 的流程驗證你的計畫 |
+| 「skill 大概也只是包裝層」 | 沒實際呼叫過你不知道 — 試了才知道 |
+| 「使用者沒明說要用 skill」 | §7.2 是**預設觸發**,不需使用者明示 |
+| 「上一輪沒用,這輪也不用」 | 每輪獨立判斷,不繼承前輪決策 |
+| 「prompt 太短,觸發 skill 過頭」 | 觸發成本低(可隨時退出 skill flow),under-trigger 比 over-trigger 嚴重 |
