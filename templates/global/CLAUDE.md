@@ -390,6 +390,13 @@ C) 先停下討論
 | `測試架構` / `測試框架選型` / `測試金字塔` | `test-engineer` |
 | `TDD` / `紅綠重構` / `Red-Green-Refactor` | `tdd-guide` |
 | `自動產生測試` / `generate tests` / `test harness` | `test-gen` |
+| `React 元件` / `Next.js` / `Tailwind` / `bundle size` / `前端優化` | `senior-frontend` |
+| `Express` / `Fastify` / `Node.js API` / `middleware` / `後端認證` | `senior-backend` |
+| `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops` |
+| `全端 scaffold` / `tech stack 選型` / `前後端整合` | `senior-fullstack` |
+| `SecOps 管線` / `SIEM` / `安全自動化` / `事件自動回應` | `senior-secops` |
+| `Playwright` / `E2E 腳本` / `瀏覽器自動化` / `Cypress 遷移` | `playwright-pro` |
+| `Claude API` / `Anthropic SDK` / `Agent SDK` / `prompt caching` | `claude-api` |
 
 ### 7.3 不該觸發的場景
 
