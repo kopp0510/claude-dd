@@ -203,6 +203,12 @@ ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>
 | **批次** | `/dd-dev --batch` | 每 3 個任務暫停等待人工回饋 |
 | **經典** | `/dd-dev --classic` | 舊版一次性實作模式（PDD + 整體實作） |
 
+### 原生 `/goal` 整合（opt-in）
+
+Claude Code ≥ 2.1.139 提供原生 `/goal <完成條件>` 指令，可作為上述模式之外的**自主收斂選項**：設定完成條件後 Claude 跨多輪自動工作，每輪由獨立評估器檢查條件，直到滿足或 `/goal clear`。
+
+DD pipeline 預設仍走「人工檢查點 + 最多 3 次重試」迴圈（`/dd-test`、`/dd-dev` 的修復流程不變）。`/goal` 適合終點明確、信任自動修復的情境（如「所有測試通過且 `git status` clean」），代價是放棄逐次人工審核。詳見全域 CLAUDE.md §3.4 與 `skills/verification-gate/SKILL.md` 的互補說明。
+
 ## 模型策略
 
 DD Pipeline 主 session 使用使用者當下設定的模型（預設 Sonnet），但在**委派 subagent / Agent 時**建議依任務性質切換以優化成本/品質：
