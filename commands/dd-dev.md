@@ -19,6 +19,10 @@
 
 預設使用微任務拆解 + Subagent 逐任務執行 + 兩階段審查。
 
+> opt-in：對驗收終點明確的功能，可用原生 `/goal "<完成條件>"`（Claude Code ≥ 2.1.139）串起
+> dev → test 的自主收斂。預設仍走 subagent-orchestrator + Plan 檢查點，`/goal` 為放棄逐次
+> 人工審核時的替代選項。
+
 ### 後端開發流程
 
 #### 0. Worktree 設定（僅 --worktree 時）

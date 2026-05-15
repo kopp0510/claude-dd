@@ -55,7 +55,7 @@ cd claude-dd
 
 ### 全域 CLAUDE.md（新增 2026-04）
 
-`templates/global/CLAUDE.md` 是一份可攜的全域設定模板，包含零幻覺政策、Karpathy 四原則等通用開發守則。install 時會比對本機版本：
+`templates/global/CLAUDE.md` 是一份可攜的全域設定模板，包含零幻覺政策（§2）與 Karpathy 四原則的落地章節 —— Think Before Coding（§2、§6.1）、Simplicity First（§3.3）、Surgical Changes（§3.2）、Goal-Driven Execution（§3.4，含原生 `/goal` 指令用法）等通用開發守則。install 時會比對本機版本：
 
 - **首次安裝**（本機無檔）：詢問是否套用
 - **已存在且相同**：跳過
