@@ -281,3 +281,16 @@ git commit -m "test: 整合測試通過"
   請檢查程式碼後執行：
   /dd-approve 繼續流程
   ```
+
+### opt-in：用原生 `/goal` 自主收斂
+
+預設的「人工檢查點 + 最多 3 次」迴圈**不變** —— 每次修復前進入 Plan 模式由使用者審核。
+
+若使用者偏好自主收斂（放棄逐次人工審核），可改用原生 `/goal` 指令（Claude Code ≥ 2.1.139）：
+
+```
+/goal "claude_docs/reports/TEST_REPORT.md 所有測試通過（失敗 0）且 git status clean"
+```
+
+Claude 會跨多輪自動「修 → 重測」直到條件滿足或 `/goal clear`，不受 3 次上限限制。
+代價：沒有逐次 Plan 審核 —— 適合終點明確、信任自動修復的情境。
