@@ -127,6 +127,8 @@ D) 新增商業功能
 
 每段結束後詢問：「這部分你同意嗎？有什麼要調整的？」
 
+**視覺輔助**：若涉及 UI/架構圖，主動提議呼叫 `senior-architect`（Mermaid/PlantUML/依賴圖）或 `frontend-design`（UI mockup）產出視覺輔助。以獨立訊息詢問，使用者同意後再呼叫。
+
 ### Step 6: 寫設計文件
 
 將批准的設計寫入文件：
