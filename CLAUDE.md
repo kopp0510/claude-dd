@@ -44,6 +44,8 @@
 → /dd-dev(DbC/CDD/PDD) → /dd-test(TDD/BDD/ATDD/FDD)
 ```
 
+> **原生 `/goal` 整合（opt-in，Claude Code ≥ 2.1.139）**：`/dd-dev`、`/dd-test` 預設走「人工檢查點 + 最多 3 次重試」迴圈不變；偏好自主收斂的使用者可改用 `/goal "<完成條件>"` 替代手刻重試。細節見 `templates/global/CLAUDE.md` §3.4 與 `skills/verification-gate/SKILL.md`。
+
 ## 注意事項
 
 - 所有回應和註解使用繁體中文
