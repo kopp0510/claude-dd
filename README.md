@@ -129,6 +129,8 @@ ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>
 | `/dd-test` | 執行測試驗證階段 (TDD) |
 | `/dd-dx` | 平台工程設計（DX Engineer）— 環境一致性 / lock 治理 / Dockerfile + CI gate + onboarding，可獨立於 `/dd-init` 重跑 |
 
+> **`/dd-init` Phase 4 vs `/dd-dx`**：兩者都呼叫 `dx-engineer` agent，但 init 內走「即時落地」（不進 Plan mode、agent 完成即直接 Write 實體檔案），優先 first-time setup 的「一次跑完」體驗；`/dd-dx` 走 Plan mode + `/dd-approve` 二段式，產出先寫 plan file，適合 refine 時想逐項審。
+
 > **2026-04 精簡**：`/dd-revise`、`/dd-stop`、`/dd-status`、`/dd-help`、`/dd-docs` 已移除，改用原生能力替代。
 
 ### 已精簡命令遷移指引
