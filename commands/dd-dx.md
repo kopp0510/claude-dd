@@ -6,6 +6,19 @@
 
 ---
 
+## 跟 `/dd-init` Phase 4 的差異(重要)
+
+兩個入口呼叫的是同一個 `dx-engineer` agent,但流程不同 — 設計取捨:
+
+| 入口 | 模式 | 何時落地 | 適用情境 |
+|---|---|---|---|
+| **`/dd-init` Phase 4** | 即時落地(不進 Plan mode) | agent 完成即直接 Write 實體檔案 | 新專案 first-time setup,優先「一次跑完」體驗 |
+| **`/dd-dx`** | Plan mode + `/dd-approve` 二段式 | agent 完成寫進 plan file;`/dd-approve` 才正式落地 | refine / 重跑,想看過再決定要不要套用 |
+
+換言之:**init 階段重速度,refine 階段重審慎**。若你在 `/dd-init` 跳過 Phase 4 後想補,跑 `/dd-dx`(會走 Plan mode 流程,你能逐項審)。
+
+---
+
 ## Plan 模式
 
 此指令在 Plan 模式下執行,所有產出寫入 plan file,正式檔案落地待 `/dd-approve`。
