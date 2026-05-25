@@ -94,6 +94,30 @@ claude_docs/
 - 前端組件必須有 TypeScript 定義
 -->
 
+## 平台工程 (Platform / DX)
+
+> Golden path：讓本機 = 容器 = CI 是同一個 image。內容由 `dx-engineer` agent 產出。
+> 若 `/dd-init` Phase 4 被跳過，下方欄位會留空白，可日後跑 `/dd-dx` 補。
+
+### 環境一致性
+- Dev container：`{{DEVCONTAINER_PATH}}`
+- 技術棧：`{{DETECTED_STACK}}`
+- 工具版本鎖檔：`{{TOOL_VERSION_FILES}}`
+- 環境變數範本：`{{ENV_EXAMPLE_PATH}}`
+
+### Lock File 治理
+- 主要 lock files：`{{LOCK_FILES}}`
+- 更新 SOP：`{{LOCK_SOP_PATH}}`
+- CI gate 指令：`{{CI_LOCK_GATE_CMD}}`
+
+### Dockerfile + CI + Onboarding
+- Dockerfile：`{{DOCKERFILE_PATH}}`（multi-stage）
+- CI lock drift workflow：`{{CI_WORKFLOW_PATH}}`
+- Onboarding 文件：`{{ONBOARDING_DOC_PATH}}`
+
+### 跳過的維度（若有）
+- `{{SKIPPED_DIMENSIONS}}` — 詳見 `claude_docs/06_platform/degradation-rationale.md`
+
 ## Agent/Skill 偏好
 <!-- 可選：指定特定 Agent/Skill 的使用偏好 -->
 - 後端開發優先使用：senior-backend

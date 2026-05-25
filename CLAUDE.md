@@ -13,8 +13,8 @@
 ## 目錄結構
 
 - `skills/` — 53 個 Skills（每個子目錄含 SKILL.md 定義檔）
-- `agents/` — 20 個 Agents（18 個自製補齊含 senior-* 全家族 + 2 個官方備份 code-simplifier/code-reviewer，部署到 `~/.claude/agents/`）
-- `commands/` — 6 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
+- `agents/` — 21 個 Agents（19 個自製補齊含 senior-* 全家族 + dx-engineer + 2 個官方備份 code-simplifier/code-reviewer，部署到 `~/.claude/agents/`）
+- `commands/` — 7 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
 - `templates/` — 8 個文件模板
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
 

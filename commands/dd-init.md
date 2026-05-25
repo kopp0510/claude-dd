@@ -258,7 +258,60 @@ claude_docs/
 
 ---
 
-### Phase 4: 產生 PROJECT_STATE.md
+### Phase 4: 平台工程設計（DX Engineer）
+
+使用 **AskUserQuestion** 詢問是否跑 DX Engineer 設計 golden path（預設 y）：
+
+```
+即將呼叫 dx-engineer agent 設計本專案的開發者體驗：
+
+📦 三個維度：
+1. 本機/容器環境一致性（.devcontainer/、.env.example）
+2. 跨語言 lock file 治理（SOP + CI gate）
+3. Dockerfile + CI gate + onboarding 文件
+
+agent 會偵測技術棧後 graceful degrade，不適用的維度會跳過。
+
+要現在跑嗎？（也可以之後跑 /dd-dx 補）
+
+選項：
+1. 跑（預設）
+2. 跳過（之後可用 /dd-dx 重跑）
+```
+
+#### 若使用者選「跑」
+
+**調用 Task 工具**（`subagent_type: dx-engineer:dx-engineer`，fallback `dx-engineer`）：
+
+```
+依本專案技術棧（從 Phase 0/A 偵測結果），設計 golden path 三維度：
+
+1. 偵測 lock files、Dockerfile、CI workflow 既有狀態
+2. graceful degrade 跳過不適用維度
+3. 產出 deliverables 直接寫實體檔案：
+   - .devcontainer/devcontainer.json（維度 1）
+   - .env.example（維度 1）
+   - Dockerfile（維度 3，multi-stage）
+   - .github/workflows/lock-gate.yml（維度 2 + 3）
+   - docs/onboarding.md（維度 3）
+4. 決策、SOP、降級理由寫進 claude_docs/06_platform/
+5. 更新 CLAUDE.md 補入「## 平台工程 (Platform / DX)」章節（摘要 + 路徑指引）
+```
+
+> **設計差異**：`/dd-init` 內呼叫 DX Engineer 走「即時落地」模式（不進 Plan mode），維持 init 的「一次跑完」體驗。`/dd-dx` 命令本身則走 Plan mode + `/dd-approve` 二段式（讓 refine 時可審）。
+
+#### 若使用者選「跳過」
+
+顯示提示：
+
+```
+ℹ️ DX 設計已跳過。日後可跑 /dd-dx 補。
+CLAUDE.md 的「## 平台工程 (Platform / DX)」章節先留空白模板。
+```
+
+---
+
+### Phase 5: 產生 PROJECT_STATE.md
 
 使用 **Write** 工具，根據模板產生 `PROJECT_STATE.md`：
 
@@ -268,18 +321,23 @@ claude_docs/
 
 ---
 
-### Phase 5: Git commit
+### Phase 6: Git commit
 
 如果在 git repo 中，使用 **Bash** 執行：
 
 ```bash
-git add CLAUDE.md PROJECT_STATE.md claude_docs/
+# 僅暫存實際存在的 DX 產出（未產生的檔案會被自動跳過）
+git add CLAUDE.md PROJECT_STATE.md claude_docs/ \
+        .devcontainer/ Dockerfile .env.example \
+        .github/workflows/lock-gate.yml docs/onboarding.md 2>/dev/null || true
 git commit -m "chore: 初始化 DD Pipeline 專案結構"
 ```
 
+> 若 Phase 4 跳過,DX 相關檔案不存在,`git add` 會略過(`|| true` 容錯)。
+
 ---
 
-### Phase 6: 顯示完成訊息
+### Phase 7: 顯示完成訊息
 
 根據專案類型和 CLAUDE.md 狀態顯示適當的訊息：
 
@@ -357,6 +415,7 @@ git commit -m "chore: 初始化 DD Pipeline 專案結構"
 | **Glob** | 檢查專案設定檔、CLAUDE.md 是否存在 |
 | **Bash** | 列出目錄、建立資料夾、執行 git |
 | **Task** (Explore) | 分析現有專案結構和程式碼 |
+| **Task** (dx-engineer) | Phase 4 設計 golden path(env / lock / docker 三維度) |
 | **AskUserQuestion** | 顯示偵測結果、詢問確認、收集輸入 |
 | **Read** | 讀取現有的 CLAUDE.md 內容 |
 | **Write** | 建立新的 CLAUDE.md、PROJECT_STATE.md |
@@ -406,13 +465,16 @@ git commit -m "chore: 初始化 DD Pipeline 專案結構"
 └──────────────┬────────────────┘
                │
                ▼
-        Phase 4: 產生 PROJECT_STATE.md
+        Phase 4: DX Engineer (opt-in)
                │
                ▼
-        Phase 5: Git commit
+        Phase 5: 產生 PROJECT_STATE.md
                │
                ▼
-        Phase 6: 顯示完成訊息
+        Phase 6: Git commit
+               │
+               ▼
+        Phase 7: 顯示完成訊息
                │
         ┌──────┼──────┐
         │      │      │

@@ -98,8 +98,8 @@ BUILTIN_SKILLS=(
     "tech-stack-evaluator"
 )
 
-# 所有 Agents（從 claude-dd/agents/ 安裝，共 20 個）
-# - 18 個為自製 agent（補齊 marketplace 缺失的官方 agent，含 senior-* 全家族）
+# 所有 Agents（從 claude-dd/agents/ 安裝，共 21 個）
+# - 19 個為自製 agent（補齊 marketplace 缺失的官方 agent，含 senior-* 全家族 + dx-engineer）
 # - 2 個為官方 agent 的本地備份（code-simplifier、code-reviewer；作為 plugin 未裝時的 fallback，確保離線/新環境也能運作）
 BUILTIN_AGENTS=(
     "senior-frontend"
@@ -116,6 +116,7 @@ BUILTIN_AGENTS=(
     "senior-security"
     "senior-prompt-engineer"
     "senior-computer-vision"
+    "dx-engineer"
     "security-auditor"
     "tdd-guide"
     "playwright-pro"
@@ -661,7 +662,7 @@ create_commands() {
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    # DD Pipeline commands（平面 .md 檔案，2026-04 精簡後 6 個核心）
+    # DD Pipeline commands（平面 .md 檔案，2026-04 精簡後 6 個核心 + 2026-05 新增 dd-dx，共 7 個）
     local dd_commands=(
         "dd-init"
         "dd-start"
@@ -669,6 +670,7 @@ create_commands() {
         "dd-approve"
         "dd-dev"
         "dd-test"
+        "dd-dx"
     )
 
     # 清理已移除的 DD Commands（2026-04 精簡）
