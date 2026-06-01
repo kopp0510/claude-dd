@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./hooks/error-capture.sh"
+            "command": "$HOME/.claude/skills/self-improving-agent/hooks/error-capture.sh"
           }
         ]
       }
