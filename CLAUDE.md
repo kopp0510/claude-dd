@@ -24,6 +24,16 @@
 2. 在 `install-dd-pipeline.sh` 的 `BUILTIN_SKILLS` 陣列加入名稱
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 
+### Skill hook 路徑規範（強制）
+
+skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd 解析的路徑：
+
+- ✅ `$HOME/.claude/skills/<skill-name>/hooks/xxx.sh`
+- ❌ `./hooks/xxx.sh`（hook 以「當前工作目錄」為基準執行，換到別的專案就找不到腳本）
+
+安裝腳本的 `validate_skill_hooks()` 會在部署前掃描所有 `hooks.json`，發現相對路徑即**中止部署**。
+引入第三方 skill（vendor）時尤其注意：上游常用相對路徑，併入前先改寫。
+
 ## 新增 Agent 步驟
 
 1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model: inherit`）

@@ -324,6 +324,40 @@ check_plugins() {
     echo ""
 }
 
+# 驗證 Skills 的 hook 路徑（防止相對路徑：hook command 以 cwd 為基準執行，
+# 相對路徑在非 skill 目錄跑 Bash 時會找不到腳本 → non-blocking 報錯）
+validate_skill_hooks() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local errors=0
+
+    print_step "前置" "驗證 Skill hook 路徑"
+
+    while IFS= read -r hooks_file; do
+        while IFS= read -r cmd; do
+            case "$cmd" in
+                /*|\$HOME/*|~/*|\$\{CLAUDE_PLUGIN_ROOT\}*)
+                    # 絕對路徑或可展開變數開頭 → 合法
+                    ;;
+                *)
+                    echo -e "├── ${RED}${CROSS} 相對路徑 hook：${NC}${hooks_file#$script_dir/}"
+                    echo -e "│   command: ${YELLOW}$cmd${NC}"
+                    echo -e "│   修正方式：改為 ${GREEN}\$HOME/.claude/skills/<skill-name>/...${NC}"
+                    errors=$((errors + 1))
+                    ;;
+            esac
+        done < <(grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' "$hooks_file" 2>/dev/null | sed 's/.*:[[:space:]]*"//; s/"$//')
+    done < <(find "$script_dir/skills" -name "hooks.json" 2>/dev/null)
+
+    if [ $errors -gt 0 ]; then
+        echo -e "└── ${RED}發現 $errors 個 hook 相對路徑問題，中止部署${NC}"
+        echo -e "    （hook 由 Claude Code 以當前工作目錄為基準執行，相對路徑會在其他專案中失效）"
+        exit 1
+    fi
+
+    echo -e "└── ${GREEN}${CHECK} 所有 skill hook 路徑合法${NC}"
+    echo ""
+}
+
 # 安裝內建 Skills
 install_builtin_skills() {
     print_step "2/8" "安裝內建 Skills"
@@ -1066,6 +1100,7 @@ main() {
                 ;;
             --update)
                 FORCE=true
+                validate_skill_hooks
                 install_builtin_skills
                 install_builtin_agents
                 exit 0
@@ -1092,6 +1127,9 @@ main() {
 
     # 檢查環境
     check_environment
+
+    # 驗證 skill hook 路徑（發現相對路徑即中止，防止部署壞設定）
+    validate_skill_hooks
 
     if [ "$CHECK_ONLY" = true ]; then
         # 檢查模式：只檢查狀態，不實際安裝
