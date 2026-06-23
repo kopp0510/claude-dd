@@ -32,7 +32,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - ❌ `./hooks/xxx.sh`（hook 以「當前工作目錄」為基準執行，換到別的專案就找不到腳本）
 
 安裝腳本的 `validate_skill_hooks()` 會在部署前掃描所有 `hooks.json`，發現相對路徑即**中止部署**。
-引入第三方 skill（vendor）時尤其注意：上游常用相對路徑，併入前先改寫。
+引入第三方 skill（vendor）時尤其注意：上游常用相對路徑，併入前先改寫（完整收編流程見下方「第三方 Skill / Agent 收編檢查清單」）。
 
 ## 新增 Agent 步驟
 
@@ -62,6 +62,22 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
 - 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh
+
+## 第三方 Skill / Agent 收編檢查清單（vendor intake）
+
+> 引入任何**非自製來源**（GitHub repo、Claude marketplace、舊版安裝包）的 skill/agent 前，逐項過。**任一項不過 → 先改寫或不收**，不得直接併入 `BUILTIN_*` 陣列。
+
+| # | 檢查項 | 怎麼驗 | 不過的處置 |
+|---|---|---|---|
+| 1 | **授權相容** | LICENSE 存在且相容（MIT/Apache 可；GPL/未標需評估）。frontmatter 若寫 `license: … LICENSE.txt`，該檔**必須同目錄存在** | 補齊 LICENSE 或移除懸空 frontmatter |
+| 2 | **hook 路徑絕對化** | grep `hooks/hooks.json`，`command` 必為 `$HOME/.claude/…`，無相對路徑（`./`）。詳見上方「Skill hook 路徑規範」 | 併入前改寫（`validate_skill_hooks()` 也會擋） |
+| 3 | **CLI / pkg 事實驗證** | 任何 `npm install` / CLI args / 套件名，先 `npm view <pkg>` 或讀官方 README 證實，**不靠名稱推論** | 無法證實 → 不收 |
+| 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
+| 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
+| 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
+| 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `BUILTIN_*` → 跑 `--force` → 納入 source of truth | — |
+
+> **典型踩雷**（實際評估）：某第三方 UI/UX skill 號稱 9 萬星但建立僅半年、forks 為整數 → 採用度存疑；且需 `npm -g` binary + Python runtime → 第 3、4 項直接擋下。
 
 ## 殘留清理（手動）
 
