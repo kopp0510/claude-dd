@@ -333,6 +333,9 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | subagent-orchestrator ⭐ | Subagent 調度專家 | dd-dev 自動調用，逐任務 subagent 執行+審查（3 階段工作流程） |
 | code-simplifier ⭐ | 程式碼簡化專家 | 簡化程式碼、降低複雜度時（3 階段包裝器工作流程） |
 | frontend-design | 前端視覺設計專家 | 視覺風格、頁面視覺設計（非 React 實作用 senior-frontend；非 Design Token 用 ui-design-system） |
+| design-brainstorm | 設計腦力激盪 | 腦力激盪、brainstorm、「我有個想法」、設計討論（非正式需求流程用 /dd-start） |
+| branch-finisher | 分支完成決策 | 「分支做完了」、準備合併、要不要建 PR（非分支建立用 worktree-manager） |
+| verification-gate | 完成前驗證閘門 | 聲稱「完成了/修好了」但未提供驗證證據時，強制要求新鮮證據 |
 
 ### 整合包裝器 Skills（DD Pipeline 安裝，13 個）
 
@@ -390,7 +393,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 - **claude-md-improver** (Skill) — 審計 CLAUDE.md 是否與程式碼庫同步
 - **/revise-claude-md** (Command) — 在工作階段結束時捕捉學習內容並更新 CLAUDE.md
 
-### 工程團隊 Skills（DD Pipeline 安裝）
+### 工程團隊 Skills（DD Pipeline 安裝，9 個）
 
 進階工程專家角色，涵蓋架構、安全、AI/ML、設計等領域：
 
@@ -406,7 +409,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 | ui-design-system | UI 設計系統 | Design Token、元件文件、響應式設計(非視覺設計用 frontend-design) |
 | ux-researcher-designer | UX 研究設計 | 使用者研究、Persona、旅程地圖 |
 
-### 產品與商業 Skills（DD Pipeline 安裝）
+### 產品與商業 Skills（DD Pipeline 安裝，12 個）
 
 產品管理、商業策略與專業整合工具：
 
