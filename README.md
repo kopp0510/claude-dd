@@ -103,19 +103,7 @@ cd claude-dd
 
 ### 清理外部殘留（手動）
 
-`install-dd-pipeline.sh` 只負責部署 DD pipeline 自己的 `BUILTIN_SKILLS`，**不會清理**其他來源（如 tresor、舊版安裝包）寫進 `~/.claude/skills/` 的內容。常見殘留：
-
-- 舊版 zip 安裝包 — `~/.claude/skills/*.zip`
-- 分類子目錄 `communication/`、`development/`、`documentation/`、`git/`、`security/` — 內含與 DD 內建同名的 `security-auditor` 等，會因 skill 載入優先序造成「載入到非預期版本」
-
-排查：
-
-```bash
-ls ~/.claude/skills/*.zip 2>/dev/null
-ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null
-```
-
-確認非自己使用後再 `rm` / `rm -rf` 清掉。
+`install-dd-pipeline.sh` 只負責部署 DD pipeline 自己的 `BUILTIN_SKILLS`，**不會清理**其他來源（如 tresor、舊版安裝包）寫進 `~/.claude/skills/` 的殘留。殘留型態、風險與排查指令見 [CLAUDE.md「殘留清理（手動）」](CLAUDE.md#殘留清理手動)（單一維護來源，避免兩份文件各自過期）。
 
 ## 指令一覽
 
@@ -184,6 +172,7 @@ ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>
 
 | 指令 | 說明 |
 |------|------|
+| `/scaffold` | 產生專案結構、元件與樣板程式碼 |
 | `/test-gen` | 自動產生測試案例 |
 | `/docs-gen` | 自動產生文件 |
 
@@ -432,7 +421,7 @@ DD Pipeline 會在專案中建立 `claude_docs/` 目錄，包含：
 
 | MCP | 說明 | 來源 |
 |-----|------|------|
-| playwright | 瀏覽器自動化測試 | [playwright-mcp](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-servers/playwright) |
+| playwright | 瀏覽器自動化測試 | [playwright-mcp](https://github.com/microsoft/playwright-mcp) |
 
 ### 可選 MCP
 

@@ -15,7 +15,7 @@
 - `skills/` — 53 個 Skills（每個子目錄含 SKILL.md 定義檔）
 - `agents/` — 21 個 Agents（19 個自製補齊含 senior-* 全家族 + dx-engineer + 2 個官方備份 code-simplifier/code-reviewer，部署到 `~/.claude/agents/`）
 - `commands/` — 7 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
-- `templates/` — 8 個文件模板
+- `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
 
 ## 新增 Skill 步驟
@@ -43,8 +43,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 ## 新增 Command 步驟
 
-- 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `create_commands()` 的 `dd_commands` 陣列
-- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `create_commands()` 的 `ns_commands` 陣列
+- 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
+- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
 
 ## DD Pipeline 流程
 
