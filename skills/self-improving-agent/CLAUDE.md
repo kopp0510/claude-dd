@@ -71,7 +71,7 @@ To enable:
       "matcher": "Bash",
       "hooks": [{
         "type": "command",
-        "command": "./skills/self-improving-agent/hooks/error-capture.sh"
+        "command": "$HOME/.claude/skills/self-improving-agent/hooks/error-capture.sh"
       }]
     }]
   }

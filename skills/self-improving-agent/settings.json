@@ -18,7 +18,7 @@
   },
   "hooks": {
     "PostToolUse": {
-      "Bash": "hooks/error-capture.sh"
+      "Bash": "$HOME/.claude/skills/self-improving-agent/hooks/error-capture.sh"
     }
   },
   "agents": [
