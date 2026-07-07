@@ -125,6 +125,51 @@ BUILTIN_AGENTS=(
     "code-reviewer"
 )
 
+# DD Pipeline commands（平面 .md 檔案，2026-04 精簡後 6 個核心 + 2026-05 新增 dd-dx，共 7 個）
+DD_COMMANDS=(
+    "dd-init"
+    "dd-start"
+    "dd-arch"
+    "dd-approve"
+    "dd-dev"
+    "dd-test"
+    "dd-dx"
+)
+
+# 命名空間 commands（目錄型）
+NS_COMMANDS=(
+    "development-scaffold"
+    "documentation-docs-gen"
+    "operations-deploy-validate"
+    "operations-health-check"
+    "operations-incident-response"
+    "performance-benchmark"
+    "performance-profile"
+    "quality-code-health"
+    "quality-debt-analysis"
+    "security-audit"
+    "security-compliance-check"
+    "security-vulnerability-scan"
+    "testing-test-gen"
+    "workflow-handoff-create"
+    "workflow-prompt-create"
+    "workflow-prompt-run"
+    "workflow-review"
+    "workflow-todo-add"
+    "workflow-todo-check"
+)
+
+# 文件模板（部署到 ~/.claude/templates/dd/）
+DD_TEMPLATES=(
+    "CLAUDE.md.template"
+    "PROJECT_STATE.md.template"
+    "REQUIREMENTS.md.template"
+    "ARCHITECTURE.md.template"
+    "API_CONTRACT.md.template"
+    "EXAMPLES.md.template"
+    "ADR.md.template"
+)
+
 # 必要的 MCP
 REQUIRED_MCP=(
     "playwright"
@@ -211,11 +256,11 @@ show_help() {
     echo "  --help          顯示此說明"
     echo ""
     echo "安裝內容："
-    echo "  - 53 個內建 Skills（19 個核心 + 13 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
-    echo "  - 20 個內建 Agents（18 個自製含 senior-* 全家族 + 2 個官方備份，供 wrapper skills 調用）"
-    echo "  - 1 個官方 Plugin（CLAUDE.md 管理工具）"
-    echo "  - 6 個 DD Commands + 19 個命名空間 Commands"
-    echo "  - 8 個 Templates（文檔模板）"
+    echo "  - ${#BUILTIN_SKILLS[@]} 個內建 Skills（19 個核心 + 13 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
+    echo "  - ${#BUILTIN_AGENTS[@]} 個內建 Agents（19 個自製含 senior-* 全家族 + 2 個官方備份，供 wrapper skills 調用）"
+    echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具）"
+    echo "  - ${#DD_COMMANDS[@]} 個 DD Commands + ${#NS_COMMANDS[@]} 個命名空間 Commands"
+    echo "  - ${#DD_TEMPLATES[@]} 個 Templates（文檔模板）"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
 }
@@ -334,7 +379,16 @@ validate_skill_hooks() {
 
     while IFS= read -r hooks_file; do
         while IFS= read -r cmd; do
-            case "$cmd" in
+            # 命令若以直譯器開頭（如 node "$HOME/..."），改檢查其第一個參數的路徑
+            local path_to_check="$cmd"
+            case "${cmd%% *}" in
+                bash|sh|zsh|node|python|python3|npx|deno)
+                    path_to_check="${cmd#* }"
+                    path_to_check="${path_to_check#\"}"
+                    path_to_check="${path_to_check#\'}"
+                    ;;
+            esac
+            case "$path_to_check" in
                 /*|\$HOME/*|~/*|\$\{CLAUDE_PLUGIN_ROOT\}*)
                     # 絕對路徑或可展開變數開頭 → 合法
                     ;;
@@ -345,7 +399,7 @@ validate_skill_hooks() {
                     errors=$((errors + 1))
                     ;;
             esac
-        done < <(grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' "$hooks_file" 2>/dev/null | sed 's/.*:[[:space:]]*"//; s/"$//')
+        done < <(grep -oE '"command"[[:space:]]*:[[:space:]]*"(\\.|[^"\\])*"' "$hooks_file" 2>/dev/null | sed 's/.*:[[:space:]]*"//; s/"$//; s/\\"/"/g')
     done < <(find "$script_dir/skills" -name "hooks.json" 2>/dev/null)
 
     if [ $errors -gt 0 ]; then
@@ -526,6 +580,13 @@ check_mcp() {
 install_plugins() {
     print_step "5/8" "啟用官方 Plugins"
 
+    # JSON 讀寫需要 jq 或 python3 其一；皆缺時跳過此步驟（而非在 set -e 下中止、留下半套安裝）
+    if ! command_exists "jq" && ! command_exists "python3"; then
+        echo -e "└── ${YELLOW}${WARN} 缺少 jq 與 python3，跳過 Plugin 設定（安裝其一後重跑可補齊）${NC}"
+        echo ""
+        return
+    fi
+
     local settings_file="$CLAUDE_DIR/settings.json"
     local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
     local plugins_base="$CLAUDE_DIR/plugins/marketplaces/$PLUGINS_MARKETPLACE/plugins"
@@ -696,17 +757,6 @@ create_commands() {
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    # DD Pipeline commands（平面 .md 檔案，2026-04 精簡後 6 個核心 + 2026-05 新增 dd-dx，共 7 個）
-    local dd_commands=(
-        "dd-init"
-        "dd-start"
-        "dd-arch"
-        "dd-approve"
-        "dd-dev"
-        "dd-test"
-        "dd-dx"
-    )
-
     # 清理已移除的 DD Commands（2026-04 精簡）
     local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status" "dd-stop")
     for old in "${deprecated_dd[@]}"; do
@@ -716,35 +766,12 @@ create_commands() {
         fi
     done
 
-    # 命名空間 commands（目錄型）
-    local ns_commands=(
-        "development-scaffold"
-        "documentation-docs-gen"
-        "operations-deploy-validate"
-        "operations-health-check"
-        "operations-incident-response"
-        "performance-benchmark"
-        "performance-profile"
-        "quality-code-health"
-        "quality-debt-analysis"
-        "security-audit"
-        "security-compliance-check"
-        "security-vulnerability-scan"
-        "testing-test-gen"
-        "workflow-handoff-create"
-        "workflow-prompt-create"
-        "workflow-prompt-run"
-        "workflow-review"
-        "workflow-todo-add"
-        "workflow-todo-check"
-    )
-
-    local total=$(( ${#dd_commands[@]} + ${#ns_commands[@]} ))
+    local total=$(( ${#DD_COMMANDS[@]} + ${#NS_COMMANDS[@]} ))
     local i=0
 
-    echo -e "├── ${BLUE}DD Pipeline Commands (${#dd_commands[@]} 個)${NC}"
+    echo -e "├── ${BLUE}DD Pipeline Commands (${#DD_COMMANDS[@]} 個)${NC}"
 
-    for cmd in "${dd_commands[@]}"; do
+    for cmd in "${DD_COMMANDS[@]}"; do
         i=$((i + 1))
         local target="$COMMANDS_DIR/$cmd.md"
         local source="$script_dir/commands/$cmd.md"
@@ -778,9 +805,9 @@ create_commands() {
         esac
     done
 
-    echo -e "├── ${BLUE}命名空間 Commands (${#ns_commands[@]} 個)${NC}"
+    echo -e "├── ${BLUE}命名空間 Commands (${#NS_COMMANDS[@]} 個)${NC}"
 
-    for ns_cmd in "${ns_commands[@]}"; do
+    for ns_cmd in "${NS_COMMANDS[@]}"; do
         i=$((i + 1))
         local target_dir="$COMMANDS_DIR/$ns_cmd"
         local source_dir="$script_dir/commands/$ns_cmd"
@@ -831,21 +858,10 @@ create_templates() {
 
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    # 定義所有 templates
-    local templates=(
-        "CLAUDE.md.template"
-        "PROJECT_STATE.md.template"
-        "REQUIREMENTS.md.template"
-        "ARCHITECTURE.md.template"
-        "API_CONTRACT.md.template"
-        "EXAMPLES.md.template"
-        "ADR.md.template"
-    )
-
-    local count=${#templates[@]}
+    local count=${#DD_TEMPLATES[@]}
     local i=0
 
-    for tpl in "${templates[@]}"; do
+    for tpl in "${DD_TEMPLATES[@]}"; do
         i=$((i + 1))
         local target="$TEMPLATES_DIR/$tpl"
         local source="$script_dir/templates/$tpl"
@@ -897,9 +913,10 @@ uninstall() {
     print_header "${ROCKET} DD Pipeline 移除程式"
 
     echo "即將移除以下內容："
-    echo "├── ~/.claude/commands/dd-*.md"
+    echo "├── ~/.claude/commands/ 中的 ${#DD_COMMANDS[@]} 個 DD Commands 與 ${#NS_COMMANDS[@]} 個命名空間 Commands"
     echo "├── ~/.claude/templates/dd/"
-    echo "├── ~/.claude/agents/ 中的 20 個內建 agent"
+    echo "├── ~/.claude/skills/ 中的 ${#BUILTIN_SKILLS[@]} 個內建 skill"
+    echo "├── ~/.claude/agents/ 中的 ${#BUILTIN_AGENTS[@]} 個內建 agent"
     echo "└── 官方 Plugins 設定（claude-md-management）"
     echo ""
 
@@ -907,18 +924,34 @@ uninstall() {
     echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm -f "$COMMANDS_DIR"/dd-*.md
+        # 僅移除 DD_COMMANDS 列表中的命令（不動使用者自建的 dd-*.md）
+        for cmd in "${DD_COMMANDS[@]}"; do
+            rm -f "$COMMANDS_DIR/$cmd.md"
+        done
+
+        for ns_cmd in "${NS_COMMANDS[@]}"; do
+            rm -rf "$COMMANDS_DIR/$ns_cmd"
+        done
+
         rm -rf "$TEMPLATES_DIR"
+
+        # 僅移除 BUILTIN_SKILLS 列表中的 skill（不動使用者自己的）
+        for skill in "${BUILTIN_SKILLS[@]}"; do
+            rm -rf "$SKILLS_DIR/$skill"
+        done
 
         # 僅移除 BUILTIN_AGENTS 列表中的 agent（不動使用者自己的）
         for agent in "${BUILTIN_AGENTS[@]}"; do
             rm -f "$AGENTS_DIR/$agent.md"
         done
 
-        # 清理 Plugin 設定
+        # 清理 Plugin 設定（JSON 讀寫需要 jq 或 python3 其一）
         local settings_file="$CLAUDE_DIR/settings.json"
         local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
 
+        if ! command_exists "jq" && ! command_exists "python3"; then
+            echo -e "${YELLOW}${WARN} 缺少 jq 與 python3，跳過 Plugin 設定清理（請手動移除 settings.json 的 enabledPlugins 項目）${NC}"
+        else
         for plugin in "${OFFICIAL_PLUGINS[@]}"; do
             local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"
 
@@ -958,6 +991,7 @@ with open('$installed_file', 'w') as f:
                 fi
             fi
         done
+        fi
 
         echo -e "${GREEN}DD Pipeline 已移除${NC}"
     else
@@ -1141,17 +1175,20 @@ main() {
         exit 0
     fi
 
-    # 安裝內建 Skills（核心功能）
-    install_builtin_skills
+    # 安裝內建 Skills / Agents / Plugins（--commands-only 時跳過，只裝 Commands）
+    if [ "$COMMANDS_ONLY" = false ]; then
+        # 安裝內建 Skills（核心功能）
+        install_builtin_skills
 
-    # 安裝內建 Agents（補齊 wrapper skills 依賴）
-    install_builtin_agents
+        # 安裝內建 Agents（補齊 wrapper skills 依賴）
+        install_builtin_agents
 
-    # 檢查 MCP
-    check_mcp
+        # 檢查 MCP
+        check_mcp
 
-    # 啟用官方 Plugins
-    install_plugins
+        # 啟用官方 Plugins
+        install_plugins
+    fi
 
     # 建立 Commands
     create_commands
