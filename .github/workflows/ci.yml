@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: 安裝腳本檢查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash 語法檢查
+        run: bash -n install-dd-pipeline.sh
+
+      - name: ShellCheck（error 級）
+        run: shellcheck -S error install-dd-pipeline.sh
+
+      - name: help smoke test
+        run: ./install-dd-pipeline.sh --help
+
+      - name: Skill hook 路徑驗證
+        run: |
+          grep -v '^main "\$@"$' install-dd-pipeline.sh > /tmp/inst.sh
+          bash -c 'source /tmp/inst.sh && validate_skill_hooks'
+
+      - name: 陣列與目錄一致性
+        run: |
+          grep -v '^main "\$@"$' install-dd-pipeline.sh > /tmp/inst.sh
+          bash -c '
+            source /tmp/inst.sh
+            fail=0
+            check() {
+              local label="$1" expected="$2" actual="$3"
+              if ! diff <(echo "$expected") <(echo "$actual"); then
+                echo "❌ $label：陣列與實際目錄不一致（< 陣列 / > 目錄）"
+                fail=1
+              else
+                echo "✅ $label 一致"
+              fi
+            }
+            check "BUILTIN_SKILLS" \
+              "$(printf "%s\n" "${BUILTIN_SKILLS[@]}" | sort)" \
+              "$(ls -d skills/*/ | xargs -n1 basename | sort)"
+            check "BUILTIN_AGENTS" \
+              "$(printf "%s\n" "${BUILTIN_AGENTS[@]}" | sort)" \
+              "$(ls agents/*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
+            check "DD_COMMANDS" \
+              "$(printf "%s\n" "${DD_COMMANDS[@]}" | sort)" \
+              "$(ls commands/dd-*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
+            check "NS_COMMANDS" \
+              "$(printf "%s\n" "${NS_COMMANDS[@]}" | sort)" \
+              "$(ls -d commands/*/ | xargs -n1 basename | sort)"
+            check "DD_TEMPLATES" \
+              "$(printf "%s\n" "${DD_TEMPLATES[@]}" | sort)" \
+              "$(ls templates/*.template | xargs -n1 basename | sort)"
+            exit $fail
+          '
