@@ -87,6 +87,11 @@ ls -t claude_docs/plans/*.md | head -1
 
 等待 subagent 完成，收集執行結果。
 
+> **同步分派（Claude Code ≥ 2.1.198 必守）**：新版 subagent 預設背景執行，
+> 「實作 → 規格審查 → 品質審查」鏈路中的每次 Task 分派**必須**明示同步
+> （`run_in_background: false`），否則審查者可能在實作者完成前就被分派，
+> 拿到不完整的程式碼。詳見下方「Subagent 分派策略」。
+
 #### Step 2: 分派規格審查 Subagent
 
 使用 Task tool 分派 general-purpose subagent：
@@ -227,6 +232,14 @@ git commit -m "<commit message>"
 - **預設序列執行**：逐任務執行，確保依賴正確
 - **同層級可並行**：無依賴關係的任務可以使用多個 Task tool 並行分派
 - **審查序列執行**：規格審查 → 品質審查必須依序
+
+### 同步 vs 背景（Claude Code ≥ 2.1.198）
+
+Claude Code 2.1.198 起 subagent **預設背景執行**。本 skill 的正確性依賴
+「前一階段完成後才分派下一階段」的順序保證，因此：
+
+- 有依賴關係的分派（實作 → 審查 → 修復、依賴鏈上的任務）：**必須** `run_in_background: false`
+- 同層級無依賴的並行任務：可背景分派，但進入下一階段前必須等待全部完成
 
 ### Subagent 超時處理
 
