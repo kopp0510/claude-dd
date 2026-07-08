@@ -64,7 +64,8 @@ go test ./...
 
 ### 5. 程式碼審查
 
-**調用 Skill: `code-reviewer`**
+**優先：原生 `/code-review`**（Claude Code ≥ 2.1.147）— 對本階段 diff 做
+bug + 簡化 + 效率審查；原生不可用時 fallback **調用 Skill: `code-reviewer`**：
 - 審查程式碼品質
 - 檢查最佳實踐
 - 檢查潛在問題

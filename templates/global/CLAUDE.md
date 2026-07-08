@@ -240,6 +240,9 @@
 
 **規則**:同時只能一項 `in_progress`,完成立即 `completed`,不批次更新。
 
+> 新版 Claude Code 若提供原生 Task 工具(`TaskCreate` / `TaskUpdate` / `TaskList`),
+> 優先使用原生工具,觸發條件與規則同上;舊版才用 TodoWrite。
+
 ### 4.5 任務結束回報格式
 
 ```
