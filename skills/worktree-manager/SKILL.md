@@ -8,6 +8,11 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 Git Worktree 隔離管理專家，在獨立的工作目錄中進行開發，避免影響主分支。
 
+> **定位（Claude Code ≥ 2.1.198）**：原生已提供 `EnterWorktree` 工具、CLI `--worktree`
+> 與 subagent `isolation: worktree`，涵蓋建立、會話檔遷移與自動清理。**優先使用原生機制**；
+> 本 skill 保留作為 fallback，適用於原生不覆蓋的場景（自訂 worktree 位置慣例、
+> 依賴安裝與基線測試驗證、舊版 Claude Code）。
+
 ## 觸發條件
 
 **自動觸發時機：**
