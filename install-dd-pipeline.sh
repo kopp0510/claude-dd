@@ -273,7 +273,18 @@ check_environment() {
 
     # 檢查 Claude Code CLI
     if command_exists "claude"; then
-        print_success "Claude Code CLI"
+        local cc_version
+        cc_version=$(claude --version 2>/dev/null | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || true)
+        if [ -n "$cc_version" ]; then
+            print_success "Claude Code CLI (v$cc_version)"
+            # 原生 opt-in 功能最低版本：Workflow ≥ 2.1.154（見 commands/dd-dev.md）
+            local min_native="2.1.154"
+            if [ "$(printf '%s\n%s\n' "$min_native" "$cc_version" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" != "$min_native" ]; then
+                echo -e "│   ${YELLOW}⚠ 版本 < ${min_native}：原生 Workflow/Worktree 等 opt-in 功能不可用（pipeline 預設流程不受影響）${NC}"
+            fi
+        else
+            print_success "Claude Code CLI（版本無法解析，略過版本檢查）"
+        fi
     else
         print_fail "Claude Code CLI"
         all_ok=false
