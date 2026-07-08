@@ -32,7 +32,9 @@
 
 #### 0. Worktree 設定（僅 --worktree 時）
 
-**調用 Skill: `worktree-manager`**
+**優先：原生 `EnterWorktree` 工具**（Claude Code ≥ 2.1.198）— 建立隔離 worktree，
+退出時自動遷移會話檔與清理。原生不可用或需要「安裝依賴 + 基線測試驗證」時,
+fallback **調用 Skill: `worktree-manager`**：
 - 建立功能分支和隔離 worktree
 - 安裝依賴、驗證基線測試
 - 後續所有操作在 worktree 中進行
@@ -127,7 +129,7 @@ git commit -m "feat(backend): 實作後端功能"
 
 #### 0. Worktree 設定（僅 --worktree 時）
 
-**調用 Skill: `worktree-manager`**
+**優先：原生 `EnterWorktree` 工具**（≥ 2.1.198），fallback **調用 Skill: `worktree-manager`**（同後端流程說明）
 
 #### 1. 讀取設計規格
 - 讀取 `claude_docs/design/DESIGN_SPEC.md`
