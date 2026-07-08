@@ -55,6 +55,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ```
 
 > **原生 `/goal` 整合（opt-in，Claude Code ≥ 2.1.139）**：`/dd-dev`、`/dd-test` 預設走「人工檢查點 + 最多 3 次重試」迴圈不變；偏好自主收斂的使用者可改用 `/goal "<完成條件>"` 替代手刻重試。細節見 `templates/global/CLAUDE.md` §3.4 與 `skills/verification-gate/SKILL.md`。
+>
+> **原生 Workflow 整合（opt-in，Claude Code ≥ 2.1.154）**：`/dd-dev` 預設模式在任務數多且不需人工檢查點時，可改用原生 Workflow 編排 subagent（並行、省 context）；`--batch` 因需人工暫停點仍走 subagent-orchestrator。細節見 `commands/dd-dev.md`。
 
 ## 注意事項
 
