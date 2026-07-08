@@ -22,6 +22,11 @@
 > opt-in：對驗收終點明確的功能，可用原生 `/goal "<完成條件>"`（Claude Code ≥ 2.1.139）串起
 > dev → test 的自主收斂。預設仍走 subagent-orchestrator + Plan 檢查點，`/goal` 為放棄逐次
 > 人工審核時的替代選項。
+>
+> opt-in：任務數多（建議 >10）且不需人工檢查點時，可改用原生 **Workflow** 工具
+> （Claude Code ≥ 2.1.154）編排「實作 → 規格審查 → 品質審查」——並行度高、中間結果
+> 不佔主對話 context、支援 `isolation: worktree`。限制：Workflow 啟動後**沒有人工
+> 暫停點**，故 `--batch` 模式（每 3 任務等人工回饋）仍必須走 subagent-orchestrator。
 
 ### 後端開發流程
 
