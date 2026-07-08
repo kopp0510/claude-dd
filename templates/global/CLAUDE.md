@@ -405,6 +405,10 @@ C) 先停下討論
 | `TDD` / `紅綠重構` / `Red-Green-Refactor` | `tdd-guide` |
 | `自動產生測試` / `generate tests` / `test harness` | `test-gen` |
 | `React 元件` / `Next.js` / `Tailwind` / `bundle size` / `前端優化` | `senior-frontend` |
+| `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design`(視覺設計;框架實作交 `senior-frontend`) |
+| `設計系統` / `design token` / `元件庫文件` / `developer handoff` | `ui-design-system` |
+| `UX 研究` / `persona` / `journey map` / `易用性測試` / `使用者訪談分析` | `ux-researcher-designer` |
+| `landing page` / `著陸頁` / `銷售頁` / `hero section` / `轉換優化` | `landing-page-generator` |
 | `Express` / `Fastify` / `Node.js API` / `middleware` / `後端認證` | `senior-backend` |
 | `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops` |
 | `dev container` / `devcontainer` / `lock file 治理` / `uv.lock` / `pnpm-lock` / `onboarding 文件` / `golden path` / `平台工程` / `DX Engineer` | `dx-engineer` |
