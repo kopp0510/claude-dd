@@ -839,8 +839,8 @@ create_commands() {
             cp -r "$source_dir" "$target_dir"
             status="forced"
         else
-            # 比較目錄內容
-            if diff -rq "$source_dir" "$target_dir" >/dev/null 2>&1; then
+            # 比較目錄內容（README.md 不部署，排除比較以維持冪等）
+            if diff -rq -x README.md "$source_dir" "$target_dir" >/dev/null 2>&1; then
                 status="uptodate"
             else
                 rm -rf "$target_dir"
@@ -848,6 +848,9 @@ create_commands() {
                 status="updated"
             fi
         fi
+
+        # README.md 僅供 repo 瀏覽，不部署（否則會被列為可呼叫的 <ns>:README 條目）
+        rm -f "$target_dir/README.md"
 
         case $status in
             new)     echo -e "$tree_char $ns_cmd: ${GREEN}已安裝（新）${NC}" ;;
