@@ -46,6 +46,7 @@ PROMOTED_SKILLS=(
     "task-planner"
     "verification-gate"
     "worktree-manager"
+    "writing-great-skills"   # user-invoked（disable-model-invocation），零 context 稅
 )
 
 MISC_SKILLS=(
