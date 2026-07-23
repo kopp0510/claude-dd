@@ -31,6 +31,7 @@
 - `agents/` — 21 個 Agents（部署依分桶；promoted：code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 7 個 dd-* 指令（.md 平面檔；僅 dd-init 預設部署） + 19 個命名空間 command 目錄（僅 workflow-review 預設部署）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
+- `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
 
 ## 新增 Skill 步驟
@@ -70,7 +71,10 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 實作 → commit → code-simplifier → 真實環境驗證(curl / playwright) → commit
 ```
 
-搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理）。
+搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
+並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
+`~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit` — 改碼目錄缺
+CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
 
 > **舊 DD Pipeline（deprecated 桶封存）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
 > 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）移入 deprecated 桶，
