@@ -139,7 +139,7 @@ BUILTIN_AGENTS=("${PROMOTED_AGENTS[@]}")
 ALL_AGENTS=("${PROMOTED_AGENTS[@]}" "${DEPRECATED_AGENTS[@]}")
 
 # DD commands（平面 .md 檔案）
-# 2026-07-23 重整：dd-init 改造為「5 步開發迴圈」初始化；原多階段 pipeline
+# 2026-07-23 重整：dd-init 改造為「6 步開發迴圈」初始化；原多階段 pipeline
 # （dd-start/arch/approve/dev/test/dx）全歷史 0 次使用，移入 deprecated 桶
 DD_COMMANDS=(
     "dd-init"
@@ -295,7 +295,7 @@ show_help() {
     echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用；misc ${#MISC_SKILLS[@]} 個、deprecated ${#DEPRECATED_SKILLS[@]} 個需旗標）"
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份；deprecated ${#DEPRECATED_AGENTS[@]} 個需旗標）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具，巢狀 CLAUDE.md 維護依賴）"
-    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：5 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
+    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：6 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
     echo "  - ${#DD_TEMPLATES[@]} 個 Templates（文檔模板）"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
@@ -1232,8 +1232,8 @@ show_completion() {
 
     echo -e "${GREEN}📌 快速開始：${NC}"
     echo "   1. cd your-project"
-    echo "   2. /dd-init  （蓋章 5 步開發迴圈 + 專案 CLAUDE.md）"
-    echo "   3. 開發：實作 → commit → code-simplifier → curl/playwright 驗證 → commit"
+    echo "   2. /dd-init  （蓋章 6 步開發迴圈 + 專案 CLAUDE.md）"
+    echo "   3. 開發：實作+測試 → commit → 簡化 → review → 再測 → commit"
     echo ""
     echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
     echo "   供 wrapper skills 透過 Task tool 調用"
