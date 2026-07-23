@@ -19,7 +19,7 @@
 
 | 桶 | 定義 | 部署條件 |
 |---|---|---|
-| **promoted** | 實證常用（8 skills、4 agents、dd-init、workflow-review） | 預設部署 |
+| **promoted** | 實證常用（9 skills、4 agents、dd-init、workflow-review） | 預設部署 |
 | **misc** | 低頻但屬 SRE / 備援性質（11 skills、5 NS commands） | `--with-misc` |
 | **deprecated** | 全歷史 0 次使用（34 skills、17 agents、6 dd commands、13 NS commands） | `--with-deprecated`；觀察期後可評估刪除 |
 
@@ -27,7 +27,7 @@
 
 ## 目錄結構
 
-- `skills/` — 53 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶）
+- `skills/` — 54 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
 - `agents/` — 21 個 Agents（部署依分桶；promoted：code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 7 個 dd-* 指令（.md 平面檔；僅 dd-init 預設部署） + 19 個命名空間 command 目錄（僅 workflow-review 預設部署）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
