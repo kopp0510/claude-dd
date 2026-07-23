@@ -5,23 +5,38 @@
 ## 安裝 / 更新
 
 ```bash
-./install-dd-pipeline.sh          # 首次安裝
-./install-dd-pipeline.sh --force  # 強制更新所有檔案
-./install-dd-pipeline.sh --check  # 只檢查環境
+./install-dd-pipeline.sh                    # 首次安裝（只裝 promoted 桶）
+./install-dd-pipeline.sh --force            # 強制更新所有檔案
+./install-dd-pipeline.sh --force --prune    # 更新並清掉 ~/.claude 中未部署桶位的舊檔（需確認）
+./install-dd-pipeline.sh --with-misc        # 連同 misc 桶（SRE / 備援項目）
+./install-dd-pipeline.sh --with-deprecated  # 連同 deprecated 桶（0 使用率封存）
+./install-dd-pipeline.sh --check            # 只檢查環境
 ```
+
+## 分桶制（2026-07-23 依全 transcript 使用率盤點）
+
+所有 skills/agents/commands 檔案保留於 repo，**部署與否由安裝腳本的桶陣列決定**（不搬目錄）：
+
+| 桶 | 定義 | 部署條件 |
+|---|---|---|
+| **promoted** | 實證常用（8 skills、4 agents、dd-init、workflow-review） | 預設部署 |
+| **misc** | 低頻但屬 SRE / 備援性質（11 skills、5 NS commands） | `--with-misc` |
+| **deprecated** | 全歷史 0 次使用（34 skills、17 agents、6 dd commands、13 NS commands） | `--with-deprecated`；觀察期後可評估刪除 |
+
+桶陣列定義在 `install-dd-pipeline.sh` 頂部（`PROMOTED_*` / `MISC_*` / `DEPRECATED_*`）。
 
 ## 目錄結構
 
-- `skills/` — 53 個 Skills（每個子目錄含 SKILL.md 定義檔）
-- `agents/` — 21 個 Agents（19 個自製補齊含 senior-* 全家族 + dx-engineer + 2 個官方備份 code-simplifier/code-reviewer，部署到 `~/.claude/agents/`）
-- `commands/` — 7 個 dd-* 指令（.md 平面檔） + 19 個命名空間 command 目錄
+- `skills/` — 53 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶）
+- `agents/` — 21 個 Agents（部署依分桶；promoted：code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
+- `commands/` — 7 個 dd-* 指令（.md 平面檔；僅 dd-init 預設部署） + 19 個命名空間 command 目錄（僅 workflow-review 預設部署）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
 
 ## 新增 Skill 步驟
 
 1. 在 `skills/<skill-name>/` 建立 `SKILL.md`
-2. 在 `install-dd-pipeline.sh` 的 `BUILTIN_SKILLS` 陣列加入名稱
+2. 在 `install-dd-pipeline.sh` 依定位加入 `PROMOTED_SKILLS` / `MISC_SKILLS` 陣列（新 skill 不進 deprecated）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 
 ### Skill hook 路徑規範（強制）
@@ -37,26 +52,29 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ## 新增 Agent 步驟
 
 1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model: inherit`）
-2. 在 `install-dd-pipeline.sh` 的 `BUILTIN_AGENTS` 陣列加入名稱
+2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
 
 ## 新增 Command 步驟
 
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
-- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
+- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列（或依定位放 `MISC_NS_COMMANDS`）
 
-## DD Pipeline 流程
+## 核心工作法：5 步開發迴圈
+
+骨幹已從多階段 DD Pipeline 換成 lawdesk-ai 實戰驗證的功能段落迴圈
+（定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
 
 ```
-/dd-init → /dd-start(RDD) → /dd-arch(SDD/DDD/ADD/EDD)
-→ [人工審核: /dd-approve，需修改時直接編輯 claude_docs/*.md 後重跑 /dd-approve]
-→ /dd-dev(DbC/CDD/PDD) → /dd-test(TDD/BDD/ATDD/FDD)
+實作 → commit → code-simplifier → 真實環境驗證(curl / playwright) → commit
 ```
 
-> **原生 `/goal` 整合（opt-in，Claude Code ≥ 2.1.139）**：`/dd-dev`、`/dd-test` 預設走「人工檢查點 + 最多 3 次重試」迴圈不變；偏好自主收斂的使用者可改用 `/goal "<完成條件>"` 替代手刻重試。細節見 `templates/global/CLAUDE.md` §3.4 與 `skills/verification-gate/SKILL.md`。
->
-> **原生 Workflow 整合（opt-in，Claude Code ≥ 2.1.154）**：`/dd-dev` 預設模式在任務數多且不需人工檢查點時，可改用原生 Workflow 編排 subagent（並行、省 context）；`--batch` 因需人工暫停點仍走 subagent-orchestrator。細節見 `commands/dd-dev.md`。
+搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理）。
+
+> **舊 DD Pipeline（deprecated 桶封存）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
+> 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）移入 deprecated 桶，
+> 檔案保留於 `commands/`，`--with-deprecated` 可重新部署。舊版 dd-init 見 git 歷史。
 
 ## 注意事項
 

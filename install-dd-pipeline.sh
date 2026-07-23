@@ -29,83 +29,94 @@ TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 
-# 所有 Skills（從 claude-dd/skills/ 安裝，共 53 個）
+# Skills 分桶（2026-07-23 依全 transcript 使用率盤點；檔案全數保留於 repo，部署與否由桶決定）
+# - PROMOTED：實證常用，預設部署
+# - MISC：低頻但屬 SRE / 備援性質，--with-misc 才部署
+# - DEPRECATED：全歷史 0 次使用，--with-deprecated 才部署；觀察期後可評估刪除
 # 註：原同名 wrapper skill（senior-frontend/backend/devops/fullstack/qa/secops、
 # tdd-guide、playwright-pro、claude-api-expert、code-reviewer）已於 2026-05 移除，
-# 改由 §7.2 主動觸發 + Claude 4.7 直接派 Task 取代。
-BUILTIN_SKILLS=(
-    # ── 核心 Skills（19 個）──
-    "systems-architect"
-    "test-engineer"
-    "security-auditor"
-    "docs-writer"
-    "refactor-expert"
-    "performance-tuner"
-    "root-cause-analyzer"
-    "config-safety-reviewer"
-    "senior-database"
-    "api-designer"
-    "i18n-expert"
-    "task-planner"
-    "worktree-manager"
-    "subagent-orchestrator"
+# 改由 §7.2 主動觸發 + 直接派 Task 取代。
+PROMOTED_SKILLS=(
     "code-simplifier"
-    "frontend-design"
-    "verification-gate"
     "design-brainstorm"
-    "branch-finisher"
-    # ── 整合包裝器 Skills（13 個）──
-    # 品質與審查類
+    "frontend-design"
     "review"
-    "code-health"
-    "debt-analysis"
-    "test-gen"
-    # 安全類
-    "vulnerability-scan"
-    "security-audit"
-    "compliance-check"
-    # 效能類
-    "performance-profile"
-    "benchmark"
-    # 維運類
-    "deploy-validate"
-    "health-check"
-    "incident-response"
-    # 文件類
-    "docs-gen"
-    # ── 工程團隊 Skills（9 個，原 OPTIONAL_SKILLS）──
-    "senior-architect"
-    "senior-security"
-    "senior-prompt-engineer"
-    "senior-data-engineer"
-    "senior-data-scientist"
-    "senior-ml-engineer"
-    "senior-computer-vision"
-    "ui-design-system"
-    "ux-researcher-designer"
-    # ── 產品與商業 Skills（12 個）──
-    "agile-product-owner"
-    "aws-solution-architect"
-    "competitive-teardown"
-    "email-template-builder"
-    "incident-commander"
-    "landing-page-generator"
-    "product-manager-toolkit"
-    "product-strategist"
-    "saas-scaffolder"
     "self-improving-agent"
-    "stripe-integration-expert"
-    "tech-stack-evaluator"
+    "task-planner"
+    "verification-gate"
+    "worktree-manager"
 )
 
-# 所有 Agents（從 claude-dd/agents/ 安裝，共 21 個）
-# - 19 個為自製 agent（補齊 marketplace 缺失的官方 agent，含 senior-* 全家族 + dx-engineer）
-# - 2 個為官方 agent 的本地備份（code-simplifier、code-reviewer；作為 plugin 未裝時的 fallback，確保離線/新環境也能運作）
-BUILTIN_AGENTS=(
+MISC_SKILLS=(
+    "branch-finisher"
+    "deploy-validate"
+    "health-check"
+    "incident-commander"
+    "incident-response"
+    "root-cause-analyzer"
+    "security-audit"
+    "security-auditor"
+    "ui-design-system"
+    "ux-researcher-designer"
+    "vulnerability-scan"
+)
+
+DEPRECATED_SKILLS=(
+    "agile-product-owner"
+    "api-designer"
+    "aws-solution-architect"
+    "benchmark"
+    "code-health"
+    "competitive-teardown"
+    "compliance-check"
+    "config-safety-reviewer"
+    "debt-analysis"
+    "docs-gen"
+    "docs-writer"
+    "email-template-builder"
+    "i18n-expert"
+    "landing-page-generator"
+    "performance-profile"
+    "performance-tuner"
+    "product-manager-toolkit"
+    "product-strategist"
+    "refactor-expert"
+    "saas-scaffolder"
+    "senior-architect"
+    "senior-computer-vision"
+    "senior-data-engineer"
+    "senior-data-scientist"
+    "senior-database"
+    "senior-ml-engineer"
+    "senior-prompt-engineer"
+    "senior-security"
+    "stripe-integration-expert"
+    "subagent-orchestrator"
+    "systems-architect"
+    "tech-stack-evaluator"
+    "test-engineer"
+    "test-gen"
+)
+
+# 部署集合（預設 = PROMOTED；main() 解析 --with-misc / --with-deprecated 後擴充）
+BUILTIN_SKILLS=("${PROMOTED_SKILLS[@]}")
+ALL_SKILLS=("${PROMOTED_SKILLS[@]}" "${MISC_SKILLS[@]}" "${DEPRECATED_SKILLS[@]}")
+
+# Agents 分桶（同 skills 的盤點基準）
+# - PROMOTED：實證用過（senior-devops、security-auditor）+ 2 個官方 agent 本地備份
+#   （code-simplifier、code-reviewer；plugin 未裝時的 fallback，確保離線/新環境可用）
+# - DEPRECATED：全歷史 0 次使用
+PROMOTED_AGENTS=(
+    "code-simplifier"
+    "code-reviewer"
+    "senior-devops"
+    "security-auditor"
+)
+
+DEPRECATED_AGENTS=(
     "senior-frontend"
     "senior-backend"
     "senior-database"
-    "senior-devops"
     "senior-fullstack"
     "senior-qa"
     "senior-secops"
@@ -117,17 +128,22 @@ BUILTIN_AGENTS=(
     "senior-prompt-engineer"
     "senior-computer-vision"
     "dx-engineer"
-    "security-auditor"
     "tdd-guide"
     "playwright-pro"
     "claude-api"
-    "code-simplifier"
-    "code-reviewer"
 )
 
-# DD Pipeline commands（平面 .md 檔案，2026-04 精簡後 6 個核心 + 2026-05 新增 dd-dx，共 7 個）
+BUILTIN_AGENTS=("${PROMOTED_AGENTS[@]}")
+ALL_AGENTS=("${PROMOTED_AGENTS[@]}" "${DEPRECATED_AGENTS[@]}")
+
+# DD commands（平面 .md 檔案）
+# 2026-07-23 重整：dd-init 改造為「5 步開發迴圈」初始化；原多階段 pipeline
+# （dd-start/arch/approve/dev/test/dx）全歷史 0 次使用，移入 deprecated 桶
 DD_COMMANDS=(
     "dd-init"
+)
+
+DEPRECATED_DD_COMMANDS=(
     "dd-start"
     "dd-arch"
     "dd-approve"
@@ -136,28 +152,38 @@ DD_COMMANDS=(
     "dd-dx"
 )
 
-# 命名空間 commands（目錄型）
+ALL_DD_COMMANDS=("${DD_COMMANDS[@]}" "${DEPRECATED_DD_COMMANDS[@]}")
+
+# 命名空間 commands（目錄型），分桶基準同 skills
 NS_COMMANDS=(
-    "development-scaffold"
-    "documentation-docs-gen"
+    "workflow-review"
+)
+
+MISC_NS_COMMANDS=(
     "operations-deploy-validate"
     "operations-health-check"
     "operations-incident-response"
+    "security-audit"
+    "security-vulnerability-scan"
+)
+
+DEPRECATED_NS_COMMANDS=(
+    "development-scaffold"
+    "documentation-docs-gen"
     "performance-benchmark"
     "performance-profile"
     "quality-code-health"
     "quality-debt-analysis"
-    "security-audit"
     "security-compliance-check"
-    "security-vulnerability-scan"
     "testing-test-gen"
     "workflow-handoff-create"
     "workflow-prompt-create"
     "workflow-prompt-run"
-    "workflow-review"
     "workflow-todo-add"
     "workflow-todo-check"
 )
+
+ALL_NS_COMMANDS=("${NS_COMMANDS[@]}" "${MISC_NS_COMMANDS[@]}" "${DEPRECATED_NS_COMMANDS[@]}")
 
 # 文件模板（部署到 ~/.claude/templates/dd/）
 DD_TEMPLATES=(
@@ -248,18 +274,21 @@ show_help() {
     echo "用法: $0 [選項]"
     echo ""
     echo "選項:"
-    echo "  --check         只檢查環境（不安裝）"
-    echo "  --force         強制重新安裝（覆蓋現有檔案）"
-    echo "  --commands-only 只安裝 DD Commands（不安裝 skills）"
-    echo "  --uninstall     移除 DD Pipeline"
-    echo "  --update        更新 skills 到最新版"
-    echo "  --help          顯示此說明"
+    echo "  --check             只檢查環境（不安裝）"
+    echo "  --force             強制重新安裝（覆蓋現有檔案）"
+    echo "  --commands-only     只安裝 DD Commands（不安裝 skills）"
+    echo "  --with-misc         連同 misc 桶一起部署（SRE / 備援性質項目）"
+    echo "  --with-deprecated   連同 deprecated 桶一起部署（0 使用率封存項目）"
+    echo "  --prune             移除 ~/.claude 中本次未部署桶位的舊檔（需確認）"
+    echo "  --uninstall         移除 DD Pipeline（含所有桶位）"
+    echo "  --update            更新 skills/agents 到最新版（旗標需置於 --update 之前）"
+    echo "  --help              顯示此說明"
     echo ""
-    echo "安裝內容："
-    echo "  - ${#BUILTIN_SKILLS[@]} 個內建 Skills（19 個核心 + 13 個整合包裝器 + 9 個工程團隊 + 12 個產品與商業）"
-    echo "  - ${#BUILTIN_AGENTS[@]} 個內建 Agents（19 個自製含 senior-* 全家族 + 2 個官方備份，供 wrapper skills 調用）"
-    echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具）"
-    echo "  - ${#DD_COMMANDS[@]} 個 DD Commands + ${#NS_COMMANDS[@]} 個命名空間 Commands"
+    echo "預設安裝內容（promoted 桶）："
+    echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用；misc ${#MISC_SKILLS[@]} 個、deprecated ${#DEPRECATED_SKILLS[@]} 個需旗標）"
+    echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份；deprecated ${#DEPRECATED_AGENTS[@]} 個需旗標）"
+    echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具，巢狀 CLAUDE.md 維護依賴）"
+    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：5 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
     echo "  - ${#DD_TEMPLATES[@]} 個 Templates（文檔模板）"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
@@ -926,11 +955,11 @@ create_templates() {
 uninstall() {
     print_header "${ROCKET} DD Pipeline 移除程式"
 
-    echo "即將移除以下內容："
-    echo "├── ~/.claude/commands/ 中的 ${#DD_COMMANDS[@]} 個 DD Commands 與 ${#NS_COMMANDS[@]} 個命名空間 Commands"
+    echo "即將移除以下內容（含所有桶位，不論當初用什麼旗標部署）："
+    echo "├── ~/.claude/commands/ 中的 ${#ALL_DD_COMMANDS[@]} 個 DD Commands 與 ${#ALL_NS_COMMANDS[@]} 個命名空間 Commands"
     echo "├── ~/.claude/templates/dd/"
-    echo "├── ~/.claude/skills/ 中的 ${#BUILTIN_SKILLS[@]} 個內建 skill"
-    echo "├── ~/.claude/agents/ 中的 ${#BUILTIN_AGENTS[@]} 個內建 agent"
+    echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"
+    echo "├── ~/.claude/agents/ 中的 ${#ALL_AGENTS[@]} 個內建 agent"
     echo "└── 官方 Plugins 設定（claude-md-management）"
     echo ""
 
@@ -938,24 +967,24 @@ uninstall() {
     echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        # 僅移除 DD_COMMANDS 列表中的命令（不動使用者自建的 dd-*.md）
-        for cmd in "${DD_COMMANDS[@]}"; do
+        # 僅移除 ALL_DD_COMMANDS 列表中的命令（不動使用者自建的 dd-*.md）
+        for cmd in "${ALL_DD_COMMANDS[@]}"; do
             rm -f "$COMMANDS_DIR/$cmd.md"
         done
 
-        for ns_cmd in "${NS_COMMANDS[@]}"; do
+        for ns_cmd in "${ALL_NS_COMMANDS[@]}"; do
             rm -rf "$COMMANDS_DIR/$ns_cmd"
         done
 
         rm -rf "$TEMPLATES_DIR"
 
-        # 僅移除 BUILTIN_SKILLS 列表中的 skill（不動使用者自己的）
-        for skill in "${BUILTIN_SKILLS[@]}"; do
+        # 僅移除 ALL_SKILLS 列表中的 skill（不動使用者自己的）
+        for skill in "${ALL_SKILLS[@]}"; do
             rm -rf "$SKILLS_DIR/$skill"
         done
 
-        # 僅移除 BUILTIN_AGENTS 列表中的 agent（不動使用者自己的）
-        for agent in "${BUILTIN_AGENTS[@]}"; do
+        # 僅移除 ALL_AGENTS 列表中的 agent（不動使用者自己的）
+        for agent in "${ALL_AGENTS[@]}"; do
             rm -f "$AGENTS_DIR/$agent.md"
         done
 
@@ -1100,14 +1129,71 @@ create_global_claude_md() {
     esac
 }
 
+# 清理 ~/.claude 中「本次未部署桶位」的舊部署殘留
+# 只動 ALL_* 列表內（即本 repo 曾部署過）且不在本次部署集合中的項目；
+# 使用者自建的 skills/agents/commands 一概不碰。可用 --with-misc/--with-deprecated 重裝復原。
+prune_retired() {
+    print_header "🧹 清理未部署桶位的舊檔（--prune）"
+
+    local prune_skills=() prune_agents=() prune_cmds=() prune_ns=()
+
+    for skill in "${ALL_SKILLS[@]}"; do
+        if [[ ! " ${BUILTIN_SKILLS[*]} " == *" $skill "* ]] && [ -d "$SKILLS_DIR/$skill" ]; then
+            prune_skills+=("$skill")
+        fi
+    done
+    for agent in "${ALL_AGENTS[@]}"; do
+        if [[ ! " ${BUILTIN_AGENTS[*]} " == *" $agent "* ]] && [ -f "$AGENTS_DIR/$agent.md" ]; then
+            prune_agents+=("$agent")
+        fi
+    done
+    for cmd in "${ALL_DD_COMMANDS[@]}"; do
+        if [[ ! " ${DD_COMMANDS[*]} " == *" $cmd "* ]] && [ -f "$COMMANDS_DIR/$cmd.md" ]; then
+            prune_cmds+=("$cmd")
+        fi
+    done
+    for ns_cmd in "${ALL_NS_COMMANDS[@]}"; do
+        if [[ ! " ${NS_COMMANDS[*]} " == *" $ns_cmd "* ]] && [ -d "$COMMANDS_DIR/$ns_cmd" ]; then
+            prune_ns+=("$ns_cmd")
+        fi
+    done
+
+    local total=$(( ${#prune_skills[@]} + ${#prune_agents[@]} + ${#prune_cmds[@]} + ${#prune_ns[@]} ))
+    if [ "$total" -eq 0 ]; then
+        echo -e "${GREEN}✅ 無殘留可清（~/.claude 已與本次部署集合一致）${NC}"
+        return
+    fi
+
+    echo "即將從 ~/.claude 移除 $total 項（皆為本 repo 部署過、本次未部署的桶位項目）："
+    [ ${#prune_skills[@]} -gt 0 ] && echo "├── skills: ${prune_skills[*]}"
+    [ ${#prune_agents[@]} -gt 0 ] && echo "├── agents: ${prune_agents[*]}"
+    [ ${#prune_cmds[@]} -gt 0 ] && echo "├── DD commands: ${prune_cmds[*]}"
+    [ ${#prune_ns[@]} -gt 0 ] && echo "└── NS commands: ${prune_ns[*]}"
+    echo ""
+
+    read -p "確定要移除嗎？（可用 --with-misc / --with-deprecated 重裝復原）[y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "取消清理"
+        return
+    fi
+
+    for skill in "${prune_skills[@]}"; do rm -rf "$SKILLS_DIR/$skill"; done
+    for agent in "${prune_agents[@]}"; do rm -f "$AGENTS_DIR/$agent.md"; done
+    for cmd in "${prune_cmds[@]}"; do rm -f "$COMMANDS_DIR/$cmd.md"; done
+    for ns_cmd in "${prune_ns[@]}"; do rm -rf "$COMMANDS_DIR/$ns_cmd"; done
+
+    echo -e "${GREEN}✅ 已移除 $total 項${NC}"
+}
+
 # 顯示完成訊息
 show_completion() {
     print_header "✅ DD Pipeline 安裝完成！"
 
     echo -e "${GREEN}📌 快速開始：${NC}"
     echo "   1. cd your-project"
-    echo "   2. /dd-init"
-    echo "   3. /dd-start \"你的需求\""
+    echo "   2. /dd-init  （蓋章 5 步開發迴圈 + 專案 CLAUDE.md）"
+    echo "   3. 開發：實作 → commit → code-simplifier → curl/playwright 驗證 → commit"
     echo ""
     echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
     echo "   供 wrapper skills 透過 Task tool 調用"
@@ -1126,8 +1212,12 @@ main() {
     local FORCE=false
     local COMMANDS_ONLY=false
     local UNINSTALL=false
+    local WITH_MISC=false
+    local WITH_DEPRECATED=false
+    local PRUNE=false
 
     # 解析參數
+    # 註：--with-misc / --with-deprecated 直接擴充部署集合，故需置於 --update 之前才生效
     while [[ $# -gt 0 ]]; do
         case $1 in
             --check)
@@ -1140,6 +1230,28 @@ main() {
                 ;;
             --commands-only)
                 COMMANDS_ONLY=true
+                shift
+                ;;
+            --with-misc)
+                if [ "$WITH_MISC" = false ]; then
+                    WITH_MISC=true
+                    BUILTIN_SKILLS+=("${MISC_SKILLS[@]}")
+                    NS_COMMANDS+=("${MISC_NS_COMMANDS[@]}")
+                fi
+                shift
+                ;;
+            --with-deprecated)
+                if [ "$WITH_DEPRECATED" = false ]; then
+                    WITH_DEPRECATED=true
+                    BUILTIN_SKILLS+=("${DEPRECATED_SKILLS[@]}")
+                    BUILTIN_AGENTS+=("${DEPRECATED_AGENTS[@]}")
+                    DD_COMMANDS+=("${DEPRECATED_DD_COMMANDS[@]}")
+                    NS_COMMANDS+=("${DEPRECATED_NS_COMMANDS[@]}")
+                fi
+                shift
+                ;;
+            --prune)
+                PRUNE=true
                 shift
                 ;;
             --uninstall)
@@ -1215,6 +1327,11 @@ main() {
     # 檢查 / 安裝全域 CLAUDE.md（除非只安裝 commands）
     if [ "$COMMANDS_ONLY" = false ]; then
         create_global_claude_md
+    fi
+
+    # 清理未部署桶位的舊檔（--prune，需逐項確認）
+    if [ "$PRUNE" = true ]; then
+        prune_retired
     fi
 
     # 顯示完成訊息
