@@ -4,7 +4,7 @@
 # 規則：每個含程式碼的資料夾都要有 CLAUDE.md，且該資料夾改了程式碼時 CLAUDE.md 需同批更新
 # 部署：claude-dd/scripts/ → ~/.claude/scripts/（source of truth 在 claude-dd repo）
 # 掛載：由 /dd-init 寫入專案 .git/hooks/pre-commit 呼叫本腳本
-# 逃生口：SKIP_DOC_CHECK=1 git commit（僅供 5 步迴圈步驟 2 的檢查點 commit；最終 commit 必須全過）
+# 逃生口：SKIP_DOC_CHECK=1 git commit（僅供迴圈步驟 2 的檢查點 commit；最終 commit 必須全過）
 
 [ "$SKIP_DOC_CHECK" = "1" ] && exit 0
 
@@ -65,5 +65,5 @@ if [ -n "$stale" ]; then
 fi
 echo ""
 echo "其他處理方式："
-echo "  - 檢查點 commit（5 步迴圈步驟 2）：SKIP_DOC_CHECK=1 git commit ...（最終 commit 必須全過）"
+echo "  - 檢查點 commit（迴圈步驟 2）：SKIP_DOC_CHECK=1 git commit ...（最終 commit 必須全過）"
 exit 1

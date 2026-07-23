@@ -1,6 +1,6 @@
-# DD 初始化 — 5 步開發迴圈
+# DD 初始化 — 6 步開發迴圈
 
-初始化專案的開發慣例：蓋章「5 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
+初始化專案的開發慣例：蓋章「6 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
 確認巢狀 CLAUDE.md 維護依賴。支援**新專案**（空目錄）和**現有專案**（已有程式碼）。
 
 > 2026-07 重整：原多階段 DD Pipeline（dd-start/arch/approve/dev/test）已封存至
@@ -17,7 +17,7 @@
    - `Cargo.toml` → Rust、`pom.xml`/`build.gradle` → Java、`composer.json` → PHP、`Gemfile` → Ruby
    - 前端框架：偵測 `next.config.*`、`vite.config.*`、`src/App.*` 等
 
-2. **判斷驗證方式**（填入迴圈步驟 4 的具體指令）：
+2. **判斷驗證方式**（填入迴圈步驟 5 的具體指令）：
    - 有 HTTP API（後端/全端）→ 驗證含 **curl 打真實 API**
    - 有前端 UI → 驗證含 **playwright 開真實瀏覽器**（截圖存 `.screenshots/`）
    - 純 CLI / 函式庫 → 驗證退化為「跑真實指令 / 消費端範例」
@@ -34,16 +34,18 @@
 ```markdown
 ## 開發流程（每個功能段落必走，不可省略）
 
-1. 實作功能
+1. **實作功能 + 首輪測試通過**（相關既有測試跑綠 + 基本手動驗證，不可帶紅燈進 commit）
 2. **commit**（第一次 — 保留簡化前還原點）
 3. 跑 **code-simplifier**（對該段新增/修改的程式碼，官方 agent）
-4. **再測一次** — 真實環境驗證，不可只跑單元測試：
+4. 跑 **code-review**（該段 diff，每段全量跑；修掉 Critical/Important 才續行）
+5. **再測一次** — 確認步驟 3、4 沒破壞行為，不可只跑單元測試：
+   - 重跑步驟 1 的相關測試
    - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
    - <依偵測結果填入：playwright 真的開瀏覽器登入、操作 UI、截圖驗證前端可用>
      - 截圖一律存 `.screenshots/`（已 gitignore）；勿丟專案根目錄
-5. **再 commit**（簡化後版本）
+6. **再 commit**（最終版本）
 
-驗證不過 → 修完重跑步驟 4，不可帶著紅燈進步驟 5。
+驗證不過 → 修完重跑步驟 5，不可帶著紅燈進步驟 6。
 
 ## CLAUDE.md 維護
 
@@ -80,7 +82,7 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
    - 已存在且未含 `check-claude-md.sh` → 在檔尾 **Edit** 追加上面的呼叫行（保留既有內容）
    - 已含 → 跳過並告知
 3. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
-   檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 5）必須全過
+   檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 6）必須全過
 
 ### Phase 4: 檢查巢狀 CLAUDE.md 依賴
 
@@ -97,7 +99,7 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 
 ```bash
 git add CLAUDE.md .gitignore 2>/dev/null || true
-git commit -m "chore: 初始化 5 步開發迴圈慣例"
+git commit -m "chore: 初始化 6 步開發迴圈慣例"
 ```
 
 > 註：`.git/hooks/` 不入版控，pre-commit gate 不需 add。此 commit 只動 CLAUDE.md/.gitignore，會通過 gate。
@@ -108,13 +110,13 @@ git commit -m "chore: 初始化 5 步開發迴圈慣例"
 ✅ 初始化完成！
 
 已設定：
-├── CLAUDE.md — 5 步開發迴圈（驗證方式：<偵測結果>）
+├── CLAUDE.md — 6 步開發迴圈（驗證方式：<偵測結果>）
 ├── .screenshots/ + .gitignore（有前端時）
 ├── pre-commit gate — 改碼目錄缺 CLAUDE.md 或未同步更新會擋 commit
 └── claude-md-management plugin 檢查
 
 📌 開始開發：
-實作 → commit → code-simplifier → 真實環境驗證 → commit
+實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
 每個功能段落走一圈；CLAUDE.md 堆疊更新由 pre-commit gate 把關。
 ```
 
