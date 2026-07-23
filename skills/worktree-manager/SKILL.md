@@ -1,188 +1,34 @@
 ---
 name: worktree-manager
-description: Git Worktree 隔離管理專家，建立獨立開發環境避免影響主分支。當提到 worktree、分支隔離、隔離開發環境、獨立分支開發時自動啟用。
+description: Git Worktree 隔離管理，建立獨立開發環境避免影響主分支。當提到 worktree、分支隔離、隔離開發環境時自動啟用。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
 # Worktree Manager
 
-Git Worktree 隔離管理專家，在獨立的工作目錄中進行開發，避免影響主分支。
+> **原生優先（Claude Code ≥ 2.1.198）**：原生 `EnterWorktree` 工具、CLI `--worktree` 與
+> subagent `isolation: worktree` 已涵蓋建立、會話遷移與自動清理 — **先用原生**。
+> 本 skill 只處理原生不覆蓋的場景：自訂位置慣例、依賴安裝與基線測試、舊版 Claude Code。
 
-> **定位（Claude Code ≥ 2.1.198）**：原生已提供 `EnterWorktree` 工具、CLI `--worktree`
-> 與 subagent `isolation: worktree`，涵蓋建立、會話檔遷移與自動清理。**優先使用原生機制**；
-> 本 skill 保留作為 fallback，適用於原生不覆蓋的場景（自訂 worktree 位置慣例、
-> 依賴安裝與基線測試驗證、舊版 Claude Code）。
+## 建立流程
 
-## 觸發條件
+1. **前置檢查**：確認在 git repo 內、`git status --porcelain` 乾淨（有未提交變更先提示處理）、
+   `git worktree list` 無同名衝突
+2. **確認設定**（AskUserQuestion 一次問完）：分支名（建議 `feature/<name>` 前綴）、
+   位置（慣例：主 repo 平行目錄 `../<project>-worktree-<branch>`）、是否裝依賴
+3. **建立**：`git worktree add -b <branch> <path> <base-branch>`
+4. **環境設定**：裝依賴（npm/pip 等，依專案）、複製 `.env.example` → `.env`（如存在）
+5. **基線測試**：跑既有測試記錄基線 — 失敗時警告但不阻止建立（帶著已知紅燈開發，
+   之後才分得清是誰弄壞的）
+6. **記錄**：在 worktree 根寫 `WORKTREE_INFO.md`（分支、base、路徑、基線結果）
 
-**自動觸發時機：**
-- `dd-dev --worktree` 時，在開發流程最前面執行
-- 使用者提到「worktree」、「分支隔離」、「獨立環境」
+## 收尾
 
-**初始互動：**
-評估目前環境狀態，建立隔離的 worktree 環境。
+開發完成後：確認 worktree 內變更已全部 commit → 回主 repo `git worktree remove <path>` →
+`git worktree prune`。merge 與分支刪除由使用者決定，本 skill 不代決。
 
-## 工作流程
+## 限制備忘
 
-### Stage 1: 環境評估
-
-**目標：** 檢查 git 狀態，確保可以建立 worktree
-
-#### Step 1: 檢查 Git 狀態
-- 確認是 git repo（`git rev-parse --is-inside-work-tree`）
-- 檢查是否有未提交的變更（`git status --porcelain`）
-- 如果有未提交的變更，提示使用者先處理
-
-#### Step 2: 檢查現有 Worktree
-- 列出現有 worktree（`git worktree list`）
-- 檢查是否已存在同名 worktree
-- 如果已存在，詢問是否繼續使用或重新建立
-
-#### Step 3: 確認設定
-使用 AskUserQuestion 詢問：
-1. 功能分支名稱（建議：`feature/<feature-name>`）
-2. Worktree 位置（建議：`../<project-name>-worktree-<branch>`）
-3. 是否需要安裝依賴（npm install / pip install 等）
-
-**退出條件：** Git 狀態乾淨，worktree 設定已確認。
-
-### Stage 2: Worktree 建立
-
-**目標：** 建立隔離的 worktree 環境並驗證
-
-#### Step 1: 建立 Worktree
-
-```bash
-# 建立新分支並設定 worktree
-git worktree add -b <branch-name> <worktree-path> <base-branch>
-```
-
-- `<branch-name>`：功能分支名稱
-- `<worktree-path>`：worktree 目錄路徑
-- `<base-branch>`：基於的分支（通常是 main 或 develop）
-
-#### Step 2: 專案設定
-
-在 worktree 中執行專案 setup：
-
-```bash
-cd <worktree-path>
-
-# Node.js 專案
-npm install  # 或 yarn / pnpm install
-
-# Python 專案
-pip install -r requirements.txt  # 或 poetry install
-
-# 其他設定
-cp .env.example .env  # 如果存在
-```
-
-#### Step 3: 測試基線驗證
-
-在 worktree 中執行現有測試，確保基線正常：
-
-```bash
-# 執行測試
-npm test  # 或對應的測試指令
-
-# 記錄基線結果
-echo "基線測試結果：通過/失敗" >> <worktree-path>/WORKTREE_INFO.md
-```
-
-#### Step 4: 建立 Worktree 資訊檔
-
-在 worktree 中建立 `WORKTREE_INFO.md`：
-
-```markdown
-# Worktree 資訊
-
-- **建立時間**：YYYY-MM-DD HH:MM
-- **分支名稱**：<branch-name>
-- **基於分支**：<base-branch>
-- **Worktree 路徑**：<worktree-path>
-- **主 repo 路徑**：<main-repo-path>
-- **基線測試**：通過/失敗
-```
-
-**退出條件：** Worktree 已建立，依賴已安裝，基線測試通過。
-
-### Stage 3: Worktree 管理
-
-**目標：** 提供 worktree 的日常管理操作
-
-#### 操作 1: 列出 Worktree
-
-```bash
-git worktree list
-```
-
-顯示所有 worktree 及其分支、路徑。
-
-#### 操作 2: 清理 Worktree
-
-開發完成後清理 worktree：
-
-```bash
-# 確認所有變更已提交
-cd <worktree-path>
-git status
-
-# 移除 worktree
-cd <main-repo-path>
-git worktree remove <worktree-path>
-
-# 清理過時的 worktree
-git worktree prune
-```
-
-#### 操作 3: Merge 回主分支
-
-將 worktree 分支 merge 回主分支：
-
-```bash
-cd <main-repo-path>
-
-# 切換到主分支
-git checkout <base-branch>
-
-# Merge 功能分支
-git merge <branch-name>
-
-# 如果需要，刪除功能分支
-git branch -d <branch-name>
-```
-
-#### 操作 4: 處理衝突
-
-如果 merge 有衝突：
-1. 列出衝突檔案
-2. 逐一解決衝突
-3. 標記已解決
-4. 完成 merge
-
-**退出條件：** 使用者完成所需的 worktree 管理操作。
-
-## 注意事項
-
-### Worktree 限制
-- 一個分支只能有一個 worktree
-- 不能在已存在 worktree 的分支上 checkout
-- 子模組在 worktree 中可能需要特殊處理
-
-### 最佳實踐
-- Worktree 路徑放在主 repo 的平行目錄
-- 使用有意義的分支名稱（`feature/`、`fix/` 前綴）
-- 開發完成後及時清理 worktree
-- 定期 rebase 主分支以減少衝突
-
-### .gitignore 注意
-- Worktree 共用主 repo 的 .gitignore
-- 如果 worktree 需要額外的忽略規則，使用 `.git/info/exclude`
-
-## 互動原則
-
-- Stage 1 需要與使用者確認設定
-- Stage 2 自動執行，完成後報告結果
-- Stage 3 根據使用者需求執行對應操作
-- 如果基線測試失敗，警告使用者但不阻止建立
+- 一個分支只能有一個 worktree；已被 worktree 佔用的分支不能再 checkout
+- 子模組專案需特殊處理，先確認再建
+- worktree 共用主 repo 的 `.gitignore`；額外忽略規則用 `.git/info/exclude`

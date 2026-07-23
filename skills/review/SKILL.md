@@ -1,6 +1,6 @@
 ---
 name: review
-description: 跨維度綜合審查包裝器，調用 workflow-review 命令同時執行安全+效能+配置審查。當需要全面審查、comprehensive review、多維度同時審查、一次涵蓋安全與效能與配置的審查時自動啟用。不適用於單純 PR 審查（用 code-reviewer）或程式碼健康指標（用 code-health）。
+description: 跨維度綜合審查包裝器，調用 workflow-review 命令同時執行安全+效能+配置審查。當需要全面審查、comprehensive review、合併前多維度審查時自動啟用。不適用於單純 PR / 段落 diff 審查（用 code-reviewer agent）。
 allowed-tools: Skill, Read, Grep, Glob
 ---
 
@@ -15,18 +15,6 @@ allowed-tools: Skill, Read, Grep, Glob
 - **實作方式**：透過 `Skill(skill="workflow-review:review")` 調用
 - **Skill 職責**：提供自動觸發、需求確認、結構化報告產出
 - **命令職責**：執行實際的多維度程式碼審查
-
-## 觸發條件
-
-**關鍵詞：**
-- 「審查程式碼」、「程式碼審查」
-- 「comprehensive review」、「全面審查」
-- 「code review」
-
-**場景觸發：**
-- 需要全面的程式碼審查（含安全、效能分析）
-- 合併前的最終審查
-- 重大功能的品質確認
 
 ## 工作流程
 

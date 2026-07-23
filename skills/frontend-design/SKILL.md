@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: 前端視覺設計專家，建立獨特、生產級的前端介面。當提到獨特視覺風格設計、生產級 UI 介面建立、頁面視覺設計時自動啟用。不適用於 React/Next.js 框架實作（用 senior-frontend）或設計系統建置（用 ui-design-system）。
+description: 前端視覺設計專家，建立獨特、生產級的前端介面。當提到視覺風格設計、UI 介面建立、頁面視覺設計、切版、版面樣式時自動啟用。不適用於純框架實作或設計系統 token 建置。
 license: Complete terms in LICENSE.txt
 modifications: "改自 Anthropic frontend-design(Apache-2.0)。本地修改:description 已在地化為繁體中文(配合 DD pipeline 繁中觸發),內文已更新至上游最新版。"
 ---
