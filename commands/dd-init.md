@@ -62,7 +62,27 @@ mkdir -p .screenshots
 grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .gitignore
 ```
 
-### Phase 3: 檢查巢狀 CLAUDE.md 依賴
+### Phase 3: 安裝 CLAUDE.md pre-commit gate（block 版）
+
+在 git repo 中時，把 `~/.claude/scripts/check-claude-md.sh` 掛進專案 pre-commit：
+
+1. 檢查 `~/.claude/scripts/check-claude-md.sh` 存在（不存在 → 提示跑 `./install-dd-pipeline.sh --force`，跳過本 Phase）
+2. 檢查 `.git/hooks/pre-commit`：
+   - 不存在 → 用 **Write** 建立：
+
+     ```bash
+     #!/bin/sh
+     # CLAUDE.md gate — 由 /dd-init 安裝；規則：改碼目錄需有 CLAUDE.md 且同批更新
+     "$HOME/.claude/scripts/check-claude-md.sh" || exit 1
+     ```
+
+     然後 `chmod +x .git/hooks/pre-commit`
+   - 已存在且未含 `check-claude-md.sh` → 在檔尾 **Edit** 追加上面的呼叫行（保留既有內容）
+   - 已含 → 跳過並告知
+3. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
+   檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 5）必須全過
+
+### Phase 4: 檢查巢狀 CLAUDE.md 依賴
 
 1. 檢查 `claude-md-management` plugin 是否已啟用（讀 `~/.claude/settings.json` 的
    `enabledPlugins` 是否含 `claude-md-management@claude-plugins-official`）：
@@ -71,7 +91,7 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 2. 現有專案且尚無巢狀 CLAUDE.md → 提示：可對主要目錄（如 `backend/`、`frontend/`）
    逐步補 CLAUDE.md，不強制一次補齊
 
-### Phase 4: Git commit
+### Phase 5: Git commit
 
 在 git repo 中時（`|| true` 容錯）：
 
@@ -80,7 +100,9 @@ git add CLAUDE.md .gitignore 2>/dev/null || true
 git commit -m "chore: 初始化 5 步開發迴圈慣例"
 ```
 
-### Phase 5: 完成訊息
+> 註：`.git/hooks/` 不入版控，pre-commit gate 不需 add。此 commit 只動 CLAUDE.md/.gitignore，會通過 gate。
+
+### Phase 6: 完成訊息
 
 ```
 ✅ 初始化完成！
@@ -88,11 +110,12 @@ git commit -m "chore: 初始化 5 步開發迴圈慣例"
 已設定：
 ├── CLAUDE.md — 5 步開發迴圈（驗證方式：<偵測結果>）
 ├── .screenshots/ + .gitignore（有前端時）
+├── pre-commit gate — 改碼目錄缺 CLAUDE.md 或未同步更新會擋 commit
 └── claude-md-management plugin 檢查
 
 📌 開始開發：
 實作 → commit → code-simplifier → 真實環境驗證 → commit
-每個功能段落走一圈；受影響目錄的 CLAUDE.md 記得堆疊更新。
+每個功能段落走一圈；CLAUDE.md 堆疊更新由 pre-commit gate 把關。
 ```
 
 ---

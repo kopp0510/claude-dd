@@ -28,6 +28,7 @@ COMMANDS_DIR="$CLAUDE_DIR/commands"
 TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
+SCRIPTS_DIR="$CLAUDE_DIR/scripts"
 
 # Skills 分桶（2026-07-23 依全 transcript 使用率盤點；檔案全數保留於 repo，部署與否由桶決定）
 # - PROMOTED：實證常用，預設部署
@@ -194,6 +195,11 @@ DD_TEMPLATES=(
     "API_CONTRACT.md.template"
     "EXAMPLES.md.template"
     "ADR.md.template"
+)
+
+# 輔助腳本（部署到 ~/.claude/scripts/；check-claude-md.sh 由 /dd-init 掛進專案 pre-commit）
+DD_SCRIPTS=(
+    "check-claude-md.sh"
 )
 
 # 必要的 MCP
@@ -894,6 +900,34 @@ create_commands() {
 
 
 # 建立 Templates
+# 部署輔助腳本到 ~/.claude/scripts/
+create_scripts() {
+    echo -e "${BLUE}${INFO} 附加步驟：部署輔助腳本${NC}"
+
+    mkdir -p "$SCRIPTS_DIR"
+
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local count=${#DD_SCRIPTS[@]}
+    local i=0
+
+    for s in "${DD_SCRIPTS[@]}"; do
+        i=$((i + 1))
+        local tree_char="├──"
+        [ $i -eq $count ] && tree_char="└──"
+
+        local source="$script_dir/scripts/$s"
+        if [ ! -f "$source" ]; then
+            echo -e "$tree_char $s: ${RED}源檔案不存在${NC}"
+            continue
+        fi
+
+        cp "$source" "$SCRIPTS_DIR/$s"
+        chmod +x "$SCRIPTS_DIR/$s"
+        echo -e "$tree_char $s: ${GREEN}${CHECK}${NC}"
+    done
+    echo ""
+}
+
 create_templates() {
     print_step "7/8" "建立 Templates"
 
@@ -977,6 +1011,11 @@ uninstall() {
         done
 
         rm -rf "$TEMPLATES_DIR"
+
+        # 僅移除 DD_SCRIPTS 列表中的腳本（不動使用者自己的）
+        for s in "${DD_SCRIPTS[@]}"; do
+            rm -f "$SCRIPTS_DIR/$s"
+        done
 
         # 僅移除 ALL_SKILLS 列表中的 skill（不動使用者自己的）
         for skill in "${ALL_SKILLS[@]}"; do
@@ -1319,9 +1358,10 @@ main() {
     # 建立 Commands
     create_commands
 
-    # 建立 Templates（除非只安裝 commands）
+    # 建立 Templates 與輔助腳本（除非只安裝 commands）
     if [ "$COMMANDS_ONLY" = false ]; then
         create_templates
+        create_scripts
     fi
 
     # 檢查 / 安裝全域 CLAUDE.md（除非只安裝 commands）
