@@ -1,410 +1,99 @@
-# DD Pipeline 初始化
+# DD 初始化 — 5 步開發迴圈
 
-初始化專案的 DD Pipeline 結構，建立必要的目錄和設定檔。
-支援**新專案**（空目錄）和**現有專案**（已有程式碼）兩種模式。
+初始化專案的開發慣例：蓋章「5 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
+確認巢狀 CLAUDE.md 維護依賴。支援**新專案**（空目錄）和**現有專案**（已有程式碼）。
+
+> 2026-07 重整：原多階段 DD Pipeline（dd-start/arch/approve/dev/test）已封存至
+> deprecated 桶。本指令改為部署經 lawdesk-ai 實戰驗證的輕量開發迴圈。
 
 ---
 
 ## 執行步驟
 
-### Phase 0: 專案類型判斷
+### Phase 0: 專案偵測
 
-1. **掃描目錄內容**，檢查是否為現有專案：
+1. **掃描目錄內容**，用 **Glob** 檢查專案類型指標：
+   - `package.json` → Node.js、`go.mod` → Go、`pyproject.toml`/`requirements.txt` → Python
+   - `Cargo.toml` → Rust、`pom.xml`/`build.gradle` → Java、`composer.json` → PHP、`Gemfile` → Ruby
+   - 前端框架：偵測 `next.config.*`、`vite.config.*`、`src/App.*` 等
 
-   使用 **Glob** 工具檢查以下檔案：
-   - `package.json` → Node.js 專案
-   - `go.mod` → Go 專案
-   - `requirements.txt` / `pyproject.toml` / `setup.py` → Python 專案
-   - `Cargo.toml` → Rust 專案
-   - `pom.xml` / `build.gradle` → Java 專案
-   - `composer.json` → PHP 專案
-   - `Gemfile` → Ruby 專案
+2. **判斷驗證方式**（填入迴圈步驟 4 的具體指令）：
+   - 有 HTTP API（後端/全端）→ 驗證含 **curl 打真實 API**
+   - 有前端 UI → 驗證含 **playwright 開真實瀏覽器**（截圖存 `.screenshots/`）
+   - 純 CLI / 函式庫 → 驗證退化為「跑真實指令 / 消費端範例」
 
-   使用 **Bash** `ls` 列出頂層目錄結構。
+3. **檢查 CLAUDE.md 是否存在**：
+   - 存在 → 補充模式（在末尾加區塊）
+   - 不存在 → 建立模式（現有專案先派 **Task**（subagent_type: `Explore`）分析技術棧與目錄結構，新專案用 **AskUserQuestion** 問專案類型/技術棧/名稱）
 
-2. **檢查是否已有 CLAUDE.md**：
+### Phase 1: 蓋章開發迴圈到專案 CLAUDE.md
 
-   使用 **Glob** 檢查 `CLAUDE.md` 是否存在。
-   - 如果存在 → 記錄 `HAS_CLAUDE_MD = true`，後續將採用「補充模式」
-   - 如果不存在 → 記錄 `HAS_CLAUDE_MD = false`，後續將採用「建立模式」
-
-3. **判斷結果**：
-   - 如果沒有發現任何程式碼或設定檔 → **新專案**，跳到 Phase 1
-   - 如果發現現有專案指標 → **現有專案**，進入 Phase A
-
----
-
-### Phase A: 現有專案分析（僅限現有專案）
-
-1. **啟動 Explore Agent 分析專案**：
-
-   使用 **Task** 工具（subagent_type: `Explore`，建議 `model: "haiku"` — 檔案搜尋低推理，省成本）：
-   ```
-   分析此專案並提供以下資訊，以結構化格式回報：
-
-   1. 技術棧
-      - 主要語言
-      - 後端框架（如有）
-      - 前端框架（如有）
-      - 資料庫（如有）
-
-   2. 專案類型
-      - 純後端 API / 純前端 SPA / 全端應用 / CLI 工具 / 函式庫
-
-   3. 目錄結構
-      - 列出主要目錄及其用途
-      - 識別後端/前端程式碼位置
-
-   4. 現有功能概覽
-      - API 端點數量和路徑
-      - 頁面/路由數量
-      - 主要組件數量
-
-   5. 測試設定
-      - 測試框架
-      - 測試目錄位置
-
-   6. 程式碼規範
-      - Linter（ESLint, Prettier, etc.）
-      - 格式化工具
-
-   7. 主要依賴
-      - 列出 5-10 個核心依賴套件
-   ```
-
-2. **整理偵測結果**，格式化為易讀的摘要。
-
-3. **顯示偵測結果並請求確認**：
-
-   使用 **AskUserQuestion** 工具：
-   ```
-   我分析了你的專案，發現以下內容：
-
-   📦 專案類型: [偵測結果]
-
-   🛠️ 技術棧:
-   - 後端: [偵測結果]
-   - 前端: [偵測結果]
-   - 資料庫: [偵測結果]
-   - 測試框架: [偵測結果]
-
-   📁 目錄結構:
-   - [目錄1] - [用途]
-   - [目錄2] - [用途]
-   ...
-
-   📊 現有功能:
-   - [X] 個 API 端點
-   - [Y] 個頁面/組件
-   ...
-
-   請確認以上資訊是否正確？
-
-   選項：
-   1. 確認正確，繼續初始化
-   2. 修改專案類型
-   3. 修改技術棧
-   4. 補充其他資訊
-   ```
-
-4. **處理用戶回饋**：
-   - 如果選擇「確認正確」→ 進入 Step 5 Plan 模式審核
-   - 如果選擇「修改」→ 使用 **AskUserQuestion** 詢問正確的值，更新偵測結果後進入 Step 5
-   - 如果選擇「補充其他」→ 詢問要補充的內容後進入 Step 5
-
-5. **偵測結果深度審核（Plan 模式，僅現有專案）**：
-
-   **調用 `EnterPlanMode`** — 讓用戶在 plan file 中確認完整偵測結果，避免技術棧誤判（如 Next.js app router vs pages router）影響後續所有階段。
-
-   Plan 內容應涵蓋：
-   - 偵測到的技術棧（語言、框架版本、關鍵套件）— 明確標示低信心偵測項
-   - 專案結構摘要（主要目錄、測試配置、CI 設定）
-   - 擬建立的 `claude_docs/` 子目錄結構
-   - 擬寫入 `CLAUDE.md` 的專案描述草稿
-
-   **調用 `ExitPlanMode`** 等待用戶修正誤判後，才進入 Phase 2 建立目錄。
-
-   新專案模式（跳至 Phase 1）不經此步驟，維持即時建立體驗。
-
----
-
-### Phase 1: 詢問專案類型（僅限新專案）
-
-使用 **AskUserQuestion** 詢問：
-
-1. **專案類型**：
-   - 純後端 API
-   - 純前端 SPA
-   - 全端應用
-   - CLI 工具
-
-2. **技術棧**（根據專案類型）：
-   - 後端：Node.js / Go / Python / 其他
-   - 前端：React / Vue / Svelte / 其他
-   - 資料庫：PostgreSQL / MongoDB / MySQL / 無
-
-3. **專案名稱和描述**
-
----
-
-### Phase 2: 建立目錄結構
-
-使用 **Bash** 建立目錄：
-
-```
-./
-├── CLAUDE.md                    # 專案設定
-├── PROJECT_STATE.md             # 流程狀態追蹤
-└── claude_docs/
-    ├── requirements/            # 需求文檔 (RDD)
-    ├── architecture/            # 架構文檔 (SDD/DDD)
-    ├── contracts/               # API 契約 (DbC)
-    ├── decisions/               # 架構決策記錄 (ADD)
-    ├── examples/                # 行為範例 (EDD)
-    ├── design/                  # UI/UX 設計
-    └── reports/                 # 測試報告
-```
-
-**注意**：如果是現有專案，使用偵測到的目錄名稱填入 CLAUDE.md（例如：`server/` 而非 `backend/`）。
-
----
-
-### Phase 3: 處理 CLAUDE.md
-
-根據 Phase 0 的檢查結果，分兩種模式處理：
-
-#### 模式 A: 建立模式（HAS_CLAUDE_MD = false）
-
-使用 **Write** 工具，根據模板產生全新的 `CLAUDE.md`：
-
-填入以下資訊（來自偵測結果或用戶輸入）：
-- 專案名稱和概述
-- 技術棧設定
-- DD 流程設定（預設全部啟用）
-- 開發模式（根據專案類型）
-- 目錄結構說明（使用實際目錄名稱）
-- 程式碼規範（使用偵測到的 Linter 設定）
-- 排除項目（node_modules、.env 等）
-
-#### 模式 B: 補充模式（HAS_CLAUDE_MD = true）
-
-1. 使用 **Read** 工具讀取現有的 `CLAUDE.md` 內容
-
-2. 檢查是否已包含 DD Pipeline 設定（搜尋 `## DD 流程設定` 或 `DD Pipeline`）：
-   - 如果已存在 → 顯示訊息「DD Pipeline 已初始化」，跳過此步驟
-   - 如果不存在 → 繼續補充
-
-3. 使用 **Edit** 工具，在 `CLAUDE.md` 末尾補充 DD Pipeline 區塊：
+用 **Write**（建立模式）或 **Edit**（補充模式；若已含 `## 開發流程` 區塊則跳過並告知）寫入。
+**依 Phase 0 偵測結果填入具體驗證指令**，不留模板變數：
 
 ```markdown
----
+## 開發流程（每個功能段落必走，不可省略）
 
-## DD Pipeline 設定
+1. 實作功能
+2. **commit**（第一次 — 保留簡化前還原點）
+3. 跑 **code-simplifier**（對該段新增/修改的程式碼，官方 agent）
+4. **再測一次** — 真實環境驗證，不可只跑單元測試：
+   - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
+   - <依偵測結果填入：playwright 真的開瀏覽器登入、操作 UI、截圖驗證前端可用>
+     - 截圖一律存 `.screenshots/`（已 gitignore）；勿丟專案根目錄
+5. **再 commit**（簡化後版本）
 
-> 此區塊由 `/dd-init` 自動產生
+驗證不過 → 修完重跑步驟 4，不可帶著紅燈進步驟 5。
 
-### 開發模式
-{{DEV_MODE}}
-<!-- 可選值：純後端 | 純前端 | 全端應用 | CLI 工具 -->
+## CLAUDE.md 維護
 
-### 啟用的 DD 方法論
-- [x] RDD - 需求驅動開發
-- [x] SDD - 系統結構設計
-- [x] DDD - 領域模型設計
-- [x] ADD - 架構決策記錄
-- [x] EDD - 範例驅動設計
-- [x] DbC - 契約驅動開發
-- [x] CDD - 元件驅動開發
-- [x] TDD - 測試驅動開發
-- [x] PDD - 提示驅動開發
-
-### 測試設定
-- 最大重試次數：3
-- 需要 E2E 測試：{{NEED_E2E}}
-- 需要 UI/UX 審查：{{NEED_UX_REVIEW}}
-
-### DD 文檔目錄
-```
-claude_docs/
-├── requirements/    # 需求文檔 (RDD)
-├── architecture/    # 架構文檔 (SDD/DDD)
-├── contracts/       # API 契約 (DbC)
-├── decisions/       # ADR 決策記錄 (ADD)
-├── examples/        # 行為範例 (EDD)
-├── design/          # UI/UX 設計
-└── reports/         # 測試報告
+- 每個有程式碼的資料夾都要有 CLAUDE.md（說明該層職責與慣例）
+- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（用 claude-md-management plugin 的 /revise-claude-md 或手動）
 ```
 
-### Agent/Skill 偏好
-- 架構設計：systems-architect, senior-architect
-- 後端開發：senior-backend
-- 前端開發：senior-frontend
-- 測試驗證：test-engineer, senior-qa
-- 安全審計：security-auditor
+建立模式時，區塊前面先寫入標準專案資訊（專案名稱、技術棧、目錄結構 — 來自偵測或詢問結果）。
 
-### DD 排除項目
-<!-- DD 流程不應修改的檔案或目錄 -->
-- node_modules/
-- .env
-- .env.local
-- dist/
-- build/
-```
+### Phase 2: 建立截圖目錄與 gitignore
 
-4. 顯示補充完成訊息：
-   ```
-   ✅ 已在現有 CLAUDE.md 中補充 DD Pipeline 設定
-   ```
-
----
-
-### Phase 4: 平台工程設計（DX Engineer）
-
-使用 **AskUserQuestion** 詢問是否跑 DX Engineer 設計 golden path（預設 y）：
-
-```
-即將呼叫 dx-engineer agent 設計本專案的開發者體驗：
-
-📦 三個維度：
-1. 本機/容器環境一致性（.devcontainer/、.env.example）
-2. 跨語言 lock file 治理（SOP + CI gate）
-3. Dockerfile + CI gate + onboarding 文件
-
-agent 會偵測技術棧後 graceful degrade，不適用的維度會跳過。
-
-要現在跑嗎？（也可以之後跑 /dd-dx 補）
-
-選項：
-1. 跑（預設）
-2. 跳過（之後可用 /dd-dx 重跑）
-```
-
-#### 若使用者選「跑」
-
-**調用 Task 工具**（`subagent_type: dx-engineer:dx-engineer`，fallback `dx-engineer`）：
-
-```
-依本專案技術棧（從 Phase 0/A 偵測結果），設計 golden path 三維度：
-
-1. 偵測 lock files、Dockerfile、CI workflow 既有狀態
-2. graceful degrade 跳過不適用維度
-3. 產出 deliverables 直接寫實體檔案：
-   - .devcontainer/devcontainer.json（維度 1）
-   - .env.example（維度 1）
-   - Dockerfile（維度 3，multi-stage）
-   - .github/workflows/lock-gate.yml（維度 2 + 3）
-   - docs/onboarding.md（維度 3）
-4. 決策、SOP、降級理由寫進 claude_docs/06_platform/
-5. 更新 CLAUDE.md 補入「## 平台工程 (Platform / DX)」章節（摘要 + 路徑指引）
-```
-
-> **設計差異**：`/dd-init` 內呼叫 DX Engineer 走「即時落地」模式（不進 Plan mode），維持 init 的「一次跑完」體驗。`/dd-dx` 命令本身則走 Plan mode + `/dd-approve` 二段式（讓 refine 時可審）。
-
-#### 若使用者選「跳過」
-
-顯示提示：
-
-```
-ℹ️ DX 設計已跳過。日後可跑 /dd-dx 補。
-CLAUDE.md 的「## 平台工程 (Platform / DX)」章節先留空白模板。
-```
-
----
-
-### Phase 5: 產生 PROJECT_STATE.md
-
-使用 **Write** 工具，根據模板產生 `PROJECT_STATE.md`：
-
-- 所有階段設為「待開始」
-- 記錄初始化時間
-- 設定下一步為 `/dd-start`
-
----
-
-### Phase 6: Git commit
-
-如果在 git repo 中，使用 **Bash** 執行：
+僅在專案有前端 UI 時執行（純後端/CLI 跳過）：
 
 ```bash
-# 僅暫存實際存在的 DX 產出（未產生的檔案會被自動跳過）
-git add CLAUDE.md PROJECT_STATE.md claude_docs/ \
-        .devcontainer/ Dockerfile .env.example \
-        .github/workflows/lock-gate.yml docs/onboarding.md 2>/dev/null || true
-git commit -m "chore: 初始化 DD Pipeline 專案結構"
+mkdir -p .screenshots
+grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .gitignore
 ```
 
-> 若 Phase 4 跳過,DX 相關檔案不存在,`git add` 會略過(`|| true` 容錯)。
+### Phase 3: 檢查巢狀 CLAUDE.md 依賴
 
----
+1. 檢查 `claude-md-management` plugin 是否已啟用（讀 `~/.claude/settings.json` 的
+   `enabledPlugins` 是否含 `claude-md-management@claude-plugins-official`）：
+   - 未啟用 → 提示執行 `./install-dd-pipeline.sh --force`（腳本會裝）或
+     `claude plugin install claude-md-management@claude-plugins-official`
+2. 現有專案且尚無巢狀 CLAUDE.md → 提示：可對主要目錄（如 `backend/`、`frontend/`）
+   逐步補 CLAUDE.md，不強制一次補齊
 
-### Phase 7: 顯示完成訊息
+### Phase 4: Git commit
 
-根據專案類型和 CLAUDE.md 狀態顯示適當的訊息：
+在 git repo 中時（`|| true` 容錯）：
 
-**情況 1: 新專案（無 CLAUDE.md）**：
-```
-✅ DD Pipeline 初始化完成！
-
-已建立：
-├── CLAUDE.md
-├── PROJECT_STATE.md
-└── claude_docs/ (7 個子目錄)
-
-📌 下一步：
-/dd-start <需求描述>
-
-範例：
-/dd-start 建立一個待辦事項管理系統，支援新增、編輯、刪除和標記完成
+```bash
+git add CLAUDE.md .gitignore 2>/dev/null || true
+git commit -m "chore: 初始化 5 步開發迴圈慣例"
 ```
 
-**情況 2: 現有專案（無 CLAUDE.md）**：
+### Phase 5: 完成訊息
+
 ```
-✅ DD Pipeline 初始化完成！
+✅ 初始化完成！
 
-已分析現有專案並建立：
-├── CLAUDE.md（已填入偵測到的技術棧）
-├── PROJECT_STATE.md
-└── claude_docs/ (7 個子目錄)
+已設定：
+├── CLAUDE.md — 5 步開發迴圈（驗證方式：<偵測結果>）
+├── .screenshots/ + .gitignore（有前端時）
+└── claude-md-management plugin 檢查
 
-📊 專案概覽：
-- 類型：[專案類型]
-- 技術棧：[技術棧摘要]
-- 現有功能：[功能數量]
-
-📌 下一步：
-/dd-start <新功能需求> 或 /dd-start --analyze（分析現有功能產生需求文檔）
+📌 開始開發：
+實作 → commit → code-simplifier → 真實環境驗證 → commit
+每個功能段落走一圈；受影響目錄的 CLAUDE.md 記得堆疊更新。
 ```
-
-**情況 3: 現有專案（已有 CLAUDE.md）**：
-```
-✅ DD Pipeline 初始化完成！
-
-已在現有 CLAUDE.md 中補充 DD Pipeline 設定：
-├── CLAUDE.md（已補充 DD 設定區塊）
-├── PROJECT_STATE.md（新建立）
-└── claude_docs/ (7 個子目錄)
-
-📊 專案概覽：
-- 類型：[專案類型]
-- 技術棧：[技術棧摘要]
-- 現有功能：[功能數量]
-
-💡 提示：
-原有的 CLAUDE.md 內容已保留，DD Pipeline 設定已補充至檔案末尾。
-如需調整 DD 設定，請編輯 CLAUDE.md 中的「DD Pipeline 設定」區塊。
-
-📌 下一步：
-/dd-start <新功能需求> 或 /dd-start --analyze（分析現有功能產生需求文檔）
-```
-
----
-
-## 模板位置
-
-模板檔案位於：`~/.claude/templates/dd/`
-
-- `CLAUDE.md.template`
-- `PROJECT_STATE.md.template`
 
 ---
 
@@ -412,74 +101,8 @@ git commit -m "chore: 初始化 DD Pipeline 專案結構"
 
 | 工具 | 用途 |
 |------|------|
-| **Glob** | 檢查專案設定檔、CLAUDE.md 是否存在 |
-| **Bash** | 列出目錄、建立資料夾、執行 git |
-| **Task** (Explore) | 分析現有專案結構和程式碼 |
-| **Task** (dx-engineer) | Phase 4 設計 golden path(env / lock / docker 三維度) |
-| **AskUserQuestion** | 顯示偵測結果、詢問確認、收集輸入 |
-| **Read** | 讀取現有的 CLAUDE.md 內容 |
-| **Write** | 建立新的 CLAUDE.md、PROJECT_STATE.md |
-| **Edit** | 在現有 CLAUDE.md 中補充 DD 設定 |
-
----
-
-## 流程圖
-
-```
-/dd-init
-    │
-    ▼
-┌───────────────────────────────┐
-│ Phase 0: 掃描目錄              │
-│ - 檢查是否有程式碼檔案          │
-│ - 檢查是否已有 CLAUDE.md       │
-└──────────────┬────────────────┘
-               │
-        ┌──────┴──────┐
-        │             │
-        ▼             ▼
-   [空目錄]       [有程式碼]
-        │             │
-        ▼             ▼
-   Phase 1        Phase A
-   詢問類型       Explore 分析
-        │             │
-        │             ▼
-        │        顯示偵測結果
-        │        請求用戶確認
-        │             │
-        └──────┬──────┘
-               │
-               ▼
-        Phase 2: 建立目錄
-               │
-               ▼
-┌───────────────────────────────┐
-│ Phase 3: 處理 CLAUDE.md       │
-│                               │
-│  ┌─────────┬─────────┐        │
-│  │         │         │        │
-│  ▼         ▼         ▼        │
-│ 新建     新建      補充       │
-│ (新專案) (現有專案) (已有檔案) │
-└──────────────┬────────────────┘
-               │
-               ▼
-        Phase 4: DX Engineer (opt-in)
-               │
-               ▼
-        Phase 5: 產生 PROJECT_STATE.md
-               │
-               ▼
-        Phase 6: Git commit
-               │
-               ▼
-        Phase 7: 顯示完成訊息
-               │
-        ┌──────┼──────┐
-        │      │      │
-        ▼      ▼      ▼
-      情況1  情況2  情況3
-      新專案 現有   現有+已有
-             專案   CLAUDE.md
-```
+| **Glob** | 偵測專案類型與 CLAUDE.md 存在性 |
+| **Task** (Explore) | 現有專案的技術棧與結構分析 |
+| **AskUserQuestion** | 新專案的類型/技術棧詢問 |
+| **Read / Write / Edit** | 讀寫 CLAUDE.md、.gitignore |
+| **Bash** | 建目錄、git commit、plugin 檢查 |

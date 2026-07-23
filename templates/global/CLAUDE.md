@@ -192,6 +192,25 @@
 
 **必須明確確認**:見 §4.2
 
+### 3.9 功能段落開發迴圈(預設工作法)
+
+每完成一個**功能段落**(非每行改動),依序走,不可省略:
+
+1. 實作功能
+2. **commit**(第一次 — 保留簡化前還原點)
+3. 跑 **code-simplifier**(官方 agent,只針對該段新增/修改的程式碼)
+4. **真實環境驗證**(不可只跑單元測試,依專案類型退化):
+   - 後端 / 全端:curl 打真實 API 驗證行為(登入/CRUD/權限…)
+   - 前端:playwright 真的開瀏覽器操作 UI + 截圖存 `.screenshots/`(gitignore,勿丟專案根目錄)
+   - 純 CLI / 函式庫:跑真實指令或消費端範例
+5. **再 commit**(簡化後版本)
+
+規則:
+- 驗證不過 → 修完重跑步驟 4,不可帶著紅燈進步驟 5
+- 本迴圈的步驟 2、5 commit 視為使用者已授權(§5.2 的例外)
+- 功能落地後,受影響目錄的巢狀 CLAUDE.md 逐層堆疊更新
+- 專案 CLAUDE.md 可覆蓋細節(驗證指令、截圖路徑等);新專案用 `/dd-init` 蓋章具體版
+
 ---
 
 ## 4. 工作流程
@@ -403,22 +422,16 @@ C) 先停下討論
 | `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer` |
 | `整理 memory` / `沉澱規則` / `把學到的寫成 skill` / `優化 skill` | `self-improving-agent` |
 | `拆任務` / `微任務` / `task breakdown` / `工作分解` | `task-planner` |
-| `測試策略` / `QA 計畫` / `測試覆蓋率規劃` | `senior-qa` |
-| `測試架構` / `測試框架選型` / `測試金字塔` | `test-engineer` |
-| `TDD` / `紅綠重構` / `Red-Green-Refactor` | `tdd-guide` |
-| `自動產生測試` / `generate tests` / `test harness` | `test-gen` |
-| `React 元件` / `Next.js` / `Tailwind` / `bundle size` / `前端優化` | `senior-frontend` |
-| `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design`(視覺設計;框架實作交 `senior-frontend`) |
-| `設計系統` / `design token` / `元件庫文件` / `developer handoff` | `ui-design-system` |
-| `UX 研究` / `persona` / `journey map` / `易用性測試` / `使用者訪談分析` | `ux-researcher-designer` |
-| `landing page` / `著陸頁` / `銷售頁` / `hero section` / `轉換優化` | `landing-page-generator` |
-| `Express` / `Fastify` / `Node.js API` / `middleware` / `後端認證` | `senior-backend` |
-| `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops` |
-| `dev container` / `devcontainer` / `lock file 治理` / `uv.lock` / `pnpm-lock` / `onboarding 文件` / `golden path` / `平台工程` / `DX Engineer` | `dx-engineer` |
-| `全端 scaffold` / `tech stack 選型` / `前後端整合` | `senior-fullstack` |
-| `SecOps 管線` / `SIEM` / `安全自動化` / `事件自動回應` | `senior-secops` |
-| `Playwright` / `E2E 腳本` / `瀏覽器自動化` / `Cypress 遷移` | `playwright-pro` |
+| `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design` |
+| `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops`(agent,派 Task) |
 | `Claude API` / `Anthropic SDK` / `Agent SDK` / `prompt caching` | `claude-api` |
+
+> 2026-07-23 瘦身:原表格 21 列砍至 8 列,只留 promoted 桶對應項。被移除列的目標
+> skill/agent(senior-qa、test-engineer、tdd-guide、test-gen、senior-frontend、
+> ui-design-system、ux-researcher-designer、landing-page-generator、senior-backend、
+> dx-engineer、senior-fullstack、senior-secops、playwright-pro)已移入 misc/deprecated
+> 桶不再預設部署;若用 `--with-misc`/`--with-deprecated` 重裝,依 §7.1 第 4 點
+> (命中 skill description)觸發即可,不需回填本表。
 
 ### 7.3 不該觸發的場景
 
