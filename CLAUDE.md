@@ -13,6 +13,8 @@
 ./install-dd-pipeline.sh --check            # 只檢查環境
 ```
 
+> 從舊版（分桶制之前）升級、既有專案升級到 6 步迴圈：見 README.md「升級指南」。
+
 ## 分桶制（2026-07-23 依全 transcript 使用率盤點）
 
 所有 skills/agents/commands 檔案保留於 repo，**部署與否由安裝腳本的桶陣列決定**（不搬目錄）：
@@ -62,13 +64,13 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
 - 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列（或依定位放 `MISC_NS_COMMANDS`）
 
-## 核心工作法：5 步開發迴圈
+## 核心工作法：6 步開發迴圈
 
 骨幹已從多階段 DD Pipeline 換成 lawdesk-ai 實戰驗證的功能段落迴圈
 （定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
 
 ```
-實作 → commit → code-simplifier → 真實環境驗證(curl / playwright) → commit
+實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
 ```
 
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
