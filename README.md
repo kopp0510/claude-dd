@@ -69,7 +69,7 @@ git pull
 ```
 
 - `--force` 用新版內容覆蓋 promoted 桶檔案
-- `--prune` 列出舊版裝的、新版預設不再部署的項目（47 skills / 17 agents / 6 dd 指令 / 18 NS commands），逐項確認後移除 — 這步是**降低每個 session context 稅**的關鍵
+- `--prune` 列出舊版裝的、新版預設不再部署的項目（45 skills / 17 agents / 6 dd 指令 / 18 NS commands），逐項確認後移除 — 這步是**降低每個 session context 稅**的關鍵
 - 全域 CLAUDE.md 會出互動 diff（§3.9 開發迴圈、§7.2 瘦身版觸發表），選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
 - 反悔隨時可用 `--with-misc` / `--with-deprecated` 重裝被清掉的桶
 
