@@ -27,7 +27,7 @@ allowed-tools: Read, Bash, Grep, Glob
 **場景觸發：**
 - 功能開發完成，需要決定如何整合
 - worktree 中的工作完成
-- DD Pipeline 的 `/dd-test` 通過後
+- DD Pipeline 6 步開發迴圈的最終驗證（步驟 5：再測）通過後
 
 ## 5 步流程
 
@@ -235,7 +235,7 @@ git fetch --prune
 
 ```
 worktree-manager → [開發] → branch-finisher
-/dd-test → branch-finisher
+6 步開發迴圈最終驗證 → branch-finisher
 code-reviewer → branch-finisher（審查通過後）
 ```
 

@@ -2,7 +2,7 @@
 
 > 多 Agent 協作的驅動開發流程系統
 
-> ⚠️ **此文件已 stale（最後更新 2026-03-24）**
+> ⚠️ **此文件已 stale（最後確認 2026-07-24）**
 >
 > 2026-04 之後多次大改未同步,包含但不限於:
 >
@@ -11,10 +11,13 @@
 > - `design-brainstorm` skill 加入
 > - 原生 `/goal` 整合
 > - LSP 整合的完整生命週期(引入 → 移除)
-> - **DX Engineer 角色 + `/dd-dx` 命令**(2026-05-25)
+> - DX Engineer 角色 + `/dd-dx` 命令(2026-05-25，**已於 2026-07-23 deprecated**)
+> - **骨幹改版**：舊版多階段 DD Pipeline（`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`）已整組封存,換成 6 步開發迴圈（實作+測試 → commit → code-simplifier → code-review → 再測 → commit）(2026-07-23)
+> - **部署分桶制**：skills/agents/commands 依實證使用率分 promoted/misc/deprecated,本文件下方的 Agent/Skill 表所列項目多數已不在預設部署範圍(2026-07-23)
+> - CLAUDE.md pre-commit gate、promoted skill 健檢瘦身、dd-init 版本標記制(2026-07 陸續加入)
 >
 > **以下 ASCII 流程圖、agent 表、命令表均不反映最新狀態。**
-> 請以 [README.md](./README.md) 為準。
+> 請以 [README.md](./README.md) 與根目錄 [CLAUDE.md](./CLAUDE.md) §核心工作法為準。
 > 本文件保留作為早期架構參考,完整 refresh 列為獨立 issue 處理。
 
 ## 完整流程架構
@@ -393,5 +396,5 @@
 ---
 
 **建立日期**：2025-12-15
-**最後更新**：2026-03-24
+**最後更新**：2026-03-24（內容）／2026-07-24（僅更新頂部 stale 警告）
 **版本**：2.0.0
