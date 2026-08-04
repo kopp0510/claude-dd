@@ -53,7 +53,7 @@ cd claude-dd
 ./install-dd-pipeline.sh --with-deprecated   # 連同 deprecated 桶（封存項目）
 ./install-dd-pipeline.sh --prune             # 清掉 ~/.claude 中未部署桶位的舊檔（逐項確認）
 ./install-dd-pipeline.sh --commands-only     # 只安裝 Commands
-./install-dd-pipeline.sh --update            # 更新 skills/agents（旗標需置於 --update 之前）
+./install-dd-pipeline.sh --update            # 更新 skills/agents（可與 --with-misc / --with-deprecated 併用）
 ./install-dd-pipeline.sh --uninstall         # 解除安裝（含所有桶位）
 ```
 

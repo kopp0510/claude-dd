@@ -274,6 +274,40 @@ file_exists() {
     [ -f "$1" ]
 }
 
+# 互動詢問（read 的安全包裝）：非互動環境（curl | bash、CI）下 read 遇 EOF
+# 會在 set -e 之下中止整個腳本，故互動詢問一律經此函式 — 無 TTY 時採用預設值
+# 結果放在 REPLY
+ask() {
+    local prompt="$1" default="$2"
+    if [ -t 0 ]; then
+        read -r -p "$prompt" REPLY || REPLY=""
+        REPLY="${REPLY:-$default}"
+    else
+        REPLY="$default"
+        echo "${prompt}${default}（非互動環境，採用預設值）"
+    fi
+}
+
+# 覆蓋既有部署前先備份到 ~/.claude/backups/（每次執行共用一個備份目錄），
+# 防止使用者對已部署檔案的本地修改被無聲抹除
+BACKUP_ROOT=""
+backup_before_overwrite() {
+    local category="$1" target="$2"
+    [ -e "$target" ] || return 0
+    if [ -z "$BACKUP_ROOT" ]; then
+        BACKUP_ROOT="$CLAUDE_DIR/backups/pre-install-$(date +%Y-%m-%d-%H%M%S)"
+    fi
+    mkdir -p "$BACKUP_ROOT/$category"
+    cp -r "$target" "$BACKUP_ROOT/$category/"
+}
+
+print_backup_notice() {
+    if [ -n "$BACKUP_ROOT" ]; then
+        echo -e "${YELLOW}📦 覆蓋前的舊版已備份至：${BACKUP_ROOT}（確認無需保留後可刪）${NC}"
+        echo ""
+    fi
+}
+
 # 顯示使用說明
 show_help() {
     echo "DD Pipeline 安裝程式"
@@ -288,7 +322,7 @@ show_help() {
     echo "  --with-deprecated   連同 deprecated 桶一起部署（0 使用率封存項目）"
     echo "  --prune             移除 ~/.claude 中本次未部署桶位的舊檔（需確認）"
     echo "  --uninstall         移除 DD Pipeline（含所有桶位）"
-    echo "  --update            更新 skills/agents 到最新版（旗標需置於 --update 之前）"
+    echo "  --update            更新 skills/agents 到最新版（可與 --with-misc / --with-deprecated 併用）"
     echo "  --help              顯示此說明"
     echo ""
     echo "預設安裝內容（promoted 桶）："
@@ -371,7 +405,7 @@ check_builtin_skills() {
     for skill in "${BUILTIN_SKILLS[@]}"; do
         i=$((i + 1))
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         if dir_exists "$SKILLS_DIR/$skill"; then
             echo -e "$tree_char $skill: ${GREEN}${CHECK} 已安裝${NC}"
@@ -384,7 +418,7 @@ check_builtin_skills() {
 
     echo ""
     echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
-    if [ $missing -gt 0 ]; then
+    if [ "$missing" -gt 0 ]; then
         echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
     else
         echo -e "└── ${GREEN}全部已安裝${NC}"
@@ -404,7 +438,7 @@ check_plugins() {
         i=$((i + 1))
         local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         if [ -f "$settings_file" ] && grep -q "\"$plugin_key\"" "$settings_file"; then
             echo -e "$tree_char $plugin: ${GREEN}${CHECK} 已啟用${NC}"
@@ -419,7 +453,8 @@ check_plugins() {
 # 驗證 Skills 的 hook 路徑（防止相對路徑：hook command 以 cwd 為基準執行，
 # 相對路徑在非 skill 目錄跑 Bash 時會找不到腳本 → non-blocking 報錯）
 validate_skill_hooks() {
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local errors=0
 
     print_step "前置" "驗證 Skill hook 路徑"
@@ -440,7 +475,7 @@ validate_skill_hooks() {
                     # 絕對路徑或可展開變數開頭 → 合法
                     ;;
                 *)
-                    echo -e "├── ${RED}${CROSS} 相對路徑 hook：${NC}${hooks_file#$script_dir/}"
+                    echo -e "├── ${RED}${CROSS} 相對路徑 hook：${NC}${hooks_file#"$script_dir"/}"
                     echo -e "│   command: ${YELLOW}$cmd${NC}"
                     echo -e "│   修正方式：改為 ${GREEN}\$HOME/.claude/skills/<skill-name>/...${NC}"
                     errors=$((errors + 1))
@@ -449,7 +484,7 @@ validate_skill_hooks() {
         done < <(grep -oE '"command"[[:space:]]*:[[:space:]]*"(\\.|[^"\\])*"' "$hooks_file" 2>/dev/null | sed 's/.*:[[:space:]]*"//; s/"$//; s/\\"/"/g')
     done < <(find "$script_dir/skills" -name "hooks.json" 2>/dev/null)
 
-    if [ $errors -gt 0 ]; then
+    if [ "$errors" -gt 0 ]; then
         echo -e "└── ${RED}發現 $errors 個 hook 相對路徑問題，中止部署${NC}"
         echo -e "    （hook 由 Claude Code 以當前工作目錄為基準執行，相對路徑會在其他專案中失效）"
         exit 1
@@ -464,7 +499,8 @@ install_builtin_skills() {
     print_step "2/8" "安裝內建 Skills"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local count=${#BUILTIN_SKILLS[@]}
     local i=0
 
@@ -475,19 +511,23 @@ install_builtin_skills() {
         local source="$script_dir/skills/$skill"
         local target="$SKILLS_DIR/$skill"
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         if [ -d "$source" ]; then
             if [ ! -d "$target" ]; then
                 cp -r "$source" "$target"
                 echo -e "$tree_char $skill: ${GREEN}已安裝（新）${NC}"
             elif [ "$FORCE" = true ]; then
+                if ! diff -rq "$source" "$target" > /dev/null 2>&1; then
+                    backup_before_overwrite "skills" "$target"
+                fi
                 rm -rf "$target"
                 cp -r "$source" "$target"
                 echo -e "$tree_char $skill: ${GREEN}已更新（強制）${NC}"
             else
                 # 比較是否有更新
                 if ! diff -rq "$source" "$target" > /dev/null 2>&1; then
+                    backup_before_overwrite "skills" "$target"
                     rm -rf "$target"
                     cp -r "$source" "$target"
                     echo -e "$tree_char $skill: ${CYAN}已更新${NC}"
@@ -517,7 +557,7 @@ check_builtin_agents() {
     for agent in "${BUILTIN_AGENTS[@]}"; do
         i=$((i + 1))
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         if file_exists "$AGENTS_DIR/$agent.md"; then
             echo -e "$tree_char $agent: ${GREEN}${CHECK} 已安裝${NC}"
@@ -530,7 +570,7 @@ check_builtin_agents() {
 
     echo ""
     echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
-    if [ $missing -gt 0 ]; then
+    if [ "$missing" -gt 0 ]; then
         echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
     else
         echo -e "└── ${GREEN}全部已安裝${NC}"
@@ -543,7 +583,8 @@ install_builtin_agents() {
     print_step "3/8" "安裝內建 Agents"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local count=${#BUILTIN_AGENTS[@]}
     local i=0
 
@@ -554,17 +595,21 @@ install_builtin_agents() {
         local source="$script_dir/agents/$agent.md"
         local target="$AGENTS_DIR/$agent.md"
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         if [ -f "$source" ]; then
             if [ ! -f "$target" ]; then
                 cp "$source" "$target"
                 echo -e "$tree_char $agent: ${GREEN}已安裝（新）${NC}"
             elif [ "$FORCE" = true ]; then
+                if ! cmp -s "$source" "$target"; then
+                    backup_before_overwrite "agents" "$target"
+                fi
                 cp "$source" "$target"
                 echo -e "$tree_char $agent: ${GREEN}已更新（強制）${NC}"
             else
                 if ! cmp -s "$source" "$target"; then
+                    backup_before_overwrite "agents" "$target"
                     cp "$source" "$target"
                     echo -e "$tree_char $agent: ${CYAN}已更新${NC}"
                 else
@@ -606,13 +651,13 @@ check_mcp() {
     for mcp in "${OPTIONAL_MCP[@]}"; do
         i=$((i + 1))
         if file_exists "$claude_json" && grep -q "\"$mcp\"" "$claude_json"; then
-            if [ $i -eq $count ]; then
+            if [ "$i" -eq "$count" ]; then
                 echo -e "    └── $mcp: ${GREEN}${CHECK}${NC}"
             else
                 echo -e "    ├── $mcp: ${GREEN}${CHECK}${NC}"
             fi
         else
-            if [ $i -eq $count ]; then
+            if [ "$i" -eq "$count" ]; then
                 echo -e "    └── $mcp: ${YELLOW}未安裝${NC}"
             else
                 echo -e "    ├── $mcp: ${YELLOW}未安裝${NC}"
@@ -647,7 +692,7 @@ install_plugins() {
         local plugin_dir="$plugins_base/$plugin"
         local plugin_json="$plugin_dir/.claude-plugin/plugin.json"
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         # 檢查 Plugin 檔案是否存在
         if [ ! -f "$plugin_json" ]; then
@@ -655,56 +700,73 @@ install_plugins() {
             continue
         fi
 
-        # 讀取版本號
+        # 讀取版本號（解析失敗時跳過該 plugin，不中止安裝）
         local version=""
         if command_exists "jq"; then
-            version=$(jq -r '.version' "$plugin_json")
+            version=$(jq -r '.version' "$plugin_json" 2>/dev/null) || version=""
         else
-            version=$(python3 -c "import json; print(json.load(open('$plugin_json'))['version'])")
+            version=$(PLUGIN_JSON="$plugin_json" python3 -c "import json, os; print(json.load(open(os.environ['PLUGIN_JSON']))['version'])" 2>/dev/null) || version=""
+        fi
+        if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo -e "$tree_char $plugin: ${YELLOW}${WARN} plugin.json 版本解析失敗，跳過${NC}"
+            continue
         fi
 
-        # 更新 settings.json — 啟用 Plugin
+        # 更新 settings.json — 啟用 Plugin（讀寫失敗時跳過該 plugin，不在 set -e 下中止安裝）
+        local settings_ok=true
         if [ -f "$settings_file" ]; then
             if command_exists "jq"; then
-                local tmp=$(mktemp)
-                jq --arg key "$plugin_key" '.enabledPlugins[$key] = true' "$settings_file" > "$tmp" && mv "$tmp" "$settings_file"
+                local tmp
+                tmp=$(mktemp)
+                if jq --arg key "$plugin_key" '.enabledPlugins[$key] = true' "$settings_file" > "$tmp"; then
+                    mv "$tmp" "$settings_file"
+                else
+                    rm -f "$tmp"
+                    settings_ok=false
+                fi
             else
-                python3 -c "
-import json, sys
-with open('$settings_file', 'r') as f:
+                SETTINGS_FILE="$settings_file" PLUGIN_KEY="$plugin_key" python3 -c "
+import json, os
+path = os.environ['SETTINGS_FILE']
+with open(path, 'r') as f:
     data = json.load(f)
-if 'enabledPlugins' not in data:
-    data['enabledPlugins'] = {}
-data['enabledPlugins']['$plugin_key'] = True
-with open('$settings_file', 'w') as f:
+data.setdefault('enabledPlugins', {})[os.environ['PLUGIN_KEY']] = True
+with open(path, 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+" || settings_ok=false
             fi
         else
             # settings.json 不存在，建立新檔
             if command_exists "jq"; then
-                echo "{}" | jq --arg key "$plugin_key" '{enabledPlugins: {($key): true}}' > "$settings_file"
+                echo "{}" | jq --arg key "$plugin_key" '{enabledPlugins: {($key): true}}' > "$settings_file" || settings_ok=false
             else
-                python3 -c "
-import json
-data = {'enabledPlugins': {'$plugin_key': True}}
-with open('$settings_file', 'w') as f:
+                SETTINGS_FILE="$settings_file" PLUGIN_KEY="$plugin_key" python3 -c "
+import json, os
+data = {'enabledPlugins': {os.environ['PLUGIN_KEY']: True}}
+with open(os.environ['SETTINGS_FILE'], 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+" || settings_ok=false
             fi
         fi
+        if [ "$settings_ok" = false ]; then
+            echo -e "$tree_char $plugin: ${YELLOW}${WARN} settings.json 更新失敗（檔案可能損毀），跳過${NC}"
+            continue
+        fi
 
-        # 更新 installed_plugins.json — 登記 Plugin
+        # 更新 installed_plugins.json — 登記 Plugin（讀寫失敗時跳過，不中止安裝）
         mkdir -p "$(dirname "$installed_file")"
         local install_path="$CLAUDE_DIR/plugins/cache/$PLUGINS_MARKETPLACE/$plugin/$version"
-        local now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+        local now
+        now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+        local installed_ok=true
 
         if [ -f "$installed_file" ]; then
             if command_exists "jq"; then
-                local tmp=$(mktemp)
-                jq --arg key "$plugin_key" \
+                local tmp
+                tmp=$(mktemp)
+                if jq --arg key "$plugin_key" \
                    --arg path "$install_path" \
                    --arg ver "$version" \
                    --arg ts "$now" \
@@ -723,33 +785,39 @@ with open('$settings_file', 'w') as f:
                            "lastUpdated": $ts
                        }]
                    end
-                   ' "$installed_file" > "$tmp" && mv "$tmp" "$installed_file"
+                   ' "$installed_file" > "$tmp"; then
+                    mv "$tmp" "$installed_file"
+                else
+                    rm -f "$tmp"
+                    installed_ok=false
+                fi
             else
-                python3 -c "
-import json
-with open('$installed_file', 'r') as f:
+                INSTALLED_FILE="$installed_file" PLUGIN_KEY="$plugin_key" \
+                INSTALL_PATH="$install_path" PLUGIN_VERSION="$version" NOW="$now" python3 -c "
+import json, os
+path = os.environ['INSTALLED_FILE']
+with open(path, 'r') as f:
     data = json.load(f)
-key = '$plugin_key'
+key = os.environ['PLUGIN_KEY']
 entry = {
     'scope': 'global',
     'projectPath': '',
-    'installPath': '$install_path',
-    'version': '$version',
-    'installedAt': '$now',
-    'lastUpdated': '$now'
+    'installPath': os.environ['INSTALL_PATH'],
+    'version': os.environ['PLUGIN_VERSION'],
+    'installedAt': os.environ['NOW'],
+    'lastUpdated': os.environ['NOW'],
 }
-if key in data.get('plugins', {}):
-    data['plugins'][key][0]['version'] = '$version'
-    data['plugins'][key][0]['lastUpdated'] = '$now'
-    data['plugins'][key][0]['installPath'] = '$install_path'
+plugins = data.setdefault('plugins', {})
+if key in plugins:
+    plugins[key][0]['version'] = entry['version']
+    plugins[key][0]['lastUpdated'] = entry['lastUpdated']
+    plugins[key][0]['installPath'] = entry['installPath']
 else:
-    if 'plugins' not in data:
-        data['plugins'] = {}
-    data['plugins'][key] = [entry]
-with open('$installed_file', 'w') as f:
+    plugins[key] = [entry]
+with open(path, 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+" || installed_ok=false
             fi
         else
             # installed_plugins.json 不存在，建立新檔
@@ -766,28 +834,34 @@ with open('$installed_file', 'w') as f:
                         "version": $ver,
                         "installedAt": $ts,
                         "lastUpdated": $ts
-                    }]' > "$installed_file"
+                    }]' > "$installed_file" || installed_ok=false
             else
-                python3 -c "
-import json
+                INSTALLED_FILE="$installed_file" PLUGIN_KEY="$plugin_key" \
+                INSTALL_PATH="$install_path" PLUGIN_VERSION="$version" NOW="$now" python3 -c "
+import json, os
 data = {
     'version': 2,
     'plugins': {
-        '$plugin_key': [{
+        os.environ['PLUGIN_KEY']: [{
             'scope': 'global',
             'projectPath': '',
-            'installPath': '$install_path',
-            'version': '$version',
-            'installedAt': '$now',
-            'lastUpdated': '$now'
+            'installPath': os.environ['INSTALL_PATH'],
+            'version': os.environ['PLUGIN_VERSION'],
+            'installedAt': os.environ['NOW'],
+            'lastUpdated': os.environ['NOW'],
         }]
     }
 }
-with open('$installed_file', 'w') as f:
+with open(os.environ['INSTALLED_FILE'], 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+" || installed_ok=false
             fi
+        fi
+
+        if [ "$installed_ok" = false ]; then
+            echo -e "$tree_char $plugin: ${YELLOW}${WARN} installed_plugins.json 更新失敗（檔案可能損毀），跳過${NC}"
+            continue
         fi
 
         echo -e "$tree_char $plugin (v$version): ${GREEN}${CHECK} 已啟用${NC}"
@@ -802,7 +876,8 @@ create_commands() {
 
     mkdir -p "$COMMANDS_DIR"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     # 清理已移除的 DD Commands（2026-04 精簡）
     local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status" "dd-stop")
@@ -824,7 +899,7 @@ create_commands() {
         local source="$script_dir/commands/$cmd.md"
         local status=""
         local tree_char="├──"
-        [ $i -eq $total ] && tree_char="└──"
+        [ "$i" -eq "$total" ] && tree_char="└──"
 
         if [ ! -f "$source" ]; then
             echo -e "$tree_char $cmd: ${RED}源檔案不存在${NC}"
@@ -834,14 +909,12 @@ create_commands() {
         if [ ! -f "$target" ]; then
             cp "$source" "$target"
             status="new"
-        elif [ "$FORCE" = true ]; then
-            cp "$source" "$target"
-            status="forced"
         elif cmp -s "$source" "$target"; then
             status="uptodate"
         else
+            backup_before_overwrite "commands" "$target"
             cp "$source" "$target"
-            status="updated"
+            if [ "$FORCE" = true ]; then status="forced"; else status="updated"; fi
         fi
 
         case $status in
@@ -860,7 +933,7 @@ create_commands() {
         local source_dir="$script_dir/commands/$ns_cmd"
         local status=""
         local tree_char="├──"
-        [ $i -eq $total ] && tree_char="└──"
+        [ "$i" -eq "$total" ] && tree_char="└──"
 
         if [ ! -d "$target_dir" ]; then
             if [ -d "$source_dir" ]; then
@@ -870,18 +943,15 @@ create_commands() {
                 echo -e "$tree_char $ns_cmd: ${RED}源檔案不存在${NC}"
                 continue
             fi
-        elif [ "$FORCE" = true ]; then
-            rm -rf "$target_dir"
-            cp -r "$source_dir" "$target_dir"
-            status="forced"
         else
             # 比較目錄內容（README.md 不部署，排除比較以維持冪等）
             if diff -rq -x README.md "$source_dir" "$target_dir" >/dev/null 2>&1; then
                 status="uptodate"
             else
+                backup_before_overwrite "commands" "$target_dir"
                 rm -rf "$target_dir"
                 cp -r "$source_dir" "$target_dir"
-                status="updated"
+                if [ "$FORCE" = true ]; then status="forced"; else status="updated"; fi
             fi
         fi
 
@@ -907,14 +977,15 @@ create_scripts() {
 
     mkdir -p "$SCRIPTS_DIR"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local count=${#DD_SCRIPTS[@]}
     local i=0
 
     for s in "${DD_SCRIPTS[@]}"; do
         i=$((i + 1))
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         local source="$script_dir/scripts/$s"
         if [ ! -f "$source" ]; then
@@ -922,6 +993,9 @@ create_scripts() {
             continue
         fi
 
+        if [ -f "$SCRIPTS_DIR/$s" ] && ! cmp -s "$source" "$SCRIPTS_DIR/$s"; then
+            backup_before_overwrite "scripts" "$SCRIPTS_DIR/$s"
+        fi
         cp "$source" "$SCRIPTS_DIR/$s"
         chmod +x "$SCRIPTS_DIR/$s"
         echo -e "$tree_char $s: ${GREEN}${CHECK}${NC}"
@@ -934,7 +1008,8 @@ create_templates() {
 
     mkdir -p "$TEMPLATES_DIR"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     local count=${#DD_TEMPLATES[@]}
     local i=0
@@ -945,7 +1020,7 @@ create_templates() {
         local source="$script_dir/templates/$tpl"
         local status=""
         local tree_char="├──"
-        [ $i -eq $count ] && tree_char="└──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
 
         if [ ! -f "$source" ]; then
             echo -e "$tree_char $target: ${RED}源檔案不存在${NC}"
@@ -955,14 +1030,12 @@ create_templates() {
         if [ ! -f "$target" ]; then
             cp "$source" "$target"
             status="new"
-        elif [ "$FORCE" = true ]; then
-            cp "$source" "$target"
-            status="forced"
         elif cmp -s "$source" "$target"; then
             status="uptodate"
         else
+            backup_before_overwrite "templates" "$target"
             cp "$source" "$target"
-            status="updated"
+            if [ "$FORCE" = true ]; then status="forced"; else status="updated"; fi
         fi
 
         # 顯示狀態
@@ -998,8 +1071,7 @@ uninstall() {
     echo "└── 官方 Plugins 設定（claude-md-management）"
     echo ""
 
-    read -p "確定要移除嗎？[y/N] " -n 1 -r
-    echo
+    ask "確定要移除嗎？[y/N] " "N"
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         # 僅移除 ALL_DD_COMMANDS 列表中的命令（不動使用者自建的 dd-*.md）
@@ -1008,7 +1080,7 @@ uninstall() {
         done
 
         for ns_cmd in "${ALL_NS_COMMANDS[@]}"; do
-            rm -rf "$COMMANDS_DIR/$ns_cmd"
+            rm -rf "${COMMANDS_DIR:?}/$ns_cmd"
         done
 
         rm -rf "$TEMPLATES_DIR"
@@ -1020,7 +1092,7 @@ uninstall() {
 
         # 僅移除 ALL_SKILLS 列表中的 skill（不動使用者自己的）
         for skill in "${ALL_SKILLS[@]}"; do
-            rm -rf "$SKILLS_DIR/$skill"
+            rm -rf "${SKILLS_DIR:?}/$skill"
         done
 
         # 僅移除 ALL_AGENTS 列表中的 agent（不動使用者自己的）
@@ -1038,39 +1110,53 @@ uninstall() {
         for plugin in "${OFFICIAL_PLUGINS[@]}"; do
             local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"
 
-            # 從 settings.json 移除
+            # 從 settings.json 移除（解析失敗時警告後繼續，不中止移除流程）
             if [ -f "$settings_file" ]; then
                 if command_exists "jq"; then
-                    local tmp=$(mktemp)
-                    jq --arg key "$plugin_key" 'del(.enabledPlugins[$key])' "$settings_file" > "$tmp" && mv "$tmp" "$settings_file"
+                    local tmp
+                    tmp=$(mktemp)
+                    if jq --arg key "$plugin_key" 'del(.enabledPlugins[$key])' "$settings_file" > "$tmp"; then
+                        mv "$tmp" "$settings_file"
+                    else
+                        rm -f "$tmp"
+                        echo -e "${YELLOW}${WARN} settings.json 解析失敗，請手動移除 enabledPlugins 的 $plugin_key${NC}"
+                    fi
                 else
-                    python3 -c "
-import json
-with open('$settings_file', 'r') as f:
+                    SETTINGS_FILE="$settings_file" PLUGIN_KEY="$plugin_key" python3 -c "
+import json, os
+path = os.environ['SETTINGS_FILE']
+with open(path, 'r') as f:
     data = json.load(f)
-data.get('enabledPlugins', {}).pop('$plugin_key', None)
-with open('$settings_file', 'w') as f:
+data.get('enabledPlugins', {}).pop(os.environ['PLUGIN_KEY'], None)
+with open(path, 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+" || echo -e "${YELLOW}${WARN} settings.json 解析失敗，請手動移除 enabledPlugins 的 $plugin_key${NC}"
                 fi
             fi
 
-            # 從 installed_plugins.json 移除
+            # 從 installed_plugins.json 移除（同上，失敗不中止）
             if [ -f "$installed_file" ]; then
                 if command_exists "jq"; then
-                    local tmp=$(mktemp)
-                    jq --arg key "$plugin_key" 'del(.plugins[$key])' "$installed_file" > "$tmp" && mv "$tmp" "$installed_file"
+                    local tmp
+                    tmp=$(mktemp)
+                    if jq --arg key "$plugin_key" 'del(.plugins[$key])' "$installed_file" > "$tmp"; then
+                        mv "$tmp" "$installed_file"
+                    else
+                        rm -f "$tmp"
+                        echo -e "${YELLOW}${WARN} installed_plugins.json 解析失敗，請手動移除 $plugin_key${NC}"
+                    fi
                 else
-                    python3 -c "
-import json
-with open('$installed_file', 'r') as f:
+                    INSTALLED_FILE="$installed_file" PLUGIN_KEY="$plugin_key" python3 -c "
+import json, os
+path = os.environ['INSTALLED_FILE']
+with open(path, 'r') as f:
     data = json.load(f)
-data.get('plugins', {}).pop('$plugin_key', None)
-with open('$installed_file', 'w') as f:
+data.get('plugins', {}).pop(os.environ['PLUGIN_KEY'], None)
+with open(path, 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+" || echo -e "${YELLOW}${WARN} installed_plugins.json 解析失敗，請手動移除 $plugin_key${NC}"
                 fi
             fi
         done
@@ -1086,7 +1172,8 @@ with open('$installed_file', 'w') as f:
 create_global_claude_md() {
     print_step "8/8" "檢查全域 CLAUDE.md"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local source="$script_dir/templates/global/CLAUDE.md"
     local target="$CLAUDE_DIR/CLAUDE.md"
 
@@ -1102,8 +1189,8 @@ create_global_claude_md() {
             echo -e "└── ${GREEN}✅ 已從 repo 模板安裝全域 CLAUDE.md（--force）${NC}"
         else
             echo -e "├── ${CYAN}全域 CLAUDE.md 不存在${NC}"
-            read -p "│   是否從 repo 模板安裝？[y/N]: " answer
-            if [[ "$answer" =~ ^[Yy]$ ]]; then
+            ask "│   是否從 repo 模板安裝？[y/N]: " "N"
+            if [[ "$REPLY" =~ ^[Yy]$ ]]; then
                 cp "$source" "$target"
                 echo -e "└── ${GREEN}✅ 已安裝${NC}"
             else
@@ -1121,7 +1208,8 @@ create_global_claude_md() {
 
     # 情境 3：內容不同 — --force 靜默覆蓋
     if [ "$FORCE" = true ]; then
-        local backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
+        local backup
+        backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
         cp "$target" "$backup"
         cp "$source" "$target"
         echo -e "├── ${YELLOW}已備份至 $(basename "$backup")${NC}"
@@ -1140,12 +1228,13 @@ create_global_claude_md() {
     echo "  k) 保留本地版本（推薦，預設）"
     echo "  s) 顯示完整 diff 後再決定"
     echo ""
-    read -p "選擇 [o/k/s，預設 k]: " choice
-    choice=${choice:-k}
+    ask "選擇 [o/k/s，預設 k]: " "k"
+    local choice="$REPLY"
 
     case $choice in
         o|O)
-            local backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
+            local backup
+            backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
             cp "$target" "$backup"
             cp "$source" "$target"
             echo -e "└── ${GREEN}✅ 已覆蓋，本地版本備份為 $(basename "$backup")${NC}"
@@ -1153,9 +1242,10 @@ create_global_claude_md() {
         s|S)
             diff "$target" "$source"
             echo ""
-            read -p "看完後要覆蓋嗎？[y/N]: " confirm
-            if [[ "$confirm" =~ ^[Yy]$ ]]; then
-                local backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
+            ask "看完後要覆蓋嗎？[y/N]: " "N"
+            if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+                local backup
+                backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
                 cp "$target" "$backup"
                 cp "$source" "$target"
                 echo -e "└── ${GREEN}✅ 已覆蓋，本地版本備份為 $(basename "$backup")${NC}"
@@ -1211,17 +1301,16 @@ prune_retired() {
     [ ${#prune_ns[@]} -gt 0 ] && echo "└── NS commands: ${prune_ns[*]}"
     echo ""
 
-    read -p "確定要移除嗎？（可用 --with-misc / --with-deprecated 重裝復原）[y/N] " -n 1 -r
-    echo
+    ask "確定要移除嗎？（可用 --with-misc / --with-deprecated 重裝復原）[y/N] " "N"
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "取消清理"
         return
     fi
 
-    for skill in "${prune_skills[@]}"; do rm -rf "$SKILLS_DIR/$skill"; done
+    for skill in "${prune_skills[@]}"; do rm -rf "${SKILLS_DIR:?}/$skill"; done
     for agent in "${prune_agents[@]}"; do rm -f "$AGENTS_DIR/$agent.md"; done
     for cmd in "${prune_cmds[@]}"; do rm -f "$COMMANDS_DIR/$cmd.md"; done
-    for ns_cmd in "${prune_ns[@]}"; do rm -rf "$COMMANDS_DIR/$ns_cmd"; done
+    for ns_cmd in "${prune_ns[@]}"; do rm -rf "${COMMANDS_DIR:?}/$ns_cmd"; done
 
     echo -e "${GREEN}✅ 已移除 $total 項${NC}"
 }
@@ -1229,6 +1318,8 @@ prune_retired() {
 # 顯示完成訊息
 show_completion() {
     print_header "✅ DD Pipeline 安裝完成！"
+
+    print_backup_notice
 
     echo -e "${GREEN}📌 快速開始：${NC}"
     echo "   1. cd your-project"
@@ -1255,9 +1346,9 @@ main() {
     local WITH_MISC=false
     local WITH_DEPRECATED=false
     local PRUNE=false
+    local UPDATE=false
 
     # 解析參數
-    # 註：--with-misc / --with-deprecated 直接擴充部署集合，故需置於 --update 之前才生效
     while [[ $# -gt 0 ]]; do
         case $1 in
             --check)
@@ -1299,11 +1390,8 @@ main() {
                 shift
                 ;;
             --update)
-                FORCE=true
-                validate_skill_hooks
-                install_builtin_skills
-                install_builtin_agents
-                exit 0
+                UPDATE=true
+                shift
                 ;;
             --help)
                 show_help
@@ -1320,6 +1408,16 @@ main() {
     # 移除模式
     if [ "$UNINSTALL" = true ]; then
         uninstall
+        exit 0
+    fi
+
+    # 更新模式（參數解析完才執行，--with-misc / --with-deprecated 不受旗標順序影響）
+    if [ "$UPDATE" = true ]; then
+        FORCE=true
+        validate_skill_hooks
+        install_builtin_skills
+        install_builtin_agents
+        print_backup_notice
         exit 0
     fi
 
@@ -1379,5 +1477,7 @@ main() {
     show_completion
 }
 
-# 執行主程式
-main "$@"
+# 執行主程式（被 source 時不執行，供 CI 直接 source 取用陣列與函式）
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi
