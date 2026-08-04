@@ -49,7 +49,8 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 
 行為保證：
 
-- **冪等**：內容相同報「已是最新」不重寫（含 `--force`）；重跑不產生備份。
+- **冪等**：所有部署點（skills / agents / commands / templates / scripts /
+  全域 CLAUDE.md）內容相同報「已是最新」不重寫（含 `--force`）；重跑不產生備份。
 - **非互動安全**：無 TTY（CI、`curl | bash`）時互動詢問一律採預設值，
   不會中止；破壞性操作（`--uninstall` / `--prune`）預設取消，自動化用 `--yes`。
 - **失敗不半套**：JSON 讀寫失敗（settings.json 損毀等）警告後跳過該項，
@@ -90,7 +91,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 
 | 檢查 | 防什麼 |
 |---|---|
-| bash -n + shellcheck（warning 級，3 支腳本） | 語法與常見 bash 陷阱 |
+| bash -n（安裝腳本）+ shellcheck（warning 級，4 支腳本） | 語法與常見 bash 陷阱 |
 | 陣列 ↔ 目錄一致性（ALL_* = 三桶聯集） | 桶陣列漏列 / 目錄改名未同步 |
 | README / CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
 | §7.2 觸發目標桶位驗證 | 全域模板指向未部署元件 |
