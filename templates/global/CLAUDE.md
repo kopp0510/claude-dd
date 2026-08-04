@@ -440,7 +440,8 @@ C) 先停下討論
 > skill/agent(senior-qa、test-engineer、tdd-guide、test-gen、senior-frontend、
 > ui-design-system、ux-researcher-designer、landing-page-generator、senior-backend、
 > dx-engineer、senior-fullstack、senior-secops、playwright-pro)已不再預設部署
-> (misc 桶項目可用 `--with-misc` 重裝;deprecated 桶已於 2026-08-04 自 repo 刪除)。
+> (其中 ui-design-system、ux-researcher-designer 屬 misc 桶可用 `--with-misc` 重裝;
+> 其餘屬 deprecated 桶,已於 2026-08-04 自 repo 刪除,git 歷史可回溯)。
 > 若重裝,依 §7.1 第 4 點
 > (命中 skill description)觸發即可,不需回填本表。
 

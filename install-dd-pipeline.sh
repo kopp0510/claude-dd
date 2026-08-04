@@ -294,7 +294,7 @@ show_help() {
     echo "  --commands-only     只安裝 DD Commands（不安裝 skills）"
     echo "  --with-misc         連同 misc 桶一起部署（SRE / 備援性質項目）"
     echo "  --prune             移除 ~/.claude 中本次未部署桶位的舊檔（需確認）"
-    echo "  --uninstall         移除 DD Pipeline（含所有桶位）"
+    echo "  --uninstall         移除 DD Pipeline（promoted + misc 桶）"
     echo "  --yes               跳過 --uninstall / --prune 的確認詢問（供自動化使用；"
     echo "                      其餘互動詢問於非互動環境一律採預設值）"
     echo "  --update            更新 skills/agents 到最新版（可與 --with-misc 併用）"
@@ -326,7 +326,7 @@ check_environment() {
         cc_version=$(claude --version 2>/dev/null | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || true)
         if [ -n "$cc_version" ]; then
             print_success "Claude Code CLI (v$cc_version)"
-            # 原生 opt-in 功能最低版本：Workflow ≥ 2.1.154（見 commands/dd-dev.md）
+            # 原生 opt-in 功能最低版本：Workflow ≥ 2.1.154
             local min_native="2.1.154"
             if [ "$(printf '%s\n%s\n' "$min_native" "$cc_version" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" != "$min_native" ]; then
                 echo -e "│   ${YELLOW}⚠ 版本 < ${min_native}：原生 Workflow/Worktree 等 opt-in 功能不可用（pipeline 預設流程不受影響）${NC}"
@@ -946,7 +946,7 @@ create_templates() {
 uninstall() {
     print_header "${ROCKET} DD Pipeline 移除程式"
 
-    echo "即將移除以下內容（含所有桶位，不論當初用什麼旗標部署）："
+    echo "即將移除以下內容（promoted + misc 桶；更早的 deprecated 部署請先依 README 升級指南清理）："
     echo "├── ~/.claude/commands/ 中的 ${#ALL_DD_COMMANDS[@]} 個 DD Commands 與 ${#ALL_NS_COMMANDS[@]} 個命名空間 Commands"
     echo "├── ~/.claude/templates/dd/"
     echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"

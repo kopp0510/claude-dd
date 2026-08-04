@@ -96,8 +96,7 @@ claude_docs/
 
 ## 平台工程 (Platform / DX)
 
-> Golden path：讓本機 = 容器 = CI 是同一個 image。內容由 `dx-engineer` agent 產出。
-> 若 `/dd-init` Phase 4 被跳過，下方欄位會留空白，可日後跑 `/dd-dx` 補。
+> Golden path：讓本機 = 容器 = CI 是同一個 image。下方欄位若留空白，可日後手動補齊。
 
 ### 環境一致性
 - Dev container：`{{DEVCONTAINER_PATH}}`
@@ -120,9 +119,8 @@ claude_docs/
 
 ## Agent/Skill 偏好
 <!-- 可選：指定特定 Agent/Skill 的使用偏好 -->
-- 後端開發優先使用：senior-backend
-- 前端開發優先使用：senior-frontend
-- 測試優先使用：test-engineer
+- 部署 / CI/CD / IaC 優先使用：senior-devops
+- 安全審查優先使用：security-auditor
 
 ## 排除項目
 <!-- DD 流程不應修改的檔案或目錄 -->

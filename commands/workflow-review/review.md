@@ -16,7 +16,6 @@ This command builds on automatic skill detections:
 **Before This Command Runs:**
 - code-reviewer skill has flagged code quality issues in real-time
 - security-auditor, secret-scanner, dependency-auditor skills have detected security concerns
-- test-generator skill has identified untested code
 
 **This Command Coordinates:**
 - Aggregates all skill findings into one report
@@ -30,10 +29,10 @@ This command builds on automatic skill detections:
 
 1. **Context Analysis**: First understand what code is being reviewed
 2. **Multi-Agent Coordination**: Use Task tool to delegate to specialized agents:
-   - `@config-safety-reviewer` for configuration safety and production reliability
-   - `@security-auditor` for security vulnerabilities
-   - `@systems-architect` for architectural concerns
-   - `@performance-tuner` for performance optimization
+   - `@security-auditor` for security vulnerabilities, configuration safety and
+     production reliability
+   - Review architectural and performance concerns directly in this command's
+     context (no dedicated sub-agents are deployed for these dimensions)
 
 3. **Configuration Safety Priority**: Pay special attention to:
    - Database connection strings and timeouts
