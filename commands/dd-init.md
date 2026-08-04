@@ -1,3 +1,7 @@
+---
+description: 初始化專案的 6 步開發迴圈 — 蓋章專案 CLAUDE.md、掛 pre-commit gate、建截圖目錄、確認 plugin 依賴
+---
+
 # DD 初始化 — 6 步開發迴圈
 
 初始化專案的開發慣例：蓋章「6 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
