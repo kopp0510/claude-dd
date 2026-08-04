@@ -15,130 +15,171 @@ jobs:
       - name: Bash 語法檢查
         run: bash -n install-dd-pipeline.sh
 
-      - name: ShellCheck（error 級）
-        run: shellcheck -S error install-dd-pipeline.sh
+      - name: ShellCheck（warning 級，全部 shell 腳本）
+        run: |
+          shellcheck -S warning \
+            install-dd-pipeline.sh \
+            scripts/check-claude-md.sh \
+            skills/self-improving-agent/hooks/error-capture.sh
 
       - name: help smoke test
         run: ./install-dd-pipeline.sh --help
 
       - name: Skill hook 路徑驗證
         run: |
-          grep -v '^main "\$@"$' install-dd-pipeline.sh > /tmp/inst.sh
-          bash -c 'source /tmp/inst.sh && validate_skill_hooks'
+          source ./install-dd-pipeline.sh
+          validate_skill_hooks
 
       - name: 陣列與目錄一致性（ALL_* = 三桶聯集）
         run: |
-          grep -v '^main "\$@"$' install-dd-pipeline.sh > /tmp/inst.sh
-          bash -c '
-            source /tmp/inst.sh
-            fail=0
-            check() {
-              local label="$1" expected="$2" actual="$3"
-              if ! diff <(echo "$expected") <(echo "$actual"); then
-                echo "❌ ${label}：陣列與實際目錄不一致（< 陣列 / > 目錄）"
-                fail=1
-              else
-                echo "✅ $label 一致"
-              fi
-            }
-            check "ALL_SKILLS" \
-              "$(printf "%s\n" "${ALL_SKILLS[@]}" | sort)" \
-              "$(ls -d skills/*/ | xargs -n1 basename | sort)"
-            check "ALL_AGENTS" \
-              "$(printf "%s\n" "${ALL_AGENTS[@]}" | sort)" \
-              "$(ls agents/*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
-            check "ALL_DD_COMMANDS" \
-              "$(printf "%s\n" "${ALL_DD_COMMANDS[@]}" | sort)" \
-              "$(ls commands/dd-*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
-            check "ALL_NS_COMMANDS" \
-              "$(printf "%s\n" "${ALL_NS_COMMANDS[@]}" | sort)" \
-              "$(ls -d commands/*/ | xargs -n1 basename | sort)"
-            check "DD_TEMPLATES" \
-              "$(printf "%s\n" "${DD_TEMPLATES[@]}" | sort)" \
-              "$(ls templates/*.template | xargs -n1 basename | sort)"
-            exit $fail
-          '
+          source ./install-dd-pipeline.sh
+          fail=0
+          check() {
+            local label="$1" expected="$2" actual="$3"
+            if ! diff <(echo "$expected") <(echo "$actual"); then
+              echo "❌ ${label}：陣列與實際目錄不一致（< 陣列 / > 目錄）"
+              fail=1
+            else
+              echo "✅ $label 一致"
+            fi
+          }
+          check "ALL_SKILLS" \
+            "$(printf "%s\n" "${ALL_SKILLS[@]}" | sort)" \
+            "$(ls -d skills/*/ | xargs -n1 basename | sort)"
+          check "ALL_AGENTS" \
+            "$(printf "%s\n" "${ALL_AGENTS[@]}" | sort)" \
+            "$(ls agents/*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
+          check "ALL_DD_COMMANDS" \
+            "$(printf "%s\n" "${ALL_DD_COMMANDS[@]}" | sort)" \
+            "$(ls commands/dd-*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
+          check "ALL_NS_COMMANDS" \
+            "$(printf "%s\n" "${ALL_NS_COMMANDS[@]}" | sort)" \
+            "$(ls -d commands/*/ | xargs -n1 basename | sort)"
+          check "DD_TEMPLATES" \
+            "$(printf "%s\n" "${DD_TEMPLATES[@]}" | sort)" \
+            "$(ls templates/*.template | xargs -n1 basename | sort)"
+          exit $fail
 
       - name: 分桶數字宣稱一致性（README / CLAUDE.md ↔ 腳本陣列）
         run: |
-          grep -v '^main "\$@"$' install-dd-pipeline.sh > /tmp/inst.sh
-          bash -c '
-            source /tmp/inst.sh
-            fail=0
-            ck() {
-              local label="$1" claimed="$2" actual="$3"
-              if [ -n "$claimed" ] && [ "$claimed" = "$actual" ]; then
-                echo "✅ ${label}：${actual}"
-              else
-                echo "❌ ${label}：宣稱「${claimed:-未找到}」，實際 ${actual}"
-                fail=1
-              fi
-            }
-
-            # README 安裝章節
-            ck "README 安裝 promoted skills 數" \
-              "$(grep -oE "安裝 [0-9]+ 個 promoted Skills" README.md | grep -oE "[0-9]+")" \
-              "${#PROMOTED_SKILLS[@]}"
-            ck "README 安裝 promoted agents 數" \
-              "$(grep -oE "安裝 [0-9]+ 個 promoted Agents" README.md | grep -oE "[0-9]+")" \
-              "${#PROMOTED_AGENTS[@]}"
-
-            # README Promoted Skills 章節：標題數字 + 表格內容
-            ck "README Promoted Skills 標題數" \
-              "$(grep -oE "^## Promoted Skills（預設部署，[0-9]+ 個）" README.md | grep -oE "[0-9]+")" \
-              "${#PROMOTED_SKILLS[@]}"
-            tbl=$(awk "/^## Promoted Skills/{f=1;next} f&&/^## /{exit} f" README.md \
-              | awk -F"|" "/^\| [a-z]/{gsub(/ /,\"\",\$2); print \$2}" | sort)
-            if ! diff <(printf "%s\n" "${PROMOTED_SKILLS[@]}" | sort) <(echo "$tbl"); then
-              echo "❌ README Promoted Skills 表格與 PROMOTED_SKILLS 陣列不一致（< 陣列 / > 表格）"
-              fail=1
-            else
-              echo "✅ README Promoted Skills 表格一致"
-            fi
-
-            # README 升級指南 --prune 宣稱（misc+deprecated 會被清的數量）
-            read -r ps pa pd pn <<<"$(grep -oE "（[0-9]+ skills / [0-9]+ agents / [0-9]+ dd 指令 / [0-9]+ NS commands）" README.md \
-              | grep -oE "[0-9]+" | tr "\n" " ")"
-            ck "README --prune skills 數" "$ps" "$(( ${#MISC_SKILLS[@]} + ${#DEPRECATED_SKILLS[@]} ))"
-            ck "README --prune agents 數" "$pa" "${#DEPRECATED_AGENTS[@]}"
-            ck "README --prune dd 指令數" "$pd" "${#DEPRECATED_DD_COMMANDS[@]}"
-            ck "README --prune NS commands 數" "$pn" "$(( ${#MISC_NS_COMMANDS[@]} + ${#DEPRECATED_NS_COMMANDS[@]} ))"
-
-            # 專案 CLAUDE.md 目錄結構數字
-            ck "CLAUDE.md skills 總數" \
-              "$(grep -oE "skills/\` — [0-9]+ 個 Skills" CLAUDE.md | grep -oE "[0-9]+")" \
-              "${#ALL_SKILLS[@]}"
-            ck "CLAUDE.md agents 總數" \
-              "$(grep -oE "agents/\` — [0-9]+ 個 Agents" CLAUDE.md | grep -oE "[0-9]+")" \
-              "${#ALL_AGENTS[@]}"
-            ck "CLAUDE.md dd 指令總數" \
-              "$(grep -oE "[0-9]+ 個 dd-\* 指令" CLAUDE.md | grep -oE "^[0-9]+")" \
-              "${#ALL_DD_COMMANDS[@]}"
-            ck "CLAUDE.md NS command 總數" \
-              "$(grep -oE "[0-9]+ 個命名空間 command 目錄" CLAUDE.md | grep -oE "^[0-9]+")" \
-              "${#ALL_NS_COMMANDS[@]}"
-            ck "CLAUDE.md 模板數" \
-              "$(grep -oE "[0-9]+ 個文件模板" CLAUDE.md | grep -oE "^[0-9]+")" \
-              "${#DD_TEMPLATES[@]}"
-            exit $fail
-          '
-
-      - name: 全域模板 §7.2 觸發目標存在性
-        run: |
-          grep -v '^main "\$@"$' install-dd-pipeline.sh > /tmp/inst.sh
-          source /tmp/inst.sh
+          source ./install-dd-pipeline.sh
           fail=0
+          ck() {
+            local label="$1" claimed="$2" actual="$3"
+            if [ -n "$claimed" ] && [ "$claimed" = "$actual" ]; then
+              echo "✅ ${label}：${actual}"
+            else
+              echo "❌ ${label}：宣稱「${claimed:-未找到}」，實際 ${actual}"
+              fail=1
+            fi
+          }
+
+          # README 安裝章節
+          ck "README 安裝 promoted skills 數" \
+            "$(grep -oE "安裝 [0-9]+ 個 promoted Skills" README.md | grep -oE "[0-9]+")" \
+            "${#PROMOTED_SKILLS[@]}"
+          ck "README 安裝 promoted agents 數" \
+            "$(grep -oE "安裝 [0-9]+ 個 promoted Agents" README.md | grep -oE "[0-9]+")" \
+            "${#PROMOTED_AGENTS[@]}"
+
+          # README Promoted Skills 章節：標題數字 + 表格內容
+          ck "README Promoted Skills 標題數" \
+            "$(grep -oE "^## Promoted Skills（預設部署，[0-9]+ 個）" README.md | grep -oE "[0-9]+")" \
+            "${#PROMOTED_SKILLS[@]}"
+          tbl=$(awk "/^## Promoted Skills/{f=1;next} f&&/^## /{exit} f" README.md \
+            | awk -F"|" "/^\| [a-z]/{gsub(/ /,\"\",\$2); print \$2}" | sort)
+          if ! diff <(printf "%s\n" "${PROMOTED_SKILLS[@]}" | sort) <(echo "$tbl"); then
+            echo "❌ README Promoted Skills 表格與 PROMOTED_SKILLS 陣列不一致（< 陣列 / > 表格）"
+            fail=1
+          else
+            echo "✅ README Promoted Skills 表格一致"
+          fi
+
+          # README 升級指南 --prune 宣稱（misc+deprecated 會被清的數量）
+          read -r ps pa pd pn <<<"$(grep -oE "（[0-9]+ skills / [0-9]+ agents / [0-9]+ dd 指令 / [0-9]+ NS commands）" README.md \
+            | grep -oE "[0-9]+" | tr "\n" " ")"
+          ck "README --prune skills 數" "$ps" "$(( ${#MISC_SKILLS[@]} + ${#DEPRECATED_SKILLS[@]} ))"
+          ck "README --prune agents 數" "$pa" "${#DEPRECATED_AGENTS[@]}"
+          ck "README --prune dd 指令數" "$pd" "${#DEPRECATED_DD_COMMANDS[@]}"
+          ck "README --prune NS commands 數" "$pn" "$(( ${#MISC_NS_COMMANDS[@]} + ${#DEPRECATED_NS_COMMANDS[@]} ))"
+
+          # 專案 CLAUDE.md 目錄結構數字
+          ck "CLAUDE.md skills 總數" \
+            "$(grep -oE "skills/\` — [0-9]+ 個 Skills" CLAUDE.md | grep -oE "[0-9]+")" \
+            "${#ALL_SKILLS[@]}"
+          ck "CLAUDE.md agents 總數" \
+            "$(grep -oE "agents/\` — [0-9]+ 個 Agents" CLAUDE.md | grep -oE "[0-9]+")" \
+            "${#ALL_AGENTS[@]}"
+          ck "CLAUDE.md dd 指令總數" \
+            "$(grep -oE "[0-9]+ 個 dd-\* 指令" CLAUDE.md | grep -oE "^[0-9]+")" \
+            "${#ALL_DD_COMMANDS[@]}"
+          ck "CLAUDE.md NS command 總數" \
+            "$(grep -oE "[0-9]+ 個命名空間 command 目錄" CLAUDE.md | grep -oE "^[0-9]+")" \
+            "${#ALL_NS_COMMANDS[@]}"
+          ck "CLAUDE.md 模板數" \
+            "$(grep -oE "[0-9]+ 個文件模板" CLAUDE.md | grep -oE "^[0-9]+")" \
+            "${#DD_TEMPLATES[@]}"
+          exit $fail
+
+      - name: 全域模板 §7.2 觸發目標存在性與桶位
+        run: |
+          source ./install-dd-pipeline.sh
+          fail=0
+          # Claude Code 內建 skill 白名單：§7.2 可指向、但不由本 repo 部署的目標
+          BUILTIN_CC_SKILLS="claude-api"
           targets=$(awk '/^### 7\.2/,/^### 7\.3/' templates/global/CLAUDE.md \
             | awk -F'|' '/^\|/{print $3}' | grep -oE '`[^`]+`' | tr -d '`' | sort -u)
           while IFS= read -r t; do
             [ -z "$t" ] && continue
             base="${t##*:}"; ns="${t%%:*}"
-            if [ -d "skills/$base" ] || [ -f "agents/$base.md" ]; then
-              echo "✅ $t"
+            if printf '%s\n' "${PROMOTED_SKILLS[@]}" | grep -qx "$base" && [ -d "skills/$base" ]; then
+              echo "✅ $t（promoted skill）"
+            elif printf '%s\n' "${PROMOTED_AGENTS[@]}" | grep -qx "$base" && [ -f "agents/$base.md" ]; then
+              echo "✅ $t（promoted agent）"
             elif [ "$t" != "$base" ] && printf '%s\n' "${OFFICIAL_PLUGINS[@]}" | grep -qx "$ns"; then
               echo "✅ ${t}（官方 plugin，install_plugins 會安裝）"
+            elif printf '%s\n' "$BUILTIN_CC_SKILLS" | grep -qx "$base"; then
+              echo "✅ ${t}（Claude Code 內建 skill）"
             else
-              echo "❌ §7.2 觸發目標不存在：$t"; fail=1
+              echo "❌ §7.2 觸發目標未預設部署（不在 promoted 桶 / 官方 plugin / 內建白名單）：$t"; fail=1
             fi
           done <<< "$targets"
           exit $fail
+
+      - name: Sandbox 端到端安裝測試（非互動）
+        run: |
+          # runner 無 claude CLI，放一個只回版本號的假 binary 讓環境檢查通過
+          mkdir -p /tmp/fakebin
+          printf '#!/bin/sh\necho "2.1.200 (Claude Code)"\n' > /tmp/fakebin/claude
+          chmod +x /tmp/fakebin/claude
+          export PATH="/tmp/fakebin:$PATH"
+
+          SANDBOX="$(mktemp -d)"
+
+          # 首次安裝：非互動環境下互動詢問須走預設值，不得中止
+          HOME="$SANDBOX" ./install-dd-pipeline.sh < /dev/null
+
+          # 驗證部署結果 = promoted 桶
+          source ./install-dd-pipeline.sh
+          [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "${#PROMOTED_SKILLS[@]}" ]
+          [ "$(ls "$SANDBOX"/.claude/agents/*.md | wc -l)" -eq "${#PROMOTED_AGENTS[@]}" ]
+          [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
+          [ -d "$SANDBOX/.claude/commands/workflow-review" ]
+          [ ! -f "$SANDBOX/.claude/commands/workflow-review/README.md" ]
+          [ "$(ls "$SANDBOX"/.claude/templates/dd/*.template | wc -l)" -eq "${#DD_TEMPLATES[@]}" ]
+          [ -x "$SANDBOX/.claude/scripts/check-claude-md.sh" ]
+          echo "✅ 首次安裝部署內容正確"
+
+          # 冪等：重跑不得改動內容、不得產生備份
+          HOME="$SANDBOX" ./install-dd-pipeline.sh < /dev/null
+          [ ! -d "$SANDBOX/.claude/backups" ]
+          echo "✅ 重跑冪等（無備份產生 = 無檔案被覆蓋）"
+
+          # --update 非互動可用
+          HOME="$SANDBOX" ./install-dd-pipeline.sh --update < /dev/null
+          echo "✅ --update 非互動可用"
+
+          # --uninstall 非互動走預設 N：取消移除、不得誤刪
+          HOME="$SANDBOX" ./install-dd-pipeline.sh --uninstall < /dev/null
+          [ -d "$SANDBOX/.claude/skills/code-simplifier" ]
+          echo "✅ 非互動 uninstall 預設取消，未誤刪"
