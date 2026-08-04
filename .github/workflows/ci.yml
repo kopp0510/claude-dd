@@ -147,38 +147,6 @@ jobs:
           done <<< "$targets"
           exit $fail
 
-      - name: Marketplace 與桶陣列一致性
-        run: |
-          source ./install-dd-pipeline.sh
-          fail=0
-          mk() { jq -r ".plugins[] | select(.name==\"$1\") | .$2[]?" .claude-plugin/marketplace.json; }
-          chk() {
-            local label="$1" expected="$2" actual="$3"
-            if diff <(echo "$expected") <(echo "$actual") >/dev/null; then
-              echo "✅ ${label} 一致"
-            else
-              echo "❌ ${label}：marketplace.json 與桶陣列不一致（< 陣列 / > marketplace）"
-              diff <(echo "$expected") <(echo "$actual") || true
-              fail=1
-            fi
-          }
-          chk "dd-core skills" \
-            "$(printf "./skills/%s\n" "${PROMOTED_SKILLS[@]}" | sort)" \
-            "$(mk dd-core skills | sort)"
-          chk "dd-core agents" \
-            "$(printf "./agents/%s.md\n" "${PROMOTED_AGENTS[@]}" | sort)" \
-            "$(mk dd-core agents | sort)"
-          chk "dd-core commands" \
-            "$( (printf "./commands/%s.md\n" "${DD_COMMANDS[@]}"; printf "./commands/%s\n" "${NS_COMMANDS[@]}") | sort)" \
-            "$(mk dd-core commands | sort)"
-          chk "dd-misc skills" \
-            "$(printf "./skills/%s\n" "${MISC_SKILLS[@]}" | sort)" \
-            "$(mk dd-misc skills | sort)"
-          chk "dd-misc commands" \
-            "$(printf "./commands/%s\n" "${MISC_NS_COMMANDS[@]}" | sort)" \
-            "$(mk dd-misc commands | sort)"
-          exit $fail
-
       - name: Sandbox 端到端安裝測試（非互動）
         run: |
           # runner 無 claude CLI，放一個只回版本號的假 binary 讓環境檢查通過

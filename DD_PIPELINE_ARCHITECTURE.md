@@ -12,6 +12,9 @@
 2. **分享用法**：別人 clone 後跑同一支腳本，就能取得同一套工作法
    （6 步開發迴圈 + CLAUDE.md gate + 分桶後的精選元件）。
 
+兩個目標共用**同一條安裝路線**（曾評估 plugin marketplace 分發，因無法交付
+全域 CLAUDE.md 與 gate、只能給元件子集而不採用，維持單一路線；見 git 歷史）。
+
 設計約束由此而來：**冪等**（重跑結果一致）、**跨平台**（macOS bash 3.2 與
 ubuntu CI 都要過）、**不塞二進制 / 不加 runtime 依賴**（只用 bash + jq 或
 python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產物不進版控）。
@@ -73,10 +76,6 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
 預算上限），同時保留反悔空間（`--prune` 清掉、旗標裝回來）。
 
-同一分桶也映射到 plugin marketplace 分享路線（`.claude-plugin/marketplace.json`：
-dd-core = promoted、dd-misc = misc；deprecated 不發佈），與 bash 安裝擇一使用，
-細節見 README「以 Plugin Marketplace 安裝」。
-
 ## 核心工作法：6 步開發迴圈
 
 ```
@@ -99,7 +98,6 @@ dd-core = promoted、dd-misc = misc；deprecated 不發佈），與 bash 安裝�
 | 陣列 ↔ 目錄一致性（ALL_* = 三桶聯集） | 桶陣列漏列 / 目錄改名未同步 |
 | README / CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
 | §7.2 觸發目標桶位驗證 | 全域模板指向未部署元件 |
-| marketplace.json ↔ 桶陣列 | 分享路線的元件清單漂移 |
 | Sandbox 端到端非互動安裝 | 只有執行期才會出現的安裝 bug |
 
 CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
