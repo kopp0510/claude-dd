@@ -60,7 +60,7 @@ Shows line counts, topic files, stale entries, and recommendations.
 
 ## Hooks
 
-The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It detects command failures and appends structured entries to auto-memory. Zero overhead on successful commands.
+The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It detects command failures and surfaces a short reminder (via `hookSpecificOutput.additionalContext`) suggesting `/self-improving-agent:remember` to save the solution — it does not write to auto-memory itself. Zero overhead on successful commands.
 
 To enable:
 ```json

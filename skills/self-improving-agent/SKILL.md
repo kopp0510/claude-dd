@@ -138,13 +138,12 @@ Takes a proven pattern and generates a complete skill:
 ## Hooks
 
 ### error-capture (PostToolUse → Bash)
-Monitors command output for errors. When detected, appends a structured entry to auto-memory with:
-- The command that failed
-- Error output (truncated)
-- Timestamp and context
-- Suggested category
+Monitors command output for errors. When detected, returns a short reminder to Claude
+(via `hookSpecificOutput.additionalContext`) containing the matched error pattern and a
+truncated context snippet, suggesting `/self-improving-agent:remember` to save the
+solution. It does not write to auto-memory itself — saving stays an explicit decision.
 
-**Token overhead:** Zero on success. ~30 tokens only when an error is detected.
+**Token overhead:** Zero on success. ~40 tokens only when an error is detected.
 
 ## Platform Support
 

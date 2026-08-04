@@ -48,10 +48,10 @@ jobs:
             "$(ls -d skills/*/ | xargs -n1 basename | sort)"
           check "ALL_AGENTS" \
             "$(printf "%s\n" "${ALL_AGENTS[@]}" | sort)" \
-            "$(ls agents/*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
+            "$(ls agents/*.md | xargs -n1 basename | sed 's/\.md$//' | sort)"
           check "ALL_DD_COMMANDS" \
             "$(printf "%s\n" "${ALL_DD_COMMANDS[@]}" | sort)" \
-            "$(ls commands/dd-*.md | xargs -n1 basename | sed "s/\.md$//" | sort)"
+            "$(ls commands/dd-*.md | xargs -n1 basename | sed 's/\.md$//' | sort)"
           check "ALL_NS_COMMANDS" \
             "$(printf "%s\n" "${ALL_NS_COMMANDS[@]}" | sort)" \
             "$(ls -d commands/*/ | xargs -n1 basename | sort)"
@@ -86,8 +86,8 @@ jobs:
           ck "README Promoted Skills 標題數" \
             "$(grep -oE "^## Promoted Skills（預設部署，[0-9]+ 個）" README.md | grep -oE "[0-9]+")" \
             "${#PROMOTED_SKILLS[@]}"
-          tbl=$(awk "/^## Promoted Skills/{f=1;next} f&&/^## /{exit} f" README.md \
-            | awk -F"|" "/^\| [a-z]/{gsub(/ /,\"\",\$2); print \$2}" | sort)
+          tbl=$(awk '/^## Promoted Skills/{f=1;next} f&&/^## /{exit} f' README.md \
+            | awk -F'|' '/^\| [a-z]/{gsub(/ /,"",$2); print $2}' | sort)
           if ! diff <(printf "%s\n" "${PROMOTED_SKILLS[@]}" | sort) <(echo "$tbl"); then
             echo "❌ README Promoted Skills 表格與 PROMOTED_SKILLS 陣列不一致（< 陣列 / > 表格）"
             fail=1
@@ -133,9 +133,9 @@ jobs:
             [ -z "$t" ] && continue
             base="${t##*:}"; ns="${t%%:*}"
             if printf '%s\n' "${PROMOTED_SKILLS[@]}" | grep -qx "$base" && [ -d "skills/$base" ]; then
-              echo "✅ $t（promoted skill）"
+              echo "✅ ${t}（promoted skill）"
             elif printf '%s\n' "${PROMOTED_AGENTS[@]}" | grep -qx "$base" && [ -f "agents/$base.md" ]; then
-              echo "✅ $t（promoted agent）"
+              echo "✅ ${t}（promoted agent）"
             elif [ "$t" != "$base" ] && printf '%s\n' "${OFFICIAL_PLUGINS[@]}" | grep -qx "$ns"; then
               echo "✅ ${t}（官方 plugin，install_plugins 會安裝）"
             elif printf '%s\n' "$BUILTIN_CC_SKILLS" | grep -qx "$base"; then
