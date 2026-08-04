@@ -10,7 +10,7 @@
 1. **跨機恢復**：換電腦時 `git clone` + 一支腳本，完整重建 `~/.claude/` 的
    skills / agents / commands / templates / 全域 CLAUDE.md。
 2. **分享用法**：別人 clone 後跑同一支腳本，就能取得同一套工作法
-   （6 步開發迴圈 + CLAUDE.md gate + 分桶後的精選元件）。
+   （6 步開發迴圈 + CLAUDE.md gate + 使用率盤點後的精選元件）。
 
 兩個目標共用**同一條安裝路線**（曾評估 plugin marketplace 分發，因無法交付
 全域 CLAUDE.md 與 gate、只能給元件子集而不採用，維持單一路線；見 git 歷史）。
@@ -27,7 +27,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 │  skills/  agents/  commands/  templates/  scripts/      │
 └───────────────────────┬────────────────────────────────┘
                         │  ./install-dd-pipeline.sh
-                        │  （分桶決定部署範圍；copy 部署，非 symlink）
+                        │  （依部署清單複製，非 symlink）
                         ▼
 ┌────────────────────────────────────────────────────────┐
 │  ~/.claude/（部署目標，可隨時由 repo 重建）               │
@@ -90,9 +90,9 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 | 檢查 | 防什麼 |
 |---|---|
 | bash -n（安裝腳本）+ shellcheck（warning 級，4 支腳本） | 語法與常見 bash 陷阱 |
-| 陣列 ↔ 目錄一致性（ALL_* = 三桶聯集） | 桶陣列漏列 / 目錄改名未同步 |
+| 陣列 ↔ 目錄一致性（ALL_* = 部署清單） | 陣列漏列 / 目錄改名未同步 |
 | README / CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
-| §7.2 觸發目標桶位驗證 | 全域模板指向未部署元件 |
+| §7.2 觸發目標部署驗證 | 全域模板指向未部署元件 |
 | Sandbox 端到端非互動安裝 | 只有執行期才會出現的安裝 bug |
 
 CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。

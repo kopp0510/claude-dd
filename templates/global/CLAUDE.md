@@ -441,8 +441,8 @@ C) 先停下討論
 > ui-design-system、ux-researcher-designer、landing-page-generator、senior-backend、
 > dx-engineer、senior-fullstack、senior-secops、playwright-pro)已不再預設部署
 > (misc / deprecated 桶均已於 2026-08-04 自 repo 刪除,git 歷史可回溯)。
-> 若重裝,依 §7.1 第 4 點
-> (命中 skill description)觸發即可,不需回填本表。
+> 若自 git 歷史取回重裝(`git checkout 9a16629 -- skills/<名字>` 後加回部署陣列),
+> 依 §7.1 第 4 點(命中 skill description)觸發即可,不需回填本表。
 
 ### 7.3 不該觸發的場景
 

@@ -31,7 +31,7 @@ jobs:
           source ./install-dd-pipeline.sh
           validate_skill_hooks
 
-      - name: 陣列與目錄一致性（ALL_* = 兩桶聯集）
+      - name: 陣列與目錄一致性（ALL_* = 部署清單）
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -61,7 +61,7 @@ jobs:
             "$(ls templates/*.template | xargs -n1 basename | sort)"
           exit $fail
 
-      - name: 分桶數字宣稱一致性（README / CLAUDE.md ↔ 腳本陣列）
+      - name: 數字宣稱一致性（README / CLAUDE.md ↔ 腳本陣列）
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -114,7 +114,7 @@ jobs:
             "${#DD_TEMPLATES[@]}"
           exit $fail
 
-      - name: 全域模板 §7.2 觸發目標存在性與桶位
+      - name: 全域模板 §7.2 觸發目標存在性與部署
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -134,7 +134,7 @@ jobs:
             elif printf '%s\n' "$BUILTIN_CC_SKILLS" | grep -qx "$base"; then
               echo "✅ ${t}（Claude Code 內建 skill）"
             else
-              echo "❌ §7.2 觸發目標未預設部署（不在 promoted 桶 / 官方 plugin / 內建白名單）：$t"; fail=1
+              echo "❌ §7.2 觸發目標未預設部署（不在部署清單 / 官方 plugin / 內建白名單）：$t"; fail=1
             fi
           done <<< "$targets"
           exit $fail
@@ -152,7 +152,7 @@ jobs:
           # 首次安裝：非互動環境下互動詢問須走預設值，不得中止
           HOME="$SANDBOX" ./install-dd-pipeline.sh < /dev/null
 
-          # 驗證部署結果 = promoted 桶
+          # 驗證部署結果 = 部署清單
           source ./install-dd-pipeline.sh
           [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "${#PROMOTED_SKILLS[@]}" ]
           [ "$(ls "$SANDBOX"/.claude/agents/*.md | wc -l)" -eq "${#PROMOTED_AGENTS[@]}" ]
