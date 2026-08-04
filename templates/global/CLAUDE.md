@@ -434,7 +434,7 @@ C) 先停下討論
 | `拆任務` / `微任務` / `task breakdown` / `工作分解` | `task-planner` |
 | `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design` |
 | `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops`(agent,派 Task) |
-| `Claude API` / `Anthropic SDK` / `Agent SDK` / `prompt caching` | `claude-api` |
+| `Claude API` / `Anthropic SDK` / `Agent SDK` / `prompt caching` | `claude-api`(Claude Code 內建 skill,非本 repo 部署) |
 
 > 2026-07-23 瘦身:原表格 21 列砍至 8 列,只留 promoted 桶對應項。被移除列的目標
 > skill/agent(senior-qa、test-engineer、tdd-guide、test-gen、senior-frontend、
