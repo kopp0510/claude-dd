@@ -1,0 +1,5 @@
+#!/bin/bash
+# claude-dd 自用 pre-commit（dogfood）：呼叫 repo 內的 CLAUDE.md gate
+# 啟用（clone 後跑一次）：git config core.hooksPath scripts/githooks
+# 逃生口同 gate 本體：SKIP_DOC_CHECK=1 git commit ...
+exec "$(git rev-parse --show-toplevel)/scripts/check-claude-md.sh"

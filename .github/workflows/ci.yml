@@ -20,6 +20,7 @@ jobs:
           shellcheck -S warning \
             install-dd-pipeline.sh \
             scripts/check-claude-md.sh \
+            scripts/githooks/pre-commit \
             skills/self-improving-agent/hooks/error-capture.sh
 
       - name: help smoke test
