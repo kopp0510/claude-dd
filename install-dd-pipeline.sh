@@ -328,6 +328,43 @@ jq_inplace() {
     fi
 }
 
+# python3 版就地改寫：讀入 JSON 為 data，執行變更敘述後寫回原檔（open('w') 截斷
+# 寫入，同樣保留 inode / symlink）。變更敘述透過 env 取用 KEY=VAL 參數。
+# 失敗（JSON 損毀等）回傳非零且原檔不動（載入失敗即退出，不會走到寫入）
+py_inplace() {
+    local file="$1" mutate="$2"
+    shift 2
+    JSON_FILE="$file" env "$@" python3 -c "
+import json, os
+env = os.environ
+path = env['JSON_FILE']
+with open(path) as f:
+    data = json.load(f)
+$mutate
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+"
+}
+
+# 就地改寫 JSON 的統一入口：有 jq 用 jq，否則用 python3（install_plugins 已保證其一存在）
+# KEY=VAL 參數同時提供給 jq（--arg KEY VAL）與 python（環境變數），兩邊用同名取值
+# 失敗回傳非零且原檔不動，呼叫端須以 `|| ...` 接住，以免 set -e 中止安裝
+# 用法：json_edit <檔案> <jq filter> <python 變更敘述> [KEY=VAL ...]
+json_edit() {
+    local file="$1" jq_filter="$2" py_mutate="$3"
+    shift 3
+    if command_exists "jq"; then
+        local jq_args=() kv
+        for kv in "$@"; do
+            jq_args+=(--arg "${kv%%=*}" "${kv#*=}")
+        done
+        jq_inplace "$file" "${jq_args[@]}" "$jq_filter"
+    else
+        py_inplace "$file" "$py_mutate" "$@"
+    fi
+}
+
 # 顯示使用說明
 show_help() {
     echo "DD Pipeline 安裝程式"
@@ -532,25 +569,20 @@ install_builtin_skills() {
         [ "$i" -eq "$count" ] && tree_char="└──"
 
         if [ -d "$source" ]; then
+            # 內容相同一律報「已是最新」（--force 也不重寫），不同才備份後覆蓋
             if [ ! -d "$target" ]; then
                 cp -r "$source" "$target"
                 echo -e "$tree_char $skill: ${GREEN}已安裝（新）${NC}"
-            elif [ "$FORCE" = true ]; then
-                if ! diff -rq "$source" "$target" > /dev/null 2>&1; then
-                    backup_before_overwrite "skills" "$target"
-                fi
+            elif diff -rq "$source" "$target" > /dev/null 2>&1; then
+                echo -e "$tree_char $skill: ${YELLOW}已是最新${NC}"
+            else
+                backup_before_overwrite "skills" "$target"
                 rm -rf "$target"
                 cp -r "$source" "$target"
-                echo -e "$tree_char $skill: ${GREEN}已更新（強制）${NC}"
-            else
-                # 比較是否有更新
-                if ! diff -rq "$source" "$target" > /dev/null 2>&1; then
-                    backup_before_overwrite "skills" "$target"
-                    rm -rf "$target"
-                    cp -r "$source" "$target"
-                    echo -e "$tree_char $skill: ${CYAN}已更新${NC}"
+                if [ "$FORCE" = true ]; then
+                    echo -e "$tree_char $skill: ${GREEN}已更新（強制）${NC}"
                 else
-                    echo -e "$tree_char $skill: ${YELLOW}已是最新${NC}"
+                    echo -e "$tree_char $skill: ${CYAN}已更新${NC}"
                 fi
             fi
         else
@@ -614,22 +646,19 @@ install_builtin_agents() {
         [ "$i" -eq "$count" ] && tree_char="└──"
 
         if [ -f "$source" ]; then
+            # 內容相同一律報「已是最新」（--force 也不重寫），不同才備份後覆蓋
             if [ ! -f "$target" ]; then
                 cp "$source" "$target"
                 echo -e "$tree_char $agent: ${GREEN}已安裝（新）${NC}"
-            elif [ "$FORCE" = true ]; then
-                if ! cmp -s "$source" "$target"; then
-                    backup_before_overwrite "agents" "$target"
-                fi
-                cp "$source" "$target"
-                echo -e "$tree_char $agent: ${GREEN}已更新（強制）${NC}"
+            elif cmp -s "$source" "$target"; then
+                echo -e "$tree_char $agent: ${YELLOW}已是最新${NC}"
             else
-                if ! cmp -s "$source" "$target"; then
-                    backup_before_overwrite "agents" "$target"
-                    cp "$source" "$target"
-                    echo -e "$tree_char $agent: ${CYAN}已更新${NC}"
+                backup_before_overwrite "agents" "$target"
+                cp "$source" "$target"
+                if [ "$FORCE" = true ]; then
+                    echo -e "$tree_char $agent: ${GREEN}已更新（強制）${NC}"
                 else
-                    echo -e "$tree_char $agent: ${YELLOW}已是最新${NC}"
+                    echo -e "$tree_char $agent: ${CYAN}已更新${NC}"
                 fi
             fi
         else
@@ -733,21 +762,12 @@ install_plugins() {
         local settings_ok=true
         if [ ! -f "$settings_file" ] && ! echo '{}' > "$settings_file"; then
             settings_ok=false   # 連空骨架都寫不進去（權限等問題）
-        elif command_exists "jq"; then
-            # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
-            jq_inplace "$settings_file" --arg key "$plugin_key" \
-                '.enabledPlugins[$key] = true' || settings_ok=false
         else
-            SETTINGS_FILE="$settings_file" PLUGIN_KEY="$plugin_key" python3 -c "
-import json, os
-path = os.environ['SETTINGS_FILE']
-with open(path, 'r') as f:
-    data = json.load(f)
-data.setdefault('enabledPlugins', {})[os.environ['PLUGIN_KEY']] = True
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-" || settings_ok=false
+            # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
+            json_edit "$settings_file" \
+                '.enabledPlugins[$key] = true' \
+                "data.setdefault('enabledPlugins', {})[env['key']] = True" \
+                "key=$plugin_key" || settings_ok=false
         fi
         if [ "$settings_ok" = false ]; then
             echo -e "$tree_char $plugin: ${YELLOW}${WARN} settings.json 更新失敗（檔案可能損毀），跳過${NC}"
@@ -761,15 +781,22 @@ with open(path, 'w') as f:
         now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
         # 同 settings.json：不存在時先種空骨架，只留「就地更新」一種路徑
         local installed_ok=true
+        local py_register
+        py_register=$(cat <<'PYEOF'
+entry = {'scope': 'global', 'projectPath': '', 'installPath': env['path'],
+         'version': env['ver'], 'installedAt': env['ts'], 'lastUpdated': env['ts']}
+plugins = data.setdefault('plugins', {})
+if env['key'] in plugins:
+    plugins[env['key']][0].update(version=env['ver'], lastUpdated=env['ts'], installPath=env['path'])
+else:
+    plugins[env['key']] = [entry]
+PYEOF
+)
         if [ ! -f "$installed_file" ] && ! echo '{"version":2,"plugins":{}}' > "$installed_file"; then
             installed_ok=false   # 連空骨架都寫不進去（權限等問題）
-        elif command_exists "jq"; then
+        else
             # shellcheck disable=SC2016  # 單引號內的 $key/$path/$ver/$ts 是 jq 變數，不可由 shell 展開
-            jq_inplace "$installed_file" \
-                --arg key "$plugin_key" \
-                --arg path "$install_path" \
-                --arg ver "$version" \
-                --arg ts "$now" \
+            json_edit "$installed_file" \
                 '
                 if .plugins[$key] then
                     .plugins[$key][0].version = $ver |
@@ -785,34 +812,9 @@ with open(path, 'w') as f:
                         "lastUpdated": $ts
                     }]
                 end
-                ' || installed_ok=false
-        else
-            INSTALLED_FILE="$installed_file" PLUGIN_KEY="$plugin_key" \
-            INSTALL_PATH="$install_path" PLUGIN_VERSION="$version" NOW="$now" python3 -c "
-import json, os
-path = os.environ['INSTALLED_FILE']
-with open(path, 'r') as f:
-    data = json.load(f)
-key = os.environ['PLUGIN_KEY']
-entry = {
-    'scope': 'global',
-    'projectPath': '',
-    'installPath': os.environ['INSTALL_PATH'],
-    'version': os.environ['PLUGIN_VERSION'],
-    'installedAt': os.environ['NOW'],
-    'lastUpdated': os.environ['NOW'],
-}
-plugins = data.setdefault('plugins', {})
-if key in plugins:
-    plugins[key][0]['version'] = entry['version']
-    plugins[key][0]['lastUpdated'] = entry['lastUpdated']
-    plugins[key][0]['installPath'] = entry['installPath']
-else:
-    plugins[key] = [entry]
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-" || installed_ok=false
+                ' \
+                "$py_register" \
+                "key=$plugin_key" "path=$install_path" "ver=$version" "ts=$now" || installed_ok=false
         fi
 
         if [ "$installed_ok" = false ]; then
@@ -828,7 +830,11 @@ with open(path, 'w') as f:
 
 # 建立 DD Commands
 create_commands() {
-    print_step "6/8" "建立 Commands"
+    if [ "${COMMANDS_ONLY:-false}" = true ]; then
+        print_step "1/1" "建立 Commands"
+    else
+        print_step "6/8" "建立 Commands"
+    fi
 
     mkdir -p "$COMMANDS_DIR"
 
@@ -1064,42 +1070,22 @@ uninstall() {
 
             # 從 settings.json 移除（解析失敗時警告後繼續，不中止移除流程）
             if [ -f "$settings_file" ]; then
-                if command_exists "jq"; then
-                    # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
-                    jq_inplace "$settings_file" --arg key "$plugin_key" 'del(.enabledPlugins[$key])' \
-                        || echo -e "${YELLOW}${WARN} settings.json 解析失敗，請手動移除 enabledPlugins 的 $plugin_key${NC}"
-                else
-                    SETTINGS_FILE="$settings_file" PLUGIN_KEY="$plugin_key" python3 -c "
-import json, os
-path = os.environ['SETTINGS_FILE']
-with open(path, 'r') as f:
-    data = json.load(f)
-data.get('enabledPlugins', {}).pop(os.environ['PLUGIN_KEY'], None)
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-" || echo -e "${YELLOW}${WARN} settings.json 解析失敗，請手動移除 enabledPlugins 的 $plugin_key${NC}"
-                fi
+                # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
+                json_edit "$settings_file" \
+                    'del(.enabledPlugins[$key])' \
+                    "data.get('enabledPlugins', {}).pop(env['key'], None)" \
+                    "key=$plugin_key" \
+                    || echo -e "${YELLOW}${WARN} settings.json 解析失敗，請手動移除 enabledPlugins 的 $plugin_key${NC}"
             fi
 
             # 從 installed_plugins.json 移除（同上，失敗不中止）
             if [ -f "$installed_file" ]; then
-                if command_exists "jq"; then
-                    # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
-                    jq_inplace "$installed_file" --arg key "$plugin_key" 'del(.plugins[$key])' \
-                        || echo -e "${YELLOW}${WARN} installed_plugins.json 解析失敗，請手動移除 $plugin_key${NC}"
-                else
-                    INSTALLED_FILE="$installed_file" PLUGIN_KEY="$plugin_key" python3 -c "
-import json, os
-path = os.environ['INSTALLED_FILE']
-with open(path, 'r') as f:
-    data = json.load(f)
-data.get('plugins', {}).pop(os.environ['PLUGIN_KEY'], None)
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-" || echo -e "${YELLOW}${WARN} installed_plugins.json 解析失敗，請手動移除 $plugin_key${NC}"
-                fi
+                # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
+                json_edit "$installed_file" \
+                    'del(.plugins[$key])' \
+                    "data.get('plugins', {}).pop(env['key'], None)" \
+                    "key=$plugin_key" \
+                    || echo -e "${YELLOW}${WARN} installed_plugins.json 解析失敗，請手動移除 $plugin_key${NC}"
             fi
         done
         fi
@@ -1146,14 +1132,11 @@ create_global_claude_md() {
         return
     fi
 
-    # 情境 3：內容不同 — --force 靜默覆蓋
+    # 情境 3：內容不同 — --force 靜默覆蓋（備份走統一機制，完成訊息會顯示位置）
     if [ "$FORCE" = true ]; then
-        local backup
-        backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
-        cp "$target" "$backup"
+        backup_before_overwrite "global" "$target"
         cp "$source" "$target"
-        echo -e "├── ${YELLOW}已備份至 $(basename "$backup")${NC}"
-        echo -e "└── ${GREEN}✅ 已用 repo 版本覆蓋（--force）${NC}"
+        echo -e "└── ${GREEN}✅ 已用 repo 版本覆蓋（--force，舊版已備份）${NC}"
         return
     fi
 
@@ -1164,7 +1147,7 @@ create_global_claude_md() {
     diff "$target" "$source" | head -30
     echo ""
     echo "選項："
-    echo "  o) 覆蓋（自動備份為 CLAUDE.md.backup.YYYY-MM-DD-HHMMSS）"
+    echo "  o) 覆蓋（舊版自動備份到 ~/.claude/backups/，完成訊息會顯示位置）"
     echo "  k) 保留本地版本（推薦，預設）"
     echo "  s) 顯示完整 diff 後再決定"
     echo ""
@@ -1173,22 +1156,18 @@ create_global_claude_md() {
 
     case $choice in
         o|O)
-            local backup
-            backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
-            cp "$target" "$backup"
+            backup_before_overwrite "global" "$target"
             cp "$source" "$target"
-            echo -e "└── ${GREEN}✅ 已覆蓋，本地版本備份為 $(basename "$backup")${NC}"
+            echo -e "└── ${GREEN}✅ 已覆蓋，舊版已備份（完成訊息會顯示位置）${NC}"
             ;;
         s|S)
             diff "$target" "$source"
             echo ""
             ask "看完後要覆蓋嗎？[y/N]: " "N"
             if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-                local backup
-                backup="$target.backup.$(date +%Y-%m-%d-%H%M%S)"
-                cp "$target" "$backup"
+                backup_before_overwrite "global" "$target"
                 cp "$source" "$target"
-                echo -e "└── ${GREEN}✅ 已覆蓋，本地版本備份為 $(basename "$backup")${NC}"
+                echo -e "└── ${GREEN}✅ 已覆蓋，舊版已備份（完成訊息會顯示位置）${NC}"
             else
                 echo -e "└── ${YELLOW}已保留本地版本${NC}"
             fi
