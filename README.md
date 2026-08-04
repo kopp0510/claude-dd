@@ -58,24 +58,19 @@ cd claude-dd
 ./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
 
-### 以 Plugin Marketplace 安裝（分享用替代路線）
+### 分享給別人
 
-repo 內建 `.claude-plugin/marketplace.json`，可直接作為 Claude Code plugin marketplace：
+安裝方式只有一種（含完整工作法：全域規則、6 步迴圈、pre-commit gate、模板與精選元件）：
 
-```
-/plugin marketplace add kopp0510/claude-dd
-/plugin install dd-core@claude-dd      # promoted 桶（6 步迴圈工作法核心）
-/plugin install dd-misc@claude-dd      # misc 桶（SRE / 備援，選裝）
+```bash
+git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
 ```
 
-注意：
+全域 CLAUDE.md 走互動 diff，對方已有自己的全域規則時可先看差異再決定。
 
-- 與 `install-dd-pipeline.sh` **擇一使用** — 同一台機器兩者並用會重複載入同名 skills/agents
-- marketplace 路線可獲得官方 plugin 管理能力（context cost 顯示、閒置 plugin 偵測、auto-update），
-  但**不含** bash 路線才有的 templates / scripts / 全域 CLAUDE.md / pre-commit gate 部署
-- self-improving-agent 的 error-capture hook 路徑假設 bash 安裝（`$HOME/.claude/skills/...`），
-  plugin 路線下該 hook 不生效
-- 元件清單與安裝腳本桶陣列的一致性由 CI 強制（漂移即紅燈）
+> 曾評估過 plugin marketplace 分發路線（2026-08-04 實測可行後移除）：plugin 機制
+> 無法部署全域 CLAUDE.md 與 pre-commit gate，只能交付元件子集，與「完整工作法」
+> 的定位不符，為維持單一路線而不採用。實作見 git 歷史。
 
 ## 升級指南
 
