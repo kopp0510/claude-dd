@@ -13,7 +13,7 @@ claude-dd 是跨機器可攜的 Claude Code profile（skills / agents / commands
 
 - **6 步開發迴圈** — 實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
 - **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
-- **分桶部署** — promoted（實證常用，預設裝）/ misc（SRE 備援，`--with-misc`），依 transcript 使用率盤點，避免閒置 skill 吃 context（0 使用率的 deprecated 桶已於 2026-08-04 刪除）
+- **使用率盤點制** — 只保留有實證使用紀錄的元件並全數預設部署，避免閒置 skill 吃 context；零使用的 misc / deprecated 桶已於 2026-08-04 刪除（git 歷史可回溯）
 - **全域 CLAUDE.md 模板** — 零幻覺政策、最小修改、Skill 觸發規則等通用守則，互動式比對部署
 
 ## 安裝
@@ -33,7 +33,7 @@ cd claude-dd
 
 > 若 `install-dd-pipeline.sh` 沒有執行權限，先 `chmod +x install-dd-pipeline.sh`。
 
-安裝程式會（預設只裝 promoted 桶）：
+安裝程式會：
 
 1. 安裝 9 個 promoted Skills 到 `~/.claude/skills/`
 2. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
@@ -49,11 +49,9 @@ cd claude-dd
 ./install-dd-pipeline.sh --help              # 顯示幫助
 ./install-dd-pipeline.sh --check             # 只檢查環境（不安裝）
 ./install-dd-pipeline.sh --force             # 強制重新安裝（覆蓋現有檔案）
-./install-dd-pipeline.sh --with-misc         # 連同 misc 桶（SRE / 備援項目）
-./install-dd-pipeline.sh --prune             # 清掉 ~/.claude 中未部署桶位的舊檔（逐項確認）
 ./install-dd-pipeline.sh --commands-only     # 只安裝 Commands
-./install-dd-pipeline.sh --update            # 更新 skills/agents（可與 --with-misc 併用）
-./install-dd-pipeline.sh --uninstall         # 解除安裝（含所有桶位）
+./install-dd-pipeline.sh --update            # 更新 skills/agents
+./install-dd-pipeline.sh --uninstall         # 解除安裝（本 repo 部署過的項目）
 ./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
 
@@ -76,8 +74,9 @@ git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-
 ### 從舊版（分桶制之前的全量部署）升級
 
 舊版會把 53 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`。
-deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本的 `--prune` 只認得 promoted / misc
-名單 — 從全量部署升級時，先暫時取回含完整名單的舊版腳本做清理，再換回最新版：
+misc / deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本已無 `--prune`（單一部署
+清單後無桶可清）— 從全量或分桶時期部署升級時，先暫時取回含完整名單與 `--prune` 的
+舊版腳本做清理，再換回最新版：
 
 ```bash
 git pull
@@ -88,8 +87,8 @@ git checkout HEAD -- install-dd-pipeline.sh      # 還原最新版腳本（git s
 ```
 
 - 全域 CLAUDE.md 會出互動 diff，選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
-- 反悔可用 `--with-misc` 重裝 misc 桶；deprecated 內容需自 git 歷史取回
-- `--uninstall` 同樣只認得現行兩桶名單 — 舊全量部署請先完成上述清理再解除安裝
+- 被清掉的內容需要時自 git 歷史取回（`git checkout 9a16629 -- skills/<名字>` 後加回部署陣列）
+- `--uninstall` 同樣只認得現行部署清單 — 舊部署請先完成上述清理再解除安裝
 
 ### 既有專案升級到 6 步迴圈
 
@@ -130,11 +129,10 @@ git pull && ./install-dd-pipeline.sh --force
 
 ## 指令一覽
 
-| 指令 | 桶位 | 說明 |
-|------|------|------|
-| `/dd-init` | promoted | 初始化專案：蓋章 6 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`、檢查 plugin 依賴 |
-| `/review`（workflow-review） | promoted | 綜合程式碼審查（安全、效能、配置） |
-| operations-\* / security-\* NS commands | misc | 事件回應、健康檢查、安全審計等 SRE 工具，`--with-misc` 才部署 |
+| 指令 | 說明 |
+|------|------|
+| `/dd-init` | 初始化專案：蓋章 6 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`、檢查 plugin 依賴 |
+| `/review`（workflow-review） | 綜合程式碼審查（安全、效能、配置） |
 
 ## Promoted Skills（預設部署，9 個）
 
@@ -149,8 +147,6 @@ git pull && ./install-dd-pipeline.sh --force
 | verification-gate | 完成前驗證閘門（宣稱完成須附新鮮證據） |
 | worktree-manager | Git worktree 隔離 |
 | writing-great-skills | skill 撰寫參考（vendored 自 [mattpocock/skills](https://github.com/mattpocock/skills)，user-invoked） |
-
-misc 桶完整清單見 `install-dd-pipeline.sh` 頂部陣列（單一維護來源）。
 
 ## 官方 Plugins（安裝腳本管理）
 
@@ -180,7 +176,7 @@ misc 桶完整清單見 `install-dd-pipeline.sh` 頂部陣列（單一維護來�
 
 ## 清理外部殘留（手動）
 
-安裝腳本的 `--prune` 只清**本 repo 部署過**的桶位殘留；其他來源（如 tresor、舊版安裝包）寫進
+安裝腳本只管理**本 repo 部署過**的項目；其他來源（如 tresor、舊版安裝包）寫進
 `~/.claude/skills/` 的殘留需手動清理，型態與排查指令見
 [CLAUDE.md「殘留清理（手動）」](CLAUDE.md#殘留清理手動)（單一維護來源，避免兩份文件各自過期）。
 
