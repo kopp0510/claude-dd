@@ -71,7 +71,7 @@ git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-
 
 ## 升級指南
 
-### 從舊版（分桶制之前的全量部署）升級
+### 從舊版部署（全量 / 分桶時期）升級
 
 舊版會把 53 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`。
 misc / deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本已無 `--prune`（單一部署

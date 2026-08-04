@@ -46,7 +46,6 @@ PROMOTED_SKILLS=(
     "writing-great-skills"   # user-invoked（disable-model-invocation），零 context 稅
 )
 
-
 # 部署集合
 BUILTIN_SKILLS=("${PROMOTED_SKILLS[@]}")
 ALL_SKILLS=("${PROMOTED_SKILLS[@]}")
@@ -73,11 +72,10 @@ DD_COMMANDS=(
 
 ALL_DD_COMMANDS=("${DD_COMMANDS[@]}")
 
-# 命名空間 commands（目錄型），分桶基準同 skills
+# 命名空間 commands（目錄型）
 NS_COMMANDS=(
     "workflow-review"
 )
-
 
 ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 

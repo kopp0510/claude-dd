@@ -99,7 +99,7 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
-> 引入任何**非自製來源**（GitHub repo、Claude marketplace、舊版安裝包）的 skill/agent 前，逐項過。**任一項不過 → 先改寫或不收**，不得直接併入 `BUILTIN_*` 陣列。
+> 引入任何**非自製來源**（GitHub repo、Claude marketplace、舊版安裝包）的 skill/agent 前，逐項過。**任一項不過 → 先改寫或不收**，不得直接併入部署陣列。
 
 | # | 檢查項 | 怎麼驗 | 不過的處置 |
 |---|---|---|---|
@@ -109,7 +109,7 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 | 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
 | 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
 | 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
-| 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `BUILTIN_*` → 跑 `--force` → 納入 source of truth | — |
+| 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → 跑 `--force` → 納入 source of truth | — |
 
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 號稱 9 萬星但建立僅半年、forks 為整數 → 採用度存疑；且需 `npm -g` binary + Python runtime → 第 3、4 項直接擋下。
 
