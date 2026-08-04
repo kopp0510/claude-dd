@@ -9,7 +9,6 @@
 ./install-dd-pipeline.sh --force            # 強制更新所有檔案
 ./install-dd-pipeline.sh --force --prune    # 更新並清掉 ~/.claude 中未部署桶位的舊檔（需確認）
 ./install-dd-pipeline.sh --with-misc        # 連同 misc 桶（SRE / 備援項目）
-./install-dd-pipeline.sh --with-deprecated  # 連同 deprecated 桶（0 使用率封存）
 ./install-dd-pipeline.sh --check            # 只檢查環境
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
 ```
@@ -24,17 +23,17 @@
 |---|---|---|
 | **promoted** | 實證常用（9 skills、4 agents、dd-init、workflow-review） | 預設部署 |
 | **misc** | 低頻但屬 SRE / 備援性質（11 skills、5 NS commands） | `--with-misc` |
-| **deprecated** | 全歷史 0 次使用（34 skills、17 agents、6 dd commands、13 NS commands） | `--with-deprecated`；觀察期後可評估刪除 |
 
-桶陣列定義在 `install-dd-pipeline.sh` 頂部（`PROMOTED_*` / `MISC_*` / `DEPRECATED_*`）。
+桶陣列定義在 `install-dd-pipeline.sh` 頂部（`PROMOTED_*` / `MISC_*`）。
 
-- **deprecated 桶觀察期至 2026-10-31**：屆時盤點仍零使用即整桶刪除（檔案可由 git 歷史回溯）
+- 原 deprecated 桶（全歷史 0 次使用的 34 skills / 17 agents / 6 dd 指令 / 13 NS commands）
+  已於 2026-08-04 提前刪除（原訂觀察期至 2026-10-31），git 歷史可回溯
 
 ## 目錄結構
 
-- `skills/` — 54 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
-- `agents/` — 21 個 Agents（部署依分桶；promoted：code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
-- `commands/` — 7 個 dd-* 指令（.md 平面檔；僅 dd-init 預設部署） + 19 個命名空間 command 目錄（僅 workflow-review 預設部署）
+- `skills/` — 20 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
+- `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
+- `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 6 個命名空間 command 目錄（僅 workflow-review 預設部署）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
@@ -42,7 +41,7 @@
 ## 新增 Skill 步驟
 
 1. 在 `skills/<skill-name>/` 建立 `SKILL.md`
-2. 在 `install-dd-pipeline.sh` 依定位加入 `PROMOTED_SKILLS` / `MISC_SKILLS` 陣列（新 skill 不進 deprecated）
+2. 在 `install-dd-pipeline.sh` 依定位加入 `PROMOTED_SKILLS` / `MISC_SKILLS` 陣列（依定位擇一）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 
 ### Skill hook 路徑規範（強制）
@@ -81,8 +80,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 `~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit` — 改碼目錄缺
 CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
 
-> **舊 DD Pipeline（deprecated 桶封存）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
-> 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）移入 deprecated 桶，
+> **舊 DD Pipeline（已刪除）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
+> 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）封存、2026-08-04 刪除，
 > 檔案保留於 `commands/`，`--with-deprecated` 可重新部署。舊版 dd-init 見 git 歷史。
 
 ## 開發本 repo

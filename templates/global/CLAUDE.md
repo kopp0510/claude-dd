@@ -439,8 +439,9 @@ C) 先停下討論
 > 2026-07-23 瘦身:原表格 21 列砍至 8 列,只留 promoted 桶對應項。被移除列的目標
 > skill/agent(senior-qa、test-engineer、tdd-guide、test-gen、senior-frontend、
 > ui-design-system、ux-researcher-designer、landing-page-generator、senior-backend、
-> dx-engineer、senior-fullstack、senior-secops、playwright-pro)已移入 misc/deprecated
-> 桶不再預設部署;若用 `--with-misc`/`--with-deprecated` 重裝,依 §7.1 第 4 點
+> dx-engineer、senior-fullstack、senior-secops、playwright-pro)已不再預設部署
+> (misc 桶項目可用 `--with-misc` 重裝;deprecated 桶已於 2026-08-04 自 repo 刪除)。
+> 若重裝,依 §7.1 第 4 點
 > (命中 skill description)觸發即可,不需回填本表。
 
 ### 7.3 不該觸發的場景
