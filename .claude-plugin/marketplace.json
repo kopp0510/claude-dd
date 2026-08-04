@@ -1,0 +1,63 @@
+{
+  "name": "claude-dd",
+  "owner": {
+    "name": "Danlio"
+  },
+  "plugins": [
+    {
+      "name": "dd-core",
+      "source": "./",
+      "description": "DD Pipeline promoted 桶：6 步開發迴圈工作法 + 實證常用 skills/agents（dd-init、workflow-review）",
+      "license": "MIT",
+      "strict": false,
+      "skills": [
+        "./skills/code-simplifier",
+        "./skills/design-brainstorm",
+        "./skills/frontend-design",
+        "./skills/review",
+        "./skills/self-improving-agent",
+        "./skills/task-planner",
+        "./skills/verification-gate",
+        "./skills/worktree-manager",
+        "./skills/writing-great-skills"
+      ],
+      "agents": [
+        "./agents/code-simplifier.md",
+        "./agents/code-reviewer.md",
+        "./agents/senior-devops.md",
+        "./agents/security-auditor.md"
+      ],
+      "commands": [
+        "./commands/dd-init.md",
+        "./commands/workflow-review"
+      ]
+    },
+    {
+      "name": "dd-misc",
+      "source": "./",
+      "description": "DD Pipeline misc 桶：SRE / 備援性質的低頻 skills 與指令",
+      "license": "MIT",
+      "strict": false,
+      "skills": [
+        "./skills/branch-finisher",
+        "./skills/deploy-validate",
+        "./skills/health-check",
+        "./skills/incident-commander",
+        "./skills/incident-response",
+        "./skills/root-cause-analyzer",
+        "./skills/security-audit",
+        "./skills/security-auditor",
+        "./skills/ui-design-system",
+        "./skills/ux-researcher-designer",
+        "./skills/vulnerability-scan"
+      ],
+      "commands": [
+        "./commands/operations-deploy-validate",
+        "./commands/operations-health-check",
+        "./commands/operations-incident-response",
+        "./commands/security-audit",
+        "./commands/security-vulnerability-scan"
+      ]
+    }
+  ]
+}

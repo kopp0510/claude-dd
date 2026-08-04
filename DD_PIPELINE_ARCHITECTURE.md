@@ -73,6 +73,10 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
 預算上限），同時保留反悔空間（`--prune` 清掉、旗標裝回來）。
 
+同一分桶也映射到 plugin marketplace 分享路線（`.claude-plugin/marketplace.json`：
+dd-core = promoted、dd-misc = misc；deprecated 不發佈），與 bash 安裝擇一使用，
+細節見 README「以 Plugin Marketplace 安裝」。
+
 ## 核心工作法：6 步開發迴圈
 
 ```
@@ -95,6 +99,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 | 陣列 ↔ 目錄一致性（ALL_* = 三桶聯集） | 桶陣列漏列 / 目錄改名未同步 |
 | README / CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
 | §7.2 觸發目標桶位驗證 | 全域模板指向未部署元件 |
+| marketplace.json ↔ 桶陣列 | 分享路線的元件清單漂移 |
 | Sandbox 端到端非互動安裝 | 只有執行期才會出現的安裝 bug |
 
 CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
