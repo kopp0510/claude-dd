@@ -44,7 +44,7 @@
 （無）
 
 ## 下一步
-/dd-start <需求描述>
+進入 6 步開發迴圈：實作+測試 → commit → code-simplifier → code-review → 再測 → commit
 
 ---
 

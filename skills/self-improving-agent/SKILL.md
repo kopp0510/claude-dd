@@ -158,4 +158,3 @@ solution. It does not write to auto-memory itself — saving stays an explicit d
 
 - [Claude Code Memory Docs](https://code.claude.com/docs/en/memory)
 - [pskoett/self-improving-agent](https://clawhub.ai/pskoett/self-improving-agent) — inspiration
-- [playwright-pro](../playwright-pro/) — sister plugin in this repo

@@ -83,12 +83,13 @@ deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本的 `--prune` 只�
 git pull
 git checkout 9a16629 -- install-dd-pipeline.sh   # 暫取含 deprecated 名單的腳本
 ./install-dd-pipeline.sh --force --prune          # 清掉不再部署的舊檔（逐項確認）
-git checkout install-dd-pipeline.sh               # 還原最新版腳本
+git checkout HEAD -- install-dd-pipeline.sh      # 還原最新版腳本（git status 應乾淨）
 ./install-dd-pipeline.sh --force
 ```
 
 - 全域 CLAUDE.md 會出互動 diff，選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
 - 反悔可用 `--with-misc` 重裝 misc 桶；deprecated 內容需自 git 歷史取回
+- `--uninstall` 同樣只認得現行兩桶名單 — 舊全量部署請先完成上述清理再解除安裝
 
 ### 既有專案升級到 6 步迴圈
 

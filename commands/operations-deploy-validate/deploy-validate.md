@@ -88,8 +88,7 @@ function selectValidators(deployContext, env) {
     // Phase 1: Parallel Pre-Deployment Validation (max 3 agents)
     phase1: {
       required: [
-        '@test-engineer',          // Run test suite
-        '@config-safety-reviewer', // Validate configs
+        '@security-auditor',       // Validate configs & security（test suite 由主流程直接執行）
       ],
 
       conditional: [

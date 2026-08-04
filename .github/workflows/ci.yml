@@ -96,7 +96,6 @@ jobs:
             echo "✅ README Promoted Skills 表格一致"
           fi
 
-
           # 專案 CLAUDE.md 目錄結構數字
           ck "CLAUDE.md skills 總數" \
             "$(grep -oE "skills/\` — [0-9]+ 個 Skills" CLAUDE.md | grep -oE "[0-9]+")" \

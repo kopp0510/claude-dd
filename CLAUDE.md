@@ -82,7 +82,7 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 
 > **舊 DD Pipeline（已刪除）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
 > 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）封存、2026-08-04 刪除，
-> 檔案保留於 `commands/`，`--with-deprecated` 可重新部署。舊版 dd-init 見 git 歷史。
+> 檔案與舊版 dd-init 見 git 歷史（如 `git show 9a16629:commands/dd-dev.md`）。
 
 ## 開發本 repo
 

@@ -73,7 +73,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 | misc | `--with-misc` | SRE / 備援性質 11 skills、5 NS commands |
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
-預算上限），同時保留反悔空間（`--prune` 清掉、旗標裝回來）。
+預算上限），同時保留反悔空間（misc 可 `--prune` 清掉、`--with-misc` 裝回來）。
 
 ## 核心工作法：6 步開發迴圈
 

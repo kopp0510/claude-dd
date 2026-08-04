@@ -97,7 +97,7 @@ function selectIncidentTeam(severity, symptoms) {
 
       conditional: [
         symptoms.includes('high-error-rate') ? '@backend-reliability-engineer' : null,
-        symptoms.includes('slow-performance') ? '@performance-tuner' : null,
+        symptoms.includes('slow-performance') ? '主流程直接做效能分析' : null,
         symptoms.includes('database-issues') ? '@database-admin' : null,
         symptoms.includes('infrastructure-issues') ? '@devops-engineer' : null,
         symptoms.includes('security-breach') ? '@security-incident-responder' : null,
