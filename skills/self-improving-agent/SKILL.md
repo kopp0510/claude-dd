@@ -13,11 +13,11 @@ Claude Code's auto-memory (v2.1.32+) automatically records project patterns, deb
 
 | Command | What it does |
 |---------|-------------|
-| `/si:review` | Analyze MEMORY.md — find promotion candidates, stale entries, consolidation opportunities |
-| `/si:promote` | Graduate a pattern from MEMORY.md → CLAUDE.md or `.claude/rules/` |
-| `/si:extract` | Turn a proven pattern into a standalone skill |
-| `/si:status` | Memory health dashboard — line counts, topic files, recommendations |
-| `/si:remember` | Explicitly save important knowledge to auto-memory |
+| `/self-improving-agent:review` | Analyze MEMORY.md — find promotion candidates, stale entries, consolidation opportunities |
+| `/self-improving-agent:promote` | Graduate a pattern from MEMORY.md → CLAUDE.md or `.claude/rules/` |
+| `/self-improving-agent:extract` | Turn a proven pattern into a standalone skill |
+| `/self-improving-agent:status` | Memory health dashboard — line counts, topic files, recommendations |
+| `/self-improving-agent:remember` | Explicitly save important knowledge to auto-memory |
 
 ## How It Fits Together
 
@@ -31,9 +31,9 @@ Claude Code's auto-memory (v2.1.32+) automatically records project patterns, deb
 │  standards  │   + topic files  │   + continuity         │
 │  Full load  │   First 200 lines│   Contextual load      │
 ├─────────────┴──────────────────┴────────────────────────┤
-│              ↑ /si:promote        ↑ /si:review          │
+│              ↑ /self-improving-agent:promote        ↑ /self-improving-agent:review          │
 │         Self-Improving Agent (this plugin)               │
-│              ↓ /si:extract    ↓ /si:remember            │
+│              ↓ /self-improving-agent:extract    ↓ /self-improving-agent:remember            │
 ├─────────────────────────────────────────────────────────┤
 │  .claude/rules/    │    New Skills    │   Error Logs     │
 │  (scoped rules)    │    (extracted)   │   (auto-captured)│
@@ -64,18 +64,18 @@ clawhub install self-improving-agent
 
 | File | Who writes | Scope | Loaded |
 |------|-----------|-------|--------|
-| `./CLAUDE.md` | You (+ `/si:promote`) | Project rules | Full file, every session |
+| `./CLAUDE.md` | You (+ `/self-improving-agent:promote`) | Project rules | Full file, every session |
 | `~/.claude/CLAUDE.md` | You | Global preferences | Full file, every session |
 | `~/.claude/projects/<path>/memory/MEMORY.md` | Claude (auto) | Project learnings | First 200 lines |
 | `~/.claude/projects/<path>/memory/*.md` | Claude (overflow) | Topic-specific notes | On demand |
-| `.claude/rules/*.md` | You (+ `/si:promote`) | Scoped rules | When matching files open |
+| `.claude/rules/*.md` | You (+ `/self-improving-agent:promote`) | Scoped rules | When matching files open |
 
 ### The promotion lifecycle
 
 ```
 1. Claude discovers pattern → auto-memory (MEMORY.md)
-2. Pattern recurs 2-3x → /si:review flags it as promotion candidate
-3. You approve → /si:promote graduates it to CLAUDE.md or rules/
+2. Pattern recurs 2-3x → /self-improving-agent:review flags it as promotion candidate
+3. You approve → /self-improving-agent:promote graduates it to CLAUDE.md or rules/
 4. Pattern becomes an enforced rule, not just a note
 5. MEMORY.md entry removed → frees space for new learnings
 ```

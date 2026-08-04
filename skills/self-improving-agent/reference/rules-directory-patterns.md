@@ -125,7 +125,7 @@ paths:
 |--------|--------|
 | CLAUDE.md over 150 lines | Move scoped patterns to rules/ |
 | Same instruction repeated for different file types | Create a scoped rule |
-| `/si:promote` suggests a file-type-specific pattern | Create or append to a rule file |
+| `/self-improving-agent:promote` suggests a file-type-specific pattern | Create or append to a rule file |
 | Team adds a new convention for a specific area | New rule file |
 
 ## Organization Tips

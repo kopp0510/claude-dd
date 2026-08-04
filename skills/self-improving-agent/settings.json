@@ -10,11 +10,11 @@
   "tags": ["memory", "auto-memory", "self-improvement", "learning", "rules", "skills"],
   "repository": "https://github.com/alirezarezvani/claude-skills",
   "commands": {
-    "review": "/si:review",
-    "promote": "/si:promote",
-    "extract": "/si:extract",
-    "status": "/si:status",
-    "remember": "/si:remember"
+    "review": "/self-improving-agent:review",
+    "promote": "/self-improving-agent:promote",
+    "extract": "/self-improving-agent:extract",
+    "status": "/self-improving-agent:status",
+    "remember": "/self-improving-agent:remember"
   },
   "hooks": {
     "PostToolUse": {

@@ -4,13 +4,13 @@ This plugin helps you curate Claude Code's auto-memory into durable project know
 
 ## Commands
 
-Use the `/si:` namespace for all commands:
+Use the `/self-improving-agent:` namespace for all commands:
 
-- `/si:review` — Analyze auto-memory health and find promotion candidates
-- `/si:promote <pattern>` — Graduate a learning to CLAUDE.md or `.claude/rules/`
-- `/si:extract <pattern>` — Create a reusable skill from a proven pattern
-- `/si:status` — Quick memory health dashboard
-- `/si:remember <knowledge>` — Explicitly save something to auto-memory
+- `/self-improving-agent:review` — Analyze auto-memory health and find promotion candidates
+- `/self-improving-agent:promote <pattern>` — Graduate a learning to CLAUDE.md or `.claude/rules/`
+- `/self-improving-agent:extract <pattern>` — Create a reusable skill from a proven pattern
+- `/self-improving-agent:status` — Quick memory health dashboard
+- `/self-improving-agent:remember <knowledge>` — Explicitly save something to auto-memory
 
 ## How auto-memory works
 
@@ -22,25 +22,25 @@ This plugin reads that directory — it never creates its own storage.
 
 ### After completing a feature or debugging session
 ```
-/si:review
+/self-improving-agent:review
 ```
 Check if anything Claude learned should become a permanent rule.
 
 ### When a pattern keeps coming up
 ```
-/si:promote "Always run migrations before tests in this project"
+/self-improving-agent:promote "Always run migrations before tests in this project"
 ```
 Moves it from MEMORY.md (background note) to CLAUDE.md (enforced rule).
 
 ### When you solved something non-obvious that could help other projects
 ```
-/si:extract "Docker build fix for ARM64 platform mismatch"
+/self-improving-agent:extract "Docker build fix for ARM64 platform mismatch"
 ```
 Creates a standalone skill with SKILL.md, ready to install elsewhere.
 
 ### To check memory capacity
 ```
-/si:status
+/self-improving-agent:status
 ```
 Shows line counts, topic files, stale entries, and recommendations.
 
@@ -55,8 +55,8 @@ Shows line counts, topic files, stale entries, and recommendations.
 
 ## Agents
 
-- **memory-analyst**: Spawned by `/si:review` to analyze patterns across memory files
-- **skill-extractor**: Spawned by `/si:extract` to generate complete skill packages
+- **memory-analyst**: Spawned by `/self-improving-agent:review` to analyze patterns across memory files
+- **skill-extractor**: Spawned by `/self-improving-agent:extract` to generate complete skill packages
 
 ## Hooks
 
