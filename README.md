@@ -55,6 +55,7 @@ cd claude-dd
 ./install-dd-pipeline.sh --commands-only     # 只安裝 Commands
 ./install-dd-pipeline.sh --update            # 更新 skills/agents（可與 --with-misc / --with-deprecated 併用）
 ./install-dd-pipeline.sh --uninstall         # 解除安裝（含所有桶位）
+./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
 
 ## 升級指南
