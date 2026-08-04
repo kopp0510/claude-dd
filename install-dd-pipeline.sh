@@ -330,11 +330,13 @@ jq_inplace() {
 
 # python3 版就地改寫：讀入 JSON 為 data，執行變更敘述後寫回原檔（open('w') 截斷
 # 寫入，同樣保留 inode / symlink）。變更敘述透過 env 取用 KEY=VAL 參數。
+# 呼叫端撰寫變更敘述時：用單引號或 quoted heredoc（避免 shell 先展開 $），
+# 且首行不得縮排（敘述會原樣插入 python 原始碼頂層）
 # 失敗（JSON 損毀等）回傳非零且原檔不動（載入失敗即退出，不會走到寫入）
 py_inplace() {
     local file="$1" mutate="$2"
     shift 2
-    JSON_FILE="$file" env "$@" python3 -c "
+    env JSON_FILE="$file" "$@" python3 -c "
 import json, os
 env = os.environ
 path = env['JSON_FILE']
@@ -396,7 +398,11 @@ show_help() {
 
 # 檢查基礎環境
 check_environment() {
-    print_step "1/8" "檢查基礎環境"
+    if [ "${COMMANDS_ONLY:-false}" = true ]; then
+        print_step "1/2" "檢查基礎環境"
+    else
+        print_step "1/8" "檢查基礎環境"
+    fi
 
     local all_ok=true
 
@@ -728,6 +734,37 @@ install_plugins() {
     local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
     local plugins_base="$CLAUDE_DIR/plugins/marketplaces/$PLUGINS_MARKETPLACE/plugins"
 
+    # installed_plugins.json 的登記敘述（迴圈不變，先備好）：jq 與 python 兩路徑
+    # 須維持等價 — 已存在就更新 version / lastUpdated / installPath，否則新建整筆
+    # shellcheck disable=SC2016  # 單引號內的 $key/$path/$ver/$ts 是 jq 變數，不可由 shell 展開
+    local jq_register='
+        if (.plugins[$key] // [] | length) > 0 then
+            .plugins[$key][0].version = $ver |
+            .plugins[$key][0].lastUpdated = $ts |
+            .plugins[$key][0].installPath = $path
+        else
+            .plugins[$key] = [{
+                "scope": "global",
+                "projectPath": "",
+                "installPath": $path,
+                "version": $ver,
+                "installedAt": $ts,
+                "lastUpdated": $ts
+            }]
+        end
+    '
+    local py_register
+    py_register=$(cat <<'PYEOF'
+entry = {'scope': 'global', 'projectPath': '', 'installPath': env['path'],
+         'version': env['ver'], 'installedAt': env['ts'], 'lastUpdated': env['ts']}
+plugins = data.setdefault('plugins', {})
+if plugins.get(env['key']):
+    plugins[env['key']][0].update(version=env['ver'], lastUpdated=env['ts'], installPath=env['path'])
+else:
+    plugins[env['key']] = [entry]
+PYEOF
+)
+
     local count=${#OFFICIAL_PLUGINS[@]}
     local i=0
 
@@ -781,39 +818,10 @@ install_plugins() {
         now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
         # 同 settings.json：不存在時先種空骨架，只留「就地更新」一種路徑
         local installed_ok=true
-        local py_register
-        py_register=$(cat <<'PYEOF'
-entry = {'scope': 'global', 'projectPath': '', 'installPath': env['path'],
-         'version': env['ver'], 'installedAt': env['ts'], 'lastUpdated': env['ts']}
-plugins = data.setdefault('plugins', {})
-if env['key'] in plugins:
-    plugins[env['key']][0].update(version=env['ver'], lastUpdated=env['ts'], installPath=env['path'])
-else:
-    plugins[env['key']] = [entry]
-PYEOF
-)
         if [ ! -f "$installed_file" ] && ! echo '{"version":2,"plugins":{}}' > "$installed_file"; then
             installed_ok=false   # 連空骨架都寫不進去（權限等問題）
         else
-            # shellcheck disable=SC2016  # 單引號內的 $key/$path/$ver/$ts 是 jq 變數，不可由 shell 展開
-            json_edit "$installed_file" \
-                '
-                if .plugins[$key] then
-                    .plugins[$key][0].version = $ver |
-                    .plugins[$key][0].lastUpdated = $ts |
-                    .plugins[$key][0].installPath = $path
-                else
-                    .plugins[$key] = [{
-                        "scope": "global",
-                        "projectPath": "",
-                        "installPath": $path,
-                        "version": $ver,
-                        "installedAt": $ts,
-                        "lastUpdated": $ts
-                    }]
-                end
-                ' \
-                "$py_register" \
+            json_edit "$installed_file" "$jq_register" "$py_register" \
                 "key=$plugin_key" "path=$install_path" "ver=$version" "ts=$now" || installed_ok=false
         fi
 
@@ -831,7 +839,7 @@ PYEOF
 # 建立 DD Commands
 create_commands() {
     if [ "${COMMANDS_ONLY:-false}" = true ]; then
-        print_step "1/1" "建立 Commands"
+        print_step "2/2" "建立 Commands"
     else
         print_step "6/8" "建立 Commands"
     fi
@@ -950,12 +958,23 @@ create_scripts() {
             continue
         fi
 
-        if [ -f "$SCRIPTS_DIR/$s" ] && ! cmp -s "$source" "$SCRIPTS_DIR/$s"; then
-            backup_before_overwrite "scripts" "$SCRIPTS_DIR/$s"
+        # 與其他部署點同語意：內容相同報「已是最新」不重寫，不同才備份後覆蓋
+        local target="$SCRIPTS_DIR/$s"
+        if [ ! -f "$target" ]; then
+            cp "$source" "$target"
+            echo -e "$tree_char $s: ${GREEN}已安裝（新）${NC}"
+        elif cmp -s "$source" "$target"; then
+            echo -e "$tree_char $s: ${YELLOW}已是最新${NC}"
+        else
+            backup_before_overwrite "scripts" "$target"
+            cp "$source" "$target"
+            if [ "$FORCE" = true ]; then
+                echo -e "$tree_char $s: ${GREEN}已更新（強制）${NC}"
+            else
+                echo -e "$tree_char $s: ${CYAN}已更新${NC}"
+            fi
         fi
-        cp "$source" "$SCRIPTS_DIR/$s"
-        chmod +x "$SCRIPTS_DIR/$s"
-        echo -e "$tree_char $s: ${GREEN}${CHECK}${NC}"
+        chmod +x "$target"
     done
     echo ""
 }

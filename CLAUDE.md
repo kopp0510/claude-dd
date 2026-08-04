@@ -89,6 +89,8 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   ```bash
   git config core.hooksPath scripts/githooks
   ```
+  （`core.hooksPath` 設定後 `.git/hooks/` 會被 git 忽略；`/dd-init` Phase 3
+  會偵測此設定並改掛到 hooksPath 目錄，兩者不衝突）
 - gate 規則與逃生口（`SKIP_DOC_CHECK=1`）同各專案：改 `.sh` 等程式碼檔時，
   該目錄的 CLAUDE.md 必須同批更新
 - 架構總覽（分層、分桶、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
