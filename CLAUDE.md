@@ -28,6 +28,11 @@
 
 桶陣列定義在 `install-dd-pipeline.sh` 頂部（`PROMOTED_*` / `MISC_*` / `DEPRECATED_*`）。
 
+- **deprecated 桶觀察期至 2026-10-31**：屆時盤點仍零使用即整桶刪除（檔案可由 git 歷史回溯）
+- 分桶同時映射到 plugin marketplace 分享路線（`.claude-plugin/marketplace.json`：
+  dd-core = promoted、dd-misc = misc；deprecated 不發佈），與桶陣列的一致性由 CI 強制；
+  安裝方式見 README「以 Plugin Marketplace 安裝」
+
 ## 目錄結構
 
 - `skills/` — 54 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
@@ -36,6 +41,7 @@
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
+- `.claude-plugin/` — marketplace.json（plugin marketplace 分享路線，桶對應 dd-core/dd-misc）
 
 ## 新增 Skill 步驟
 
@@ -100,7 +106,8 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - 所有回應和註解使用繁體中文
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
-- 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh
+- 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的桶陣列與
+  `.claude-plugin/marketplace.json`（CI 會擋兩者不一致）
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
