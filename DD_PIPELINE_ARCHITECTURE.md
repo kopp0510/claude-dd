@@ -1,7 +1,7 @@
 # claude-dd 架構 — Portable Claude Code Profile
 
 > 本文件描述現行架構（2026-08-04 重寫，取代舊多階段 DD Pipeline 版本；
-> 舊版流程圖與 agent/命令表見 git 歷史，對應實作封存於 deprecated 桶）。
+> 舊版流程圖、agent/命令表與對應實作均見 git 歷史）。
 
 ## 定位
 
@@ -64,14 +64,13 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 
 ## 分桶制（部署範圍控制）
 
-依 2026-07-23 全 transcript 使用率盤點，元件檔案全數保留於 repo，
-**部署與否由腳本頂部的桶陣列決定**：
+依 2026-07-23 全 transcript 使用率盤點分桶，**部署與否由腳本頂部的桶陣列決定**
+（全歷史 0 使用的 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯）：
 
 | 桶 | 條件 | 內容 |
 |---|---|---|
 | promoted | 預設部署 | 9 skills、4 agents、dd-init、workflow-review |
 | misc | `--with-misc` | SRE / 備援性質 11 skills、5 NS commands |
-| deprecated | `--with-deprecated` | 全歷史 0 使用的封存項目 |
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
 預算上限），同時保留反悔空間（`--prune` 清掉、旗標裝回來）。

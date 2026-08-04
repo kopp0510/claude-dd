@@ -31,7 +31,7 @@ jobs:
           source ./install-dd-pipeline.sh
           validate_skill_hooks
 
-      - name: 陣列與目錄一致性（ALL_* = 三桶聯集）
+      - name: 陣列與目錄一致性（ALL_* = 兩桶聯集）
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -96,13 +96,6 @@ jobs:
             echo "✅ README Promoted Skills 表格一致"
           fi
 
-          # README 升級指南 --prune 宣稱（misc+deprecated 會被清的數量）
-          read -r ps pa pd pn <<<"$(grep -oE "（[0-9]+ skills / [0-9]+ agents / [0-9]+ dd 指令 / [0-9]+ NS commands）" README.md \
-            | grep -oE "[0-9]+" | tr "\n" " ")"
-          ck "README --prune skills 數" "$ps" "$(( ${#MISC_SKILLS[@]} + ${#DEPRECATED_SKILLS[@]} ))"
-          ck "README --prune agents 數" "$pa" "${#DEPRECATED_AGENTS[@]}"
-          ck "README --prune dd 指令數" "$pd" "${#DEPRECATED_DD_COMMANDS[@]}"
-          ck "README --prune NS commands 數" "$pn" "$(( ${#MISC_NS_COMMANDS[@]} + ${#DEPRECATED_NS_COMMANDS[@]} ))"
 
           # 專案 CLAUDE.md 目錄結構數字
           ck "CLAUDE.md skills 總數" \

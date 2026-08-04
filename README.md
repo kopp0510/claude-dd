@@ -6,14 +6,14 @@ claude-dd 是跨機器可攜的 Claude Code profile（skills / agents / commands
 由安裝腳本部署到 `~/.claude/`。此 repo 是 source of truth。
 
 > **2026-07-23 大改版**：原多階段 DD Pipeline（dd-start → dd-arch → dd-approve → dd-dev → dd-test）
-> 依實際使用率盤點後封存至 deprecated 桶；骨幹改為經實戰驗證的 6 步開發迴圈。
+> 依實際使用率盤點後封存、2026-08-04 自 repo 刪除（見 git 歷史）；骨幹改為經實戰驗證的 6 步開發迴圈。
 > 舊版說明見 git 歷史（tag 前版本的 README）。
 
 ## 特色
 
 - **6 步開發迴圈** — 實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
 - **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
-- **分桶部署** — promoted（實證常用，預設裝）/ misc（SRE 備援，`--with-misc`）/ deprecated（0 使用率封存，`--with-deprecated`），依 transcript 使用率盤點，避免閒置 skill 吃 context
+- **分桶部署** — promoted（實證常用，預設裝）/ misc（SRE 備援，`--with-misc`），依 transcript 使用率盤點，避免閒置 skill 吃 context（0 使用率的 deprecated 桶已於 2026-08-04 刪除）
 - **全域 CLAUDE.md 模板** — 零幻覺政策、最小修改、Skill 觸發規則等通用守則，互動式比對部署
 
 ## 安裝
@@ -50,10 +50,9 @@ cd claude-dd
 ./install-dd-pipeline.sh --check             # 只檢查環境（不安裝）
 ./install-dd-pipeline.sh --force             # 強制重新安裝（覆蓋現有檔案）
 ./install-dd-pipeline.sh --with-misc         # 連同 misc 桶（SRE / 備援項目）
-./install-dd-pipeline.sh --with-deprecated   # 連同 deprecated 桶（封存項目）
 ./install-dd-pipeline.sh --prune             # 清掉 ~/.claude 中未部署桶位的舊檔（逐項確認）
 ./install-dd-pipeline.sh --commands-only     # 只安裝 Commands
-./install-dd-pipeline.sh --update            # 更新 skills/agents（可與 --with-misc / --with-deprecated 併用）
+./install-dd-pipeline.sh --update            # 更新 skills/agents（可與 --with-misc 併用）
 ./install-dd-pipeline.sh --uninstall         # 解除安裝（含所有桶位）
 ./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
@@ -76,17 +75,20 @@ git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-
 
 ### 從舊版（分桶制之前的全量部署）升級
 
-舊版會把 53 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`。升級步驟：
+舊版會把 53 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`。
+deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本的 `--prune` 只認得 promoted / misc
+名單 — 從全量部署升級時，先暫時取回含完整名單的舊版腳本做清理，再換回最新版：
 
 ```bash
 git pull
-./install-dd-pipeline.sh --force --prune
+git checkout 9a16629 -- install-dd-pipeline.sh   # 暫取含 deprecated 名單的腳本
+./install-dd-pipeline.sh --force --prune          # 清掉不再部署的舊檔（逐項確認）
+git checkout install-dd-pipeline.sh               # 還原最新版腳本
+./install-dd-pipeline.sh --force
 ```
 
-- `--force` 用新版內容覆蓋 promoted 桶檔案
-- `--prune` 列出舊版裝的、新版預設不再部署的項目（45 skills / 17 agents / 6 dd 指令 / 18 NS commands），逐項確認後移除 — 這步是**降低每個 session context 稅**的關鍵
-- 全域 CLAUDE.md 會出互動 diff（§3.9 開發迴圈、§7.2 瘦身版觸發表），選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
-- 反悔隨時可用 `--with-misc` / `--with-deprecated` 重裝被清掉的桶
+- 全域 CLAUDE.md 會出互動 diff，選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
+- 反悔可用 `--with-misc` 重裝 misc 桶；deprecated 內容需自 git 歷史取回
 
 ### 既有專案升級到 6 步迴圈
 
@@ -131,7 +133,6 @@ git pull && ./install-dd-pipeline.sh --force
 |------|------|------|
 | `/dd-init` | promoted | 初始化專案：蓋章 6 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`、檢查 plugin 依賴 |
 | `/review`（workflow-review） | promoted | 綜合程式碼審查（安全、效能、配置） |
-| `/dd-start` `/dd-arch` `/dd-approve` `/dd-dev` `/dd-test` `/dd-dx` | deprecated | 舊多階段 pipeline，`--with-deprecated` 才部署 |
 | operations-\* / security-\* NS commands | misc | 事件回應、健康檢查、安全審計等 SRE 工具，`--with-misc` 才部署 |
 
 ## Promoted Skills（預設部署，9 個）
@@ -148,7 +149,7 @@ git pull && ./install-dd-pipeline.sh --force
 | worktree-manager | Git worktree 隔離 |
 | writing-great-skills | skill 撰寫參考（vendored 自 [mattpocock/skills](https://github.com/mattpocock/skills)，user-invoked） |
 
-misc / deprecated 桶完整清單見 `install-dd-pipeline.sh` 頂部陣列（單一維護來源）。
+misc 桶完整清單見 `install-dd-pipeline.sh` 頂部陣列（單一維護來源）。
 
 ## 官方 Plugins（安裝腳本管理）
 

@@ -7,8 +7,8 @@ description: 初始化專案的 6 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 初始化專案的開發慣例：蓋章「6 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
 確認巢狀 CLAUDE.md 維護依賴。支援**新專案**（空目錄）和**現有專案**（已有程式碼）。
 
-> 2026-07 重整：原多階段 DD Pipeline（dd-start/arch/approve/dev/test）已封存至
-> deprecated 桶。本指令改為部署經 lawdesk-ai 實戰驗證的輕量開發迴圈。
+> 2026-07 重整：原多階段 DD Pipeline（dd-start/arch/approve/dev/test）已封存、
+> 2026-08-04 刪除（見 git 歷史）。本指令改為部署經 lawdesk-ai 實戰驗證的輕量開發迴圈。
 
 ---
 
