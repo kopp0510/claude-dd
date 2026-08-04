@@ -55,25 +55,21 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 - **冪等**：所有部署點（skills / agents / commands / templates / scripts /
   全域 CLAUDE.md）內容相同報「已是最新」不重寫（含 `--force`）；重跑不產生備份。
 - **非互動安全**：無 TTY（CI、`curl | bash`）時互動詢問一律採預設值，
-  不會中止；破壞性操作（`--uninstall` / `--prune`）預設取消，自動化用 `--yes`。
+  不會中止；破壞性操作（`--uninstall`）預設取消，自動化用 `--yes`。
 - **失敗不半套**：JSON 讀寫失敗（settings.json 損毀等）警告後跳過該項，
   不在 `set -e` 下炸掉整個安裝；JSON 就地改寫保留 inode / symlink / 權限
   （`jq_inplace` / `py_inplace` / `json_edit`，jq 優先、python3 後備）。
 - **可回復**：覆蓋差異檔前備份到 `~/.claude/backups/pre-install-<時間>/`，
   完成訊息顯示位置；`--uninstall` 只移除本 repo 部署過的項目。
 
-## 分桶制（部署範圍控制）
+## 部署清單（使用率盤點制）
 
-依 2026-07-23 全 transcript 使用率盤點分桶，**部署與否由腳本頂部的桶陣列決定**
-（全歷史 0 使用的 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯）：
-
-| 桶 | 條件 | 內容 |
-|---|---|---|
-| promoted | 預設部署 | 9 skills、4 agents、dd-init、workflow-review |
-| misc | `--with-misc` | SRE / 備援性質 11 skills、5 NS commands |
+依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
+（清單 = 腳本頂部 `PROMOTED_*` 陣列：9 skills、4 agents、dd-init、workflow-review）。
+零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
-預算上限），同時保留反悔空間（misc 可 `--prune` 清掉、`--with-misc` 裝回來）。
+預算上限）；需要時自 git 歷史取回並加回陣列即可重新部署。
 
 ## 核心工作法：6 步開發迴圈
 

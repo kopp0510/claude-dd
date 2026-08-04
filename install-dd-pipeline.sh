@@ -31,11 +31,9 @@ AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 SCRIPTS_DIR="$CLAUDE_DIR/scripts"
 
-# Skills 分桶（2026-07-23 依全 transcript 使用率盤點；部署與否由桶決定）
-# - PROMOTED：實證常用，預設部署
-# - MISC：低頻但屬 SRE / 備援性質，--with-misc 才部署
-# 註：deprecated 桶（全歷史 0 次使用的 34 skills / 17 agents / 6 dd 指令 /
-# 13 NS commands）已於 2026-08-04 自 repo 刪除，git 歷史可回溯。
+# Skills 部署清單（使用率盤點制：只保留實證常用的元件，其餘刪除、git 歷史可回溯）
+# 註：原 misc 桶（11 skills / 5 NS commands）與 deprecated 桶（34 skills /
+# 17 agents / 6 dd 指令 / 13 NS commands）均已於 2026-08-04 刪除。
 PROMOTED_SKILLS=(
     "code-simplifier"
     "design-brainstorm"
@@ -48,23 +46,10 @@ PROMOTED_SKILLS=(
     "writing-great-skills"   # user-invoked（disable-model-invocation），零 context 稅
 )
 
-MISC_SKILLS=(
-    "branch-finisher"
-    "deploy-validate"
-    "health-check"
-    "incident-commander"
-    "incident-response"
-    "root-cause-analyzer"
-    "security-audit"
-    "security-auditor"
-    "ui-design-system"
-    "ux-researcher-designer"
-    "vulnerability-scan"
-)
 
-# 部署集合（預設 = PROMOTED；main() 解析 --with-misc 後擴充）
+# 部署集合
 BUILTIN_SKILLS=("${PROMOTED_SKILLS[@]}")
-ALL_SKILLS=("${PROMOTED_SKILLS[@]}" "${MISC_SKILLS[@]}")
+ALL_SKILLS=("${PROMOTED_SKILLS[@]}")
 
 # Agents（同 skills 的盤點基準）
 # - PROMOTED：實證用過（senior-devops、security-auditor）+ 2 個官方 agent 本地備份
@@ -93,15 +78,8 @@ NS_COMMANDS=(
     "workflow-review"
 )
 
-MISC_NS_COMMANDS=(
-    "operations-deploy-validate"
-    "operations-health-check"
-    "operations-incident-response"
-    "security-audit"
-    "security-vulnerability-scan"
-)
 
-ALL_NS_COMMANDS=("${NS_COMMANDS[@]}" "${MISC_NS_COMMANDS[@]}")
+ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 
 # 文件模板（部署到 ~/.claude/templates/dd/）
 DD_TEMPLATES=(
@@ -292,16 +270,14 @@ show_help() {
     echo "  --check             只檢查環境（不安裝）"
     echo "  --force             強制重新安裝（覆蓋現有檔案）"
     echo "  --commands-only     只安裝 DD Commands（不安裝 skills）"
-    echo "  --with-misc         連同 misc 桶一起部署（SRE / 備援性質項目）"
-    echo "  --prune             移除 ~/.claude 中本次未部署桶位的舊檔（需確認）"
-    echo "  --uninstall         移除 DD Pipeline（promoted + misc 桶）"
-    echo "  --yes               跳過 --uninstall / --prune 的確認詢問（供自動化使用；"
+    echo "  --uninstall         移除 DD Pipeline（本 repo 部署過的項目）"
+    echo "  --yes               跳過 --uninstall 的確認詢問（供自動化使用；"
     echo "                      其餘互動詢問於非互動環境一律採預設值）"
-    echo "  --update            更新 skills/agents 到最新版（可與 --with-misc 併用）"
+    echo "  --update            更新 skills/agents 到最新版"
     echo "  --help              顯示此說明"
     echo ""
-    echo "預設安裝內容（promoted 桶）："
-    echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用；misc ${#MISC_SKILLS[@]} 個需 --with-misc）"
+    echo "安裝內容："
+    echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用）"
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具，巢狀 CLAUDE.md 維護依賴）"
     echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：6 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
@@ -946,7 +922,7 @@ create_templates() {
 uninstall() {
     print_header "${ROCKET} DD Pipeline 移除程式"
 
-    echo "即將移除以下內容（promoted + misc 桶；更早的 deprecated 部署請先依 README 升級指南清理）："
+    echo "即將移除以下內容（本 repo 部署過的項目；更早的 misc/deprecated 部署請先依 README 升級指南清理）："
     echo "├── ~/.claude/commands/ 中的 ${#ALL_DD_COMMANDS[@]} 個 DD Commands 與 ${#ALL_NS_COMMANDS[@]} 個命名空間 Commands"
     echo "├── ~/.claude/templates/dd/"
     echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"
@@ -1107,66 +1083,6 @@ create_global_claude_md() {
     esac
 }
 
-# 清理 ~/.claude 中「本次未部署桶位」的舊部署殘留
-# 只動 ALL_* 列表內（即本 repo 曾部署過）且不在本次部署集合中的項目；
-# 使用者自建的 skills/agents/commands 一概不碰。可用 --with-misc 重裝復原。
-prune_retired() {
-    print_header "🧹 清理未部署桶位的舊檔（--prune）"
-
-    local prune_skills=() prune_agents=() prune_cmds=() prune_ns=()
-
-    for skill in "${ALL_SKILLS[@]}"; do
-        if [[ ! " ${BUILTIN_SKILLS[*]} " == *" $skill "* ]] && [ -d "$SKILLS_DIR/$skill" ]; then
-            prune_skills+=("$skill")
-        fi
-    done
-    for agent in "${ALL_AGENTS[@]}"; do
-        if [[ ! " ${BUILTIN_AGENTS[*]} " == *" $agent "* ]] && [ -f "$AGENTS_DIR/$agent.md" ]; then
-            prune_agents+=("$agent")
-        fi
-    done
-    for cmd in "${ALL_DD_COMMANDS[@]}"; do
-        if [[ ! " ${DD_COMMANDS[*]} " == *" $cmd "* ]] && [ -f "$COMMANDS_DIR/$cmd.md" ]; then
-            prune_cmds+=("$cmd")
-        fi
-    done
-    for ns_cmd in "${ALL_NS_COMMANDS[@]}"; do
-        if [[ ! " ${NS_COMMANDS[*]} " == *" $ns_cmd "* ]] && [ -d "$COMMANDS_DIR/$ns_cmd" ]; then
-            prune_ns+=("$ns_cmd")
-        fi
-    done
-
-    local total=$(( ${#prune_skills[@]} + ${#prune_agents[@]} + ${#prune_cmds[@]} + ${#prune_ns[@]} ))
-    if [ "$total" -eq 0 ]; then
-        echo -e "${GREEN}✅ 無殘留可清（~/.claude 已與本次部署集合一致）${NC}"
-        return
-    fi
-
-    echo "即將從 ~/.claude 移除 $total 項（皆為本 repo 部署過、本次未部署的桶位項目）："
-    [ ${#prune_skills[@]} -gt 0 ] && echo "├── skills: ${prune_skills[*]}"
-    [ ${#prune_agents[@]} -gt 0 ] && echo "├── agents: ${prune_agents[*]}"
-    [ ${#prune_cmds[@]} -gt 0 ] && echo "├── DD commands: ${prune_cmds[*]}"
-    [ ${#prune_ns[@]} -gt 0 ] && echo "└── NS commands: ${prune_ns[*]}"
-    echo ""
-
-    if [ "${ASSUME_YES:-false}" = true ]; then
-        REPLY="y"
-    else
-        ask "確定要移除嗎？（可用 --with-misc 重裝復原）[y/N] " "N"
-    fi
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "取消清理"
-        return
-    fi
-
-    for skill in "${prune_skills[@]}"; do rm -rf "${SKILLS_DIR:?}/$skill"; done
-    for agent in "${prune_agents[@]}"; do rm -f "$AGENTS_DIR/$agent.md"; done
-    for cmd in "${prune_cmds[@]}"; do rm -f "$COMMANDS_DIR/$cmd.md"; done
-    for ns_cmd in "${prune_ns[@]}"; do rm -rf "${COMMANDS_DIR:?}/$ns_cmd"; done
-
-    echo -e "${GREEN}✅ 已移除 $total 項${NC}"
-}
-
 # 顯示完成訊息
 show_completion() {
     print_header "✅ DD Pipeline 安裝完成！"
@@ -1195,8 +1111,6 @@ main() {
     local FORCE=false
     local COMMANDS_ONLY=false
     local UNINSTALL=false
-    local WITH_MISC=false
-    local PRUNE=false
     local UPDATE=false
     local ASSUME_YES=false
 
@@ -1213,18 +1127,6 @@ main() {
                 ;;
             --commands-only)
                 COMMANDS_ONLY=true
-                shift
-                ;;
-            --with-misc)
-                if [ "$WITH_MISC" = false ]; then
-                    WITH_MISC=true
-                    BUILTIN_SKILLS+=("${MISC_SKILLS[@]}")
-                    NS_COMMANDS+=("${MISC_NS_COMMANDS[@]}")
-                fi
-                shift
-                ;;
-            --prune)
-                PRUNE=true
                 shift
                 ;;
             --uninstall)
@@ -1275,14 +1177,11 @@ main() {
         exit 0
     fi
 
-    # 更新模式（參數解析完才執行，--with-misc 不受旗標順序影響）
+    # 更新模式（參數解析完才執行）
     if [ "$UPDATE" = true ]; then
         FORCE=true
         install_builtin_skills
         install_builtin_agents
-        if [ "$PRUNE" = true ]; then
-            prune_retired
-        fi
         print_backup_notice
         exit 0
     fi
@@ -1314,11 +1213,6 @@ main() {
     # 檢查 / 安裝全域 CLAUDE.md（除非只安裝 commands）
     if [ "$COMMANDS_ONLY" = false ]; then
         create_global_claude_md
-    fi
-
-    # 清理未部署桶位的舊檔（--prune，需逐項確認）
-    if [ "$PRUNE" = true ]; then
-        prune_retired
     fi
 
     # 顯示完成訊息

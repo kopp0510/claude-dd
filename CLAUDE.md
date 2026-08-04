@@ -5,35 +5,29 @@
 ## 安裝 / 更新
 
 ```bash
-./install-dd-pipeline.sh                    # 首次安裝（只裝 promoted 桶）
+./install-dd-pipeline.sh                    # 首次安裝
 ./install-dd-pipeline.sh --force            # 強制更新所有檔案
-./install-dd-pipeline.sh --force --prune    # 更新並清掉 ~/.claude 中未部署桶位的舊檔（需確認）
-./install-dd-pipeline.sh --with-misc        # 連同 misc 桶（SRE / 備援項目）
 ./install-dd-pipeline.sh --check            # 只檢查環境
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
 ```
 
-> 從舊版（分桶制之前）升級、既有專案升級到 6 步迴圈：見 README.md「升級指南」。
+> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 6 步迴圈：見 README.md「升級指南」。
 
-## 分桶制（2026-07-23 依全 transcript 使用率盤點）
+## 部署清單（使用率盤點制）
 
-所有 skills/agents/commands 檔案保留於 repo，**部署與否由安裝腳本的桶陣列決定**（不搬目錄）：
+repo 只保留**有實證使用紀錄**的元件（9 skills、4 agents、dd-init、workflow-review），
+全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的 `PROMOTED_*` 陣列。
 
-| 桶 | 定義 | 部署條件 |
-|---|---|---|
-| **promoted** | 實證常用（9 skills、4 agents、dd-init、workflow-review） | 預設部署 |
-| **misc** | 低頻但屬 SRE / 備援性質（11 skills、5 NS commands） | `--with-misc` |
-
-桶陣列定義在 `install-dd-pipeline.sh` 頂部（`PROMOTED_*` / `MISC_*`）。
-
-- 原 deprecated 桶（全歷史 0 次使用的 34 skills / 17 agents / 6 dd 指令 / 13 NS commands）
-  已於 2026-08-04 提前刪除（原訂觀察期至 2026-10-31），git 歷史可回溯
+- 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /
+  17 agents / 6 dd 指令 / 13 NS commands）與 misc 桶（SRE 備援性質但零實際調用的
+  11 skills / 5 NS commands）均於 2026-08-04 刪除；取回方式
+  `git checkout 9a16629 -- skills/<名字>` 後加回陣列
 
 ## 目錄結構
 
-- `skills/` — 20 個 Skills（每個子目錄含 SKILL.md 定義檔；部署依分桶；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
+- `skills/` — 9 個 Skills（每個子目錄含 SKILL.md 定義檔，全數部署；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
-- `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 6 個命名空間 command 目錄（僅 workflow-review 預設部署）
+- `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
@@ -41,7 +35,7 @@
 ## 新增 Skill 步驟
 
 1. 在 `skills/<skill-name>/` 建立 `SKILL.md`
-2. 在 `install-dd-pipeline.sh` 依定位加入 `PROMOTED_SKILLS` / `MISC_SKILLS` 陣列（依定位擇一）
+2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_SKILLS` 陣列加入名稱
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 
 ### Skill hook 路徑規範（強制）
@@ -64,7 +58,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ## 新增 Command 步驟
 
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
-- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列（或依定位放 `MISC_NS_COMMANDS`）
+- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
 
 ## 核心工作法：6 步開發迴圈
 
@@ -94,14 +88,14 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   會偵測此設定並改掛到 hooksPath 目錄，兩者不衝突）
 - gate 規則與逃生口（`SKIP_DOC_CHECK=1`）同各專案：改 `.sh` 等程式碼檔時，
   該目錄的 CLAUDE.md 必須同批更新
-- 架構總覽（分層、分桶、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
+- 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項
 
 - 所有回應和註解使用繁體中文
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
-- 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的桶陣列（CI 會擋不一致）
+- 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的部署陣列（CI 會擋不一致）
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
