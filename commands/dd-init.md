@@ -82,7 +82,11 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 在 git repo 中時，把 `~/.claude/scripts/check-claude-md.sh` 掛進專案 pre-commit：
 
 1. 檢查 `~/.claude/scripts/check-claude-md.sh` 存在（不存在 → 提示跑 `./install-dd-pipeline.sh --force`，跳過本 Phase）
-2. 檢查 `.git/hooks/pre-commit`：
+2. 先查 `git config --get core.hooksPath`：有值時 git 會**完全忽略** `.git/hooks/`，
+   gate 掛載點改為該目錄下的 `pre-commit`（該檔已含 `check-claude-md.sh` 呼叫
+   → 跳過並告知；如 claude-dd repo 自身的 `scripts/githooks` 即此情況）；
+   無值時掛載點為 `.git/hooks/pre-commit`
+3. 檢查掛載點的 `pre-commit`：
    - 不存在 → 用 **Write** 建立：
 
      ```bash
@@ -91,10 +95,10 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
      "$HOME/.claude/scripts/check-claude-md.sh" || exit 1
      ```
 
-     然後 `chmod +x .git/hooks/pre-commit`
+     然後對掛載點檔案 `chmod +x`
    - 已存在且未含 `check-claude-md.sh` → 在檔尾 **Edit** 追加上面的呼叫行（保留既有內容）
    - 已含 → 跳過並告知
-3. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
+4. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
    檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 6）必須全過
 
 ### Phase 4: 檢查巢狀 CLAUDE.md 依賴

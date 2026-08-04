@@ -11,6 +11,8 @@
   `/dd-init` 掛進各專案的 `.git/hooks/pre-commit`。
 - `githooks/pre-commit` — 本 repo 自用（dogfood），轉呼叫上面的 gate。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。
+  注意 `core.hooksPath` 設定後 git 會完全忽略 `.git/hooks/`，與 `/dd-init` 的
+  預設掛載點互斥（dd-init Phase 3 會偵測並改掛到 hooksPath 目錄）。
 
 ## 此層慣例
 
