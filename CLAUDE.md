@@ -11,6 +11,7 @@
 ./install-dd-pipeline.sh --with-misc        # 連同 misc 桶（SRE / 備援項目）
 ./install-dd-pipeline.sh --with-deprecated  # 連同 deprecated 桶（0 使用率封存）
 ./install-dd-pipeline.sh --check            # 只檢查環境
+./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
 ```
 
 > 從舊版（分桶制之前）升級、既有專案升級到 6 步迴圈：見 README.md「升級指南」。
@@ -33,7 +34,7 @@
 - `agents/` — 21 個 Agents（部署依分桶；promoted：code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 7 個 dd-* 指令（.md 平面檔；僅 dd-init 預設部署） + 19 個命名空間 command 目錄（僅 workflow-review 預設部署）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
-- `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate）
+- `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/）
 
 ## 新增 Skill 步驟
@@ -81,6 +82,16 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 > **舊 DD Pipeline（deprecated 桶封存）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
 > 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）移入 deprecated 桶，
 > 檔案保留於 `commands/`，`--with-deprecated` 可重新部署。舊版 dd-init 見 git 歷史。
+
+## 開發本 repo
+
+- clone 後啟用 CLAUDE.md gate（dogfood，本 repo 吃自己的 pre-commit）：
+  ```bash
+  git config core.hooksPath scripts/githooks
+  ```
+- gate 規則與逃生口（`SKIP_DOC_CHECK=1`）同各專案：改 `.sh` 等程式碼檔時，
+  該目錄的 CLAUDE.md 必須同批更新
+- 架構總覽（分層、分桶、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項
 
