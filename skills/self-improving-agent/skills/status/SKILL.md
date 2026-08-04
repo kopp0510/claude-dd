@@ -1,18 +1,18 @@
 ---
 name: status
 description: "Memory health dashboard showing line counts, topic files, capacity, stale entries, and recommendations."
-command: /si:status
+command: /self-improving-agent:status
 ---
 
-# /si:status — Memory Health Dashboard
+# /self-improving-agent:status — Memory Health Dashboard
 
 Quick overview of your project's memory state across all memory systems.
 
 ## Usage
 
 ```
-/si:status                    # Full dashboard
-/si:status --brief            # One-line summary
+/self-improving-agent:status                    # Full dashboard
+/self-improving-agent:status --brief            # One-line summary
 ```
 
 ## What It Reports
@@ -85,7 +85,7 @@ done
 ### Brief mode
 
 ```
-/si:status --brief
+/self-improving-agent:status --brief
 ```
 
 Output: `📊 Memory: {{n}}/200 lines | {{count}} rules | {{status_emoji}} {{status_word}}`
@@ -93,12 +93,12 @@ Output: `📊 Memory: {{n}}/200 lines | {{count}} rules | {{status_emoji}} {{sta
 ## Interpretation
 
 - **Green (< 60%)**: Plenty of room. Auto-memory is working well.
-- **Yellow (60-90%)**: Getting full. Consider running `/si:review` to promote or clean up.
-- **Red (> 90%)**: Near capacity. Auto-memory may start dropping older entries. Run `/si:review` now.
+- **Yellow (60-90%)**: Getting full. Consider running `/self-improving-agent:review` to promote or clean up.
+- **Red (> 90%)**: Near capacity. Auto-memory may start dropping older entries. Run `/self-improving-agent:review` now.
 
 ## Tips
 
-- Run `/si:status --brief` as a quick check anytime
-- If capacity is yellow+, run `/si:review` to identify promotion candidates
+- Run `/self-improving-agent:status --brief` as a quick check anytime
+- If capacity is yellow+, run `/self-improving-agent:review` to identify promotion candidates
 - Stale entries waste space — delete references to files that no longer exist
 - Topic files are fine — Claude creates them to keep MEMORY.md under 200 lines

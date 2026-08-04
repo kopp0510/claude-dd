@@ -1,20 +1,20 @@
 ---
 name: extract
 description: "Turn a proven pattern or debugging solution into a standalone reusable skill with SKILL.md, reference docs, and examples."
-command: /si:extract
+command: /self-improving-agent:extract
 ---
 
-# /si:extract — Create Skills from Patterns
+# /self-improving-agent:extract — Create Skills from Patterns
 
 Transforms a recurring pattern or debugging solution into a standalone, portable skill that can be installed in any project.
 
 ## Usage
 
 ```
-/si:extract <pattern description>                  # Interactive extraction
-/si:extract <pattern> --name docker-m1-fixes       # Specify skill name
-/si:extract <pattern> --output ./skills/            # Custom output directory
-/si:extract <pattern> --dry-run                     # Preview without creating files
+/self-improving-agent:extract <pattern description>                  # Interactive extraction
+/self-improving-agent:extract <pattern> --name docker-m1-fixes       # Specify skill name
+/self-improving-agent:extract <pattern> --output ./skills/            # Custom output directory
+/self-improving-agent:extract <pattern> --dry-run                     # Preview without creating files
 ```
 
 ## When to Extract
@@ -150,7 +150,7 @@ Source: MEMORY.md entries at lines {{n, m, ...}} (retained — the skill is port
 ### Extracting a debugging pattern
 
 ```
-/si:extract "Fix for Docker builds failing on Apple Silicon with platform mismatch"
+/self-improving-agent:extract "Fix for Docker builds failing on Apple Silicon with platform mismatch"
 ```
 
 Creates `docker-m1-fixes/SKILL.md` with:
@@ -162,7 +162,7 @@ Creates `docker-m1-fixes/SKILL.md` with:
 ### Extracting a workflow pattern
 
 ```
-/si:extract "Always regenerate TypeScript API client after modifying OpenAPI spec"
+/self-improving-agent:extract "Always regenerate TypeScript API client after modifying OpenAPI spec"
 ```
 
 Creates `api-client-regen/SKILL.md` with:
