@@ -22,6 +22,7 @@ claude-dd 是跨機器可攜的 Claude Code profile（skills / agents / commands
 
 - [Claude Code CLI](https://claude.com/claude-code)、Node.js、Git、Bash
 - 必要 MCP：`playwright`（腳本只檢查不安裝，請先[安裝 playwright MCP](https://github.com/microsoft/playwright-mcp)）
+- 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
 
 ### 首次安裝
 
