@@ -63,8 +63,11 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 | 陷阱 | 對策 |
 |------|------|
 | `file://` 被擋、localhost 逾時 | SVG 包進 HTML 後轉 **base64 data URI** 導航 |
-| 無限動畫使 screenshot 逾時 | 先 `svg.pauseAnimations()` 再截圖 |
+| 無限動畫使 screenshot 逾時 | 先 `svg.pauseAnimations()` 再截圖，並加 `animations: 'disabled'` |
+| 換頁後截圖仍逾時 | 瀏覽器殘留狀態所致 — `browser_close` 重開再導航 |
 | 動畫是否真的在動 | `setCurrentTime(t)` 定格兩個時間點各截一張，肉眼比對位移 |
+| 延遲啟動的球停在畫面左上角 (0,0) | 錯開相位一律用**負值 `begin`**（如 `-3.6s`），不用正延遲 |
+| 瀏覽器捲軸被截進畫面（成品出現假捲軸） | 包裝頁 CSS 加 `overflow:hidden`，截圖加 `clip` 限定 SVG 區域，交付前抽查四邊像素應為背景色 |
 | 截圖輸出路徑受限 | playwright 只能寫入其 allowed roots（通常是專案根/.playwright-mcp）；截完移出並清理，勿留在 repo |
 
 檢查項：文字無溢出、箭頭不穿節點、標籤不壓線、小球在路徑上且有位移。發現問題 → 改 SVG 重渲染,迴圈至乾淨。
@@ -76,10 +79,10 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 - **有 ffmpeg**：逐幀定格（`pauseAnimations()` + `setCurrentTime(i*DUR/N)` + 截圖，10fps × 總循環長）→
   ```bash
   ffmpeg -framerate 10 -i f%03d.png \
-    -vf "scale=1080:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" \
+    -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" \
     -loop 0 out.gif
   ```
-  （1080 寬 72 幀約 300–400KB）
+  **交付原尺寸，勿為壓檔縮小**（使用者回饋過縮到 1080 寬「有點小張」；1440 寬 72 幀約 400KB 可接受）
 - **無 ffmpeg**：退化交付 SVG，明確告知「裝 ffmpeg 後可轉 GIF」（macOS：`brew install ffmpeg`），不硬轉。
 
 ### 6. 交付前驗證
