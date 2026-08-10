@@ -6,14 +6,15 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 
 # Tech Diagram GIF — 技術圖表繪製與 GIF 匯出
 
-零 runtime 依賴的技術圖表管線：手寫 SVG（依 vendored 風格規範）→ 瀏覽器渲染自檢 → 匯出無縫循環 GIF。
+不引入 Python/cairosvg 管線的技術圖表流程：手寫 SVG（依 vendored 風格規範）→ 瀏覽器渲染自檢 → 匯出無縫循環 GIF。
 風格規範 vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，見 LICENSE.txt）；
 只收編其 markdown 規範，不引入其 Python/cairosvg/FFmpeg 管線。
 
 ## 硬閘門
 
 1. **結構未確認前，不寫任何 SVG** — 先用純文字把節點/分組/連線定案（工作流程第 1 步）。
-2. **交付一律 GIF**（使用者硬規則）。SVG 是內部原稿：可一併提供，但須說明「對外分享用 GIF」
+2. **交付一律 GIF**（使用者硬規則；唯一例外：環境無 ffmpeg 時依第 5 步退化交付 SVG 並附裝法）。
+   SVG 是內部原稿：可一併提供，但須說明「對外分享用 GIF」
    （SVG 格式可含 script，收件方有信任成本；本 skill 產的 SVG 零 script，交付前必驗證）。
 3. **渲染自檢不可省** — 沒親眼看過渲染結果不得宣稱完成。
 
@@ -42,9 +43,12 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 
 ### 3. 手寫 SVG
 
-- 版面規則照 `references/svg-layout-best-practices.md`（間距 ≥80px、正交轉角、標籤偏移、z-order）
-- 色票/字體/節點語意色桶照所選風格檔；畫布建議 `viewBox 0 0 1440 1080`
-- **字體堆疊必含跨平台 CJK 後備**：襯線 `Georgia,'Times New Roman','Songti TC','Noto Serif CJK TC',serif`、
+- 版面規則照 `references/svg-layout-best-practices.md`（間距 ≥80px、正交轉角、標籤偏移、z-order；
+  該檔僅取版面規則，其 cairosvg/PNG 匯出段落不適用本 skill）
+- 色票/節點語意色桶照所選風格檔；畫布建議 `viewBox 0 0 1440 1080` —
+  **注意風格檔的字級/間距以 960 寬為基準，用 1440 畫布時需等比放大（約 ×1.5）**
+- **字體堆疊必含跨平台 CJK 後備**（以本段為準，覆蓋風格檔的 PingFang SC）：
+  襯線 `Georgia,'Times New Roman','Songti TC','Noto Serif CJK TC',serif`、
   無襯線 `-apple-system,'Helvetica Neue','PingFang TC','Noto Sans CJK TC',sans-serif`
   （macOS 已驗證；Linux 走 Noto 後備，未實測）
 - 小球規則：核心 r4 + 光暈 r8 opacity 0.22、顏色跟隨箭頭語意、**等速**（dur ∝ 路徑長）、
@@ -80,8 +84,9 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 
 ### 6. 交付前驗證
 
-- SVG 零 script：`grep -ci "script\|onload\|javascript:" <svg>` 必須為 0
-- GIF 抽 2 幀（`ffmpeg -vf "select=eq(n\,K)"`）確認小球位置不同（動畫真的燒進去了）
+- SVG 零 script：`grep -cEi "<script|\bon[a-z]+[[:space:]]*=|javascript:|foreignObject" <svg>` 必須為 0
+  （涵蓋事件處理器 on* 與 foreignObject，不只 onload）
+- GIF 抽 2 幀（`ffmpeg -fps_mode passthrough -vf "select=eq(n\,K)"`）確認小球位置不同（動畫真的燒進去了）
 - 暫存幀目錄清理乾淨
 - 交付訊息附：GIF 路徑、開啟方式、SVG 原稿路徑與資安說明一句
 

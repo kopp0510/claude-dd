@@ -15,8 +15,10 @@
 
 ## 部署清單（使用率盤點制）
 
-repo 只保留**有實證使用紀錄**的元件（9 skills、4 agents、dd-init、workflow-review），
-全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的 `PROMOTED_*` 陣列。
+repo 只保留**有實證使用紀錄**的元件（2026-08-04 盤點留存 9 skills、4 agents、
+dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來源為當次
+對話的完整管線驗證），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
+`PROMOTED_*` 陣列。
 
 - 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /
   17 agents / 6 dd 指令 / 13 NS commands）與 misc 桶（SRE 備援性質但零實際調用的

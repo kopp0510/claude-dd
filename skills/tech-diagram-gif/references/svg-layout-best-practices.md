@@ -1,5 +1,7 @@
 # SVG Technical Diagram Layout Best Practices
 
+> Vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，LICENSE.txt 見上層目錄）。
+> **適用範圍**：僅取版面/連線/標籤規則；渲染與匯出以 SKILL.md 為準，本檔 cairosvg / rsvg-convert / PNG 匯出段落與 Style-1/6 專節不適用本 skill。
 ## Universal Layout Rules (Apply to All Styles)
 
 ### 1. Component Spacing

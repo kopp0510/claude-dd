@@ -1,5 +1,6 @@
 # Style 8 — Dark Luxury
 
+> Vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，LICENSE.txt 見上層目錄）。
 Inspired by the `dark-gold` theme from [Understand-Anything](https://github.com/nicholasgasior/understand-anything).
 Deep black canvas with warm champagne-gold accents and hybrid serif/sans typography.
 Uniquely warm among all dark styles — closest peer is style-2 (Dark Terminal) but with a premium editorial feel.
