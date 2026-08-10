@@ -23,3 +23,6 @@
 .env
 .env.local
 .env.*.local
+
+# Playwright MCP 工作目錄（渲染自檢暫存）
+.playwright-mcp/
