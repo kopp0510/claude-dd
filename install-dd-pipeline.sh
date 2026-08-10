@@ -332,10 +332,18 @@ check_environment() {
 
     # 檢查 Bash
     if command_exists "bash"; then
-        print_last_success "Bash"
+        print_success "Bash"
     else
-        print_last_fail "Bash"
+        print_fail "Bash"
         all_ok=false
+    fi
+
+    # 檢查 ffmpeg（可選：tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG）
+    if command_exists "ffmpeg"; then
+        print_last_success "ffmpeg（可選，GIF 匯出）"
+    else
+        echo -e "└── ${YELLOW}⚠ ffmpeg 未安裝（可選）：tech-diagram-gif 將退化交付 SVG${NC}"
+        echo -e "    ${YELLOW}安裝：macOS \`brew install ffmpeg\`；Debian/Ubuntu \`sudo apt install ffmpeg\`${NC}"
     fi
 
     echo ""
