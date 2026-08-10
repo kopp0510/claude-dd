@@ -76,13 +76,16 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 
 先偵測 `ffmpeg`（`command -v ffmpeg`）：
 
-- **有 ffmpeg**：逐幀定格（`pauseAnimations()` + `setCurrentTime(i*DUR/N)` + 截圖，10fps × 總循環長）→
+- **有 ffmpeg**：逐幀定格（`pauseAnimations()` + `setCurrentTime(i*DUR/N)` + 截圖，**20fps** × 總循環長）→
   ```bash
-  ffmpeg -framerate 10 -i f%03d.png \
+  ffmpeg -framerate 20 -i f%03d.png \
     -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" \
     -loop 0 out.gif
   ```
-  **交付原尺寸，勿為壓檔縮小**（使用者回饋過縮到 1080 寬「有點小張」；1440 寬 72 幀約 400KB 可接受）
+  - **fps 用 20（或 25），不用 10**：10fps 小球每格跳動明顯，使用者回饋「卡卡的」；GIF 幀延遲單位
+    是 1/100 秒，fps 須整除 100，且 50fps 會被多數播放器強制放慢，20/25 是流暢與相容的平衡
+  - 幀數多時分兩段 `run_code` 截（單次呼叫有逾時上限）
+  - **交付原尺寸，勿為壓檔縮小**（使用者回饋過縮到 1080 寬「有點小張」；1440 寬 144 幀約 700KB 可接受）
 - **無 ffmpeg**：退化交付 SVG，明確告知「裝 ffmpeg 後可轉 GIF」（macOS：`brew install ffmpeg`），不硬轉。
 
 ### 6. 交付前驗證
