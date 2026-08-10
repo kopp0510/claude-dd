@@ -34,17 +34,29 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 
 ### 2. 選風格與動畫模式
 
-| 預設 | 選項 |
-|------|------|
-| 風格：Style 8 Dark Luxury（`references/style-8-dark-luxury.md`） | Style 2 Dark Terminal（`references/style-2-dark-terminal.md`） |
-| 動畫：小球沿線跑（`animateMotion`） | dash 脈衝（`stroke-dashoffset`） |
+| 風格 | 檔案 | 何時用 |
+|------|------|--------|
+| **Style 8 Dark Luxury（預設）** | `references/style-8-dark-luxury.md` | 架構、流程、資料流、拓撲 — 通用首選 |
+| Style 2 Dark Terminal | `references/style-2-dark-terminal.md` | 開發者風格；**UML 類（ER/時序/狀態機/use case）優先用此** — Style 8 深底吃 UML 細節與人形，比較表也不適合 |
+| Style 11 Event Transit | `references/style-11-event-transit.md` | 事件流/串流拓撲（Kafka/Pulsar/NATS、消費者群、DLQ）— 提到「事件流」「地鐵圖」「Kafka 拓撲」時用 |
+| Style 12 Ops Pulse | `references/style-12-ops-pulse.md` | 事故排查/SLO review（golden signals、critical path、trace 瀑布）— 提到「事故圖」「golden signals」「reliability」時用 |
 
-使用者無明示偏好時用預設，不必多問。
+動畫兩種模式（詳見 `references/motion-narrative.md`）：
+
+- **循環流動（預設）**：小球沿線跑（`animateMotion`）或 dash 脈衝
+- **建置 → 營運（敘事）**：開場無連線 → 逐條畫入 → 營運流動 → 淡出循環 — 對外展示/README hero 用
+
+使用者無明示偏好時用預設，不必多問；圖型落在特定風格的甜蜜區時主動建議換風格（一句話，不反覆）。
 
 ### 3. 手寫 SVG
 
 - 版面規則照 `references/svg-layout-best-practices.md`（間距 ≥80px、正交轉角、標籤偏移、z-order；
   該檔僅取版面規則，其 cairosvg/PNG 匯出段落不適用本 skill）
+- 節點複雜或含 DB/佇列/使用者/決策時，用 `references/icons.md` 的語意圖形
+  （DB 圓柱、佇列管、LLM 雙框、Agent 六角形、User 人形、決策菱形、文件摺角）取代一律圓角矩形
+- 量化版面預算照 `references/composition-quality-contract.md`：0 交叉、每邊 ≤2 折、
+  繞路比 ≤1.35、節點間 ≥40px、容器 gutter ≥20px；先排容器與列才排線、保留跨層走廊、
+  同側多線分 port、legend 不進流程走廊。超出預算 → 調節點位置或拆圖，不硬塞
 - 色票/節點語意色桶照所選風格檔；畫布建議 `viewBox 0 0 1440 1080` —
   **注意風格檔的字級/間距以 960 寬為基準，用 1440 畫布時需等比放大（約 ×1.5）**
 - **字體堆疊必含跨平台 CJK 後備**（以本段為準，覆蓋風格檔的 PingFang SC）：
@@ -70,7 +82,9 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 | 瀏覽器捲軸被截進畫面（成品出現假捲軸） | 包裝頁 CSS 加 `overflow:hidden`，截圖加 `clip` 限定 SVG 區域，交付前抽查四邊像素應為背景色 |
 | 截圖輸出路徑受限 | playwright 只能寫入其 allowed roots（通常是專案根/.playwright-mcp）；截完移出並清理，勿留在 repo |
 
-檢查項：文字無溢出、箭頭不穿節點、標籤不壓線、小球在路徑上且有位移。發現問題 → 改 SVG 重渲染,迴圈至乾淨。
+檢查項：文字無溢出、箭頭不穿節點、標籤不壓線、小球在路徑上且有位移、
+版面預算達標（0 交叉、每邊 ≤2 折、節點間 ≥40px — 見 composition-quality-contract）。
+發現問題 → 改 SVG 重渲染,迴圈至乾淨。
 
 ### 5. GIF 匯出
 
