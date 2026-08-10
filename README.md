@@ -35,7 +35,7 @@ cd claude-dd
 
 安裝程式會：
 
-1. 安裝 9 個 promoted Skills 到 `~/.claude/skills/`
+1. 安裝 10 個 promoted Skills 到 `~/.claude/skills/`
 2. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 3. 啟用官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴）
 4. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
@@ -134,7 +134,7 @@ git pull && ./install-dd-pipeline.sh --force
 | `/dd-init` | 初始化專案：蓋章 6 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`、檢查 plugin 依賴 |
 | `/review`（workflow-review） | 綜合程式碼審查（安全、效能、配置） |
 
-## Promoted Skills（預設部署，9 個）
+## Promoted Skills（預設部署，10 個）
 
 | Skill | 說明 |
 |-------|------|
@@ -144,6 +144,7 @@ git pull && ./install-dd-pipeline.sh --force
 | review | 綜合審查 wrapper |
 | self-improving-agent | 記憶審計與知識沉澱 |
 | task-planner | 微任務拆解 |
+| tech-diagram-gif | 技術圖表繪製與 GIF 匯出（風格規範 vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)） |
 | verification-gate | 完成前驗證閘門（宣稱完成須附新鮮證據） |
 | worktree-manager | Git worktree 隔離 |
 | writing-great-skills | skill 撰寫參考（vendored 自 [mattpocock/skills](https://github.com/mattpocock/skills)，user-invoked） |

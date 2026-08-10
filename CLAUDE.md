@@ -25,7 +25,7 @@ repo 只保留**有實證使用紀錄**的元件（9 skills、4 agents、dd-init
 
 ## 目錄結構
 
-- `skills/` — 9 個 Skills（每個子目錄含 SKILL.md 定義檔，全數部署；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考）
+- `skills/` — 10 個 Skills（每個子目錄含 SKILL.md 定義檔，全數部署；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/` — 7 個文件模板（`.template`，部署到 `~/.claude/templates/dd/`）+ 1 份全域 CLAUDE.md 模板（`templates/global/`，另經互動比對部署到 `~/.claude/CLAUDE.md`）
