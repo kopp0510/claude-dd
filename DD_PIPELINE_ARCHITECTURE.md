@@ -65,7 +65,8 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部 `PROMOTED_*` 陣列：9 skills、4 agents、dd-init、workflow-review）。
+（清單 = 腳本頂部 `PROMOTED_*` 陣列：10 skills、4 agents、dd-init、workflow-review；
+2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
