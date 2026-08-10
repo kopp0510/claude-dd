@@ -41,6 +41,7 @@ PROMOTED_SKILLS=(
     "review"
     "self-improving-agent"
     "task-planner"
+    "tech-diagram-gif"
     "verification-gate"
     "worktree-manager"
     "writing-great-skills"   # user-invoked（disable-model-invocation），零 context 稅
