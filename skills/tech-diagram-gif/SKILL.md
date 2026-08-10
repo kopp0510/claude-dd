@@ -13,8 +13,8 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ## 硬閘門
 
 1. **結構未確認前，不寫任何 SVG** — 先用純文字把節點/分組/連線定案（工作流程第 1 步）。
-2. **交付一律 GIF**（使用者硬規則；唯一例外：環境無 ffmpeg 時依第 5 步退化交付 SVG 並附裝法）。
-   SVG 是內部原稿：可一併提供，但須說明「對外分享用 GIF」
+2. **交付物只有 GIF**（使用者硬規則）。SVG 僅為中間產物：GIF 產出並驗證後**即刪除，
+   不留在交付目錄**。唯一例外：環境無 ffmpeg 時依第 5 步退化交付 SVG 並附裝法與資安說明
    （SVG 格式可含 script，收件方有信任成本；本 skill 產的 SVG 零 script，交付前必驗證）。
 3. **渲染自檢不可省** — 沒親眼看過渲染結果不得宣稱完成。
 
@@ -107,8 +107,11 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 - SVG 零 script：`grep -cEi "<script|\bon[a-z]+[[:space:]]*=|javascript:|foreignObject" <svg>` 必須為 0
   （涵蓋事件處理器 on* 與 foreignObject，不只 onload）
 - GIF 抽 2 幀（`ffmpeg -fps_mode passthrough -vf "select=eq(n\,K)"`）確認小球位置不同（動畫真的燒進去了）
-- 暫存幀目錄清理乾淨
-- 交付訊息附：GIF 路徑、開啟方式、SVG 原稿路徑與資安說明一句
+- 暫存幀目錄與中間產物 SVG 清理乾淨（交付目錄只留 GIF）
+- **成品輸出到使用者專案的當下目錄 `./diagrams/`**（使用者硬規則，不放 /tmp 揮發區）；
+  目錄不存在時 `mkdir -p ./diagrams` 自動建立；
+  該目錄若在 git repo 內且未被追蹤，提醒一句可加入 .gitignore 或自行 commit，不代決定
+- 交付訊息附：GIF 路徑與開啟方式（退化交付 SVG 時才附資安說明）
 
 ## 常見錯誤
 
