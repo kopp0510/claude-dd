@@ -99,7 +99,6 @@ OPTIONAL_MCP=(
     "zeabur"
     "google-docs"
     "googleDrive"
-    "claude-mem"
 )
 
 # 官方 Plugins
