@@ -1,39 +1,42 @@
-# DD Pipeline（claude-dd）
+[English](README.md) | [繁體中文](README.zh-TW.md)
 
-> 可攜式 Claude Code 設定庫 — 把「AI 有沒有照規矩做」變成看得見、擋得住的輸出
+# DD Pipeline (claude-dd)
 
-**是什麼**：跨機器可攜的 Claude Code profile（skills / agents / commands / 全域 CLAUDE.md）。
-`git clone` 後跑一支 bash，整套工作習慣就裝進 `~/.claude/`；此 repo 是 source of truth。
+> A portable Claude Code profile — turning "did the AI actually follow the rules?" into output you can see and gates that can block you
 
-**解決什麼**：用 AI 寫程式最難的不是寫不出來，是你不知道它有沒有跳步驟 —
-測試跑了嗎？文件同步了嗎？剛才那句話是查證過還是編的？
-這套設定把這些原本靠默契的環節，變成強制執行、留得下紀錄的輸出。
+![claude-dd three-layer architecture](diagrams/claude-dd-architecture.gif)
 
-**適合誰**：已經在用 Claude Code，想把個人工作習慣固定下來、換機器也帶得走的開發者。
+**What it is**: a Claude Code profile you can carry between machines — skills, agents, commands, and a global `CLAUDE.md`. Clone the repo, run one bash script, and your whole working style is installed into `~/.claude/`. This repo is the source of truth; `~/.claude/` is always a deployment of it.
+
+**What it solves**: the hard part of coding with AI isn't getting code out of it — it's not knowing whether it skipped a step. Did the tests actually run? Did the docs get updated in the same batch? Was that last claim verified or invented? This profile converts those unspoken assumptions into things that are enforced, and that leave a record.
+
+**Who it's for**: developers already using Claude Code who want to pin down their own working habits and take them to the next machine.
 
 ```bash
 git clone https://github.com/kopp0510/claude-dd.git
 cd claude-dd && ./install-dd-pipeline.sh
 ```
 
-## 特色
+> **Language note**: the rules themselves — the global `CLAUDE.md` template, the skill definitions, and the installer's console output — are written in Traditional Chinese, because that is the language the author works in. The mechanisms (the pre-commit gate, the CI checks, the loop) are language-independent and work as-is; the prose is not. Translating the global template is the one change to make if you want to adopt this in another language.
 
-- **6 步開發迴圈** — 每個功能段落必走：實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
-- **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
-- **零幻覺政策** — 涉及 API 簽名、版本號、專案事實時必須標註來源；「應該是」「大概」等模糊詞列為禁用
-- **Skill 觸發顯性化** — 該觸發卻不觸發時必須寫出一行具體理由，讓「跳過」從黑箱變成可稽核紀錄
-- **使用率盤點制** — 只保留有實證使用紀錄的元件並全數預設部署，避免閒置 skill 吃 context
-- **全域 CLAUDE.md 模板** — 上述守則的單一來源，互動式比對部署到 `~/.claude/CLAUDE.md`
+## Highlights
 
-## 安裝
+- **6-step development cycle** — every feature increment runs the same loop: implement + test → commit → code-simplifier → code-review → re-verify against a real environment (curl / playwright) → commit
+- **CLAUDE.md pre-commit gate** — a commit is blocked when a directory containing code has no `CLAUDE.md`, or has one that wasn't updated in the same batch. The rejection message doubles as instructions the AI agent can act on to fix it itself
+- **Zero-hallucination policy** — API signatures, version numbers, and project facts must carry a source annotation; hedges like "should be" or "probably" are banned outright rather than tolerated
+- **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason must be written out, turning "I skipped it" from a black box into an auditable line
+- **Usage-inventory model** — only components with an evidenced usage record are kept, and all of them ship by default, so idle skills don't eat context
+- **Global CLAUDE.md template** — the single source for all of the above, deployed to `~/.claude/CLAUDE.md` through an interactive diff
 
-### 前置需求
+## Installation
 
-- [Claude Code CLI](https://claude.com/claude-code)、Node.js、Git、Bash
-- 必要 MCP：`playwright`（腳本只檢查不安裝，請先[安裝 playwright MCP](https://github.com/microsoft/playwright-mcp)）
-- 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
+### Prerequisites
 
-### 首次安裝
+- [Claude Code CLI](https://claude.com/claude-code), Node.js, Git, Bash
+- Required MCP: `playwright` — the installer checks for it but will not install it, so set up [playwright MCP](https://github.com/microsoft/playwright-mcp) first
+- Optional: `ffmpeg` — used by tech-diagram-gif for GIF export. Without it that skill degrades to delivering SVG instead of failing. On macOS: `brew install ffmpeg`
+
+### First-time install
 
 ```bash
 git clone https://github.com/kopp0510/claude-dd.git
@@ -41,151 +44,150 @@ cd claude-dd
 ./install-dd-pipeline.sh
 ```
 
-> 若 `install-dd-pipeline.sh` 沒有執行權限，先 `chmod +x install-dd-pipeline.sh`。
+> If `install-dd-pipeline.sh` isn't executable, run `chmod +x install-dd-pipeline.sh` first.
 
-安裝程式會：
+The installer will:
 
-1. 安裝 10 個 promoted Skills 到 `~/.claude/skills/`
-2. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
-3. 啟用官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴）
-4. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
-5. 部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`
-6. **互動式比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）
+1. Install 10 promoted Skills into `~/.claude/skills/`
+2. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
+3. Enable the official plugin (claude-md-management — the dependency behind nested CLAUDE.md maintenance)
+4. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
+5. Deploy `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`
+6. **Interactively diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default
 
-### 安裝選項
+### Install options
 
 ```bash
-./install-dd-pipeline.sh --help              # 顯示幫助
-./install-dd-pipeline.sh --check             # 只檢查環境（不安裝）
-./install-dd-pipeline.sh --force             # 強制重新安裝（覆蓋現有檔案）
-./install-dd-pipeline.sh --commands-only     # 只安裝 Commands
-./install-dd-pipeline.sh --update            # 更新 skills/agents
-./install-dd-pipeline.sh --uninstall         # 解除安裝（本 repo 部署過的項目）
-./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
+./install-dd-pipeline.sh --help              # show help
+./install-dd-pipeline.sh --check             # check the environment only, install nothing
+./install-dd-pipeline.sh --force             # reinstall, overwriting existing files
+./install-dd-pipeline.sh --commands-only     # install commands only
+./install-dd-pipeline.sh --update            # update skills and agents
+./install-dd-pipeline.sh --uninstall         # remove what this repo deployed
+./install-dd-pipeline.sh --uninstall --yes   # uninstall without confirmation (for automation; in non-interactive environments every prompt takes its default)
 ```
 
-### 分享給別人
+### Sharing with others
 
-安裝方式只有一種（含完整工作法：全域規則、6 步迴圈、pre-commit gate 與精選元件）：
+There is exactly one installation path, and it carries the complete working method — global rules, the 6-step cycle, the pre-commit gate, and the curated components:
 
 ```bash
 git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
 ```
 
-全域 CLAUDE.md 走互動 diff，對方已有自己的全域規則時可先看差異再決定。
+The global CLAUDE.md goes through an interactive diff, so someone who already has their own global rules can inspect the difference before deciding.
 
-> 曾評估過 plugin marketplace 分發路線（2026-08-04 實測可行後移除）：plugin 機制
-> 無法部署全域 CLAUDE.md 與 pre-commit gate，只能交付元件子集，與「完整工作法」
-> 的定位不符，為維持單一路線而不採用。實作見 git 歷史。
+> A plugin-marketplace distribution route was evaluated and removed on 2026-08-04 after it was proven to work. The plugin mechanism cannot deploy a global CLAUDE.md or a pre-commit gate — it can only ship a subset of components, which contradicts the "complete working method" framing. Removed to keep a single path. The implementation is in the git history.
 
-## 升級
+## Upgrading
 
-日常更新：
+Routine update:
 
 ```bash
 git pull && ./install-dd-pipeline.sh --force
 ```
 
-從舊版部署（全量 / 分桶時期）升級、既有專案升級到 6 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
-歷次結構性變更見 [CHANGELOG.md](CHANGELOG.md)。
+For upgrades from older layouts (the everything-deployed and bucketed eras) and for moving an existing project onto the 6-step cycle, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
+Structural changes over time are in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)*.
 
-## 核心工作法：6 步開發迴圈
+## The core loop: 6-step development cycle
 
-每個**功能段落**必走（定義於全域 CLAUDE.md §3.9，專案具體版由 `/dd-init` 蓋章）：
+Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the project-specific version is stamped in by `/dd-init`):
 
 ```
-1. 實作功能 + 首輪測試通過（不可帶紅燈進 commit）
-2. commit（第一次 — 保留簡化前還原點）
-3. code-simplifier（該段 diff）
-4. code-review（該段 diff，全量跑；修掉 Critical/Important 才續行）
-5. 再測一次 — 重跑測試 + curl 打真實 API / playwright 真實瀏覽器操作（截圖存 .screenshots/）
-6. commit（最終版本）
+1. Implement + get the first round of tests passing (never enter a commit with a red light)
+2. commit (first one — preserves a restore point from before simplification)
+3. code-simplifier (on that increment's diff)
+4. code-review (on that increment's diff, run in full; Critical/Important findings must be fixed before continuing)
+5. Re-verify — rerun the tests, plus curl against the real API / drive a real browser with playwright (screenshots go to .screenshots/)
+6. commit (final version)
 ```
 
-三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
+Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (including a 12-item Fowler code-smell baseline), and real-environment verification owns behaviour.
 
-### CLAUDE.md 維護規則（pre-commit gate 強制）
+Step 1 proves the thing you built is right; step 5 proves that simplifying it and applying review findings didn't break it. Different purposes — neither substitutes for the other.
 
-- 每個含程式碼的資料夾都要有 CLAUDE.md；改碼時同批更新，並逐層堆疊更新上層
-- gate（`~/.claude/scripts/check-claude-md.sh`，由 `/dd-init` 掛進專案 `.git/hooks/pre-commit`）擋下不合規 commit，錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
-- 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過
+The full path from zero to daily use (install once, stamp each project once, then every feature increment runs the same loop):
 
-## 指令一覽
+![claude-dd usage flow](diagrams/claude-dd-usage-flow.gif)
 
-| 指令 | 說明 |
-|------|------|
-| `/dd-init` | 初始化專案：蓋章 6 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`、檢查 plugin 依賴 |
-| `/review`（workflow-review） | 綜合程式碼審查（安全、效能、配置） |
+### CLAUDE.md maintenance rules (enforced by pre-commit gate)
 
-## Promoted Skills（預設部署，10 個）
+- Every folder containing code needs a `CLAUDE.md`; it is updated in the same batch as the code, and the update cascades upward through the parent layers
+- The gate (`~/.claude/scripts/check-claude-md.sh`, hooked into the project's `.git/hooks/pre-commit` by `/dd-init`) rejects non-compliant commits. Its error message tells the AI agent directly to read the directory, generate or update the file itself, and retry
+- Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly
 
-| Skill | 說明 |
-|-------|------|
-| code-simplifier | 程式碼簡化（迴圈步驟 3 的 wrapper） |
-| design-brainstorm | 蘇格拉底式設計對話（事實自己查、決策才問人） |
-| frontend-design | 前端視覺設計 |
-| review | 綜合審查 wrapper |
-| self-improving-agent | 記憶審計與知識沉澱 |
-| task-planner | 微任務拆解 |
-| tech-diagram-gif | 技術圖表繪製與 GIF 匯出（風格規範 vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)） |
-| verification-gate | 完成前驗證閘門（宣稱完成須附新鮮證據） |
-| worktree-manager | Git worktree 隔離 |
-| writing-great-skills | skill 撰寫參考（vendored 自 [mattpocock/skills](https://github.com/mattpocock/skills)，user-invoked） |
+## Commands
 
-## 官方 Plugins（安裝腳本管理）
+| Command | Description |
+|---------|-------------|
+| `/dd-init` | Initialise a project: stamp the 6-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/`, verify plugin dependencies |
+| `/review` (workflow-review) | Combined code review — security, performance, configuration |
 
-| Plugin | 功能 |
-|--------|------|
-| claude-md-management | 巢狀 CLAUDE.md 稽核與更新（`claude-md-improver` skill + `/revise-claude-md`）— 6 步迴圈的文件維護依賴 |
+## Promoted Skills (10, deployed by default)
+
+> "Promoted" means the component has an evidenced usage record and therefore ships by default. Components without one were removed rather than kept around — the git history holds them.
+
+| Skill | Description |
+|-------|-------------|
+| code-simplifier | Code simplification (the wrapper used at step 3 of the loop) |
+| design-brainstorm | Socratic design dialogue — look facts up yourself, only ask the human about decisions |
+| frontend-design | Frontend visual design |
+| review | Combined-review wrapper |
+| self-improving-agent | Memory auditing and knowledge distillation |
+| task-planner | Micro-task breakdown |
+| tech-diagram-gif | Technical diagrams with GIF export (style specs vendored from [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)) |
+| verification-gate | Pre-completion gate — claiming done requires fresh evidence |
+| worktree-manager | Git worktree isolation |
+| writing-great-skills | Reference for writing skills (vendored from [mattpocock/skills](https://github.com/mattpocock/skills), user-invoked) |
+
+## Official plugins (managed by the installer)
+
+| Plugin | Purpose |
+|--------|---------|
+| claude-md-management | Auditing and updating nested CLAUDE.md files (`claude-md-improver` skill + `/revise-claude-md`) — the documentation-maintenance dependency of the 6-step cycle |
 
 ## MCP
 
-安裝腳本只檢查不安裝，且會**區分設定範圍**：設在 `~/.claude.json` 根層 `mcpServers`
-（官方 scope 名稱 `user`，所有專案可用）才顯示 ✅；只設在個別專案下（官方 `local`）
-標示「僅 N 個專案設定」— 那在其他專案用不到，對「跨機器可攜的工作法」而言等同未安裝。
-解析不了 `~/.claude.json`（檔案損毀）或機器上無 jq / python3 時，回報「無法判定」而非「未安裝」。
+The installer checks for MCP servers but never installs them, and it **distinguishes configuration scope**. A ✅ requires the server to be under the root `mcpServers` key of `~/.claude.json` (official scope name `user`, available in every project). A server configured only under an individual project (official scope `local`) is reported as "configured in N projects only" — it is unavailable elsewhere, which for a working method built around portability is equivalent to not installed. If `~/.claude.json` cannot be parsed (corrupt file), or the machine has neither `jq` nor `python3`, the check reports "cannot determine" rather than "not installed".
 
-> **限制**：官方第三種 scope（`project` — 專案根目錄的 `.mcp.json`）不在 `~/.claude.json` 內，
-> 本檢查看不到，該情況會低報。要看完整實況以 `claude mcp list` 為準（三種 scope 都會列出）。
+> **Limitation**: the third official scope (`project` — a `.mcp.json` in the project root) does not live in `~/.claude.json`, so this check cannot see it and will under-report in that case. For the complete picture use `claude mcp list`, which lists all three scopes.
 
-安裝 MCP 時建議指定 user scope，才是所有專案可用：
+When installing an MCP server, specify user scope so it is available in every project:
 
 ```bash
 claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 ```
 
-### 必要
+### Required
 
-| MCP | 說明 | 來源 |
-|-----|------|------|
-| playwright | 瀏覽器自動化（迴圈步驟 5 前端驗證） | [playwright-mcp](https://github.com/microsoft/playwright-mcp) |
+| MCP | Description | Source |
+|-----|-------------|--------|
+| playwright | Browser automation (frontend verification at step 5 of the loop) | [playwright-mcp](https://github.com/microsoft/playwright-mcp) |
 
-### 可選
+### Optional
 
-| MCP | 說明 | 來源 |
-|-----|------|------|
-| context7 | 取版本正確的函式庫官方文件（支撐全域 CLAUDE.md §2.5「禁止從名稱推論 API」） | [@upstash/context7-mcp](https://github.com/upstash/context7) |
-| sequential-thinking | 循序思考推理 | [@modelcontextprotocol/server-sequential-thinking](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking) |
-| serena | 智能程式碼助手 | [serena](https://github.com/oraios/serena) |
-| cipher | AI 程式碼記憶層 | [@byterover/cipher](https://github.com/campfirein/cipher) |
-| zeabur | 雲端部署平台 | [zeabur-mcp](https://zeabur.com/docs/en-US/mcp) |
-| google-docs | Google 文件整合 | [google-docs-mcp](https://github.com/a-bonus/google-docs-mcp) |
-| googleDrive | Google 雲端硬碟整合 | [gdrive-mcp-server](https://github.com/felores/gdrive-mcp-server) |
-| claude-mem | 跨對話記憶系統 | [claude-mem](https://github.com/thedotmack/claude-mem) |
+| MCP | Description | Source |
+|-----|-------------|--------|
+| context7 | Version-accurate official library documentation (backs global CLAUDE.md §2.5, "never infer an API from its name") | [@upstash/context7-mcp](https://github.com/upstash/context7) |
+| sequential-thinking | Sequential reasoning | [@modelcontextprotocol/server-sequential-thinking](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking) |
+| serena | Code assistant | [serena](https://github.com/oraios/serena) |
+| cipher | Memory layer for AI coding | [@byterover/cipher](https://github.com/campfirein/cipher) |
+| zeabur | Cloud deployment platform | [zeabur-mcp](https://zeabur.com/docs/en-US/mcp) |
+| google-docs | Google Docs integration | [google-docs-mcp](https://github.com/a-bonus/google-docs-mcp) |
+| googleDrive | Google Drive integration | [gdrive-mcp-server](https://github.com/felores/gdrive-mcp-server) |
+| claude-mem | Cross-conversation memory | [claude-mem](https://github.com/thedotmack/claude-mem) |
 
-## 清理外部殘留（手動）
+## Cleaning up foreign leftovers (manual)
 
-安裝腳本只管理**本 repo 部署過**的項目；其他來源（第三方 skill 安裝器、舊版安裝包）寫進
-`~/.claude/skills/` 的殘留需手動清理，型態與排查指令見
-[CLAUDE.md「殘留清理（手動）」](CLAUDE.md#殘留清理手動)（單一維護來源，避免兩份文件各自過期）。
+The installer only manages what **this repo deployed**. Leftovers written into `~/.claude/skills/` by other sources — third-party skill installers, older install bundles — have to be cleaned up by hand. The known shapes and the commands to find them are documented in [CLAUDE.md, "殘留清理（手動）"](CLAUDE.md#殘留清理手動) *(Traditional Chinese)*, kept there as the single maintenance source so two documents can't go stale independently.
 
-## 授權
+## License
 
 MIT License
 
-vendored 內容：`skills/writing-great-skills/`（來自 [mattpocock/skills](https://github.com/mattpocock/skills)，MIT）；
-`agents/code-reviewer.md` 的 Fowler smell baseline 章節改編自同一來源。
+Vendored content: `skills/writing-great-skills/` (from [mattpocock/skills](https://github.com/mattpocock/skills), MIT); the Fowler smell baseline section of `agents/code-reviewer.md` is adapted from the same source.
 
-## 貢獻
+## Contributing
 
-歡迎提交 Issue 和 Pull Request！
+Issues and pull requests are welcome.

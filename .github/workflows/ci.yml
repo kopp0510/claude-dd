@@ -72,26 +72,31 @@ jobs:
             fi
           }
 
-          # README 安裝章節
-          ck "README 安裝 promoted skills 數" \
-            "$(grep -oE "安裝 [0-9]+ 個 promoted Skills" README.md | grep -oE "[0-9]+")" \
-            "${#PROMOTED_SKILLS[@]}"
-          ck "README 安裝 promoted agents 數" \
-            "$(grep -oE "安裝 [0-9]+ 個 promoted Agents" README.md | grep -oE "[0-9]+")" \
-            "${#PROMOTED_AGENTS[@]}"
+          # README（英文預設 + 繁中）：安裝章節數字、Promoted Skills 標題數字與表格內容
+          # 正規式刻意做成語言無關 —「10 個 promoted Skills」與「10 promoted Skills」都吃，
+          # 兩份都驗，否則沒被驗的那份會靜靜過期
+          for rf in README.md README.zh-TW.md; do
+            [ -f "$rf" ] || { echo "❌ 找不到 $rf"; fail=1; continue; }
 
-          # README Promoted Skills 章節：標題數字 + 表格內容
-          ck "README Promoted Skills 標題數" \
-            "$(grep -oE "^## Promoted Skills（預設部署，[0-9]+ 個）" README.md | grep -oE "[0-9]+")" \
-            "${#PROMOTED_SKILLS[@]}"
-          tbl=$(awk '/^## Promoted Skills/{f=1;next} f&&/^## /{exit} f' README.md \
-            | awk -F'|' '/^\| [a-z]/{gsub(/ /,"",$2); print $2}' | sort)
-          if ! diff <(printf "%s\n" "${PROMOTED_SKILLS[@]}" | sort) <(echo "$tbl"); then
-            echo "❌ README Promoted Skills 表格與 PROMOTED_SKILLS 陣列不一致（< 陣列 / > 表格）"
-            fail=1
-          else
-            echo "✅ README Promoted Skills 表格一致"
-          fi
+            ck "${rf} 安裝 promoted skills 數" \
+              "$(grep -oE "[0-9]+( 個)? promoted Skills" "$rf" | grep -oE "^[0-9]+" | head -1)" \
+              "${#PROMOTED_SKILLS[@]}"
+            ck "${rf} 安裝 promoted agents 數" \
+              "$(grep -oE "[0-9]+( 個)? promoted Agents" "$rf" | grep -oE "^[0-9]+" | head -1)" \
+              "${#PROMOTED_AGENTS[@]}"
+
+            ck "${rf} Promoted Skills 標題數" \
+              "$(grep -oE "^## Promoted Skills[^0-9]*[0-9]+" "$rf" | grep -oE "[0-9]+$" | head -1)" \
+              "${#PROMOTED_SKILLS[@]}"
+            tbl=$(awk '/^## Promoted Skills/{f=1;next} f&&/^## /{exit} f' "$rf" \
+              | awk -F'|' '/^\| [a-z]/{gsub(/ /,"",$2); print $2}' | sort)
+            if ! diff <(printf "%s\n" "${PROMOTED_SKILLS[@]}" | sort) <(echo "$tbl"); then
+              echo "❌ ${rf} Promoted Skills 表格與 PROMOTED_SKILLS 陣列不一致（< 陣列 / > 表格）"
+              fail=1
+            else
+              echo "✅ ${rf} Promoted Skills 表格一致"
+            fi
+          done
 
           # 專案 CLAUDE.md 目錄結構數字
           ck "CLAUDE.md skills 總數" \
