@@ -235,7 +235,6 @@ claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 | context7 | Version-accurate official library documentation (backs global CLAUDE.md §2.5, "never infer an API from its name") | [@upstash/context7-mcp](https://github.com/upstash/context7) |
 | sequential-thinking | Sequential reasoning | [@modelcontextprotocol/server-sequential-thinking](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking) |
 | serena | Code assistant | [serena](https://github.com/oraios/serena) |
-| cipher | Memory layer for AI coding | [@byterover/cipher](https://github.com/campfirein/cipher) |
 | zeabur | Cloud deployment platform | [zeabur-mcp](https://zeabur.com/docs/en-US/mcp) |
 | google-docs | Google Docs integration | [google-docs-mcp](https://github.com/a-bonus/google-docs-mcp) |
 | googleDrive | Google Drive integration | [gdrive-mcp-server](https://github.com/felores/gdrive-mcp-server) |
