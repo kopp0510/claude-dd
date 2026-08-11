@@ -148,6 +148,12 @@ git pull && ./install-dd-pipeline.sh --force
 > **限制**：官方第三種 scope（`project` — 專案根目錄的 `.mcp.json`）不在 `~/.claude.json` 內，
 > 本檢查看不到，該情況會低報。要看完整實況以 `claude mcp list` 為準（三種 scope 都會列出）。
 
+安裝 MCP 時建議指定 user scope，才是所有專案可用：
+
+```bash
+claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
+```
+
 ### 必要
 
 | MCP | 說明 | 來源 |
@@ -158,6 +164,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 | MCP | 說明 | 來源 |
 |-----|------|------|
+| context7 | 取版本正確的函式庫官方文件（支撐全域 CLAUDE.md §2.5「禁止從名稱推論 API」） | [@upstash/context7-mcp](https://github.com/upstash/context7) |
 | sequential-thinking | 循序思考推理 | [@modelcontextprotocol/server-sequential-thinking](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking) |
 | serena | 智能程式碼助手 | [serena](https://github.com/oraios/serena) |
 | cipher | AI 程式碼記憶層 | [@byterover/cipher](https://github.com/campfirein/cipher) |

@@ -92,6 +92,7 @@ REQUIRED_MCP=(
 
 # 可選的 MCP
 OPTIONAL_MCP=(
+    "context7"
     "sequential-thinking"
     "serena"
     "cipher"
