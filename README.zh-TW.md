@@ -63,7 +63,7 @@ cd claude-dd
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
 5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
-7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**`--force` 會跳過這個詢問直接覆蓋**，見[升級](#升級)
+7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
 另有一個不列入編號的附加步驟：部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`。
 
@@ -87,7 +87,9 @@ cd claude-dd
 git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
 ```
 
-全域 CLAUDE.md 走互動 diff，對方已有自己的全域規則時可先看差異再決定。
+全域 CLAUDE.md 走互動 diff，對方已有自己的全域規則時可先看差異再決定；
+完全沒有全域 CLAUDE.md 的人則是問要不要安裝、預設「否」— 沒有明確答 `y`（或帶 `--force`），
+任何人的 `~/.claude/CLAUDE.md` 都不會被建立或取代。
 
 > 曾評估過 plugin marketplace 分發路線（2026-08-04 實測可行後移除）：plugin 機制
 > 無法部署全域 CLAUDE.md 與 pre-commit gate，只能交付元件子集，與「完整工作法」

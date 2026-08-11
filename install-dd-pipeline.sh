@@ -402,7 +402,7 @@ check_plugins() {
 }
 
 # 驗證 Skills 的 hook 路徑（防止相對路徑：hook command 以 cwd 為基準執行，
-# 相對路徑在非 skill 目錄跑 Bash 時會找不到腳本 → non-blocking 報錯）
+# 相對路徑在非 skill 目錄跑 Bash 時會找不到腳本 → 發現即中止部署 exit 1）
 validate_skill_hooks() {
     local errors=0
 

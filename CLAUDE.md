@@ -6,7 +6,7 @@
 
 ```bash
 ./install-dd-pipeline.sh                    # 首次安裝
-./install-dd-pipeline.sh --force            # 強制更新所有檔案
+./install-dd-pipeline.sh --force            # 更新：差異檔覆蓋（內容相同不重寫）；全域 CLAUDE.md 跳過詢問直接覆蓋（先備份）
 ./install-dd-pipeline.sh --check            # 只檢查環境
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
 ```
@@ -56,7 +56,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 ## 新增 Agent 步驟
 
-1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model: inherit`）
+1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model` —
+   自製 agent 用 `inherit`；官方備份（code-reviewer / code-simplifier）維持上游的 `opus`，不要改齊）
 2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
@@ -77,7 +78,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
-`~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit` — 改碼目錄缺
+`~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有
+`core.hooksPath` 時改掛該目錄，見下方「開發本 repo」）— 改碼目錄缺
 CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
 
 > **舊 DD Pipeline（已刪除）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
@@ -105,8 +107,9 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - README 有英文（`README.md`，GitHub 預設顯示）與繁中（`README.zh-TW.md`）兩份，**內容須同批更新**。
   CI 對兩份都驗數字宣稱與 Promoted Skills 表格，正規式為語言無關（`.github/workflows/ci.yml`）。
   CHANGELOG.md 與 UPGRADING.md 維持純繁中，英文 README 連向它們時須標註 *(Traditional Chinese)*。
-  README 變英文不改變本專案的註解與回應語言 — 專案 CLAUDE.md（衝突順序第 3 位）優先於
-  全域模板 §1.1「跟隨 README 語言」（第 5 位）
+  README 變英文不改變本專案的註解語言 — 專案 CLAUDE.md（衝突順序第 3 位）優先於
+  全域模板 §1.1 程式碼註解列的「跟隨 README 語言」（第 5 位）；回應語言在 §1.1
+  本就固定繁中，與 README 語言無關
 - 查 `~/.claude.json` 的內容（MCP 等）務必真正解析 JSON 判斷 scope，**不可用字串 grep** —
   該檔同時存放所有專案的 scoped 設定，純比對會把別的專案的設定誤判為已安裝
   （`mcp_scope()` 為此而寫：jq → python3 → 退化標示無法判定）
@@ -117,8 +120,9 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
-  CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期。同理適用於
-  指令一覽、官方 Plugins、安裝選項清單：這些在雙語化後是 12 處而非 6 處手動同步點
+  CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期。
+  CI 不驗的手動同步區塊共 6 類（安裝步驟清單、安裝選項、指令一覽、官方 Plugins、
+  MCP 必要表、MCP 可選表），雙語化後 × 兩份 README = 12 處
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
@@ -127,7 +131,7 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 | # | 檢查項 | 怎麼驗 | 不過的處置 |
 |---|---|---|---|
 | 1 | **授權相容** | LICENSE 存在且相容（MIT/Apache 可；GPL/未標需評估）。frontmatter 若寫 `license: … LICENSE.txt`，該檔**必須同目錄存在** | 補齊 LICENSE 或移除懸空 frontmatter |
-| 2 | **hook 路徑絕對化** | grep `hooks/hooks.json`，`command` 必為 `$HOME/.claude/…`，無相對路徑（`./`）。詳見上方「Skill hook 路徑規範」 | 併入前改寫（`validate_skill_hooks()` 也會擋） |
+| 2 | **hook 路徑絕對化** | grep `hooks/hooks.json`，`command` 路徑須以 `/`、`$HOME/`、`~/` 或 `${CLAUDE_PLUGIN_ROOT}` 開頭（validator 會先剝掉 `bash`/`node` 等直譯器前綴再判斷）；相對路徑（`./`）不合格。詳見上方「Skill hook 路徑規範」 | 併入前改寫（`validate_skill_hooks()` 也會擋） |
 | 3 | **CLI / pkg 事實驗證** | 任何 `npm install` / CLI args / 套件名，先 `npm view <pkg>` 或讀官方 README 證實，**不靠名稱推論** | 無法證實 → 不收 |
 | 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
 | 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
@@ -148,7 +152,7 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 排查指令：
 
 ```bash
-ls ~/.claude/skills/*.zip 2>/dev/null                              # 查 zip 殘留
+find ~/.claude/skills -maxdepth 1 -name '*.zip'                    # 查 zip 殘留（zsh 下 glob 無匹配會直接報錯，故用 find）
 ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null  # 查分類目錄殘留
 ```
 
