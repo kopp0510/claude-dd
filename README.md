@@ -34,7 +34,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 - **Zero-hallucination policy** — API signatures, version numbers, and project facts must carry a source annotation; hedges like "should be" or "probably" are banned outright rather than tolerated
 - **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason must be written out, turning "I skipped it" from a black box into an auditable line
 - **Usage-inventory model** — only components with an evidenced usage record are kept, and all of them ship by default, so idle skills don't eat context
-- **Global CLAUDE.md template** — the single source for all of the above, deployed to `~/.claude/CLAUDE.md` through an interactive diff
+- **Global CLAUDE.md template** — the single source for all of the above, deployed to `~/.claude/CLAUDE.md` through an interactive diff (`--force` overwrites it directly instead, backing the old one up)
 
 ## Installation
 
