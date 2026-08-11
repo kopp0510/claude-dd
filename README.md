@@ -50,8 +50,7 @@ cd claude-dd
 3. 啟用官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴）
 4. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 5. 部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`
-6. 安裝文件模板到 `~/.claude/templates/dd/`
-7. **互動式比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）
+6. **互動式比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）
 
 ### 安裝選項
 
@@ -67,7 +66,7 @@ cd claude-dd
 
 ### 分享給別人
 
-安裝方式只有一種（含完整工作法：全域規則、6 步迴圈、pre-commit gate、模板與精選元件）：
+安裝方式只有一種（含完整工作法：全域規則、6 步迴圈、pre-commit gate 與精選元件）：
 
 ```bash
 git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
