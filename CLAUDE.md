@@ -105,6 +105,12 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - 查 `~/.claude.json` 的內容（MCP 等）務必真正解析 JSON 判斷 scope，**不可用字串 grep** —
   該檔同時存放所有專案的 scoped 設定，純比對會把別的專案的設定誤判為已安裝
   （`mcp_scope()` 為此而寫：jq → python3 → 退化標示無法判定）
+- 檢查類輸出的鐵則：**不確定就說不確定，不可退化成有把握的斷言**。`mcp_scope()`
+  區分 `none`（確定沒有）／`unparseable`（檔案損毀，無從判定）／`unknown`（缺 jq
+  與 python3，只有字串證據）；jq 與 python3 兩條路徑須逐項等價（型別護欄要對齊），
+  否則同一台機器裝不裝 jq 會得到不同結論
+- `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
+  （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 

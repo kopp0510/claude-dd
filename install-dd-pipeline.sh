@@ -561,54 +561,72 @@ install_builtin_agents() {
 
 # 檢查 MCP
 # 判定單一 MCP 在 ~/.claude.json 中的設定範圍，輸出下列其一：
-#   global    — 根層 mcpServers（所有專案皆可用，這才是 profile 想要的狀態）
-#   local:<N> — 僅出現在 N 個專案的 projects.<路徑>.mcpServers（其他專案用不到）
-#   none      — 找不到
-#   unknown   — 無 jq 也無 python3，退回字串比對，無法判定範圍
-# 純字串 grep 會把別的專案的 scoped 設定誤判為已安裝，故需真正解析 JSON
+#   global      — 根層 mcpServers（官方 scope 名稱為 user；所有專案皆可用，profile 要的就是這個）
+#   local:<N>   — 僅出現在 N 個專案的 projects.<路徑>.mcpServers（官方 scope 名稱為 local）
+#   none        — 檔案不存在，或解析成功但找不到
+#   unparseable — 檔案存在但 JSON 解析失敗（損毀 / 截斷），有無安裝無從判定
+#   unknown     — 無 jq 也無 python3，只能字串比對，連「是否真的設定」都僅為字串證據
+# 兩點必須留意：
+#   1) 純字串 grep 會把別的專案的 scoped 設定誤判為已安裝，故需真正解析 JSON
+#   2) 官方第三種 scope（project = 專案根目錄的 .mcp.json）不在此檔內，本函式看不到
 mcp_scope() {
-    local mcp="$1" file="$2"
+    local mcp="$1" file="$2" out=""
 
     file_exists "$file" || { echo "none"; return; }
 
     if command_exists "jq"; then
-        jq -r --arg name "$mcp" '
-            if ((.mcpServers // {}) | has($name)) then "global"
+        # 型別護欄與 python3 分支對齊：非物件的 mcpServers / projects 條目一律略過，
+        # 而不是讓整條 filter 報錯（報錯會被誤讀成「沒安裝」）
+        out=$(jq -r --arg name "$mcp" '
+            def hasmcp($o): ($o | type) == "object" and (($o.mcpServers // {}) | type) == "object"
+                            and (($o.mcpServers // {}) | has($name));
+            if hasmcp(.) then "global"
             else
-                (((.projects // {}) | [to_entries[] | select((.value.mcpServers // {}) | has($name))] | length)) as $n
+                (((.projects // {}) | if type == "object" then [to_entries[] | select(hasmcp(.value))] | length else 0 end)) as $n
                 | if $n > 0 then "local:\($n)" else "none" end
-            end' "$file" 2>/dev/null || echo "none"
+            end' "$file" 2>/dev/null) || out=""
     elif command_exists "python3"; then
-        MCP_NAME="$mcp" MCP_FILE="$file" python3 -c '
+        out=$(MCP_NAME="$mcp" MCP_FILE="$file" python3 -c '
 import json, os, sys
 name, path = os.environ["MCP_NAME"], os.environ["MCP_FILE"]
 try:
     with open(path) as f:
         data = json.load(f)
 except Exception:
-    print("none"); sys.exit()
-if name in (data.get("mcpServers") or {}):
+    sys.exit(1)
+def hasmcp(o):
+    return isinstance(o, dict) and isinstance(o.get("mcpServers") or {}, dict) \
+           and name in (o.get("mcpServers") or {})
+if hasmcp(data):
     print("global")
 else:
-    n = sum(1 for p in (data.get("projects") or {}).values()
-            if isinstance(p, dict) and name in (p.get("mcpServers") or {}))
+    projects = data.get("projects") or {}
+    n = sum(1 for p in projects.values() if hasmcp(p)) if isinstance(projects, dict) else 0
     print("local:%d" % n if n else "none")
-' 2>/dev/null || echo "none"
+' 2>/dev/null) || out=""
     else
         grep -q "\"$mcp\"" "$file" 2>/dev/null && echo "unknown" || echo "none"
+        return
     fi
+
+    # 空輸出 = 解析失敗或空檔：回報「無法判定」而非「沒安裝」
+    # （對一個要求可稽核的腳本，把不確定講成確定的斷言是最該避免的錯誤）
+    [ -n "$out" ] && echo "$out" || echo "unparseable"
 }
 
-# 依範圍輸出一行；$1=樹狀符號 $2=名稱 $3=範圍 $4=縮排
+# 依範圍輸出一行；$1=樹狀符號 $2=名稱 $3=範圍 $4=縮排 $5=額外說明（可空）
+# 必要與可選兩區塊共用，避免同一份 scope→訊息映射寫兩次而漂移
 print_mcp_line() {
-    local tree="$1" mcp="$2" scope="$3" indent="$4"
+    local tree="$1" mcp="$2" scope="$3" indent="$4" extra="$5"
     case "$scope" in
         global)
             echo -e "${indent}${tree} $mcp: ${GREEN}${CHECK}${NC}" ;;
         local:*)
-            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 僅 ${scope#local:} 個專案設定（非全域，其他專案用不到）${NC}" ;;
+            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 僅 ${scope#local:} 個專案設定（非全域${extra}）${NC}" ;;
+        unparseable)
+            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 無法判定（~/.claude.json 解析失敗，檔案損毀？）${NC}" ;;
         unknown)
-            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 已設定（缺 jq/python3，無法判定是全域或單一專案）${NC}" ;;
+            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 疑似已設定（缺 jq/python3，僅字串比對，範圍未知）${NC}" ;;
         *)
             echo -e "${indent}${tree} $mcp: ${YELLOW}未安裝${NC}" ;;
     esac
@@ -625,12 +643,11 @@ check_mcp() {
 
     for mcp in "${REQUIRED_MCP[@]}"; do
         scope=$(mcp_scope "$mcp" "$claude_json")
-        case "$scope" in
-            global)  print_success "$mcp" ;;
-            local:*) print_warn "$mcp（僅 ${scope#local:} 個專案設定，非全域 — 迴圈步驟 5 在其他專案不可用）" ;;
-            unknown) print_warn "$mcp（已設定，缺 jq/python3 無法判定範圍）" ;;
-            *)       print_fail "$mcp (需要手動設定)" ;;
-        esac
+        if [ "$scope" = "none" ]; then
+            print_fail "$mcp (需要手動設定)"
+        else
+            print_mcp_line "├──" "$mcp" "$scope" "" "，迴圈步驟 5 在其他專案不可用"
+        fi
     done
 
     echo "│"
@@ -645,7 +662,7 @@ check_mcp() {
         tree="├──"
         [ "$i" -eq "$count" ] && tree="└──"
         scope=$(mcp_scope "$mcp" "$claude_json")
-        print_mcp_line "$tree" "$mcp" "$scope" "    "
+        print_mcp_line "$tree" "$mcp" "$scope" "    " "，其他專案用不到"
     done
 
     echo ""
