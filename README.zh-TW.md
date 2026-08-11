@@ -4,7 +4,7 @@
 
 > 可攜式 Claude Code 設定庫 — 把「AI 有沒有照規矩做」變成看得見、擋得住的輸出
 
-![claude-dd 三層架構](diagrams/claude-dd-architecture.gif)
+![claude-dd 三層架構](diagrams/claude-dd-architecture.zh-TW.gif)
 
 **是什麼**：跨機器可攜的 Claude Code profile（skills / agents / commands / 全域 CLAUDE.md）。
 `git clone` 後跑一支 bash，整套工作習慣就裝進 `~/.claude/`；此 repo 是 source of truth。
@@ -110,7 +110,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 從零到日常的完整路徑（裝一次、每個專案蓋章一次、之後每個功能段落走同一個迴圈）：
 
-![claude-dd 使用流程](diagrams/claude-dd-usage-flow.gif)
+![claude-dd 使用流程](diagrams/claude-dd-usage-flow.zh-TW.gif)
 
 ### CLAUDE.md 維護規則（pre-commit gate 強制）
 
