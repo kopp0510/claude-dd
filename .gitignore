@@ -26,3 +26,6 @@
 
 # Playwright MCP 工作目錄（渲染自檢暫存）
 .playwright-mcp/
+
+# 文章草稿（Medium 等，發布前不進公開 repo）
+.drafts/
