@@ -204,6 +204,15 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 |--------|------|
 | claude-md-management | 巢狀 CLAUDE.md 稽核與更新（`claude-md-improver` skill + `/revise-claude-md`）— 6 步迴圈的文件維護依賴 |
 
+### 推薦第三方 Plugin（安裝腳本不管理）
+
+| Plugin | 功能 | 安裝方式 |
+|--------|------|----------|
+| [claude-mem](https://github.com/thedotmack/claude-mem) | 跨對話記憶（以 lifecycle hooks 自動記錄 session，內附檢索工具） | `npx claude-mem install` |
+
+> claude-mem 以 **plugin** 形式安裝，不是 MCP server — 不會註冊進 `~/.claude.json` 的
+> `mcpServers`，因此安裝腳本的 MCP 檢查看不到它，也不會嘗試檢查。
+
 ## MCP
 
 安裝腳本只檢查不安裝，且會**區分設定範圍**：設在 `~/.claude.json` 根層 `mcpServers`
@@ -247,7 +256,6 @@ claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 | zeabur | 雲端部署平台 | [zeabur-mcp](https://zeabur.com/docs/en-US/mcp) |
 | google-docs | Google 文件整合 | [google-docs-mcp](https://github.com/a-bonus/google-docs-mcp) |
 | googleDrive | Google 雲端硬碟整合 | [gdrive-mcp-server](https://github.com/felores/gdrive-mcp-server) |
-| claude-mem | 跨對話記憶系統 | [claude-mem](https://github.com/thedotmack/claude-mem) |
 
 ## 清理外部殘留（手動）
 

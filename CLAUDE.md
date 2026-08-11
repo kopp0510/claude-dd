@@ -121,8 +121,11 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
   CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期。
-  CI 不驗的手動同步區塊共 6 類（安裝步驟清單、安裝選項、指令一覽、官方 Plugins、
-  MCP 必要表、MCP 可選表），雙語化後 × 兩份 README = 12 處
+  CI 不驗的手動同步區塊共 7 類（安裝步驟清單、安裝選項、指令一覽、官方 Plugins、
+  第三方 Plugin 推薦、MCP 必要表、MCP 可選表），雙語化後 × 兩份 README = 14 處
+- `OPTIONAL_MCP` 只收 **MCP server**（會註冊進 `~/.claude.json` `mcpServers` 的東西）；
+  plugin 形式的工具（如 claude-mem，`npx claude-mem install` 走 hooks + plugin 系統）
+  列進去檢查會**永遠回報未安裝**，應改列 README 的「推薦第三方 Plugin」段落
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 

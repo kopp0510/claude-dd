@@ -192,6 +192,14 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 |--------|---------|
 | claude-md-management | Auditing and updating nested CLAUDE.md files (`claude-md-improver` skill + `/revise-claude-md`) — the documentation-maintenance dependency of the 6-step cycle |
 
+### Recommended third-party plugin (not managed by the installer)
+
+| Plugin | Purpose | Install |
+|--------|---------|---------|
+| [claude-mem](https://github.com/thedotmack/claude-mem) | Cross-conversation memory (records sessions via lifecycle hooks, with bundled search tools) | `npx claude-mem install` |
+
+> claude-mem installs as a **plugin**, not an MCP server — it never registers under `mcpServers` in `~/.claude.json`, so the installer's MCP check cannot see it and does not try to.
+
 ## MCP
 
 The installer checks for MCP servers but never installs them, and it **distinguishes configuration scope**. A ✅ requires the server to be under the root `mcpServers` key of `~/.claude.json` (official scope name `user`, available in every project). A server configured only under an individual project (official scope `local`) is reported as "configured in N projects only" — it is unavailable elsewhere, which for a working method built around portability is equivalent to not installed.
@@ -231,7 +239,6 @@ claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 | zeabur | Cloud deployment platform | [zeabur-mcp](https://zeabur.com/docs/en-US/mcp) |
 | google-docs | Google Docs integration | [google-docs-mcp](https://github.com/a-bonus/google-docs-mcp) |
 | googleDrive | Google Drive integration | [gdrive-mcp-server](https://github.com/felores/gdrive-mcp-server) |
-| claude-mem | Cross-conversation memory | [claude-mem](https://github.com/thedotmack/claude-mem) |
 
 ## Cleaning up foreign leftovers (manual)
 
