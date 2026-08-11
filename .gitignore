@@ -26,6 +26,3 @@
 
 # Playwright MCP 工作目錄（渲染自檢暫存）
 .playwright-mcp/
-
-# 圖表成品（tech-diagram-gif 輸出,本地產物不進版控）
-diagrams/
