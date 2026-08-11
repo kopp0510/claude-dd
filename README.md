@@ -161,7 +161,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 ## 清理外部殘留（手動）
 
-安裝腳本只管理**本 repo 部署過**的項目；其他來源（如 tresor、舊版安裝包）寫進
+安裝腳本只管理**本 repo 部署過**的項目；其他來源（第三方 skill 安裝器、舊版安裝包）寫進
 `~/.claude/skills/` 的殘留需手動清理，型態與排查指令見
 [CLAUDE.md「殘留清理（手動）」](CLAUDE.md#殘留清理手動)（單一維護來源，避免兩份文件各自過期）。
 

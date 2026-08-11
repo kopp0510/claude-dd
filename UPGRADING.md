@@ -10,7 +10,8 @@ git pull && ./install-dd-pipeline.sh --force
 
 ## 從舊版部署（全量 / 分桶時期）升級
 
-舊版會把 53 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`。
+舊版會把 53–54 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`
+（全量時期 53 個，分桶時期 54 個）。
 misc / deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本已無 `--prune`（單一部署
 清單後無桶可清）— 從全量或分桶時期部署升級時，先暫時取回含完整名單與 `--prune` 的
 舊版腳本做清理，再換回最新版：
