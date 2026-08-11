@@ -1,20 +1,29 @@
-# DD Pipeline
+# DD Pipeline（claude-dd）
 
-> 可攜式 Claude Code 設定庫 — 以「6 步開發迴圈」為骨幹的輕量開發工作法
+> 可攜式 Claude Code 設定庫 — 把「AI 有沒有照規矩做」變成看得見、擋得住的輸出
 
-claude-dd 是跨機器可攜的 Claude Code profile（skills / agents / commands / 全域 CLAUDE.md），
-由安裝腳本部署到 `~/.claude/`。此 repo 是 source of truth。
+**是什麼**：跨機器可攜的 Claude Code profile（skills / agents / commands / 全域 CLAUDE.md）。
+`git clone` 後跑一支 bash，整套工作習慣就裝進 `~/.claude/`；此 repo 是 source of truth。
 
-> **2026-07-23 大改版**：原多階段 DD Pipeline（dd-start → dd-arch → dd-approve → dd-dev → dd-test）
-> 依實際使用率盤點後封存、2026-08-04 自 repo 刪除（見 git 歷史）；骨幹改為經實戰驗證的 6 步開發迴圈。
-> 舊版說明見 git 歷史（tag 前版本的 README）。
+**解決什麼**：用 AI 寫程式最難的不是寫不出來，是你不知道它有沒有跳步驟 —
+測試跑了嗎？文件同步了嗎？剛才那句話是查證過還是編的？
+這套設定把這些原本靠默契的環節，變成強制執行、留得下紀錄的輸出。
+
+**適合誰**：已經在用 Claude Code，想把個人工作習慣固定下來、換機器也帶得走的開發者。
+
+```bash
+git clone https://github.com/kopp0510/claude-dd.git
+cd claude-dd && ./install-dd-pipeline.sh
+```
 
 ## 特色
 
-- **6 步開發迴圈** — 實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
+- **6 步開發迴圈** — 每個功能段落必走：實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
 - **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
-- **使用率盤點制** — 只保留有實證使用紀錄的元件並全數預設部署，避免閒置 skill 吃 context；零使用的 misc / deprecated 桶已於 2026-08-04 刪除（git 歷史可回溯）
-- **全域 CLAUDE.md 模板** — 零幻覺政策、最小修改、Skill 觸發規則等通用守則，互動式比對部署
+- **零幻覺政策** — 涉及 API 簽名、版本號、專案事實時必須標註來源；「應該是」「大概」等模糊詞列為禁用
+- **Skill 觸發顯性化** — 該觸發卻不觸發時必須寫出一行具體理由，讓「跳過」從黑箱變成可稽核紀錄
+- **使用率盤點制** — 只保留有實證使用紀錄的元件並全數預設部署，避免閒置 skill 吃 context
+- **全域 CLAUDE.md 模板** — 上述守則的單一來源，互動式比對部署到 `~/.claude/CLAUDE.md`
 
 ## 安裝
 
@@ -70,42 +79,16 @@ git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-
 > 無法部署全域 CLAUDE.md 與 pre-commit gate，只能交付元件子集，與「完整工作法」
 > 的定位不符，為維持單一路線而不採用。實作見 git 歷史。
 
-## 升級指南
+## 升級
 
-### 從舊版部署（全量 / 分桶時期）升級
-
-舊版會把 53 個 skills / 21 個 agents / 7 個 dd 指令全部裝進 `~/.claude/`。
-misc / deprecated 桶已於 2026-08-04 自 repo 刪除，現行腳本已無 `--prune`（單一部署
-清單後無桶可清）— 從全量或分桶時期部署升級時，先暫時取回含完整名單與 `--prune` 的
-舊版腳本做清理，再換回最新版：
-
-```bash
-git pull
-git checkout 9a16629 -- install-dd-pipeline.sh   # 暫取含 deprecated 名單的腳本
-./install-dd-pipeline.sh --force --prune          # 清掉不再部署的舊檔（逐項確認）
-git checkout HEAD -- install-dd-pipeline.sh      # 還原最新版腳本（git status 應乾淨）
-./install-dd-pipeline.sh --force
-```
-
-- 全域 CLAUDE.md 會出互動 diff，選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
-- 被清掉的內容需要時自 git 歷史取回（`git checkout 9a16629 -- skills/<名字>` 後加回部署陣列）
-- `--uninstall` 同樣只認得現行部署清單 — 舊部署請先完成上述清理再解除安裝
-
-### 既有專案升級到 6 步迴圈
-
-已在跑舊版（或手寫 5 步版）開發流程的專案：
-
-1. 到該專案跑一次 `/dd-init` — 會補上缺的部分（pre-commit gate、`.screenshots/`、plugin 檢查）
-2. **注意**：專案 CLAUDE.md 若已有 `## 開發流程` 區塊，`/dd-init` 會跳過不覆蓋 —
-   要升級成 6 步版（新增 code-review 步驟、顯性化首輪測試），請手動編輯該區塊，
-   或刪掉舊區塊後重跑 `/dd-init` 重蓋
-3. 舊 DD Pipeline 專案的 `claude_docs/`、`PROJECT_STATE.md` 不受影響，可保留或自行清理
-
-### 日常更新
+日常更新：
 
 ```bash
 git pull && ./install-dd-pipeline.sh --force
 ```
+
+從舊版部署（全量 / 分桶時期）升級、既有專案升級到 6 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+歷次結構性變更見 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 核心工作法：6 步開發迴圈
 

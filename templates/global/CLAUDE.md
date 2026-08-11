@@ -160,6 +160,8 @@
   不自行跑命令,條件須是 Claude 輸出能證明的)
 - 標明不可變動的約束 — 如「不得修改其他測試檔」
 
+> 來源:官方文件 https://code.claude.com/docs/en/goal.md(版本門檻、評估器機制、條件寫法皆逐字對應)
+
 ### 3.5 測試
 
 - 改完**主動提議**跑相關測試,**不自動執行**(除非使用者授權)
@@ -436,12 +438,8 @@ C) 先停下討論
 | `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops`(agent,派 Task) |
 | `Claude API` / `Anthropic SDK` / `Agent SDK` / `prompt caching` | `claude-api`(Claude Code 內建 skill,非本 repo 部署) |
 
-> 2026-07-23 瘦身:原表格 21 列砍至 8 列,只留 promoted 桶對應項。被移除列的目標
-> skill/agent(senior-qa、test-engineer、tdd-guide、test-gen、senior-frontend、
-> ui-design-system、ux-researcher-designer、landing-page-generator、senior-backend、
-> dx-engineer、senior-fullstack、senior-secops、playwright-pro)已不再預設部署
-> (misc / deprecated 桶均已於 2026-08-04 自 repo 刪除,git 歷史可回溯)。
-> 若自 git 歷史取回重裝(`git checkout 9a16629 -- skills/<名字>` 後加回部署陣列),
+> 本表只列預設部署元件。未列的 skill/agent 若自 git 歷史取回重裝
+> (`git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回部署陣列),
 > 依 §7.1 第 4 點(命中 skill description)觸發即可,不需回填本表。
 
 ### 7.3 不該觸發的場景
@@ -469,6 +467,3 @@ C) 先停下討論
 
 觸發成本低(可隨時退出 skill flow),under-trigger 比 over-trigger 嚴重。
 已有具體計畫、prompt 很短、上一輪沒觸發、使用者沒明說要用 skill — 都不是跳過 §7.2 的理由;每輪獨立判斷。
-
-> 2026-07-31:依 Claude 5 家族遷移指引調整 — 規則內容不變,補償性加重語氣平述化
-> (§3.1、§3.9、§7 開頭、§7.2 標題、§7.5),原 §7.6 藉口逐條表濃縮為本原則句。
