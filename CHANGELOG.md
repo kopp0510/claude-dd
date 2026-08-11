@@ -18,7 +18,8 @@
 - 雙語 README：`README.md`（英文，GitHub 預設顯示）與 `README.zh-TW.md`（繁體中文），
   兩份頂部各有一行語言切換列。英文版含 language note，說明規則本文仍是繁中
 - 專案架構圖與使用流程圖（`diagrams/*.gif`，Style 8 Dark Luxury、8 秒循環、20fps），
-  由 tech-diagram-gif skill 產出並納入版控，兩份 README 皆嵌入
+  由 tech-diagram-gif skill 產出並納入版控，兩份 README 皆嵌入。雙語出圖：
+  英文用原檔名（與 README 同一套慣例），繁中版加 `.zh-TW` 後綴
 - 可選 MCP 新增 `context7` — 取版本正確的官方文件，支撐全域 CLAUDE.md §2.5
   「禁止從名稱推論 API」
 - CHANGELOG 改採 semver，回溯補上 v0.2.0–v1.0.0 的 git tag
