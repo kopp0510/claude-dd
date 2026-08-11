@@ -27,7 +27,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /
   17 agents / 6 dd 指令 / 13 NS commands）與 misc 桶（SRE 備援性質但零實際調用的
   11 skills / 5 NS commands）均於 2026-08-04 刪除；取回方式
-  `git checkout 9a16629 -- skills/<名字>` 後加回陣列
+  `git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回陣列
 
 ## 目錄結構
 
@@ -68,7 +68,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 ## 核心工作法：6 步開發迴圈
 
-骨幹已從多階段 DD Pipeline 換成 lawdesk-ai 實戰驗證的功能段落迴圈
+骨幹已從多階段 DD Pipeline 換成經實際專案實戰驗證的功能段落迴圈
 （定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
 
 ```
@@ -82,7 +82,7 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 
 > **舊 DD Pipeline（已刪除）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
 > 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）封存、2026-08-04 刪除，
-> 檔案與舊版 dd-init 見 git 歷史（如 `git show 9a16629:commands/dd-dev.md`）。
+> 檔案與舊版 dd-init 見 git 歷史（如 `git show pre-prune-2026-08-04:commands/dd-dev.md`）。
 
 ## 開發本 repo
 
