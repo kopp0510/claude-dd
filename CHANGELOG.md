@@ -17,10 +17,14 @@ repo 改為單一部署清單，只保留有實證使用紀錄的元件並全數
 - 刪除 deprecated 桶：全歷史 0 次使用的 34 skills / 17 agents / 6 dd 指令 / 13 NS commands
 - 刪除 misc 桶：SRE 備援性質但零實際調用的 11 skills / 5 NS commands
 - 安裝腳本移除 `--prune`（單一清單後無桶可清）
-- 舊版多階段 DD Pipeline 指令（`/dd-start`、`/dd-arch`、`/dd-approve`、`/dd-dev`、`/dd-test`）
-  於此批一併自 repo 刪除
+- 被刪的 6 個 dd 指令為舊版多階段流程的 `/dd-start`、`/dd-arch`、`/dd-approve`、
+  `/dd-dev`、`/dd-test`，加上已停用的 `/dd-dx`；`/dd-init` 保留並改造
 
 被刪內容可自 tag `pre-prune-2026-08-04` 取回，見 UPGRADING.md。
+
+同批曾評估 plugin marketplace 分發路線（`.claude-plugin/marketplace.json`），
+實測可行後仍移除、維持單一 clone + bash 安裝：plugin 機制無法部署全域 CLAUDE.md
+與 pre-commit gate，只能交付元件子集，與「完整工作法」的定位不符。
 
 ## 2026-07-31 — 全域模板依 Claude 5 家族遷移指引調整
 
