@@ -1110,7 +1110,7 @@ show_completion() {
     echo "   claude-md-management — 使用 /revise-claude-md 管理 CLAUDE.md"
     echo ""
     echo -e "${GREEN}📌 查看說明：${NC}"
-    echo "   參閱 README.md"
+    echo "   參閱 README.zh-TW.md（繁體中文）/ README.md（English）"
     echo ""
 }
 

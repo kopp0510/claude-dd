@@ -102,6 +102,11 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
 - 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的部署陣列（CI 會擋不一致）
+- README 有英文（`README.md`，GitHub 預設顯示）與繁中（`README.zh-TW.md`）兩份，**內容須同批更新**。
+  CI 對兩份都驗數字宣稱與 Promoted Skills 表格，正規式為語言無關（`.github/workflows/ci.yml`）。
+  CHANGELOG.md 與 UPGRADING.md 維持純繁中，英文 README 連向它們時須標註 *(Traditional Chinese)*。
+  README 變英文不改變本專案的註解與回應語言 — 專案 CLAUDE.md（衝突順序第 3 位）優先於
+  全域模板 §1.1「跟隨 README 語言」（第 5 位）
 - 查 `~/.claude.json` 的內容（MCP 等）務必真正解析 JSON 判斷 scope，**不可用字串 grep** —
   該檔同時存放所有專案的 scoped 設定，純比對會把別的專案的設定誤判為已安裝
   （`mcp_scope()` 為此而寫：jq → python3 → 退化標示無法判定）
@@ -111,8 +116,9 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   否則同一台機器裝不裝 jq 會得到不同結論
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
-- 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步 README 的 MCP 表格 —
-  CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期
+- 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
+  CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期。同理適用於
+  指令一覽、官方 Plugins、安裝選項清單：這些在雙語化後是 12 處而非 6 處手動同步點
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
