@@ -3,6 +3,18 @@
 記錄影響使用方式的結構性變更。日期為變更進 repo 的日期，細節可在 git 歷史查證。
 升級步驟見 [UPGRADING.md](UPGRADING.md)。
 
+## 2026-08-11 — 刪除 7 個文件模板（舊架構遺留）
+
+`templates/*.template`（REQUIREMENTS / ARCHITECTURE / API_CONTRACT / EXAMPLES /
+ADR / PROJECT_STATE / CLAUDE.md）是舊多階段流程的產出物，其消費者
+（`/dd-start`、`/dd-arch`、`/dd-approve`、`/dd-dev`、`/dd-test`）已於 2026-08-04 刪除。
+
+- 現行 `/dd-init` 依專案偵測結果直接生成內容，不讀模板；全 repo 已無任何讀取路徑
+- 安裝步驟由 8 步減為 7 步，不再部署 `~/.claude/templates/dd/`
+- **既有安裝的 `~/.claude/templates/dd/` 不會被自動刪除**，需要時手動 `rm -rf`
+  或跑 `--uninstall`
+- 取回：`git checkout pre-prune-2026-08-04 -- templates/`
+
 ## 2026-08-10 — 新增 tech-diagram-gif skill
 
 - 新增自製 skill：技術圖表繪製與 GIF 匯出（流程圖 / 架構圖 / 走向動畫），

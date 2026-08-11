@@ -80,17 +80,6 @@ NS_COMMANDS=(
 
 ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 
-# 文件模板（部署到 ~/.claude/templates/dd/）
-DD_TEMPLATES=(
-    "CLAUDE.md.template"
-    "PROJECT_STATE.md.template"
-    "REQUIREMENTS.md.template"
-    "ARCHITECTURE.md.template"
-    "API_CONTRACT.md.template"
-    "EXAMPLES.md.template"
-    "ADR.md.template"
-)
-
 # 輔助腳本（部署到 ~/.claude/scripts/；check-claude-md.sh 由 /dd-init 掛進專案 pre-commit）
 DD_SCRIPTS=(
     "check-claude-md.sh"
@@ -280,7 +269,6 @@ show_help() {
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具，巢狀 CLAUDE.md 維護依賴）"
     echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：6 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
-    echo "  - ${#DD_TEMPLATES[@]} 個 Templates（文檔模板）"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
 }
@@ -290,7 +278,7 @@ check_environment() {
     if [ "${COMMANDS_ONLY:-false}" = true ]; then
         print_step "1/2" "檢查基礎環境"
     else
-        print_step "1/8" "檢查基礎環境"
+        print_step "1/7" "檢查基礎環境"
     fi
 
     local all_ok=true
@@ -356,7 +344,7 @@ check_environment() {
 
 # 檢查內建 Skills（僅檢查，不安裝）
 check_builtin_skills() {
-    print_step "2/8" "檢查內建 Skills"
+    print_step "2/7" "檢查內建 Skills"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local count=${#BUILTIN_SKILLS[@]}
@@ -390,7 +378,7 @@ check_builtin_skills() {
 
 # 檢查 Plugins（僅檢查，不安裝）
 check_plugins() {
-    print_step "5/8" "檢查官方 Plugins"
+    print_step "5/7" "檢查官方 Plugins"
 
     local settings_file="$CLAUDE_DIR/settings.json"
     local count=${#OFFICIAL_PLUGINS[@]}
@@ -456,7 +444,7 @@ validate_skill_hooks() {
 
 # 安裝內建 Skills
 install_builtin_skills() {
-    print_step "2/8" "安裝內建 Skills"
+    print_step "2/7" "安裝內建 Skills"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local count=${#BUILTIN_SKILLS[@]}
@@ -498,7 +486,7 @@ install_builtin_skills() {
 
 # 檢查內建 Agents（僅檢查，不安裝）
 check_builtin_agents() {
-    print_step "3/8" "檢查內建 Agents"
+    print_step "3/7" "檢查內建 Agents"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local count=${#BUILTIN_AGENTS[@]}
@@ -532,7 +520,7 @@ check_builtin_agents() {
 
 # 安裝內建 Agents
 install_builtin_agents() {
-    print_step "3/8" "安裝內建 Agents"
+    print_step "3/7" "安裝內建 Agents"
     echo -e "├── 來源：${CYAN}DD Pipeline 內建${NC}"
 
     local count=${#BUILTIN_AGENTS[@]}
@@ -573,7 +561,7 @@ install_builtin_agents() {
 
 # 檢查 MCP
 check_mcp() {
-    print_step "4/8" "檢查 MCP"
+    print_step "4/7" "檢查 MCP"
 
     local claude_json="$HOME/.claude.json"
 
@@ -616,7 +604,7 @@ check_mcp() {
 
 # 安裝官方 Plugins
 install_plugins() {
-    print_step "5/8" "啟用官方 Plugins"
+    print_step "5/7" "啟用官方 Plugins"
 
     # JSON 讀寫需要 jq 或 python3 其一；皆缺時跳過此步驟（而非在 set -e 下中止、留下半套安裝）
     if ! command_exists "jq" && ! command_exists "python3"; then
@@ -736,7 +724,7 @@ create_commands() {
     if [ "${COMMANDS_ONLY:-false}" = true ]; then
         print_step "2/2" "建立 Commands"
     else
-        print_step "6/8" "建立 Commands"
+        print_step "6/7" "建立 Commands"
     fi
 
     mkdir -p "$COMMANDS_DIR"
@@ -831,7 +819,6 @@ create_commands() {
     echo ""
 }
 
-# 建立 Templates
 # 部署輔助腳本到 ~/.claude/scripts/
 create_scripts() {
     echo -e "${BLUE}${INFO} 附加步驟：部署輔助腳本${NC}"
@@ -873,65 +860,13 @@ create_scripts() {
     echo ""
 }
 
-create_templates() {
-    print_step "7/8" "建立 Templates"
-
-    mkdir -p "$TEMPLATES_DIR"
-
-    local count=${#DD_TEMPLATES[@]}
-    local i=0
-
-    for tpl in "${DD_TEMPLATES[@]}"; do
-        i=$((i + 1))
-        local target="$TEMPLATES_DIR/$tpl"
-        local source="$SCRIPT_DIR/templates/$tpl"
-        local status=""
-        local tree_char="├──"
-        [ "$i" -eq "$count" ] && tree_char="└──"
-
-        if [ ! -f "$source" ]; then
-            echo -e "$tree_char $target: ${RED}源檔案不存在${NC}"
-            continue
-        fi
-
-        if [ ! -f "$target" ]; then
-            cp "$source" "$target"
-            status="new"
-        elif cmp -s "$source" "$target"; then
-            status="uptodate"
-        else
-            backup_before_overwrite "templates" "$target"
-            cp "$source" "$target"
-            if [ "$FORCE" = true ]; then status="forced"; else status="updated"; fi
-        fi
-
-        # 顯示狀態
-        case $status in
-            new)
-                echo -e "$tree_char $target: ${GREEN}已安裝（新）${NC}"
-                ;;
-            forced)
-                echo -e "$tree_char $target: ${GREEN}已更新（強制）${NC}"
-                ;;
-            updated)
-                echo -e "$tree_char $target: ${CYAN}已更新${NC}"
-                ;;
-            uptodate)
-                echo -e "$tree_char $target: ${YELLOW}已是最新${NC}"
-                ;;
-        esac
-    done
-
-    echo ""
-}
-
 # 移除安裝
 uninstall() {
     print_header "${ROCKET} DD Pipeline 移除程式"
 
-    echo "即將移除以下內容（本 repo 部署過的項目；更早的 misc/deprecated 部署請先依 README 升級指南清理）："
+    echo "即將移除以下內容（本 repo 部署過的項目；更早的 misc/deprecated 部署請先依 UPGRADING.md 清理）："
     echo "├── ~/.claude/commands/ 中的 ${#ALL_DD_COMMANDS[@]} 個 DD Commands 與 ${#ALL_NS_COMMANDS[@]} 個命名空間 Commands"
-    echo "├── ~/.claude/templates/dd/"
+    echo "├── ~/.claude/templates/dd/（舊版部署殘留；現行版本已不再部署文件模板）"
     echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"
     echo "├── ~/.claude/agents/ 中的 ${#ALL_AGENTS[@]} 個內建 agent"
     echo "└── 官方 Plugins 設定（claude-md-management）"
@@ -1010,7 +945,7 @@ uninstall() {
 
 # 建立 / 比對全域 CLAUDE.md
 create_global_claude_md() {
-    print_step "8/8" "檢查全域 CLAUDE.md"
+    print_step "7/7" "檢查全域 CLAUDE.md"
 
     local source="$SCRIPT_DIR/templates/global/CLAUDE.md"
     local target="$CLAUDE_DIR/CLAUDE.md"
@@ -1211,9 +1146,8 @@ main() {
     # 建立 Commands
     create_commands
 
-    # 建立 Templates 與輔助腳本（除非只安裝 commands）
+    # 部署輔助腳本（除非只安裝 commands）
     if [ "$COMMANDS_ONLY" = false ]; then
-        create_templates
         create_scripts
     fi
 

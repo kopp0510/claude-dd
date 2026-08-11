@@ -8,7 +8,7 @@
 這個 repo 有兩個目標：
 
 1. **跨機恢復**：換電腦時 `git clone` + 一支腳本，完整重建 `~/.claude/` 的
-   skills / agents / commands / templates / 全域 CLAUDE.md。
+   skills / agents / commands / scripts / 全域 CLAUDE.md。
 2. **分享用法**：別人 clone 後跑同一支腳本，就能取得同一套工作法
    （6 步開發迴圈 + CLAUDE.md gate + 使用率盤點後的精選元件）。
 
@@ -31,7 +31,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
                         ▼
 ┌────────────────────────────────────────────────────────┐
 │  ~/.claude/（部署目標，可隨時由 repo 重建）               │
-│  skills/  agents/  commands/  templates/dd/  scripts/   │
+│  skills/  agents/  commands/  scripts/                  │
 │  CLAUDE.md（全域，互動比對安裝）  settings.json（plugin） │
 │  backups/pre-install-*/（覆蓋前自動備份）                │
 └───────────────────────┬────────────────────────────────┘
@@ -47,13 +47,13 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 
 ## 安裝腳本（install-dd-pipeline.sh）
 
-8 個步驟：環境檢查 → hook 路徑驗證（前置）→ Skills → Agents → MCP 檢查 →
-官方 Plugins → Commands → Templates + 輔助腳本 → 全域 CLAUDE.md（互動比對）。
+7 個步驟：環境檢查 → hook 路徑驗證（前置）→ Skills → Agents → MCP 檢查 →
+官方 Plugins → Commands + 輔助腳本 → 全域 CLAUDE.md（互動比對）。
 
 行為保證：
 
-- **冪等**：所有部署點（skills / agents / commands / templates / scripts /
-  全域 CLAUDE.md）內容相同報「已是最新」不重寫（含 `--force`）；重跑不產生備份。
+- **冪等**：所有部署點（skills / agents / commands / scripts / 全域 CLAUDE.md）
+  內容相同報「已是最新」不重寫（含 `--force`）；重跑不產生備份。
 - **非互動安全**：無 TTY（CI、`curl | bash`）時互動詢問一律採預設值，
   不會中止；破壞性操作（`--uninstall`）預設取消，自動化用 `--yes`。
 - **失敗不半套**：JSON 讀寫失敗（settings.json 損毀等）警告後跳過該項，

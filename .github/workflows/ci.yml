@@ -56,9 +56,6 @@ jobs:
           check "ALL_NS_COMMANDS" \
             "$(printf "%s\n" "${ALL_NS_COMMANDS[@]}" | sort)" \
             "$(ls -d commands/*/ | xargs -n1 basename | sort)"
-          check "DD_TEMPLATES" \
-            "$(printf "%s\n" "${DD_TEMPLATES[@]}" | sort)" \
-            "$(ls templates/*.template | xargs -n1 basename | sort)"
           exit $fail
 
       - name: 數字宣稱一致性（README / CLAUDE.md ↔ 腳本陣列）
@@ -109,9 +106,6 @@ jobs:
           ck "CLAUDE.md NS command 總數" \
             "$(grep -oE "[0-9]+ 個命名空間 command 目錄" CLAUDE.md | grep -oE "^[0-9]+")" \
             "${#ALL_NS_COMMANDS[@]}"
-          ck "CLAUDE.md 模板數" \
-            "$(grep -oE "[0-9]+ 個文件模板" CLAUDE.md | grep -oE "^[0-9]+")" \
-            "${#DD_TEMPLATES[@]}"
           exit $fail
 
       - name: 全域模板 §7.2 觸發目標存在性與部署
@@ -159,7 +153,6 @@ jobs:
           [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
           [ -d "$SANDBOX/.claude/commands/workflow-review" ]
           [ ! -f "$SANDBOX/.claude/commands/workflow-review/README.md" ]
-          [ "$(ls "$SANDBOX"/.claude/templates/dd/*.template | wc -l)" -eq "${#DD_TEMPLATES[@]}" ]
           [ -x "$SANDBOX/.claude/scripts/check-claude-md.sh" ]
           echo "✅ 首次安裝部署內容正確"
 
