@@ -64,7 +64,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 4. Check MCP servers (read-only — reports scope, installs nothing)
 5. Register the official plugin (claude-md-management — the dependency behind nested CLAUDE.md maintenance). Prints `Plugin 檔案不存在` and moves on if the plugin isn't already on disk
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
-7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **`--force` skips this prompt and overwrites**; see [Upgrading](#upgrading)
+7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
 Plus one unnumbered step that deploys `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`.
 
@@ -88,7 +88,7 @@ There is exactly one installation path, and it carries the complete working meth
 git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
 ```
 
-The global CLAUDE.md goes through an interactive diff, so someone who already has their own global rules can inspect the difference before deciding.
+The global CLAUDE.md goes through an interactive diff, so someone who already has their own global rules can inspect the difference before deciding. Someone with no global CLAUDE.md at all gets a yes/no install prompt instead, defaulting to No — so nobody's `~/.claude/CLAUDE.md` is created or replaced without an explicit yes (or `--force`).
 
 > A plugin-marketplace distribution route was evaluated and removed on 2026-08-04 after it was proven to work. The plugin mechanism cannot deploy a global CLAUDE.md or a pre-commit gate — it can only ship a subset of components, which contradicts the "complete working method" framing. Removed to keep a single path. The implementation is in the git history.
 

@@ -9,6 +9,8 @@
 
 1. **跨機恢復**：換電腦時 `git clone` + 一支腳本，完整重建 `~/.claude/` 的
    skills / agents / commands / scripts / 全域 CLAUDE.md。
+   注意：全新機器上全域 CLAUDE.md 那步是詢問制且**預設不安裝**（`[y/N]` 預設 N，
+   非互動同樣採 N）— 要一次到位須帶 `--force` 或互動時答 `y`。
 2. **分享用法**：別人 clone 後跑同一支腳本，就能取得同一套工作法
    （6 步開發迴圈 + CLAUDE.md gate + 使用率盤點後的精選元件）。
 
@@ -38,17 +40,24 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
                         │  /dd-init（逐專案蓋章）
                         ▼
 ┌────────────────────────────────────────────────────────┐
-│  各專案（專案 CLAUDE.md + .git/hooks/pre-commit gate）   │
+│  各專案（專案 CLAUDE.md + pre-commit gate*）             │
 └────────────────────────────────────────────────────────┘
 ```
 
-修改一律改 repo 再重新部署；直接改 `~/.claude/` 的內容會在下次安裝時
-被覆蓋（覆蓋前自動備份到 `~/.claude/backups/`）。
+\* gate 掛載點：`.git/hooks/pre-commit`；專案設有 `git config core.hooksPath` 時
+git 會忽略 `.git/hooks/`，`/dd-init` 改掛到該目錄下的 `pre-commit`（本 repo 自身即此情況）。
+
+修改一律改 repo 再重新部署；直接改 `~/.claude/` 的 skills / agents / commands /
+scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/backups/`）。
+**全域 CLAUDE.md 是例外**：不帶 `--force` 時互動選單預設 `k)` 保留本地版本，
+本地改動不會被覆蓋；帶 `--force` 才直接覆蓋（同樣先備份）。
 
 ## 安裝腳本（install-dd-pipeline.sh）
 
-7 個步驟：環境檢查 → hook 路徑驗證（前置）→ Skills → Agents → MCP 檢查 →
-官方 Plugins → Commands + 輔助腳本 → 全域 CLAUDE.md（互動比對）。
+7 個編號步驟（`1/7`…`7/7`）：環境檢查 → Skills → Agents → MCP 檢查 →
+官方 Plugins → Commands → 全域 CLAUDE.md（互動比對；`--force` 直接覆蓋）。
+另有兩個不佔編號的步驟：hook 路徑驗證（「前置」，在 Skills 之前）與
+輔助腳本部署（「附加步驟」，在 Commands 之後）。
 
 行為保證：
 
@@ -91,6 +100,8 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 | 檢查 | 防什麼 |
 |---|---|
 | bash -n（安裝腳本）+ shellcheck（warning 級，4 支腳本） | 語法與常見 bash 陷阱 |
+| `--help` smoke test | 腳本連起碼的執行都掛掉 |
+| Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | 陣列 ↔ 目錄一致性（ALL_* = 部署清單） | 陣列漏列 / 目錄改名未同步 |
 | README（英/繁中兩份）/ CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
 | §7.2 觸發目標部署驗證 | 全域模板指向未部署元件 |
@@ -101,5 +112,6 @@ CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 ## 授權
 
 Root MIT（LICENSE）。vendored 內容各自附上游授權
-（`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`），
+（`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`、
+`skills/tech-diagram-gif/LICENSE.txt`），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
