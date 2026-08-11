@@ -145,14 +145,22 @@ The gate demands one `CLAUDE.md` per code-bearing directory rather than one big 
 - **`@import` does not solve this.** It's the obvious alternative and it doesn't work for context: imported files "still load and enter the context window at launch". Splitting a big file into imports buys you organization, not budget. Real subdirectory files are the only mechanism that defers loading.
 - **The docs go where the change goes.** A rule about the API layer sitting next to the API layer is more likely to be updated when that layer changes — which is precisely what the gate enforces by requiring the same-batch update.
 
-**What it costs — read this before adopting**
+**What it costs, what's already mitigated, and what's left**
 
-- **Nested files don't survive `/compact`.** The docs are explicit: project-root `CLAUDE.md` is re-injected after compaction, but "nested CLAUDE.md files in subdirectories and rules with `paths:` frontmatter are not re-injected automatically; they reload the next time Claude reads a file in that subdirectory". In a long session, the subsystem rule you were relying on can quietly leave context.
-- **More files, more contradictions.** "If two rules contradict each other, Claude may pick one arbitrarily." Nesting multiplies the surface for that, and the docs' remedy is manual: review your nested files periodically and delete the conflicts.
-- **Real friction on small changes.** Touch one `.sh` in a directory that has no `CLAUDE.md` and your commit is blocked until you write one. Sometimes that's the point. Sometimes you just wanted to fix a typo in a script, and `SKIP_DOC_CHECK=1` is the pressure valve — which of course also means the discipline is only as strong as your willingness not to reach for it.
-- **Documentation theatre is a live risk.** Nothing checks whether the `CLAUDE.md` you wrote is *accurate* — only that it exists and was staged. A directory full of files nobody reads passes the gate perfectly.
+- **Documentation theatre.** The gate verifies a file exists and was staged. It cannot verify the content is true.
+  *Mitigation*: §3.9 of the global template dictates the repair format when the gate fires — read every file in the directory, then write "one line on this layer's job → key files and their purpose → conventions and constraints here → relationship to the parent", with an explicit ban on placeholder or shell content.
+  *Residual*: that rule is context, not enforcement. A determined shortcut still passes. The gate raises the cost of faking it; it doesn't make faking impossible.
+- **Friction on small changes.** Adding a `CLAUDE.md` for a directory you only meant to touch once is real overhead.
+  *Mitigation*: the gate only fires on code extensions and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends, so markdown, config and asset changes never trigger it; `SKIP_DOC_CHECK=1` covers checkpoint commits.
+  *Residual*: the first commit that puts code into a genuinely new directory does cost you a file. That's the deal, and the escape hatch is only as strong as your willingness not to reach for it.
+- **More files, more contradictions.** "If two rules contradict each other, Claude may pick one arbitrarily."
+  *Mitigation*: `claude-md-improver` (from the claude-md-management plugin) and `/revise-claude-md` exist for exactly this cleanup, and §3.9 asks for a cascade check up the parent layers after each change.
+  *Residual*: nothing *detects* a contradiction. Those are tools you have to decide to run; the docs put the periodic review on you.
+- **Nested files don't survive `/compact`.** Per the docs, root `CLAUDE.md` is re-injected after compaction but nested files "are not re-injected automatically; they reload the next time Claude reads a file in that subdirectory".
+  *Mitigation*: in practice, editing code in that directory means reading a file there first, which reloads it.
+  *Residual*: a narrow one — changing a directory's code from memory after a compaction without reading anything in it. That's already a bad habit; this just adds a reason not to.
 
-If those costs sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 6-step loop works without it.
+If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 6-step loop works without it.
 
 ## Commands
 
