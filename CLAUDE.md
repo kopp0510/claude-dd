@@ -111,6 +111,8 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   否則同一台機器裝不裝 jq 會得到不同結論
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
+- 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步 README 的 MCP 表格 —
+  CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
