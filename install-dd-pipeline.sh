@@ -95,7 +95,6 @@ OPTIONAL_MCP=(
     "context7"
     "sequential-thinking"
     "serena"
-    "cipher"
     "zeabur"
     "google-docs"
     "googleDrive"

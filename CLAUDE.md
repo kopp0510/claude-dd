@@ -126,6 +126,8 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - `OPTIONAL_MCP` 只收 **MCP server**（會註冊進 `~/.claude.json` `mcpServers` 的東西）；
   plugin 形式的工具（如 claude-mem，`npx claude-mem install` 走 hooks + plugin 系統）
   列進去檢查會**永遠回報未安裝**，應改列 README 的「推薦第三方 Plugin」段落
+- 可選 MCP 推薦名單比照使用率盤點制：上游 deprecated／改名（如 cipher → byterover-cli，
+  2026-08-11 移除）或本機實際使用紀錄已斷即移除；後繼品未經實證使用不自動遞補
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
