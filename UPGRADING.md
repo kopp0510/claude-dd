@@ -27,7 +27,9 @@ git checkout HEAD -- install-dd-pipeline.sh                   # 還原最新版�
 > `pre-prune-2026-08-04` 是標註在「刪除前最後完整狀態」的 tag，
 > 取代先前文件中的裸 commit hash，重新 clone 後同樣可用。
 
-- 全域 CLAUDE.md 會出互動 diff，選「覆蓋」取得新版；有本地客製就選「看完整 diff」再決定
+- **上面的指令都帶 `--force`，全域 CLAUDE.md 會直接以 repo 版覆蓋、不出互動 diff**
+  （舊版備份到 `~/.claude/backups/pre-install-<時間戳>/`，路徑印在完成訊息裡）。
+  全域規則有本地客製想保留的話，最後一步改成不帶 `--force` 跑，才會出 diff 選單讓你選 `k`（保留本地）
 - 被清掉的內容需要時自 git 歷史取回（`git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回部署陣列）
 - `--uninstall` 同樣只認得現行部署清單 — 舊部署請先完成上述清理再解除安裝
 
@@ -35,7 +37,7 @@ git checkout HEAD -- install-dd-pipeline.sh                   # 還原最新版�
 
 已在跑舊版（或手寫 5 步版）開發流程的專案：
 
-1. 到該專案跑一次 `/dd-init` — 會補上缺的部分（pre-commit gate、`.screenshots/`、plugin 檢查）
+1. 到該專案跑一次 `/dd-init` — 會補上缺的部分（pre-commit gate、`.screenshots/`（僅前端專案）、plugin 檢查）
 2. **注意**：專案 CLAUDE.md 若已有 `## 開發流程` 區塊，`/dd-init` 會跳過不覆蓋 —
    要升級成 6 步版（新增 code-review 步驟、顯性化首輪測試），請手動編輯該區塊，
    或刪掉舊區塊後重跑 `/dd-init` 重蓋
