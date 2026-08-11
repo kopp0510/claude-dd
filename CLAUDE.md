@@ -102,6 +102,9 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
 - 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的部署陣列（CI 會擋不一致）
+- 查 `~/.claude.json` 的內容（MCP 等）務必真正解析 JSON 判斷 scope，**不可用字串 grep** —
+  該檔同時存放所有專案的 scoped 設定，純比對會把別的專案的設定誤判為已安裝
+  （`mcp_scope()` 為此而寫：jq → python3 → 退化標示無法判定）
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
