@@ -113,6 +113,33 @@ jobs:
             "${#ALL_NS_COMMANDS[@]}"
           exit $fail
 
+      - name: 安裝 flag 三方對照（README ↔ --help ↔ 腳本 case 分支）
+        run: |
+          fail=0
+          # 腳本實際支援的 flag：頂層參數解析的 case 分支
+          script_flags=$(grep -oE '^[[:space:]]+--[a-z-]+\)' install-dd-pipeline.sh \
+            | tr -d ' )' | sort -u)
+          # --help 印出的選項清單
+          help_flags=$(./install-dd-pipeline.sh --help \
+            | grep -oE '^[[:space:]]+--[a-z-]+' | tr -d ' ' | sort -u)
+          # 兩份 README 的指令範例：只取 ./install-dd-pipeline.sh 後面接的 flag，
+          # 否則會誤抓別的指令的參數（README 有 `claude mcp add --scope user`）
+          readme_flags=$(grep -hoE '\./install-dd-pipeline\.sh( --[a-z-]+)+' README.md README.zh-TW.md \
+            | grep -oE -- '--[a-z-]+' | sort -u)
+
+          cmp_flags() {
+            local label="$1" a="$2" b="$3"
+            if diff <(echo "$a") <(echo "$b"); then
+              echo "✅ ${label} 一致"
+            else
+              echo "❌ ${label} 不一致（< 前者 / > 後者）"
+              fail=1
+            fi
+          }
+          cmp_flags "腳本 case 分支 ↔ --help 輸出" "$script_flags" "$help_flags"
+          cmp_flags "腳本 case 分支 ↔ README 指令範例" "$script_flags" "$readme_flags"
+          exit $fail
+
       - name: 全域模板 §7.2 觸發目標存在性與部署
         run: |
           source ./install-dd-pipeline.sh
@@ -146,6 +173,12 @@ jobs:
           chmod +x /tmp/fakebin/claude
           export PATH="/tmp/fakebin:$PATH"
 
+          # --check：只檢查環境、不得寫入任何檔案（獨立乾淨 sandbox，驗 README 的「不安裝」宣稱）
+          CHECK_SANDBOX="$(mktemp -d)"
+          HOME="$CHECK_SANDBOX" ./install-dd-pipeline.sh --check < /dev/null
+          [ -z "$(ls -A "$CHECK_SANDBOX")" ]
+          echo "✅ --check 未寫入任何檔案"
+
           SANDBOX="$(mktemp -d)"
 
           # 首次安裝：非互動環境下互動詢問須走預設值，不得中止
@@ -166,9 +199,21 @@ jobs:
           [ ! -d "$SANDBOX/.claude/backups" ]
           echo "✅ 重跑冪等（無備份產生 = 無檔案被覆蓋）"
 
+          # --force：內容相同時不重寫，因此同樣不得產生備份
+          HOME="$SANDBOX" ./install-dd-pipeline.sh --force < /dev/null
+          [ ! -d "$SANDBOX/.claude/backups" ]
+          echo "✅ --force 內容相同不重寫（無備份產生）"
+
           # --update 非互動可用
           HOME="$SANDBOX" ./install-dd-pipeline.sh --update < /dev/null
           echo "✅ --update 非互動可用"
+
+          # --commands-only：只裝 commands，不得動到既有 skills
+          skills_before=$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)
+          HOME="$SANDBOX" ./install-dd-pipeline.sh --commands-only < /dev/null
+          [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "$skills_before" ]
+          [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
+          echo "✅ --commands-only 未動到既有 skills"
 
           # --uninstall 非互動走預設 N：取消移除、不得誤刪
           HOME="$SANDBOX" ./install-dd-pipeline.sh --uninstall < /dev/null
