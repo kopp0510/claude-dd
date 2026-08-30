@@ -22,8 +22,10 @@
 
 - 全域模板 §7.2 觸發表新增 `revise-claude-md` 一列（關鍵字刻意避開 improver 的
   `修`/`改` 與 self-improving-agent 的 `沉澱`/`memory`/`skill`，避免撞列）
-- `diagrams/src/` 納入版控 — 4 張 GIF 的產生器（零依賴 Python 手寫 SVG）與重出流程。
+- `diagrams/src/` 納入版控 — GIF 的產生器（零依賴 Python 手寫 SVG）與重出流程。
   先前只保存成品 GIF，改一個字就得整張重畫；本次已實際踩到這個坑
+- 新增第三張圖表「7 步開發迴圈」（`claude-dd-dev-loop*.gif`，中英各一），
+  把七個步驟本身畫出來並嵌進兩份 README — 先前兩張圖只把迴圈壓成一個框裡的一行字
 
 ### Fixed
 

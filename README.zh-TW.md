@@ -128,6 +128,8 @@ git pull && ./install-dd-pipeline.sh --force
 
 三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
 
+![claude-dd 7 步開發迴圈](diagrams/claude-dd-dev-loop.zh-TW.gif)
+
 從零到日常的完整路徑（裝一次、每個專案蓋章一次、之後每個功能段落走同一個迴圈）：
 
 ![claude-dd 使用流程](diagrams/claude-dd-usage-flow.zh-TW.gif)
