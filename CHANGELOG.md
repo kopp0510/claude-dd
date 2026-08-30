@@ -15,7 +15,8 @@
 - **開發迴圈由 6 步改為 7 步**：新增步驟 7「沉澱本輪學到的」— 用
   `claude-md-management:revise-claude-md` 把本輪的踩雷/指令/慣例寫進 CLAUDE.md。
   它是唯一可跳過（本輪沒學到就跳）、也是唯一會回問使用者的步驟。
-  步驟 1–6 編號與內容不變。全部現行文件、`/dd-init` 蓋章版與 4 張 diagrams GIF 已同步；
+  步驟 1–6 編號與內容不變。全部現行文件、`/dd-init` 蓋章版與當時既有的 4 張 diagrams GIF
+  已同步（重製時循環長度由 8s 改為 7.2s，144 幀 20fps）；
   CHANGELOG 舊條目與 UPGRADING 的歷史敘述保留原「6 步」字樣
 
 ### Added
@@ -26,6 +27,9 @@
   先前只保存成品 GIF，改一個字就得整張重畫；本次已實際踩到這個坑
 - 新增第三張圖表「7 步開發迴圈」（`claude-dd-dev-loop*.gif`，中英各一），
   把七個步驟本身畫出來並嵌進兩份 README — 先前兩張圖只把迴圈壓成一個框裡的一行字
+- `tech-diagram-gif` 陷阱表補上 playwright 的工具層與瀏覽器層差異：`browser_navigate`
+  擋 `file://` 但 `run_code` 裡的 `page.goto('file://…')` 不受限、`run_code` 裡拿不到 `fs`、
+  `page.screenshot({path})` 可寫任意路徑 — 連拍上百幀時走 `run_code` 這條
 
 ### Fixed
 
