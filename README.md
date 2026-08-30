@@ -12,7 +12,7 @@
 
 1. **A pre-commit hook that blocks commits** when a directory containing code has no `CLAUDE.md`, or has one that wasn't staged in the same commit. This one is real enforcement — it's a shell script with `exit 1`, it doesn't care what the AI decided.
 2. **A global `CLAUDE.md`** that tells Claude to cite a source for API signatures, version numbers, and project facts, and bans hedges like "should be" / "probably".
-3. **A 6-step loop** stamped into each project's `CLAUDE.md` so every feature increment goes through simplify → review → re-verify before the final commit.
+3. **A 7-step loop** stamped into each project's `CLAUDE.md` so every feature increment goes through simplify → review → re-verify before the final commit.
 
 Be clear about the difference: only #1 is enforcement. Claude Code loads `CLAUDE.md` as context, not as configuration — [the docs say so plainly](https://code.claude.com/docs/en/memory) ("Claude treats them as context, not enforced configuration"). #2 and #3 raise the floor and leave a record you can audit; they do not guarantee compliance. Anything that must happen every time belongs in a hook, which is exactly why the gate exists.
 
@@ -29,7 +29,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 
 ## Highlights
 
-- **6-step development cycle** — every feature increment runs the same loop: implement + test → commit → code-simplifier → code-review → re-verify against a real environment (curl / playwright) → commit
+- **7-step development cycle** — every feature increment runs the same loop: implement + test → commit → code-simplifier → code-review → re-verify against a real environment (curl / playwright) → commit
 - **CLAUDE.md pre-commit gate** — a commit is blocked when a directory containing code has no `CLAUDE.md`, or has one that wasn't updated in the same batch. The rejection message doubles as instructions the AI agent can act on to fix it itself
 - **Zero-hallucination policy** — API signatures, version numbers, and project facts must carry a source annotation; hedges like "should be" or "probably" are banned outright rather than tolerated
 - **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason must be written out, turning "I skipped it" from a black box into an auditable line
@@ -82,7 +82,7 @@ Plus one unnumbered step that deploys `check-claude-md.sh` (the pre-commit gate 
 
 ### Sharing with others
 
-There is exactly one installation path, and it carries the complete working method — global rules, the 6-step cycle, the pre-commit gate, and the curated components:
+There is exactly one installation path, and it carries the complete working method — global rules, the 7-step cycle, the pre-commit gate, and the curated components:
 
 ```bash
 git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
@@ -102,10 +102,10 @@ git pull && ./install-dd-pipeline.sh --force
 
 > **`--force` overwrites your global `CLAUDE.md` without asking.** The interactive diff described above only runs *without* `--force`. The previous version is backed up to `~/.claude/backups/pre-install-<timestamp>/` and the path is printed in the completion message, so it is recoverable — but if you have local edits you want to keep, run the installer without `--force` first and choose `k` (keep local).
 
-For upgrades from older layouts (the everything-deployed and bucketed eras) and for moving an existing project onto the 6-step cycle, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
+For upgrades from older layouts (the everything-deployed and bucketed eras) and for moving an existing project onto the 7-step cycle, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
 Structural changes over time are in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)*.
 
-## The core loop: 6-step development cycle
+## The core loop: 7-step development cycle
 
 Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the project-specific version is stamped in by `/dd-init`):
 
@@ -116,7 +116,10 @@ Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the pr
 4. code-review (on that increment's diff, run in full; Critical/Important findings must be fixed before continuing)
 5. Re-verify — rerun the tests, plus curl against the real API / drive a real browser with playwright (screenshots go to .screenshots/)
 6. commit (final version)
+7. Capture what this round taught you (only if there is something) — `/revise-claude-md` folds any gotcha, command or convention into `CLAUDE.md`
 ```
+
+Step 7 is the only skippable step, and the only one that asks you first: it proposes the additions and waits for approval. It handles session learnings, which is a separate concern from the code-changed-so-docs-must-follow sync the gate enforces.
 
 Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (including a 12-item Fowler code-smell baseline), and real-environment verification owns behaviour.
 
@@ -154,19 +157,19 @@ The gate demands one `CLAUDE.md` per code-bearing directory rather than one big 
   *Mitigation*: the gate only fires on code extensions and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends, so markdown, config and asset changes never trigger it; `SKIP_DOC_CHECK=1` covers checkpoint commits.
   *Residual*: the first commit that puts code into a genuinely new directory does cost you a file. That's the deal, and the escape hatch is only as strong as your willingness not to reach for it.
 - **More files, more contradictions.** "If two rules contradict each other, Claude may pick one arbitrarily."
-  *Mitigation*: `claude-md-improver` (from the claude-md-management plugin) and `/revise-claude-md` exist for exactly this cleanup, and §3.9 asks for a cascade check up the parent layers after each change.
+  *Mitigation*: `claude-md-improver` (from the claude-md-management plugin) is the tool for this cleanup — it audits existing files against a quality baseline. (`/revise-claude-md` is a different job: folding this session's learnings in at loop close-out.) §3.9 also asks for a cascade check up the parent layers after each change.
   *Residual*: nothing *detects* a contradiction. Those are tools you have to decide to run; the docs put the periodic review on you.
 - **Nested files don't survive `/compact`.** Per the docs, root `CLAUDE.md` is re-injected after compaction but nested files "are not re-injected automatically; they reload the next time Claude reads a file in that subdirectory".
   *Mitigation*: in practice, editing code in that directory means reading a file there first, which reloads it.
   *Residual*: a narrow one — changing a directory's code from memory after a compaction without reading anything in it. That's already a bad habit; this just adds a reason not to.
 
-If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 6-step loop works without it.
+If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 7-step loop works without it.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/dd-init` | Initialise a project: stamp the 6-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/` (only when the project has a frontend — pure backend/CLI skips it), verify plugin dependencies |
+| `/dd-init` | Initialise a project: stamp the 7-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/` (only when the project has a frontend — pure backend/CLI skips it), verify plugin dependencies |
 | `/workflow-review:review` | Combined code review — security, performance, configuration. It's a namespaced command, so the colon form is the callable name |
 
 ## Promoted Skills (10, deployed by default)
@@ -190,7 +193,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 
 | Plugin | Purpose |
 |--------|---------|
-| claude-md-management | Auditing and updating nested CLAUDE.md files (`claude-md-improver` skill + `/revise-claude-md`) — the documentation-maintenance dependency of the 6-step cycle |
+| claude-md-management | Auditing and updating nested CLAUDE.md files (`claude-md-improver` skill + `/revise-claude-md`) — the documentation-maintenance dependency of the 7-step cycle |
 
 ### Recommended third-party plugin (not managed by the installer)
 

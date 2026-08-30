@@ -33,12 +33,15 @@ git checkout HEAD -- install-dd-pipeline.sh                   # 還原最新版�
 - 被清掉的內容需要時自 git 歷史取回（`git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回部署陣列）
 - `--uninstall` 同樣只認得現行部署清單 — 舊部署請先完成上述清理再解除安裝
 
-## 既有專案升級到 6 步迴圈
+## 既有專案升級到 7 步迴圈
+
+> 本節原記錄「舊版 → 6 步」的升級；2026-08-31 迴圈新增步驟 7（沉澱本輪學到的），
+> 現行為 7 步。已用舊版 `/dd-init` 蓋章過的專案不會自動更新，需依下述步驟重蓋或手改。
 
 已在跑舊版（或手寫 5 步版）開發流程的專案：
 
 1. 到該專案跑一次 `/dd-init` — 會補上缺的部分（pre-commit gate、`.screenshots/`（僅前端專案）、plugin 檢查）
 2. **注意**：專案 CLAUDE.md 若已有 `## 開發流程` 區塊，`/dd-init` 會跳過不覆蓋 —
-   要升級成 6 步版（新增 code-review 步驟、顯性化首輪測試），請手動編輯該區塊，
+   要升級成 7 步版（新增 code-review 步驟、顯性化首輪測試、收尾沉澱），請手動編輯該區塊，
    或刪掉舊區塊後重跑 `/dd-init` 重蓋
 3. 舊 DD Pipeline 專案的 `claude_docs/`、`PROJECT_STATE.md` 不受影響，可保留或自行清理

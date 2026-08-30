@@ -1,10 +1,10 @@
 ---
-description: 初始化專案的 6 步開發迴圈 — 蓋章專案 CLAUDE.md、掛 pre-commit gate、建截圖目錄、確認 plugin 依賴
+description: 初始化專案的 7 步開發迴圈 — 蓋章專案 CLAUDE.md、掛 pre-commit gate、建截圖目錄、確認 plugin 依賴
 ---
 
-# DD 初始化 — 6 步開發迴圈
+# DD 初始化 — 7 步開發迴圈
 
-初始化專案的開發慣例：蓋章「6 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
+初始化專案的開發慣例：蓋章「7 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
 確認巢狀 CLAUDE.md 維護依賴。支援**新專案**（空目錄）和**現有專案**（已有程式碼）。
 
 > 2026-07 重整：原多階段 DD Pipeline（dd-start/arch/approve/dev/test）已封存、
@@ -57,13 +57,18 @@ description: 初始化專案的 6 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    - <依偵測結果填入：playwright 真的開瀏覽器登入、操作 UI、截圖驗證前端可用>
      - 截圖一律存 `.screenshots/`（已 gitignore）；勿丟專案根目錄
 6. **再 commit**（最終版本）
+7. **沉澱本輪學到的**（有才做）— 本輪若留下踩雷、指令或慣例，用
+   claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
+   它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
 
 驗證不過 → 修完重跑步驟 5，不可帶著紅燈進步驟 6。
 
 ## CLAUDE.md 維護
 
 - 每個有程式碼的資料夾都要有 CLAUDE.md（說明該層職責與慣例）
-- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（用 claude-md-management plugin 的 /revise-claude-md 或手動）
+- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（程式碼改了 → 文件跟著改，pre-commit gate 會擋）
+- 步驟 7 處理的是「本輪學到什麼」，與上一條的「程式碼改了所以文件要同步」是兩件事；
+  它是唯一可跳過、也是唯一會回問你的步驟
 ```
 
 建立模式時，區塊前面先寫入標準專案資訊（專案名稱、技術棧、目錄結構 — 來自偵測或詢問結果）。
@@ -116,7 +121,7 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 
 ```bash
 git add CLAUDE.md .gitignore 2>/dev/null || true
-git commit -m "chore: 初始化 6 步開發迴圈慣例"
+git commit -m "chore: 初始化 7 步開發迴圈慣例"
 ```
 
 > 註：`.git/hooks/` 不入版控，pre-commit gate 不需 add。此 commit 只動 CLAUDE.md/.gitignore，會通過 gate。
@@ -127,7 +132,7 @@ git commit -m "chore: 初始化 6 步開發迴圈慣例"
 ✅ 初始化完成！
 
 已設定：
-├── CLAUDE.md — 6 步開發迴圈（驗證方式：<偵測結果>）
+├── CLAUDE.md — 7 步開發迴圈（驗證方式：<偵測結果>）
 ├── .screenshots/ + .gitignore（有前端時）
 ├── pre-commit gate — 改碼目錄缺 CLAUDE.md 或未同步更新會擋 commit
 └── claude-md-management plugin 檢查

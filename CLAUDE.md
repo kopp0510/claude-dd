@@ -11,7 +11,7 @@
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
 ```
 
-> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 6 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 7 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
 
 環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**：tech-diagram-gif 的
 GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。
@@ -36,6 +36,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
+- `diagrams/` — 兩份 README 嵌的 4 張 GIF；來源腳本在 `diagrams/src/`（改圖改腳本再重出，勿手改 GIF）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
 
 ## 新增 Skill 步驟
@@ -67,14 +68,17 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
 - 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
 
-## 核心工作法：6 步開發迴圈
+## 核心工作法：7 步開發迴圈
 
 骨幹已從多階段 DD Pipeline 換成經實際專案實戰驗證的功能段落迴圈
 （定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
 
 ```
-實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
+實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit → 沉澱
 ```
+
+步驟 7「沉澱」是唯一可跳過、也是唯一會回問使用者的步驟：本輪學到的踩雷/指令/慣例用
+`/revise-claude-md` 寫進 CLAUDE.md，與下方 gate 強制的「程式碼改了所以文件要同步」是兩件事。
 
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
