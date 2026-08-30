@@ -27,6 +27,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 ┌────────────────────────────────────────────────────────┐
 │  claude-dd repo（source of truth，git 版控）             │
 │  skills/  agents/  commands/  templates/  scripts/      │
+│  diagrams/（成品 GIF）  diagrams/src/（產生器）           │
 └───────────────────────┬────────────────────────────────┘
                         │  ./install-dd-pipeline.sh
                         │  （依部署清單複製，非 symlink）
