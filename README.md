@@ -123,6 +123,8 @@ Step 7 is the only skippable step, and the only one that asks you first: it prop
 
 Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (including a 12-item Fowler code-smell baseline), and real-environment verification owns behaviour.
 
+![claude-dd 7-step development loop](diagrams/claude-dd-dev-loop.gif)
+
 Step 1 proves the thing you built is right; step 5 proves that simplifying it and applying review findings didn't break it. Different purposes — neither substitutes for the other.
 
 The full path from zero to daily use (install once, stamp each project once, then every feature increment runs the same loop):

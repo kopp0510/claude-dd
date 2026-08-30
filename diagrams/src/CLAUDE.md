@@ -1,6 +1,6 @@
 # diagrams/src — 圖表產生器
 
-上層 `diagrams/` 的 4 張 GIF 由這裡的兩支腳本產出；改圖一律改腳本再重跑，不要手改 GIF。
+上層 `diagrams/` 的 6 張 GIF 由這裡的三支腳本產出；改圖一律改腳本再重跑，不要手改 GIF。
 
 ## 檔案
 
@@ -8,8 +8,9 @@
 |---|---|
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（7 步迴圈在框 ⑤） |
 | `gen_arch.py` | `arch-zh-TW.svg`、`arch-en.svg` — 三層架構（L1 repo → L2 `~/.claude/` → L3 各專案） |
+| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 7 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來） |
 
-兩支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
+三支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
 中英兩版共用同一份版面座標，只換 `ZH` / `EN` 兩個 dict 的字串。
 
 ## 慣例與約束
@@ -26,13 +27,13 @@
 
 ## 完整重出 GIF 的流程
 
-1. 在暫存目錄跑兩支腳本 → 得到 4 份 `.svg` 與 `.html`
+1. 在暫存目錄跑三支腳本 → 得到 6 份 `.svg` 與 `.html`
 2. playwright 開 `file://<暫存>/xxx.html`，`pauseAnimations()` 後
    `setCurrentTime(i*7.2/144)` 逐幀截圖，144 幀
 3. `ffmpeg -framerate 20 -i f%03d.png -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 out.gif`
 4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再覆蓋 `../*.gif`
 
-細節見 `tech-diagram-gif` skill；本目錄只保存 claude-dd 自己這 4 張的來源。
+細節見 `tech-diagram-gif` skill；本目錄只保存 claude-dd 自己這 6 張的來源。
 
 ## 與上層的關係
 
