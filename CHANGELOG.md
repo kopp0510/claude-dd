@@ -8,6 +8,29 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Changed
+
+- **開發迴圈由 6 步改為 7 步**：新增步驟 7「沉澱本輪學到的」— 用
+  `claude-md-management:revise-claude-md` 把本輪的踩雷/指令/慣例寫進 CLAUDE.md。
+  它是唯一可跳過（本輪沒學到就跳）、也是唯一會回問使用者的步驟。
+  步驟 1–6 編號與內容不變。全部現行文件、`/dd-init` 蓋章版與 4 張 diagrams GIF 已同步；
+  CHANGELOG 舊條目與 UPGRADING 的歷史敘述保留原「6 步」字樣
+
+### Added
+
+- 全域模板 §7.2 觸發表新增 `revise-claude-md` 一列（關鍵字刻意避開 improver 的
+  `修`/`改` 與 self-improving-agent 的 `沉澱`/`memory`/`skill`，避免撞列）
+- `diagrams/src/` 納入版控 — 4 張 GIF 的產生器（零依賴 Python 手寫 SVG）與重出流程。
+  先前只保存成品 GIF，改一個字就得整張重畫；本次已實際踩到這個坑
+
+### Fixed
+
+- `/dd-init` 蓋章版與兩份 README 原本把 `/revise-claude-md` 當成巢狀文件同步的工具，
+  與其實際行為（回顧本 session 學到什麼）不符 — 已拆成兩件事分別說明。
+  **已用舊版 `/dd-init` 蓋章過的專案不會自動更新**，需重跑 `/dd-init` 或手改該區塊
+
 ## 1.0.0 — 2026-08-11
 
 首次對外發布。版本號自本版起生效，`install-dd-pipeline.sh` 的 CLI flags 與

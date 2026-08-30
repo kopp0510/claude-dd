@@ -238,6 +238,9 @@
    - 前端:playwright 真的開瀏覽器操作 UI + 截圖存 `.screenshots/`(gitignore,勿丟專案根目錄)
    - 純 CLI / 函式庫:跑真實指令或消費端範例
 6. **再 commit**(最終版本)
+7. **沉澱本輪學到的**(有才做) — 本輪若留下踩雷、指令或慣例,呼叫
+   `claude-md-management:revise-claude-md` 寫進 CLAUDE.md。它會先列出建議、
+   等使用者同意才寫檔;沒有值得留的就跳過,不硬湊
 
 > 步驟 1 的測試證明「做出來是對的」,步驟 5 證明「簡化與修 review 沒把對的改壞」— 目的不同,缺一不可。
 
@@ -246,6 +249,8 @@
 - 本迴圈的步驟 2、6 commit 視為使用者已授權(§5.2 的例外)
 - 步驟 1、5 的「跑測試」指**既有**相關測試,不違反 §3.5 不主動新增測試;專案無測試時退化為只剩真實環境驗證
 - 功能落地後,受影響目錄的巢狀 CLAUDE.md 逐層堆疊更新
+- 步驟 7 是唯一可跳過的步驟(本輪沒學到東西就跳過),也是唯一會回問使用者的步驟;
+  它處理「本輪學到什麼」,與上一條「程式碼改了所以文件要同步」是兩件事
 - 專案裝有 CLAUDE.md pre-commit gate(`/dd-init` 安裝)時:改碼目錄缺 CLAUDE.md 或未同批更新會被擋 commit。步驟 2 檢查點可用 `SKIP_DOC_CHECK=1 git commit`;步驟 6 最終 commit **必須全過,不可用 SKIP 繞過**
 - **被 gate 擋下時自主修復,不回問使用者**:
   - 缺 CLAUDE.md → 讀該目錄全部檔案,自行產生(格式:該層職責一句話 → 關鍵檔案與用途 → 此層慣例/約束 → 與上層的關係;寫實際讀到的內容,禁止空殼或佔位文字)
@@ -309,7 +314,7 @@
 
 **規則**:同時只能一項 `in_progress`,完成立即 `completed`,不批次更新。
 
-**粒度**:task 開在 §3.9 的「功能段落」層級,一個 task 走一圈 6 步迴圈。
+**粒度**:task 開在 §3.9 的「功能段落」層級,一個 task 走一圈 7 步迴圈。
 `task-planner` 產的微任務降為段落內的實作 checklist,不進 task 追蹤。
 
 > 新版 Claude Code 若提供原生 Task 工具(`TaskCreate` / `TaskUpdate` / `TaskList`),
@@ -471,6 +476,7 @@ C) 先停下討論
 | User prompt 含這類字 | 呼叫 |
 |---|---|
 | `fix` / `修` / `改` / `改善` / `audit` / `審查` **+ 任何 `.md` 檔** | `claude-md-management:claude-md-improver` |
+| `把學到的寫進 CLAUDE.md` / `這輪學到的記進文件` / `收工更新 CLAUDE.md` | `claude-md-management:revise-claude-md` |
 | `簡化` / `降複雜度` / `清冗餘` / `refactor 簡化` + (code/檔案) | `code-simplifier` |
 | `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer` |
 | `整理 memory` / `沉澱規則` / `把學到的寫成 skill` / `優化 skill` | `self-improving-agent` |
