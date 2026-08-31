@@ -4,8 +4,6 @@
 
 > A portable Claude Code profile — turning "did the AI actually follow the rules?" into output you can see and gates that can block you
 
-![claude-dd three-layer architecture](diagrams/claude-dd-architecture.gif)
-
 **What it is**: a Claude Code profile you can carry between machines — skills, agents, commands, and a global `CLAUDE.md`. Clone the repo, run one bash script, and your whole working style is installed into `~/.claude/`. This repo is the source of truth; `~/.claude/` is always a deployment of it.
 
 **What it actually does**: three things, with honestly different strengths.

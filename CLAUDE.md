@@ -36,8 +36,10 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
-- `diagrams/` — 兩份 README 嵌的 6 張 GIF（三層架構、使用流程、8 步迴圈 × 中英）；
-  來源腳本在 `diagrams/src/`（改圖改腳本再重出，勿手改 GIF）
+- `diagrams/` — 兩份 README 嵌的 4 張 GIF（使用流程、8 步迴圈 × 中英）；
+  來源腳本在 `diagrams/src/`（改圖改腳本再重出，勿手改 GIF）。
+  三層架構圖於 2026-08-31 移除 — 它畫的是目錄清單而非架構，資訊都在
+  `DD_PIPELINE_ARCHITECTURE.md` 的文字版裡，還多一份圖要維護
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
 
 ## 新增 Skill 步驟
