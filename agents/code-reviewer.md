@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 程式碼審查專家,依專案 CLAUDE.md 與既有慣例審查變更,分級回報發現並附具體失敗情境。官方 code-reviewer plugin 未裝時的本地備份;7 步開發迴圈步驟 4、commit / PR 前審查時使用,呼叫時需指明審查範圍(通常是最近變更的 git diff)。不適用於程式碼簡化(用 code-simplifier)或安全專項審查(用 security-auditor)。
+description: 程式碼審查專家,依專案 CLAUDE.md 與既有慣例審查變更,分級回報發現並附具體失敗情境。官方 code-reviewer plugin 未裝時的本地備份;8 步開發迴圈步驟 4、commit / PR 前審查時使用,呼叫時需指明審查範圍(通常是最近變更的 git diff)。不適用於程式碼簡化(用 code-simplifier)或安全專項審查(用 security-auditor)。
 model: opus
 color: green
 ---

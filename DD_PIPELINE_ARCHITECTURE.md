@@ -12,7 +12,7 @@
    注意：全新機器上全域 CLAUDE.md 那步是詢問制且**預設不安裝**（`[y/N]` 預設 N，
    非互動同樣採 N）— 要一次到位須帶 `--force` 或互動時答 `y`。
 2. **分享用法**：別人 clone 後跑同一支腳本，就能取得同一套工作法
-   （7 步開發迴圈 + CLAUDE.md gate + 使用率盤點後的精選元件）。
+   （8 步開發迴圈 + CLAUDE.md gate + 使用率盤點後的精選元件）。
 
 兩個目標共用**同一條安裝路線**（曾評估 plugin marketplace 分發，因無法交付
 全域 CLAUDE.md 與 gate、只能給元件子集而不採用，維持單一路線；見 git 歷史）。
@@ -82,7 +82,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
 預算上限）；需要時自 git 歷史取回並加回陣列即可重新部署。
 
-## 核心工作法：7 步開發迴圈
+## 核心工作法：8 步開發迴圈
 
 ```
 實作+測試 → commit → code-simplifier → code-review → 再測 → commit → 沉澱

@@ -11,7 +11,7 @@
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
 ```
 
-> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 7 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 8 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
 
 環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**：tech-diagram-gif 的
 GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。
@@ -36,7 +36,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
-- `diagrams/` — 兩份 README 嵌的 6 張 GIF（三層架構、使用流程、7 步迴圈 × 中英）；
+- `diagrams/` — 兩份 README 嵌的 6 張 GIF（三層架構、使用流程、8 步迴圈 × 中英）；
   來源腳本在 `diagrams/src/`（改圖改腳本再重出，勿手改 GIF）
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
 
@@ -69,53 +69,20 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
 - 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
 
-## 核心工作法：8 步開發迴圈（本 repo 自用）
+## 核心工作法：8 步開發迴圈
 
-> 全域模板 §3.9 定義的是 **7 步** — 那是部署給所有專案的版本，README 與 diagrams
-> 的圖也都是 7 步。本 repo 自己多跑第 8 步先 dogfood，跑順了再考慮推進全域模板與
-> `/dd-init` 蓋章版（那會影響所有專案）。
-
-每個功能段落必走：
+骨幹是經實際專案實戰驗證的功能段落迴圈
+（定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
 
 ```
 實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
   → 沉澱本輪所學 → 評分&修正
 ```
 
-1–6 步同 `templates/global/CLAUDE.md` §3.9。第 7、8 步：
-
-| 步驟 | 做什麼 | 什麼時候跳過 |
-|---|---|---|
-| **7. 沉澱本輪所學** | `revise-claude-md` 把本輪的踩雷／指令／慣例寫進 CLAUDE.md | 這輪沒學到東西就跳過，不硬湊 |
-| **8. 評分 & 修正** | `claude-md-improver` 審本輪動過的那幾份 CLAUDE.md | **本輪完全沒動到任何 CLAUDE.md** 才跳過 |
-
-- **第 7 步跳過不代表第 8 步也跳過**：第 2、6 步 commit 時 pre-commit gate 會逼著更新
-  改碼目錄的 CLAUDE.md，那些改動不是第 7 步加的，但一樣要審。`diagrams/src/CLAUDE.md`
-  就是這樣帶著一個會讓人踩坑的錯誤進版控的 — gate 只確認「有寫」、**不確認「寫得對」**
-  （commit 6c0f0ec 修掉）。這一格正是第 8 步最該存在的理由
-- **順序不可反**：7 是加、8 是整理。反過來的話 8 剛整理完 7 又塞新東西進去，白做
-- **第 8 步只審本輪動過的 CLAUDE.md**，不要全 repo 掃。範圍這樣抓（第 8 步跑在第 6 步
-  commit 之後，`git diff --cached` 那時已經是空的，抓不到東西）：
-
-  ```bash
-  { git show --name-only --pretty=format: HEAD; git status --porcelain | awk '{print $NF}'; } \
-    | grep 'CLAUDE\.md$' | sort -u
-  ```
-
-  前半是第 6 步 commit 進去的，後半是第 7 步剛改還沒 commit 的，兩邊聯集才完整。
-  improver 的 Phase 1 寫的是「find 全部」，不主動縮範圍就會產出跟本輪無關的長報告 —
-  看兩次就會開始跳過，規則等於沒有
-- **第 8 步的發現分兩類處理，不要把選擇丟回給使用者**（使用者未必知道該修什麼）：
-  - **實跑驗證得出來的錯** — 文件寫的指令、檔名、數量、路徑與實際不符 →
-    **直接修，不問**，結尾報一行「順手修掉 X」即可
-  - **主觀建議** — 太囉嗦、可以更精簡、結構可以更好 → **提一次就好，不動手**，
-    使用者說要才改
-
-  判準是「能不能實跑驗證」：跑得出來且結果不符就是客觀錯，其餘一律當主觀。
-  分數（A–F）只拿來決定結尾要不要多寫一句，不當「要不要問使用者」的閘門
-- **第 7、8 步動到檔案就要 commit**：`.md` 不在 gate 的程式碼副檔名清單裡，不會被擋，
-  但留著未提交的改動會混進下一輪
-- 這兩步**靠自律，不像 gate 有程式擋**
+第 7、8 步的細則（範圍怎麼算、發現怎麼分類、何時可跳過）見全域模板 §3.9。
+本 repo 是這兩步的 dogfood 來源：2026-08-31 先在這裡實跑 4 次，抓到 2 個真錯誤
+（`diagrams/src/CLAUDE.md` 漏寫 `gen_usage.py` 不產 html、第 8 步條文自己用了
+在該時機為空的 `git diff --cached`），驗證可行後才推進全域模板與 `/dd-init`。
 
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
