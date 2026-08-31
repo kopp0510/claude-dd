@@ -153,9 +153,11 @@ def build(L):
     for j, ln in enumerate(lines):
         o.append(f'<text x="1090" y="{862+j*19}" class="nb">{esc(ln)}</text>\n')
 
-    for i, b in enumerate((0.0, -2.4, -4.8)):
+    # begin 一律避開 dur 的整數倍，否則球「跑完一圈跳回起點」會剛好落在 GIF 的
+    # 循環接點上，每次循環都看得到跳一下（2026-08-31 踩過）
+    for i, b in enumerate((-0.6, -2.4, -4.8)):
         o.append(ball(f"d1{i}", GOLD, 3.6, b))
-        o.append(ball(f"d2{i}", GOLD, 3.6, b - 1.2))
+        o.append(ball(f"d2{i}", GOLD, 3.6, b - 1.8))
     o.append(ball("chg", VIOLET, 7.2, -1.8))
 
     lx = 100

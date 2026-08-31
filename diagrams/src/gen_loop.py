@@ -185,13 +185,10 @@ def build(L):
     o.append(note(748, YC + 30, *L["cnote"]))
     o.append(f'<text x="124" y="{GB[1]+GB[3]-14}" class="xs">{esc(L["bfoot"])}</text>\n')
 
-    o.append(ball("p12", GOLD, 3.6, -0.0))
+    # 只有長路徑放球。框間短連線（p12/p34/p45/p56/p78）路徑僅 20px，
+    # 球的光暈直徑就有 16px — 放上去會蓋住箭頭，循環時還會原地跳一下（2026-08-31 踩過）
     o.append(ball("p23", GOLD, 7.2, -0.9))
-    o.append(ball("p34", GOLD, 3.6, -1.8))
-    o.append(ball("p45", GOLD, 3.6, -2.4))
-    o.append(ball("p56", GOLD, 3.6, -3.0))
     o.append(ball("p67", GOLD, 7.2, -4.5))
-    o.append(ball("p78", GOLD, 3.6, -3.6))
     o.append(ball("back", ROSE, 7.2, -2.1))
     o.append(ball("next", GOLD_DIM, 7.2, -6.0))
 
