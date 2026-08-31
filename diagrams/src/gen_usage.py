@@ -189,7 +189,7 @@ def build(L):
             o.append(f'<text x="{NOTE_X}" y="{ny+25+j*19}" class="nb">{esc(ln)}</text>\n')
 
     # 小球（dur 皆整除 7.2）
-    o.append(ball("p12", GOLD, 3.6, -0.0))
+    o.append(ball("p12", GOLD, 3.6, -0.6))  # 避開 dur 整數倍，否則跳躍落在循環接點
     o.append(ball("p34", GOLD, 3.6, -1.2))
     o.append(ball("p56", GOLD, 3.6, -2.4))
     o.append(ball("p23", GOLD, 7.2, -0.6))
