@@ -6,9 +6,9 @@
 
 | 檔案 | 產出 |
 |---|---|
-| `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（7 步迴圈在框 ⑤） |
+| `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（8 步迴圈在框 ⑤） |
 | `gen_arch.py` | `arch-zh-TW.svg`、`arch-en.svg` — 三層架構（L1 repo → L2 `~/.claude/` → L3 各專案） |
-| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 7 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來） |
+| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來） |
 
 三支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
 中英兩版共用同一份版面座標，只換 `ZH` / `EN` 兩個 dict 的字串。

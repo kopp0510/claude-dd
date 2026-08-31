@@ -12,6 +12,12 @@
 
 ### Changed
 
+- **開發迴圈由 6 步改為 8 步**（同日兩次擴充）。步驟 8「評分 & 修正本輪動過的
+  CLAUDE.md」用 `claude-md-management:claude-md-improver`，補 pre-commit gate 的盲點 —
+  gate 只確認改碼目錄的 CLAUDE.md「有寫」、不確認「寫得對」。
+  **第一個動作是算範圍**（`git show HEAD` 聯集 `git status`），因為該 skill 的
+  Phase 1 是「find 全部」，實測有專案含 87 份 CLAUDE.md，不先算範圍會全 repo 掃。
+  步驟 7 跳過不代表步驟 8 跳過。先在 claude-dd dogfood 4 次抓到 2 個真錯誤才推全域
 - **開發迴圈由 6 步改為 7 步**：新增步驟 7「沉澱本輪學到的」— 用
   `claude-md-management:revise-claude-md` 把本輪的踩雷/指令/慣例寫進 CLAUDE.md。
   它是唯一可跳過（本輪沒學到就跳）、也是唯一會回問使用者的步驟。

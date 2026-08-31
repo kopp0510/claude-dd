@@ -13,7 +13,7 @@
 
 1. **一個會擋 commit 的 pre-commit hook** — 改碼目錄沒有 `CLAUDE.md`、或有但沒跟這次 commit 一起 staged，就擋下。這條是真的強制：一支 shell 腳本 `exit 1`，跟 AI 怎麼想無關。
 2. **一份全域 `CLAUDE.md`** — 要求涉及 API 簽名、版本號、專案事實時標註來源，並把「應該是」「大概」列為禁用詞。
-3. **一個 7 步迴圈** — 由 `/dd-init` 蓋章進各專案的 `CLAUDE.md`，每個功能段落都要走簡化 → 審查 → 再驗證才進最終 commit。
+3. **一個 8 步迴圈** — 由 `/dd-init` 蓋章進各專案的 `CLAUDE.md`，每個功能段落都要走簡化 → 審查 → 再驗證才進最終 commit。
 
 差別要講清楚：**只有第 1 條是強制**。Claude Code 是把 `CLAUDE.md` 當 context 載入而非設定，[官方文件寫得很直白](https://code.claude.com/docs/en/memory)（"Claude treats them as context, not enforced configuration"）。第 2、3 條抬高下限、留下可稽核的紀錄，但不保證照做。**必須每次都發生的事得寫成 hook** — gate 就是為此存在。
 
@@ -28,7 +28,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 
 ## 特色
 
-- **7 步開發迴圈** — 每個功能段落必走：實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
+- **8 步開發迴圈** — 每個功能段落必走：實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit
 - **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
 - **零幻覺政策** — 涉及 API 簽名、版本號、專案事實時必須標註來源；「應該是」「大概」等模糊詞列為禁用
 - **Skill 觸發顯性化** — 該觸發卻不觸發時必須寫出一行具體理由，讓「跳過」從黑箱變成可稽核紀錄
@@ -55,7 +55,7 @@ cd claude-dd
 
 > 若 `install-dd-pipeline.sh` 沒有執行權限，先 `chmod +x install-dd-pipeline.sh`。
 
-安裝腳本的進度顯示為 7 步（`1/7` … `7/7`）：
+安裝腳本的進度顯示為 8 步（`1/7` … `7/7`）：
 
 1. 檢查基礎環境（上述硬性需求，缺一即中止）
 2. 安裝 10 個 promoted Skills 到 `~/.claude/skills/`
@@ -81,7 +81,7 @@ cd claude-dd
 
 ### 分享給別人
 
-安裝方式只有一種（含完整工作法：全域規則、7 步迴圈、pre-commit gate 與精選元件）：
+安裝方式只有一種（含完整工作法：全域規則、8 步迴圈、pre-commit gate 與精選元件）：
 
 ```bash
 git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
@@ -107,10 +107,10 @@ git pull && ./install-dd-pipeline.sh --force
 > 舊版會備份到 `~/.claude/backups/pre-install-<時間戳>/`，路徑印在完成訊息裡，所以救得回來 —
 > 但若你的全域規則有在地修改想保留，先不帶 `--force` 跑一次、選 `k`（保留本地）。
 
-從舊版部署（全量 / 分桶時期）升級、既有專案升級到 7 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+從舊版部署（全量 / 分桶時期）升級、既有專案升級到 8 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
 歷次結構性變更見 [CHANGELOG.md](CHANGELOG.md)。
 
-## 核心工作法：7 步開發迴圈
+## 核心工作法：8 步開發迴圈
 
 每個**功能段落**必走（定義於全域 CLAUDE.md §3.9，專案具體版由 `/dd-init` 蓋章）：
 
@@ -128,7 +128,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
 
-![claude-dd 7 步開發迴圈](diagrams/claude-dd-dev-loop.zh-TW.gif)
+![claude-dd 8 步開發迴圈](diagrams/claude-dd-dev-loop.zh-TW.gif)
 
 從零到日常的完整路徑（裝一次、每個專案蓋章一次、之後每個功能段落走同一個迴圈）：
 
@@ -180,13 +180,13 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
   *對策*：實務上要改那個目錄的程式碼就得先讀檔，一讀就重新載入。
   *殘餘*：很窄 — compact 後憑記憶改該目錄的碼、全程沒讀過裡面任何檔案。那本來就是壞習慣，這只是多一個別那樣做的理由。
 
-如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要裝 gate。7 步迴圈沒有它一樣能跑。
+如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要裝 gate。8 步迴圈沒有它一樣能跑。
 
 ## 指令一覽
 
 | 指令 | 說明 |
 |------|------|
-| `/dd-init` | 初始化專案：蓋章 7 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`（僅在專案有前端時；純後端/CLI 跳過）、檢查 plugin 依賴 |
+| `/dd-init` | 初始化專案：蓋章 8 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`（僅在專案有前端時；純後端/CLI 跳過）、檢查 plugin 依賴 |
 | `/workflow-review:review` | 綜合程式碼審查（安全、效能、配置）。這是命名空間指令，冒號形式才是可呼叫的名稱 |
 
 ## Promoted Skills（預設部署，10 個）
@@ -208,7 +208,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 
 | Plugin | 功能 |
 |--------|------|
-| claude-md-management | 巢狀 CLAUDE.md 稽核與更新（`claude-md-improver` skill + `/revise-claude-md`）— 7 步迴圈的文件維護依賴 |
+| claude-md-management | 巢狀 CLAUDE.md 稽核與更新（`claude-md-improver` skill + `/revise-claude-md`）— 8 步迴圈的文件維護依賴 |
 
 ### 推薦第三方 Plugin（安裝腳本不管理）
 
