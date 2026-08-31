@@ -8,40 +8,59 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
-## 未發布
+## 1.1.0 — 2026-08-31
 
 ### Changed
 
-- **開發迴圈由 6 步改為 8 步**（同日兩次擴充）。步驟 8「評分 & 修正本輪動過的
-  CLAUDE.md」用 `claude-md-management:claude-md-improver`，補 pre-commit gate 的盲點 —
-  gate 只確認改碼目錄的 CLAUDE.md「有寫」、不確認「寫得對」。
-  **第一個動作是算範圍**（`git show HEAD` 聯集 `git status`），因為該 skill 的
-  Phase 1 是「find 全部」，實測有專案含 87 份 CLAUDE.md，不先算範圍會全 repo 掃。
-  步驟 7 跳過不代表步驟 8 跳過。先在 claude-dd dogfood 4 次抓到 2 個真錯誤才推全域
-- **開發迴圈由 6 步改為 7 步**：新增步驟 7「沉澱本輪學到的」— 用
-  `claude-md-management:revise-claude-md` 把本輪的踩雷/指令/慣例寫進 CLAUDE.md。
-  它是唯一可跳過（本輪沒學到就跳）、也是唯一會回問使用者的步驟。
-  步驟 1–6 編號與內容不變。全部現行文件、`/dd-init` 蓋章版與當時既有的 4 張 diagrams GIF
-  已同步（重製時循環長度由 8s 改為 7.2s，144 幀 20fps）；
-  CHANGELOG 舊條目與 UPGRADING 的歷史敘述保留原「6 步」字樣
+- **開發迴圈由 6 步改為 8 步**（同日兩階段擴充）：
+  - **步驟 7「沉澱本輪所學」**（`claude-md-management:revise-claude-md`）— 本輪學到的
+    踩雷／指令／慣例寫進 CLAUDE.md，會先列建議等使用者同意才寫檔；沒學到就跳過
+  - **步驟 8「評分 & 修正本輪動過的 CLAUDE.md」**（`claude-md-improver`）— 補 pre-commit
+    gate 的盲點：gate 只確認改碼目錄的 CLAUDE.md「有寫」、**不確認「寫得對」**。
+    **第一個動作是算範圍**（`git show HEAD` 聯集 `git status`），因為該 skill 的 Phase 1
+    是「find 全部」，實測有專案含 87 份 CLAUDE.md，不先算範圍會全 repo 掃。
+    **步驟 7 跳過不代表步驟 8 跳過** — gate 逼出來的那些改動一樣要審
+  - 步驟 1–6 編號與內容不變。先在 claude-dd dogfood 4 次抓到 2 個真錯誤才推全域。
+    已用舊版 `/dd-init` 蓋章過的專案不會自動更新，重跑 `/dd-init` 會偵測舊版並提議升級
+- 全域模板收緊回應風格與 task 粒度；巢狀 CLAUDE.md 的代價改寫為
+  「代價 → 對策 → 殘餘風險」三段式
+- 全域模板 §3.4 砍掉 `/goal` 的操作手冊（官方文件轉述，非行為規則），留一行指路
+- `claude-mem` 由必要 MCP 改列「推薦第三方 Plugin」— 它走 hooks + plugin 系統，
+  MCP 檢查對它永遠誤報未安裝
 
 ### Added
 
-- 全域模板 §7.2 觸發表新增 `revise-claude-md` 一列（關鍵字刻意避開 improver 的
-  `修`/`改` 與 self-improving-agent 的 `沉澱`/`memory`/`skill`，避免撞列）
-- `diagrams/src/` 納入版控 — GIF 的產生器（零依賴 Python 手寫 SVG）與重出流程。
-  先前只保存成品 GIF，改一個字就得整張重畫；本次已實際踩到這個坑
-- 新增第三張圖表「7 步開發迴圈」（`claude-dd-dev-loop*.gif`，中英各一），
-  把七個步驟本身畫出來並嵌進兩份 README — 先前兩張圖只把迴圈壓成一個框裡的一行字
+- 全域模板 **§2.6 動手前範圍盤點與佐證要求**：改既有介面前先 Grep 呼叫端並列出受影響
+  檔案；病因要有第一手證據；結果只報實際跑過的
+- 全域模板 **§4.1 停等語規則**：使用者說「先告訴我」「不要直接改」時，該輪只出計畫
+- 全域模板 **§2.5 擴充**：skill / agent / 工具的 description 也算「名稱層級」資訊，
+  要拿它的行為下判斷前先讀 SKILL.md 本體
+- 全域模板 §7.2 觸發表新增 `revise-claude-md`（關鍵字刻意避開 improver 與
+  self-improving-agent，避免撞列）
+- **第三張圖表「8 步開發迴圈」**（`claude-dd-dev-loop*.gif`，中英各一）並嵌進兩份
+  README — 先前兩張圖只把迴圈壓成一個框裡的一行字
+- **`diagrams/src/` 納入版控** — 6 張 GIF 的產生器（零依賴 Python 手寫 SVG）與重出流程。
+  先前只保存成品 GIF，改一個字就得整張重畫
 - `tech-diagram-gif` 陷阱表補上 playwright 的工具層與瀏覽器層差異：`browser_navigate`
   擋 `file://` 但 `run_code` 裡的 `page.goto('file://…')` 不受限、`run_code` 裡拿不到 `fs`、
-  `page.screenshot({path})` 可寫任意路徑 — 連拍上百幀時走 `run_code` 這條
+  `page.screenshot({path})` 可寫任意路徑
+- **CI 新增兩道防線**：安裝 flag 三方對照（腳本 case 分支 ↔ `--help` ↔ 兩份 README）、
+  迴圈步數四方一致（全域模板 §3.9 ↔ `/dd-init` 蓋章版 ↔ 兩份 README ↔ `dd-loop-version` 標記）
 
 ### Fixed
 
+- **`/dd-init` 的版本標記停在 `6step`** — 判斷邏輯是「含 `6step` → 已是現行版」，
+  導致已蓋章的專案永遠不會被提議升級。**靜默失效、不報錯**
+- 兩份 README 的迴圈清單只列到第 7 步，與「8 步」標題自相矛盾
 - `/dd-init` 蓋章版與兩份 README 原本把 `/revise-claude-md` 當成巢狀文件同步的工具，
-  與其實際行為（回顧本 session 學到什麼）不符 — 已拆成兩件事分別說明。
-  **已用舊版 `/dd-init` 蓋章過的專案不會自動更新**，需重跑 `/dd-init` 或手改該區塊
+  與其實際行為（回顧本 session 學到什麼）不符 — 已拆成兩件事分別說明
+- `diagrams/src/gen_usage.py` 只產 `.svg` 不產 `.html`，與該目錄 CLAUDE.md 寫的
+  「6 份 .svg 與 .html」不符，照文件做會在重出流程第 2 步斷掉
+- README 與 CLAUDE.md 事實查核：13 處與實作對齊的修正
+
+### Removed
+
+- 可選 MCP 移除 `cipher` — 上游已 deprecated 改名 byterover-cli，本機使用紀錄已斷
 
 ## 1.0.0 — 2026-08-11
 
