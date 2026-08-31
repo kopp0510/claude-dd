@@ -134,6 +134,9 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
   兩份 README 指令範例」名稱完全一致，新增/刪除 flag 忘了同步文件會被擋。
   只驗 flag **名稱**，各 flag 的**語意描述**仍是手動維護
+- **迴圈步數**已有 CI 防線：驗「全域模板 §3.9 ↔ `/dd-init` 蓋章版 ↔ 兩份 README 清單
+  ↔ `dd-loop-version` 標記」四方一致。2026-08-31 迴圈 6→7→8 時，README 清單漏補一項、
+  標記停在 `6step`（會讓舊專案跑 `/dd-init` 被誤判為最新），兩者都靜默失效不報錯
 - `OPTIONAL_MCP` 只收 **MCP server**（會註冊進 `~/.claude.json` `mcpServers` 的東西）；
   plugin 形式的工具（如 claude-mem，`npx claude-mem install` 走 hooks + plugin 系統）
   列進去檢查會**永遠回報未安裝**，應改列 README 的「推薦第三方 Plugin」段落
