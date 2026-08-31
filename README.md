@@ -117,9 +117,10 @@ Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the pr
 5. Re-verify — rerun the tests, plus curl against the real API / drive a real browser with playwright (screenshots go to .screenshots/)
 6. commit (final version)
 7. Capture what this round taught you (only if there is something) — `/revise-claude-md` folds any gotcha, command or convention into `CLAUDE.md`
+8. Score & fix the CLAUDE.md files this round touched — compute the scope first, then `claude-md-improver` audits only those files
 ```
 
-Step 7 is the only skippable step, and the only one that asks you first: it proposes the additions and waits for approval. It handles session learnings, which is a separate concern from the code-changed-so-docs-must-follow sync the gate enforces.
+Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 would immediately drop new content into the files it just cleaned up. Skipping 7 does not skip 8: at steps 2 and 6 the gate forces updates to the CLAUDE.md of any directory whose code changed, and those edits need auditing too — the gate only confirms something was written, not that it was written correctly. Step 8 computes its scope first, because `claude-md-improver` defaults to finding every CLAUDE.md in the repo (one project here has 87 of them).
 
 Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (including a 12-item Fowler code-smell baseline), and real-environment verification owns behaviour.
 

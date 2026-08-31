@@ -121,10 +121,11 @@ git pull && ./install-dd-pipeline.sh --force
 4. code-review（該段 diff，全量跑；修掉 Critical/Important 才續行）
 5. 再測一次 — 重跑測試 + curl 打真實 API / playwright 真實瀏覽器操作（截圖存 .screenshots/）
 6. commit（最終版本）
-7. 沉澱本輪學到的（有才做）— 踩雷、指令、慣例用 `/revise-claude-md` 寫進 `CLAUDE.md`
+7. 沉澱本輪所學（有才做）— 踩雷、指令、慣例用 `/revise-claude-md` 寫進 `CLAUDE.md`
+8. 評分 & 修正本輪動過的 `CLAUDE.md` — 先算範圍，再讓 `claude-md-improver` 只審那幾份
 ```
 
-步驟 7 是唯一可跳過、也是唯一會回問你的步驟：它先列出建議、你同意才寫檔。它處理「本輪學到什麼」，與 gate 強制的「程式碼改了所以文件要同步」是兩件事。
+步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 的 gate 會逼著更新改碼目錄的 `CLAUDE.md`，那些改動一樣要審 —— gate 只確認「有寫」、不確認「寫得對」。步驟 8 的第一個動作是算範圍，因為 `claude-md-improver` 預設會找出 repo 裡的每一份 `CLAUDE.md`（這裡有個專案就有 87 份）。
 
 三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
 
