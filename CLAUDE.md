@@ -81,6 +81,24 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 步驟 7「沉澱」是唯一可跳過、也是唯一會回問使用者的步驟：本輪學到的踩雷/指令/慣例用
 `/revise-claude-md` 寫進 CLAUDE.md，與下方 gate 強制的「程式碼改了所以文件要同步」是兩件事。
 
+### 本 repo 追加：步驟 7 拆成 a、b（尚未推到全域模板）
+
+```
+7a. revise-claude-md    → 把本輪學到的「加」進 CLAUDE.md
+7b. claude-md-improver  → 「整理」剛動過的那幾份，檢查寫得對不對
+```
+
+- **順序不可反**：a 是加、b 是整理。反過來的話 b 剛整理完 a 又塞新東西進去，白做
+- **7b 只審本輪動過的 CLAUDE.md**（`git diff --cached --name-only` 就知道是哪幾份），
+  **不要全 repo 掃**。improver 的 Phase 1 寫的是「find 全部」，不主動縮範圍就會產出
+  跟本輪無關的長報告 — 看兩次就會開始跳過，規則等於沒有
+- **7b 預設只出報告、不改檔**；評到 B 級以下才列出問題並問使用者要修哪些
+- **被 gate 擋下時自動產生的 CLAUDE.md 一定要進 7b 的範圍**：gate 只檢查該目錄的
+  CLAUDE.md 有沒有一起 staged，**只確認「有寫」、不確認「寫得對」**。
+  `diagrams/src/CLAUDE.md` 就是這樣帶著一個會讓人踩坑的錯誤進版控的（commit 6c0f0ec 修掉）
+- 這條規則**靠自律，不像 gate 有程式擋**。在本 repo 跑順了再考慮推進
+  `templates/global/CLAUDE.md` §3.9 與 `/dd-init` 蓋章版（那會影響所有專案）
+
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
 `~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有
