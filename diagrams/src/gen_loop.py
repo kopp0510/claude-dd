@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""claude-dd 7 步開發迴圈圖 — Style 8 Dark Luxury，1440x1080，總循環 7.2s"""
+"""claude-dd 8 步開發迴圈圖 — Style 8 Dark Luxury，1440x1080，總循環 7.2s"""
 import io
 
 SERIF = "Georgia,'Times New Roman','Songti TC','Noto Serif CJK TC',serif"
@@ -10,11 +10,11 @@ T1, T2, T3 = "#f5f0eb", "#a39787", "#6b5f53"
 GREEN, VIOLET, BLUE, ROSE, AMBER, GRAY = "#5a9e6f", "#a78bfa", "#38bdf8", "#f87171", "#fbbf24", "#94a3b8"
 
 ZH = dict(
-    title="claude-dd 7 步開發迴圈",
-    sub="每個功能段落都走這一圈 · 步驟 1–6 一定要做，步驟 7 有東西才做",
+    title="claude-dd 8 步開發迴圈",
+    sub="每個功能段落都走這一圈 · 1–6 一定要做；7 有東西才做；8 只要動過 CLAUDE.md 就要做",
     groups=["A · 做出來（證明它是對的）",
             "B · 整理它（證明沒把對的改壞）",
-            "C · 留下來（把本輪學到的沉澱）"],
+            "C · 留下來（沉澱，然後檢查）"],
     a=[("① 實作 + 首輪測試", ["相關既有測試跑綠", "加基本手動驗證", "不可帶紅燈進 commit"], GREEN),
        ("② commit（第一次）", ["保留簡化前的還原點", "被 gate 擋下時這一步",
                              "可用 SKIP_DOC_CHECK=1"], AMBER)],
@@ -30,23 +30,26 @@ ZH = dict(
        ("⑥ commit（最終版）", ["gate 必須全過", "不可用 SKIP 繞過",
                              "缺文件由 AI 自己補齊"], AMBER)],
     bfoot="③④ 之後一定要回到 ⑤：簡化與修 review 都動了程式碼，沒重驗過就不算數 · 驗證不過就修完重跑 ⑤，不可帶紅燈進 ⑥",
-    c=[("⑦ 沉澱本輪學到的（有才做）", ["踩雷、指令、慣例",
-                                  "用 /revise-claude-md 寫進 CLAUDE.md",
-                                  "沒有值得留的就跳過，不硬湊"], GOLD_DIM)],
-    cnote=("步驟 7 的兩個特別之處", ["唯一可跳過的步驟 — 本輪沒學到東西就跳過",
-                                "唯一會回問你的步驟 — 它先列建議，你同意才寫檔",
-                                "與「程式碼改了所以文件要同步」是兩件事（後者由 gate 硬擋）"]),
+    c=[("⑦ 沉澱本輪所學（有才做）", ["踩雷、指令、慣例",
+                                "用 /revise-claude-md 寫進 CLAUDE.md",
+                                "沒有值得留的就跳過"], GOLD_DIM),
+       ("⑧ 評分 & 修正", ["先算範圍：只審本輪動過的",
+                        "improver 審那幾份，不全 repo 掃",
+                        "驗得出來的錯直接修，不問"], BLUE)],
+    cnote=("步驟 7、8 的分工", ["7 是「加」— 把本輪學到的寫進去",
+                            "8 是「整理」— 檢查那幾份寫得對不對",
+                            "7 跳過不代表 8 跳過：gate 逼出來的改動也要審"]),
     legend=[("主流程", GOLD, False), ("⑤ 驗證不過 → 修完重跑 ⑤", ROSE, True),
             ("下一個功能段落 → 回到 ①", GOLD_DIM, True)],
-    foot="Style 8 · Dark Luxury · claude-dd 7 步開發迴圈 · 依全域 CLAUDE.md §3.9 繪製",
+    foot="Style 8 · Dark Luxury · claude-dd 8 步開發迴圈 · 依全域 CLAUDE.md §3.9 繪製",
 )
 
 EN = dict(
-    title="claude-dd 7-step development loop",
-    sub="every feature increment runs this once · steps 1–6 are mandatory, step 7 only when there is something to keep",
+    title="claude-dd 8-step development loop",
+    sub="every feature increment runs this once · 1–6 always; 7 only if you learned something; 8 whenever a CLAUDE.md changed",
     groups=["A · Build it (prove it is right)",
             "B · Clean it up (prove cleanup didn't break it)",
-            "C · Keep it (capture what this round taught you)"],
+            "C · Keep it (capture, then check)"],
     a=[("① Implement + first tests", ["existing related tests go green", "plus a basic manual check",
                                       "never enter a commit with a red light"], GREEN),
        ("② commit (first one)", ["a restore point before simplification", "this is the step where",
@@ -64,14 +67,17 @@ EN = dict(
                              "missing docs get written by the AI"], AMBER)],
     bfoot="Always come back to ⑤ after ③④: both of them touched the code, and untested code does not count · if it fails, fix and rerun ⑤ — never enter ⑥ with a red light",
     c=[("⑦ Capture the learnings (if any)", ["gotchas, commands, conventions",
-                                             "/revise-claude-md folds them into CLAUDE.md",
-                                             "nothing worth keeping? skip it"], GOLD_DIM)],
-    cnote=("What makes step 7 different", ["the only skippable step — skip it when you learned nothing",
-                                           "the only step that asks you first — it proposes, you approve",
-                                           'separate from the "code changed so docs must follow" sync the gate enforces']),
+                                             "/revise-claude-md folds them in",
+                                             "nothing worth keeping? skip it"], GOLD_DIM),
+       ("⑧ Score & fix", ["first compute the scope",
+                          "improver audits only those files",
+                          "objective errors get fixed, no asking"], BLUE)],
+    cnote=("How steps 7 and 8 divide the work", ["7 adds — this round's learnings go in",
+                                                 "8 checks — are those files written correctly",
+                                                 "skipping 7 does not skip 8: gate-forced edits count too"]),
     legend=[("main flow", GOLD, False), ("⑤ fails → fix, then rerun ⑤", ROSE, True),
             ("next feature increment → back to ①", GOLD_DIM, True)],
-    foot="Style 8 · Dark Luxury · claude-dd 7-step development loop · drawn from global CLAUDE.md §3.9",
+    foot="Style 8 · Dark Luxury · claude-dd 8-step development loop · drawn from global CLAUDE.md §3.9",
 )
 
 BW, BHX = 268, 108
@@ -145,7 +151,8 @@ def build(L):
         "p56": f"M {XS[2]+BW} {cb} H {XS[3]-12}",
         "p67": f"M {XS[3]+BW/2} {YB+BHX} V 664 H {XS[0]+BW/2} V {YC-12}",
         "back": f"M {XS[2]+BW-40} {YB+BHX} V 604 H {XS[2]+40} V {YB+BHX+12}",
-        "next": f"M {XS[0]} {cc} H 60 V {ca} H {XS[0]-12}",
+        "p78": f"M {XS[0]+BW} {cc} H {XS[1]-12}",
+        "next": f"M {XS[1]+BW/2} {YC+BHX} V 878 H 60 V {ca} H {XS[0]-12}",
     }
     for k, d in paths.items():
         o.append(f'  <path id="{k}" d="{d}" fill="none"/>\n')
@@ -159,7 +166,7 @@ def build(L):
                  f'stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>\n')
         o.append(f'<text x="{cx+24}" y="{cy+28}" class="grp">{esc(lbl)}</text>\n')
 
-    for k in ("p12", "p23", "p34", "p45", "p56", "p67"):
+    for k in ("p12", "p23", "p34", "p45", "p56", "p67", "p78"):
         o.append(f'  <use href="#{k}" stroke="{GOLD}" stroke-width="1.6" opacity="0.32" fill="none" '
                  f'marker-end="url(#ag)"/>\n')
     o.append(f'  <use href="#back" stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.34" '
@@ -171,11 +178,11 @@ def build(L):
         o.append(box(x, YA, n, ls, c))
     for (n, ls, c), x in zip(L["b"], XS):
         o.append(box(x, YB, n, ls, c))
-    c_name, c_lines, c_color = L["c"][0]
-    o.append(box(XS[0], YC, c_name, c_lines, c_color))
+    for (n, ls, c), x in zip(L["c"], XS):
+        o.append(box(x, YC, n, ls, c))
 
     o.append(note(748, YA + 30, *L["anote"]))
-    o.append(note(448, YC + 30, *L["cnote"]))
+    o.append(note(748, YC + 30, *L["cnote"]))
     o.append(f'<text x="124" y="{GB[1]+GB[3]-14}" class="xs">{esc(L["bfoot"])}</text>\n')
 
     o.append(ball("p12", GOLD, 3.6, -0.0))
@@ -184,6 +191,7 @@ def build(L):
     o.append(ball("p45", GOLD, 3.6, -2.4))
     o.append(ball("p56", GOLD, 3.6, -3.0))
     o.append(ball("p67", GOLD, 7.2, -4.5))
+    o.append(ball("p78", GOLD, 3.6, -3.6))
     o.append(ball("back", ROSE, 7.2, -2.1))
     o.append(ball("next", GOLD_DIM, 7.2, -6.0))
 
