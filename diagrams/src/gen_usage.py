@@ -213,6 +213,9 @@ def build(L):
 
 
 for lang, L in (("zh-TW", ZH), ("en", EN)):
-    p = f"usage-{lang}.svg"
-    io.open(p, "w", encoding="utf-8").write(build(L))
-    print("wrote", p)
+    svg = build(L)
+    io.open(f"usage-{lang}.svg", "w", encoding="utf-8").write(svg)
+    io.open(f"usage-{lang}.html", "w", encoding="utf-8").write(
+        '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;padding:0;'
+        'overflow:hidden;background:#0a0a0a}svg{display:block}</style>' + svg)
+    print("wrote usage-" + lang)
