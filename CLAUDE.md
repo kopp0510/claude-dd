@@ -69,27 +69,32 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
 - 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
 
-## 核心工作法：7 步開發迴圈
+## 核心工作法：8 步開發迴圈（本 repo 自用）
 
-骨幹已從多階段 DD Pipeline 換成經實際專案實戰驗證的功能段落迴圈
-（定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
+> 全域模板 §3.9 定義的是 **7 步** — 那是部署給所有專案的版本，README 與 diagrams
+> 的圖也都是 7 步。本 repo 自己多跑第 8 步先 dogfood，跑順了再考慮推進全域模板與
+> `/dd-init` 蓋章版（那會影響所有專案）。
 
-```
-實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit → 沉澱
-```
-
-步驟 7「沉澱」是唯一可跳過、也是唯一會回問使用者的步驟：本輪學到的踩雷/指令/慣例用
-`/revise-claude-md` 寫進 CLAUDE.md，與下方 gate 強制的「程式碼改了所以文件要同步」是兩件事。
-
-### 本 repo 追加：步驟 7 拆成 a、b（尚未推到全域模板）
+每個功能段落必走：
 
 ```
-7a. revise-claude-md    → 把本輪學到的「加」進 CLAUDE.md
-7b. claude-md-improver  → 「整理」剛動過的那幾份，檢查寫得對不對
+實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
+  → 沉澱本輪所學 → 評分&修正
 ```
 
-- **順序不可反**：a 是加、b 是整理。反過來的話 b 剛整理完 a 又塞新東西進去，白做
-- **7b 只審本輪動過的 CLAUDE.md**，**不要全 repo 掃**。範圍這樣抓（7b 跑在第 6 步
+1–6 步同 `templates/global/CLAUDE.md` §3.9。第 7、8 步：
+
+| 步驟 | 做什麼 | 什麼時候跳過 |
+|---|---|---|
+| **7. 沉澱本輪所學** | `revise-claude-md` 把本輪的踩雷／指令／慣例寫進 CLAUDE.md | 這輪沒學到東西就跳過，不硬湊 |
+| **8. 評分 & 修正** | `claude-md-improver` 審本輪動過的那幾份 CLAUDE.md | **本輪完全沒動到任何 CLAUDE.md** 才跳過 |
+
+- **第 7 步跳過不代表第 8 步也跳過**：第 2、6 步 commit 時 pre-commit gate 會逼著更新
+  改碼目錄的 CLAUDE.md，那些改動不是第 7 步加的，但一樣要審。`diagrams/src/CLAUDE.md`
+  就是這樣帶著一個會讓人踩坑的錯誤進版控的 — gate 只確認「有寫」、**不確認「寫得對」**
+  （commit 6c0f0ec 修掉）。這一格正是第 8 步最該存在的理由
+- **順序不可反**：7 是加、8 是整理。反過來的話 8 剛整理完 7 又塞新東西進去，白做
+- **第 8 步只審本輪動過的 CLAUDE.md**，不要全 repo 掃。範圍這樣抓（第 8 步跑在第 6 步
   commit 之後，`git diff --cached` 那時已經是空的，抓不到東西）：
 
   ```bash
@@ -97,20 +102,20 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
     | grep 'CLAUDE\.md$' | sort -u
   ```
 
-  前半是第 6 步 commit 進去的，後半是 7a 剛改還沒 commit 的，兩邊聯集才完整。improver 的 Phase 1 寫的是「find 全部」，不主動縮範圍就會產出
-  跟本輪無關的長報告 — 看兩次就會開始跳過，規則等於沒有
-- **7b 的發現分兩類處理，不要把選擇丟回給使用者**（使用者未必知道該修什麼）：
+  前半是第 6 步 commit 進去的，後半是第 7 步剛改還沒 commit 的，兩邊聯集才完整。
+  improver 的 Phase 1 寫的是「find 全部」，不主動縮範圍就會產出跟本輪無關的長報告 —
+  看兩次就會開始跳過，規則等於沒有
+- **第 8 步的發現分兩類處理，不要把選擇丟回給使用者**（使用者未必知道該修什麼）：
   - **實跑驗證得出來的錯** — 文件寫的指令、檔名、數量、路徑與實際不符 →
     **直接修，不問**，結尾報一行「順手修掉 X」即可
   - **主觀建議** — 太囉嗦、可以更精簡、結構可以更好 → **提一次就好，不動手**，
     使用者說要才改
+
   判準是「能不能實跑驗證」：跑得出來且結果不符就是客觀錯，其餘一律當主觀。
-  分數（A–F）只拿來決定要不要在結尾多寫一句，不拿來當「要不要問使用者」的閘門
-- **被 gate 擋下時自動產生的 CLAUDE.md 一定要進 7b 的範圍**：gate 只檢查該目錄的
-  CLAUDE.md 有沒有一起 staged，**只確認「有寫」、不確認「寫得對」**。
-  `diagrams/src/CLAUDE.md` 就是這樣帶著一個會讓人踩坑的錯誤進版控的（commit 6c0f0ec 修掉）
-- 這條規則**靠自律，不像 gate 有程式擋**。在本 repo 跑順了再考慮推進
-  `templates/global/CLAUDE.md` §3.9 與 `/dd-init` 蓋章版（那會影響所有專案）
+  分數（A–F）只拿來決定結尾要不要多寫一句，不當「要不要問使用者」的閘門
+- **第 7、8 步動到檔案就要 commit**：`.md` 不在 gate 的程式碼副檔名清單裡，不會被擋，
+  但留著未提交的改動會混進下一輪
+- 這兩步**靠自律，不像 gate 有程式擋**
 
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
