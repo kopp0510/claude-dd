@@ -165,6 +165,32 @@ jobs:
           done <<< "$targets"
           exit $fail
 
+      - name: 迴圈步數四方一致（全域模板 ↔ dd-init 蓋章版 ↔ 兩份 README ↔ 版本標記）
+        run: |
+          # 2026-08-31 迴圈 6→7→8 時，README 清單漏補一項、dd-loop-version 停在 6step，
+          # 兩者都不會報錯只會靜默失效（舊專案跑 /dd-init 會被判定「已是最新」）
+          count_block() {  # $1=檔案 $2=區塊起始 regex $3=區塊結束 regex
+            sed -n "/$2/,/$3/p" "$1" | grep -cE '^[0-9]+\. '
+          }
+          count_fence() {  # $1=檔案 $2=章節標題 regex：數該章節第一個 ``` 圍欄內的編號項
+            awk -v pat="$2" '$0 ~ pat {f=1} f&&/^```$/{c++; if(c==2)f=0} f&&c==1&&/^[0-9]+\./{n++} END{print n+0}' "$1"
+          }
+          n_tpl=$(count_block templates/global/CLAUDE.md '^### 3\.9' '^> 步驟 1')
+          n_dd=$(count_block commands/dd-init.md '^## 開發流程' '^驗證不過')
+          n_en=$(count_fence README.md '^## The core loop')
+          n_zh=$(count_fence README.zh-TW.md '^## 核心工作法')
+          tag=$(grep -o 'dd-loop-version: [0-9a-z]*' commands/dd-init.md | head -1 | awk '{print $2}')
+          echo "全域模板 §3.9=$n_tpl  dd-init 蓋章版=$n_dd  README.md=$n_en  README.zh-TW=$n_zh  標記=$tag"
+          fail=0
+          [ "$n_tpl" -gt 0 ] || { echo "❌ 全域模板 §3.9 抓不到步驟，檢查腳本的區塊 regex 失效"; fail=1; }
+          for pair in "dd-init:$n_dd" "README.md:$n_en" "README.zh-TW.md:$n_zh"; do
+            name="${pair%%:*}"; got="${pair##*:}"
+            [ "$got" = "$n_tpl" ] || { echo "❌ $name 是 $got 步，與全域模板 §3.9 的 $n_tpl 步不一致"; fail=1; }
+          done
+          [ "$tag" = "${n_tpl}step" ] || { echo "❌ dd-loop-version 是 ${tag}，應為 ${n_tpl}step — 標記過期會讓 /dd-init 誤判舊專案已是最新"; fail=1; }
+          [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記對得上"
+          exit $fail
+
       - name: Sandbox 端到端安裝測試（非互動）
         run: |
           # runner 無 claude CLI，放一個只回版本號的假 binary 讓環境檢查通過
