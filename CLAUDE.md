@@ -89,8 +89,15 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ```
 
 - **順序不可反**：a 是加、b 是整理。反過來的話 b 剛整理完 a 又塞新東西進去，白做
-- **7b 只審本輪動過的 CLAUDE.md**（`git diff --cached --name-only` 就知道是哪幾份），
-  **不要全 repo 掃**。improver 的 Phase 1 寫的是「find 全部」，不主動縮範圍就會產出
+- **7b 只審本輪動過的 CLAUDE.md**，**不要全 repo 掃**。範圍這樣抓（7b 跑在第 6 步
+  commit 之後，`git diff --cached` 那時已經是空的，抓不到東西）：
+
+  ```bash
+  { git show --name-only --pretty=format: HEAD; git status --porcelain | awk '{print $NF}'; } \
+    | grep 'CLAUDE\.md$' | sort -u
+  ```
+
+  前半是第 6 步 commit 進去的，後半是 7a 剛改還沒 commit 的，兩邊聯集才完整。improver 的 Phase 1 寫的是「find 全部」，不主動縮範圍就會產出
   跟本輪無關的長報告 — 看兩次就會開始跳過，規則等於沒有
 - **7b 的發現分兩類處理，不要把選擇丟回給使用者**（使用者未必知道該修什麼）：
   - **實跑驗證得出來的錯** — 文件寫的指令、檔名、數量、路徑與實際不符 →
