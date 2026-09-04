@@ -85,7 +85,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 ## 核心工作法：8 步開發迴圈
 
 ```
-實作+測試 → commit → code-simplifier → code-review → 再測 → commit → 沉澱
+實作+測試 → commit → code-simplifier → code-review → 再測 → commit → 沉澱 → 評分&修正
 ```
 
 步驟 7「沉澱」可跳過（本輪沒學到就跳），且會先列建議等使用者同意才寫檔；
