@@ -267,7 +267,7 @@ show_help() {
     echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用）"
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具，巢狀 CLAUDE.md 維護依賴）"
-    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：6 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
+    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：8 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
 }
@@ -1098,8 +1098,8 @@ show_completion() {
 
     echo -e "${GREEN}📌 快速開始：${NC}"
     echo "   1. cd your-project"
-    echo "   2. /dd-init  （蓋章 6 步開發迴圈 + 專案 CLAUDE.md）"
-    echo "   3. 開發：實作+測試 → commit → 簡化 → review → 再測 → commit"
+    echo "   2. /dd-init  （蓋章 8 步開發迴圈 + 專案 CLAUDE.md）"
+    echo "   3. 開發：實作+測試 → commit → 簡化 → review → 再測 → commit → 沉澱所學 → 評分修正"
     echo ""
     echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
     echo "   供 wrapper skills 透過 Task tool 調用"

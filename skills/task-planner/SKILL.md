@@ -48,7 +48,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 - 依賴圖（樹狀文字圖）
 - 任務列表（上述格式）
 - **段落分組**：把任務依相依性分組為「功能段落」，每個段落對應一輪 8 步開發迴圈
-  （段落完成 = 迴圈跑完一圈：實作+測試 → commit → 簡化 → review → 再測 → commit）
+  （段落完成 = 迴圈跑完一圈：實作+測試 → commit → 簡化 → review → 再測 → commit → 沉澱所學 → 評分修正）
 
 ## 產出前驗證（完成條件）
 
