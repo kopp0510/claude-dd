@@ -145,6 +145,7 @@ git commit -m "chore: 初始化 8 步開發迴圈慣例"
 
 📌 開始開發：
 實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
+  → 沉澱本輪所學 → 評分&修正
 每個功能段落走一圈；CLAUDE.md 堆疊更新由 pre-commit gate 把關。
 ```
 

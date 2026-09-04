@@ -27,7 +27,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 
 ## Highlights
 
-- **8-step development cycle** — every feature increment runs the same loop: implement + test → commit → code-simplifier → code-review → re-verify against a real environment (curl / playwright) → commit
+- **8-step development cycle** — every feature increment runs the same loop: implement + test → commit → code-simplifier → code-review → re-verify against a real environment (curl / playwright) → commit → capture learnings → score & fix CLAUDE.md
 - **CLAUDE.md pre-commit gate** — a commit is blocked when a directory containing code has no `CLAUDE.md`, or has one that wasn't updated in the same batch. The rejection message doubles as instructions the AI agent can act on to fix it itself
 - **Zero-hallucination policy** — API signatures, version numbers, and project facts must carry a source annotation; hedges like "should be" or "probably" are banned outright rather than tolerated
 - **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason must be written out, turning "I skipped it" from a black box into an auditable line
