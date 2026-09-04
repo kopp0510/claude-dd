@@ -191,6 +191,54 @@ jobs:
           [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記對得上"
           exit $fail
 
+      - name: 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要）
+        run: |
+          # 四方檢查只數「編號清單」，使用者實際看到的兩類文案不在其中：
+          # ①install-dd-pipeline.sh 印出的「N 步開發迴圈」②散落各處的一行式箭頭摘要。
+          # 2026-09-04 這兩類共漏抓 9 處（含 DD_PIPELINE_ARCHITECTURE.md 停在 7 段）。
+          n=$(sed -n '/^### 3\.9/,/^> 步驟 1/p' templates/global/CLAUDE.md | grep -cE '^[0-9]+\. ')
+          echo "基準（全域模板 §3.9）：$n 步"
+          [ "$n" -gt 0 ] || { echo "❌ 基準抓不到步驟，區塊 regex 失效"; exit 1; }
+          fail=0
+
+          # ① 安裝腳本印給使用者的字串（排除註解行 — 那裡是有日期的歷史敘述，刻意保留舊數字）
+          found=0
+          while IFS= read -r hit; do
+            [ -z "$hit" ] && continue
+            found=1; ln="${hit%%:*}"
+            got=$(printf '%s' "$hit" | grep -oE '[0-9]+ 步開發迴圈' | grep -oE '^[0-9]+' | head -1)
+            if [ "$got" = "$n" ]; then echo "✅ install-dd-pipeline.sh:${ln} 輸出 $got 步"
+            else echo "❌ install-dd-pipeline.sh:${ln} 印出 $got 步，應為 $n 步"; fail=1; fi
+          done < <(grep -nE '[0-9]+ 步開發迴圈' install-dd-pipeline.sh | grep -vE '^[0-9]+:[[:space:]]*#' || true)
+          [ "$found" = 1 ] || { echo "❌ 腳本裡找不到任何「N 步開發迴圈」輸出，抓取 regex 已失效"; fail=1; }
+
+          # ② 一行式箭頭摘要：合併續行後，箭頭≥3 且同時含 commit 與 review 才認定為迴圈摘要
+          #    CHANGELOG / UPGRADING 是歷史敘述，排除
+          found=0
+          while IFS= read -r hit; do
+            [ -z "$hit" ] && continue
+            found=1; where="${hit%%|*}"; got="${hit##*|}"
+            if [ "$got" = "$n" ]; then echo "✅ 箭頭摘要 ${where}：$got 段"
+            else echo "❌ ${where} 的箭頭摘要是 $got 段，應為 $n 段"; fail=1; fi
+          done < <(git ls-files '*.md' '*.sh' | grep -vE '^(CHANGELOG|UPGRADING)\.md$' \
+            | while IFS= read -r f; do
+                awk -v F="$f" '
+                  function flush(  c) {
+                    if (buf == "") return
+                    c = gsub(/→/, "→", buf)
+                    if (c >= 3 && buf ~ /commit/ && buf ~ /review|審查/) printf "%s:%d|%d\n", F, ln, c+1
+                    buf = ""
+                  }
+                  { line = $0
+                    if (line ~ /^[[:space:]]*→/ && buf != "") { sub(/^[[:space:]]+/, "", line); buf = buf " " line; next }
+                    flush(); buf = line; ln = NR }
+                  END { flush() }' "$f"
+              done || true)
+          [ "$found" = 1 ] || { echo "❌ 找不到任何箭頭摘要，抓取規則已失效"; fail=1; }
+
+          [ $fail -eq 0 ] && echo "✅ 兩類文案都與 $n 步一致"
+          exit $fail
+
       - name: Sandbox 端到端安裝測試（非互動）
         run: |
           # runner 無 claude CLI，放一個只回版本號的假 binary 讓環境檢查通過
