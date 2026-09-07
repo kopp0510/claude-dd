@@ -110,6 +110,16 @@ POSITIVE_CASES = [
     ('節點文字用 <tspan> 包住',
      lambda s: s.replace('>claude-dd repo<', '><tspan>claude-dd</tspan> repo<'),
      '文字 37'),
+    # circle/ellipse 節點：Style 11 的 junction 就是 <circle>。先前只認 rect 與
+    # polygon，圓形節點整個不算節點，它的間距/溢出/穿越全都沒驗到卻印「全部通過」。
+    # 必須先 tag() 再加：只要 SVG 裡出現任何一個 data-role，整份就切換成標記模式，
+    # 其餘沒標的元素會全部落空 —— 在未標記的 fixture 上直接插一個帶 role 的節點，
+    # 測到的會是「節點 1」而不是圓形有沒有被認得。
+    ('圓形節點（Style 11 junction 的畫法）',
+     lambda s: tag(s).replace('<!-- ⑧ commit 成功 -->',
+                              '<circle data-role="node" cx="700" cy="900" r="30" '
+                              'fill="#111111" stroke="#5a9e6f"/>\n<!-- ⑧ commit 成功 -->'),
+     '節點 9'),
 ]
 
 # 只該產生警告、不該判失敗的情況
@@ -120,6 +130,12 @@ WARN_CASES = [
     ('曲線連線（略過但要出聲）',
      lambda s: s.replace('d="M 430,188 L 560,188"', 'd="M 430,188 C 480,160 520,160 560,188"'),
      '略過'),
+    # 部分標記比完全不標更危險：只要出現一個 data-role，沒標的元素會被整批略過，
+    # 而且是靜默的。實測踩過 —— 在敘事動畫版插了帶 role 的箭頭，節點與容器全歸零。
+    ('部分標記（其餘元素被整批略過）',
+     lambda s: s.replace('<!-- ===== 節點',
+                         '<path data-role="decoration" d="M 10,10 L 20,20"/>\n<!-- ===== 節點'),
+     '沒標 data-role'),
 ]
 
 

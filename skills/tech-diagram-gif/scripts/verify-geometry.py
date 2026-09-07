@@ -264,6 +264,37 @@ def parse_polygons(svg, tagged):
     return nodes
 
 
+def circle_points(cx, cy, rx, ry, sides=24):
+    """把圓／橢圓近似成多邊形，好讓掃描線（polygon_x_span）能算斜邊上的可用寬度。"""
+    import math
+    return tuple((cx + rx * math.cos(2 * math.pi * i / sides),
+                  cy + ry * math.sin(2 * math.pi * i / sides)) for i in range(sides))
+
+
+def parse_round_nodes(svg, tagged):
+    """圓形與橢圓節點（Style 11 的 junction、圓柱端蓋等）。
+
+    先前只認 rect 與 polygon，`<circle data-role="node">` 整個不算節點 ——
+    該節點的間距、溢出、穿越全都沒驗到，而輸出照樣印「全部通過」。
+    """
+    nodes = []
+    for name in ('circle', 'ellipse'):
+        for a, _ in scan(svg, name):
+            role = a.get('data-role')
+            if role != 'node':
+                continue                            # 圓形太常當裝飾，一律要顯式標記
+            cx, cy = num(a, 'cx'), num(a, 'cy')
+            if name == 'circle':
+                rx = ry = num(a, 'r')
+            else:
+                rx, ry = num(a, 'rx'), num(a, 'ry')
+            if None in (cx, cy, rx, ry):
+                continue
+            nodes.append(Node(cx - rx, cy - ry, cx + rx, cy + ry,
+                              circle_points(cx, cy, rx, ry)))
+    return nodes
+
+
 def parse_edges(svg, tagged):
     """連線折線，回傳 ({id: [(x, y), ...]}, 略過清單)。
 
@@ -361,7 +392,39 @@ def node_boxes_in_order(svg):
             xs = [q[0] for q in points]
             ys = [q[1] for q in points]
             out.append((Box(min(xs), min(ys), max(xs), max(ys)), pos, tuple(points)))
+    for name in ('circle', 'ellipse'):
+        for a, pos in scan(body, name):
+            if a.get('data-role') != 'node':
+                continue
+            cx, cy = num(a, 'cx'), num(a, 'cy')
+            rx = ry = num(a, 'r') if name == 'circle' else None
+            if name == 'ellipse':
+                rx, ry = num(a, 'rx'), num(a, 'ry')
+            if None in (cx, cy, rx, ry):
+                continue
+            out.append((Box(cx - rx, cy - ry, cx + rx, cy + ry), pos,
+                        circle_points(cx, cy, rx, ry)))
     return out
+
+
+def count_unmarked(svg):
+    """標記模式下，看起來像節點／容器卻沒標 data-role 的元素數。
+
+    只要 SVG 裡出現任何一個 data-role，整份就切換成標記模式，沒標的元素會被
+    整批略過 —— 而略過是靜默的，輸出照樣是「✅ 全部通過」。實測踩過：在未標記的
+    圖上加一個 data-role="decoration" 的箭頭，節點與容器立刻歸零。
+    """
+    body = re.sub(r'<defs\b.*?</defs>', '', svg, flags=re.S)
+    unmarked = 0
+    for name in ('rect', 'polygon'):
+        for a, _ in scan(body, name):
+            if a.get('data-role') is not None:
+                continue
+            if name == 'rect' and (looks_like_node(a) or looks_like_container(a)) and box_of(a):
+                unmarked += 1
+            elif name == 'polygon' and a.get('fill', '').startswith('#') and len(points_of(a)) >= 3:
+                unmarked += 1
+    return unmarked
 
 
 def parse(svg):
@@ -370,6 +433,7 @@ def parse(svg):
     body = re.sub(r'<defs\b.*?</defs>', '', svg, flags=re.S)   # marker 的 polygon 不是節點
     nodes, containers = parse_rects(body, tagged)
     nodes += parse_polygons(body, tagged)
+    nodes += parse_round_nodes(body, tagged)
     edges, skipped = parse_edges(body, tagged)
     slanted = [(eid, i) for eid, pts in edges.items()
                for i, ((x1, y1), (x2, y2)) in enumerate(segments(pts))
@@ -691,6 +755,12 @@ def run(path, cycle):
     print(f'辨識方式：{"data-role 標記" if diagram.tagged else "⚠️  無 data-role，用畫法猜（可能漏檢）"}')
     if not diagram.tagged:
         report.warn('SVG 未標 data-role，本次為啟發式辨識')
+    else:
+        unmarked = count_unmarked(svg)
+        if unmarked:
+            print(f'  ⚠️  另有 {unmarked} 個元素看起來是節點／容器但沒標 data-role，已被略過')
+            report.warn(f'{unmarked} 個疑似節點／容器沒標 data-role，未參與檢查 —— '
+                        '部分標記比完全不標更危險，補齊或全部拿掉')
     print(f'元素：節點 {len(diagram.nodes)} · 連線 {len(diagram.edges)} '
           f'· 容器 {len(diagram.containers)} · 文字 {len(diagram.texts)}')
     for eid, why in diagram.skipped_edges:
