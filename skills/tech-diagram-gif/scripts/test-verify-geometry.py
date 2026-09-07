@@ -81,6 +81,13 @@ CASES = [
     ('遮罩被之後才畫的節點蓋掉', '蓋掉',
      lambda s: s.replace('<rect x="452" y="656" width="131" height="24"',
                          '<rect x="560" y="656" width="131" height="24"')),
+    # 正規式不在乎 XML 合不合法：重複屬性的檔案照樣能跑完所有幾何檢查印「全部通過」，
+    # 而瀏覽器會靜默取後者。實測踩過：虛線連線被第二個 stroke-dasharray 蓋成實線。
+    ('重複屬性（XML 不合法）', '重複屬性',
+     lambda s: s.replace('<path id="e1" d="M 430,188 L 560,188" fill="none" stroke="#d4a574"',
+                         '<path id="e1" d="M 430,188 L 560,188" fill="none" stroke="#d4a574" stroke="#000"')),
+    ('未閉合標籤（XML 解析失敗）', 'XML 不合法',
+     lambda s: s.replace('</svg>', '<g><rect x="1" y="1" width="2" height="2"/></svg>')),
     ('節點數 > 9', '節點 1',
      lambda s: s.replace('<!-- ⑧ commit 成功 -->', ''.join(
          f'<rect x="{60 + i * 4}" y="{980 + i}" width="30" height="20" rx="6" '

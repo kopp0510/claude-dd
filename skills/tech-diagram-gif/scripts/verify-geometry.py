@@ -15,6 +15,7 @@ rx=8 fill=none 為容器、id=e* 的 path 為連線）並印出警告 —— 猜
 import itertools
 import re
 import sys
+from xml.etree import ElementTree
 from pathlib import Path
 from typing import NamedTuple, Optional
 
@@ -466,6 +467,34 @@ class Report:
             self.fails.append(fail_msg)
 
 
+def check_wellformed(report, svg):
+    """XML 良構 + 重複屬性。
+
+    本腳本其餘檢查全靠正規式，正規式不在乎檔案是不是合法 XML —— 一份有重複屬性、
+    瀏覽器會靜默取後者的 SVG，照樣可以跑完所有幾何檢查並印「✅ 全部通過」。
+    實測踩過：敘事動畫版對本來就是虛線的連線再加一個 stroke-dasharray 做畫入效果，
+    兩個屬性打架，虛線被畫成實線，而檢查全綠。
+    """
+    print('[XML 良構]')
+    # 重複屬性自己掃，minidom 只會回報第一個且不給元素上下文
+    duplicates = []
+    for line_no, line in enumerate(svg.splitlines(), 1):
+        for m in re.finditer(r'<(\w[\w-]*)\b([^>]*)>', line):
+            names = re.findall(r'([\w:-]+)\s*=\s*"', m.group(2))
+            dup = sorted({n for n in names if names.count(n) > 1})
+            if dup:
+                duplicates.append(f'行 {line_no} <{m.group(1)}> 重複 {dup}')
+    report.check(not duplicates,
+                 f'重複屬性 {len(duplicates)} 處'
+                 + (''.join(f'\n       {d}' for d in duplicates) if duplicates else ''),
+                 f'重複屬性 {duplicates}')
+    try:
+        ElementTree.fromstring(svg)
+        report.say(True, '可被 XML 解析器讀取')
+    except ElementTree.ParseError as err:
+        report.check(False, f'XML 解析失敗：{err}', f'XML 不合法：{err}')
+
+
 def check_budget(report, diagram):
     print('[數量預算]')
     for name, got, limit in (('節點', len(diagram.nodes), LIMITS['nodes']),
@@ -772,6 +801,7 @@ def run(path, cycle):
         report.warn(f'非正交線段 {ids}：交叉/穿越/間距判定不適用，需人工確認')
     print()
 
+    check_wellformed(report, svg)
     check_budget(report, diagram)
     check_bends_and_detour(report, diagram.edges)
     check_crossings(report, diagram.edges)
