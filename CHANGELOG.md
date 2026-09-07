@@ -23,6 +23,10 @@
   HTML 靜態交付（本 skill 只交 GIF）與 39 型 reference（使用率盤點制）
 - 同輪順帶定調：節點間距**取嚴為 80px**（`svg-layout-best-practices` 的 Universal
   Layout Rules），contract 表列的 40px 是上游 showcase 不及格線，不再出現在閘門裡
+- **vendor intake 清單補「只借概念、不抄檔案」的歸屬規則**：歸屬要精確到段落／項目，
+  不可整節掛名。判準是「能逐條指出哪一段來自誰」。同輪把該 skill 的量化數字從三份手抄
+  （第 1 步、第 3 步、Taste Gate）收成一份 —— contract 是唯一來源，SKILL.md 只留
+  Taste Gate 這份操作用的逐項版本，其餘改為指路
 
 - **CI 迴圈步數第五方檢查**：既有的四方一致只數**編號清單**，使用者實際看到的兩類
   文案不在範圍 — 安裝腳本印出的「N 步開發迴圈」，以及散落各處的一行式箭頭摘要。
