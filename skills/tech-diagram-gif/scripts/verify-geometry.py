@@ -20,7 +20,9 @@ from typing import NamedTuple, Optional
 
 LIMITS = dict(nodes=9, edges=12, containers=4, notes=2,
               bends=2, detour=1.35, node_gap=80, gutter=20, port_gap=12,
-              label_gap=6)   # 下限，不是區間：擁擠時加大到 8–10px 是建議不是上限
+              label_gap=6,   # 下限，不是區間：擁擠時加大到 8–10px 是建議不是上限
+              accents=2,     # 只用於 print_not_covered 的提示文字（無法通用判定）
+              port_gap_small=8)   # contract 的例外：小節點（邊長 < 100px）放寬到 8px
 
 # class 名稱對應的預設字級；沒有 class 也沒有 font-size 時用 DEFAULT_FONT_SIZE
 FONT_SIZES = {'nm': 20, 'sm': 15, 'al': 15, 'ttl': 31, 'lbl': 16, 'sub': 16}
@@ -58,6 +60,8 @@ class Diagram(NamedTuple):
     edges: dict          # 連線 id -> 折線頂點 [(x, y), ...]
     texts: list
     tagged: bool         # 是否有 data-role 標記（沒有就是退化猜法）
+    skipped_edges: list  # 無法做正交判定而略過的連線 [(id, 理由)]
+    slanted: list        # 非正交線段 [(id, 段序)]；正交判定對它們無效
 
 
 # ---------------------------------------------------------------- 幾何工具
@@ -69,6 +73,8 @@ def text_width(s, font_size):
 
 
 def polygon_x_span(points, y):
+    # 限制：凸多邊形才準。凹形狀回傳的是外框跨度，中間的缺口會被當成可用空間
+    # （目前 icons.md 的菱形／六角形都是凸的）。三點共線的退化多邊形回 None。
     """多邊形在高度 y 這條水平線上的可用 x 區間（掃描線求交）。"""
     xs = []
     for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1]):
@@ -173,115 +179,160 @@ def text_x_range(text):
 
 # -------------------------------------------------------------------- 解析
 
+ATTR_RE = re.compile(r'([\w:-]+)\s*=\s*"([^"]*)"')
+NUM_RE = re.compile(r'^\s*(-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)\s*$')
+
+
+def attrs_of(tag):
+    """把一個開頭標籤拆成屬性字典。屬性順序在 SVG 規格上無意義，不可寫死。"""
+    return {k: v for k, v in ATTR_RE.findall(tag)}
+
+
+def num(attrs, key):
+    """讀一個數值屬性；不是純數字（含百分比、單位、運算式）就回 None。"""
+    m = NUM_RE.match(attrs.get(key, ''))
+    return float(m.group(1)) if m else None
+
+
+def box_of(attrs):
+    """從 x/y/width/height 組出 Box；缺任一個或不是數字就回 None。"""
+    x, y, w, h = (num(attrs, k) for k in ('x', 'y', 'width', 'height'))
+    if None in (x, y, w, h):
+        return None
+    return Box(x, y, x + w, y + h)
+
+
+def points_of(attrs, key='points'):
+    """points / d 的座標對；同時吃 "x,y x,y" 與 "x y x y"。"""
+    return [(float(a), float(b)) for a, b in
+            re.findall(r'(-?[\d.]+)[,\s]+(-?[\d.]+)', attrs.get(key, ''))]
+
+
+def scan(svg, name):
+    """掃出某種標籤，回傳 [(attrs, 文件位置)]，文件位置供 z-order 判定用。"""
+    return [(attrs_of(m.group(0)), m.start())
+            for m in re.finditer(rf'<{name}\b[^>]*>', svg)]
+
+
+def looks_like_node(a):
+    """退化猜法：圓角實心框就是節點。不綁特定 rx 值或色票 ——
+    icons.md 用 rx=10、style-2 用另一套 fill，寫死任何一個都會讓節點靜默消失。"""
+    return 'rx' in a and a.get('fill', 'none') != 'none'
+
+
+def looks_like_container(a):
+    return 'rx' in a and a.get('fill', 'none') == 'none'
+
+
 def parse_rects(svg, tagged):
     """矩形節點與容器（同一輪掃描，回傳 (nodes, containers)）。"""
     nodes, containers = [], []
-    for m in re.finditer(r'<rect\b[^>]*>', svg):
-        tag = m.group(0)
-        box = re.search(r'x="([\d.]+)"\s+y="([\d.]+)"\s+width="([\d.]+)"\s+height="([\d.]+)"', tag)
+    for a, _ in scan(svg, 'rect'):
+        box = box_of(a)
         if not box:
-            continue
-        x, y, w, h = map(float, box.groups())
-        role = re.search(r'data-role="(\w+)"', tag)
-        if role:
-            if role.group(1) == 'node':
-                nodes.append(Node(x, y, x + w, y + h))
-            elif role.group(1) == 'container':
-                containers.append(Box(x, y, x + w, y + h))
-        elif not tagged:                                    # 退化猜法：靠畫法認
-            if 'rx="6"' in tag and 'fill="none"' not in tag:
-                nodes.append(Node(x, y, x + w, y + h))
-            elif 'rx="8"' in tag and 'fill="none"' in tag:
-                containers.append(Box(x, y, x + w, y + h))
+            continue                                    # 畫布那種沒有 x/y 的整面 rect
+        role = a.get('data-role')
+        if role == 'node':
+            nodes.append(Node(*box))
+        elif role == 'container':
+            containers.append(box)
+        elif role is None and not tagged:
+            if looks_like_node(a):
+                nodes.append(Node(*box))
+            elif looks_like_container(a):
+                containers.append(box)
     return nodes, containers
 
 
 def parse_polygons(svg, tagged):
     """多邊形節點（菱形等）。"""
     nodes = []
-    for m in re.finditer(r'<polygon\b[^>]*points="([\d,.\s]+)"[^>]*>', svg):
-        tag = m.group(0)
-        if 'marker' in tag or ('data-role=' in tag and 'node' not in tag):
+    for a, _ in scan(svg, 'polygon'):
+        role = a.get('data-role')
+        if tagged and role != 'node':
             continue
-        if tagged and 'data-role="node"' not in tag:
+        if not tagged and role is None and not a.get('fill', '').startswith('#'):
+            continue                                    # 箭頭 marker 的 polygon
+        if role not in (None, 'node'):
             continue
-        if not tagged and 'fill="#' not in tag:      # 箭頭 marker 的 polygon 沒有座標框
-            continue
-        # points 可能寫成 "x,y x,y" 或 "x y x y"，一律用數字對抓
-        points = [(float(a), float(b)) for a, b in
-                  re.findall(r'(-?[\d.]+)[,\s]+(-?[\d.]+)', m.group(1))]
+        points = points_of(a)
         if len(points) < 3:
             continue
-        xs = [p[0] for p in points]
-        ys = [p[1] for p in points]
+        xs = [q[0] for q in points]
+        ys = [q[1] for q in points]
         nodes.append(Node(min(xs), min(ys), max(xs), max(ys), tuple(points)))
     return nodes
 
 
 def parse_edges(svg, tagged):
-    """連線折線，回傳 {id: [(x, y), ...]}。曲線不做正交幾何判定，直接跳過。"""
-    edges = {}
-    for m in re.finditer(r'<path\b[^>]*>', svg):
-        tag = m.group(0)
-        if 'data-role=' in tag and 'edge' not in tag:
+    """連線折線，回傳 ({id: [(x, y), ...]}, 略過清單)。
+
+    只認由 M/L 絕對座標組成的正交折線。曲線與簡寫指令（h/v/a/c/s/q/t）**不靜默跳過** ——
+    略過的連線等於少驗一條，會回傳理由讓呼叫端印出來。
+    """
+    edges, skipped = {}, []
+    for a, _ in scan(svg, 'path'):
+        role = a.get('data-role')
+        if role is not None and role != 'edge':
             continue
-        eid = re.search(r'id="(\w+)"', tag)
-        if not eid or (not tagged and not re.match(r'^e\d+$', eid.group(1))):
+        eid = a.get('id')
+        if not eid or (not tagged and role is None and not re.match(r'^e\d+$', eid)):
             continue
-        d = re.search(r'\sd="([^"]+)"', tag)
-        if not d or 'C' in d.group(1) or 'Q' in d.group(1):
+        d = a.get('d', '')
+        bad = set(re.findall(r'[A-Za-z]', d)) - {'M', 'L'}
+        if bad:
+            skipped.append((eid, f'含非直線指令 {sorted(bad)}'))
             continue
-        points = [(float(a), float(b)) for a, b in
-                  re.findall(r'(-?[\d.]+),(-?[\d.]+)', d.group(1))]
-        if len(points) >= 2:
-            edges[eid.group(1)] = points
-    return edges
+        points = [(float(x), float(y)) for x, y in
+                  re.findall(r'(-?[\d.]+)[,\s]+(-?[\d.]+)', d)]
+        if len(points) < 2:
+            skipped.append((eid, '座標少於兩點'))
+            continue
+        if eid in edges:
+            skipped.append((eid, 'id 重複，後者覆蓋前者'))
+        edges[eid] = points
+    return edges, skipped
 
 
 def parse_texts(svg):
-    """文字錨點、內容、字級與對齊方式。"""
+    """文字錨點、內容、字級與對齊方式；<tspan> 等子元素的文字一併取出。"""
     texts = []
-    for m in re.finditer(r'<text\b([^>]*)>([^<]*)</text>', svg):
-        attrs, body = m.groups()
-        pos = re.search(r'x="([\d.]+)"\s+y="([\d.]+)"', attrs)
-        if not pos or not body.strip():
+    for m in re.finditer(r'<text\b([^>]*)>(.*?)</text>', svg, re.S):
+        a = attrs_of('<text ' + m.group(1) + '>')
+        body = re.sub(r'<[^>]*>', '', m.group(2)).strip()
+        x, y = num(a, 'x'), num(a, 'y')
+        if x is None or y is None or not body:
             continue
-        font_size = re.search(r'font-size="([\d.]+)"', attrs)
-        cls = re.search(r'class="(\w+)"', attrs)
-        if font_size:
-            size = float(font_size.group(1))
-        else:
-            size = FONT_SIZES.get(cls.group(1) if cls else '', DEFAULT_FONT_SIZE)
-        if 'text-anchor="middle"' in attrs:
-            anchor = 'middle'
-        elif 'text-anchor="end"' in attrs:
-            anchor = 'end'
-        else:
-            anchor = 'start'
-        texts.append(Text(float(pos.group(1)), float(pos.group(2)), body, size, anchor))
+        size = num(a, 'font-size')
+        if size is None:
+            size = FONT_SIZES.get(a.get('class', ''), DEFAULT_FONT_SIZE)
+        texts.append(Text(x, y, body, size, a.get('text-anchor', 'start')))
     return texts
 
 
 def parse_masks(svg):
-    """邊標籤底下的遮罩 rect：優先 data-role="mask"，退化用「填畫布底色、無圓角」猜。
+    """邊標籤底下的遮罩 rect：優先 data-role="mask"，退化用「無圓角的實心色塊」猜。
 
-    回傳 [(Box, 文件位置)] —— 位置用來判 z-order（後畫的節點會蓋掉先畫的遮罩）。
+    回傳 ([(Box, 文件位置)], 是否為退化猜法) —— 位置用來判 z-order。
+    退化猜法不綁畫布底色：漸層畫布（style-2 / style-8 都有）會讓底色比對整組失效，
+    兩項遮罩檢查一起變空轉還印「沒有偵測到遮罩」，看起來像正常結果。
     """
     body = re.sub(r'<defs\b.*?</defs>', '', svg, flags=re.S)
-    canvas = re.search(r'<rect width="[\d.]+" height="[\d.]+" fill="(#[0-9a-fA-F]{3,8})"', body)
-    background = canvas.group(1).lower() if canvas else None
+    tagged = 'data-role="mask"' in body
     masks = []
-    for m in re.finditer(r'<rect\b[^>]*>', body):
-        tag = m.group(0)
-        if 'data-role="mask"' not in tag:
-            if 'data-role=' in tag or 'rx=' in tag:
+    for a, pos in scan(body, 'rect'):
+        if tagged:
+            if a.get('data-role') != 'mask':
                 continue
-            if not background or f'fill="{background}"' not in tag.lower():
+        else:
+            if a.get('data-role') is not None or 'rx' in a:
                 continue
-        box = _rect_box(tag)
+            if not a.get('fill', '').startswith('#'):
+                continue
+        box = box_of(a)
         if box:
-            masks.append((box, m.start()))
-    return masks
+            masks.append((box, pos))
+    return masks, not tagged
 
 
 def node_boxes_in_order(svg):
@@ -293,34 +344,24 @@ def node_boxes_in_order(svg):
     body = re.sub(r'<defs\b.*?</defs>', '', svg, flags=re.S)
     tagged = 'data-role=' in svg
     out = []
-    for m in re.finditer(r'<rect\b[^>]*>', body):
-        tag = m.group(0)
-        is_node = 'data-role="node"' in tag if tagged else (
-            'rx="6"' in tag and 'fill="none"' not in tag)
-        box = _rect_box(tag) if is_node else None
+    for a, pos in scan(body, 'rect'):
+        role = a.get('data-role')
+        is_node = role == 'node' if tagged else looks_like_node(a)
+        box = box_of(a) if is_node else None
         if box:
-            out.append((box, m.start(), None))
-    for m in re.finditer(r'<polygon\b[^>]*points="([\d,.\s]+)"[^>]*>', body):
-        tag = m.group(0)
-        if tagged and 'data-role="node"' not in tag:
+            out.append((box, pos, None))
+    for a, pos in scan(body, 'polygon'):
+        role = a.get('data-role')
+        if tagged and role != 'node':
             continue
-        if not tagged and 'fill="#' not in tag:
+        if not tagged and not a.get('fill', '').startswith('#'):
             continue
-        pts = [(float(a), float(b)) for a, b in
-               re.findall(r'(-?[\d.]+)[,\s]+(-?[\d.]+)', m.group(1))]
-        if len(pts) >= 3:
-            xs = [q[0] for q in pts]
-            ys = [q[1] for q in pts]
-            out.append((Box(min(xs), min(ys), max(xs), max(ys)), m.start(), tuple(pts)))
+        points = points_of(a)
+        if len(points) >= 3:
+            xs = [q[0] for q in points]
+            ys = [q[1] for q in points]
+            out.append((Box(min(xs), min(ys), max(xs), max(ys)), pos, tuple(points)))
     return out
-
-
-def _rect_box(tag):
-    g = re.search(r'x="([\d.]+)"\s+y="([\d.]+)"\s+width="([\d.]+)"\s+height="([\d.]+)"', tag)
-    if not g:
-        return None
-    x, y, w, h = map(float, g.groups())
-    return Box(x, y, x + w, y + h)
 
 
 def parse(svg):
@@ -329,7 +370,11 @@ def parse(svg):
     body = re.sub(r'<defs\b.*?</defs>', '', svg, flags=re.S)   # marker 的 polygon 不是節點
     nodes, containers = parse_rects(body, tagged)
     nodes += parse_polygons(body, tagged)
-    return Diagram(nodes, containers, parse_edges(body, tagged), parse_texts(body), tagged)
+    edges, skipped = parse_edges(body, tagged)
+    slanted = [(eid, i) for eid, pts in edges.items()
+               for i, ((x1, y1), (x2, y2)) in enumerate(segments(pts))
+               if x1 != x2 and y1 != y2]
+    return Diagram(nodes, containers, edges, parse_texts(body), tagged, skipped, slanted)
 
 
 # -------------------------------------------------------------------- 檢查
@@ -411,24 +456,38 @@ def check_node_gap(report, nodes):
                  f'節點間距 {closest:.0f}px')
 
 
+def _overlaps(a, b):
+    return a.x1 < b.x2 and b.x1 < a.x2 and a.y1 < b.y2 and b.y1 < a.y2
+
+
 def check_containers(report, nodes, containers):
-    print('[容器 gutter]')
-    for i, container in enumerate(containers):
-        inside = [n for n in nodes if is_inside(n, container)]
-        if not inside:
-            continue
-        gutter = min(inner_margin(n, container) for n in inside)
-        report.check(gutter >= LIMITS['gutter'],
-                     f'容器{i} 含 {len(inside)} 節點，最小 {gutter:.0f}px'
-                     f'（下限 {LIMITS["gutter"]}）',
-                     f'容器{i} gutter {gutter:.0f}px')
+    print(f'[容器 gutter · 下限 {LIMITS["gutter"]}px]')
     if not containers:
+        print('  （沒有容器）')
         return
-    orphans = [n for n in nodes if not any(is_inside(n, c) for c in containers)]
-    report.say(not orphans,
-               f'未被容器包住的節點 {len(orphans)} 個' + (f' → {orphans}' if orphans else ''))
-    if orphans:
-        report.warn(f'{len(orphans)} 個節點在所有容器外')
+    for i, container in enumerate(containers):
+        # 用「相交」而非「完全包住」挑成員：節點戳出容器邊界時，
+        # 若只算完全包住的，它會整個退出 gutter 檢查 —— 越壞越通過。
+        members = [n for n in nodes if _overlaps(n, container)]
+        if not members:
+            continue
+        outside = [n for n in members if not is_inside(n, container)]
+        if outside:
+            where = ', '.join(f'({n.x1:.0f},{n.y1:.0f})' for n in outside)
+            report.check(False,
+                         f'容器{i} 有 {len(outside)} 個節點越過邊界 → {where}',
+                         f'容器{i} 有節點越界 {where}')
+            continue
+        gutter = min(inner_margin(n, container) for n in members)
+        report.check(gutter >= LIMITS['gutter'],
+                     f'容器{i} 含 {len(members)} 節點，最小 {gutter:.0f}px',
+                     f'容器{i} gutter {gutter:.0f}px')
+    orphans = [n for n in nodes
+               if not any(_overlaps(n, c) for c in containers)]
+    report.check(not orphans,
+                 f'完全在所有容器外的節點 {len(orphans)} 個'
+                 + (f' → {[(f"{n.x1:.0f},{n.y1:.0f}") for n in orphans]}' if orphans else ''),
+                 f'{len(orphans)} 個節點在所有容器外')
 
 
 def check_ports(report, edges, nodes):
@@ -445,12 +504,16 @@ def check_ports(report, edges, nodes):
         print('  （無同邊多線）')
         return
     for (index, side), pts in sorted(shared.items()):
+        node = nodes[index]
         coords = sorted(pt[0] if side in 'TB' else pt[1] for pt in pts)
         closest = min(b - a for a, b in zip(coords, coords[1:]))
-        report.check(closest >= LIMITS['port_gap'],
+        # contract 的例外：小節點（該邊長度 < 100px）下限放寬到 8px
+        edge_len = (node.x2 - node.x1) if side in 'TB' else (node.y2 - node.y1)
+        limit = LIMITS['port_gap'] if edge_len >= 100 else LIMITS['port_gap_small']
+        report.check(closest >= limit,
                      f'節點{index} {side} 邊 {len(pts)} 條線，最小 {closest:.0f}px'
-                     f'（下限 {LIMITS["port_gap"]}）',
-                     f'節點{index}{side} port {closest:.0f}px')
+                     f'（下限 {limit}，邊長 {edge_len:.0f}px）',
+                     f'節點{index}{side} port {closest:.0f}px < {limit}px')
 
 
 def check_animation(report, svg, cycle):
@@ -495,6 +558,31 @@ def check_text_overflow(report, nodes, texts):
     print('  ℹ️  寬度為估算；判定臨界時在渲染階段用 getBBox() 複驗')
 
 
+def check_parallel_edges(report, edges):
+    print(f'[平行同向連線的全程間距 · 下限 {LIMITS["port_gap"]}px]')
+    flat = [(eid, seg) for eid, pts in edges.items() for seg in segments(pts)]
+    too_close = []
+    for i, (id_a, seg_a) in enumerate(flat):
+        for id_b, seg_b in flat[i + 1:]:
+            if id_a == id_b:
+                continue
+            (ax1, ay1), (ax2, ay2) = seg_a
+            (bx1, by1), (bx2, by2) = seg_b
+            if ay1 == ay2 and by1 == by2:                       # 兩段都水平
+                overlap = min(max(ax1, ax2), max(bx1, bx2)) - max(min(ax1, ax2), min(bx1, bx2))
+                distance = abs(ay1 - by1)
+            elif ax1 == ax2 and bx1 == bx2:                     # 兩段都垂直
+                overlap = min(max(ay1, ay2), max(by1, by2)) - max(min(ay1, ay2), min(by1, by2))
+                distance = abs(ax1 - bx1)
+            else:
+                continue
+            if overlap > 0 and distance < LIMITS['port_gap']:
+                too_close.append((id_a, id_b, f'{distance:.0f}px'))
+    report.check(not too_close,
+                 f'{len(too_close)} 對平行線太近' + (f' → {too_close}' if too_close else ''),
+                 f'平行線間距不足 {too_close}')
+
+
 def _mask_to_segment_gap(box, segment):
     """遮罩與一段正交線的可見間隙；負值代表遮罩壓在線上。"""
     (x1, y1), (x2, y2) = segment
@@ -516,11 +604,17 @@ def _mask_to_segment_gap(box, segment):
 
 
 def check_label_clearance(report, svg, edges):
+    # 限制：量的是「距離最近的任何一條線」，不是「標籤自己那條線」。
+    # contract 對無關幾何的淨空下限是 4px，比這裡的 6px 鬆，所以本檢查偏嚴不偏鬆。
     print(f'[邊標籤遮罩與連線的可見間隙 · 下限 {LIMITS["label_gap"]}px]')
-    masks = parse_masks(svg)
+    masks, guessed = parse_masks(svg)
     if not masks:
-        print('  （沒有偵測到標籤遮罩）')
+        report.warn('沒有偵測到標籤遮罩 —— 若圖上有邊標籤，這兩項檢查等於空轉；'
+                    '請在遮罩 rect 標 data-role="mask"')
+        print('  ⚠️  沒有偵測到標籤遮罩（見結尾警告）')
         return
+    if guessed:
+        print(f'  ℹ️  {len(masks)} 個遮罩靠畫法猜出（無 data-role="mask"）')
     measured = 0
     for box, _ in masks:
         nearest = None
@@ -557,18 +651,18 @@ def _polygon_overlaps_box(points, box):
 
 def check_mask_zorder(report, svg):
     print('[標籤遮罩的 z-order]')
-    masks = parse_masks(svg)
+    masks, _ = parse_masks(svg)
     nodes = node_boxes_in_order(svg)
     if not masks or not nodes:
-        print('  （沒有遮罩或沒有節點）')
+        print('  （沒有遮罩或沒有節點，這項未實際判定）')
         return
     covered = []
     for mask, mask_pos in masks:
         for node, node_pos, points in nodes:
             if node_pos <= mask_pos:
                 continue                            # 先畫的節點不會蓋住後畫的遮罩
-            if box_gap(mask, node) != 0 or is_inside(mask, node):
-                continue
+            if not _overlaps(mask, node) or is_inside(mask, node):
+                continue                            # 邊緣剛好相接不算蓋住
             if points and not _polygon_overlaps_box(points, mask):
                 continue                            # 外框重疊但形狀沒碰到（菱形的角落空白）
             covered.append((f'({mask.x1:.0f},{mask.y1:.0f})',
@@ -582,7 +676,9 @@ def check_mask_zorder(report, svg):
 
 def print_not_covered():
     print('[本腳本未涵蓋 · 需人工或渲染判定]')
-    print(f'  · 強調色元素 ≤2、註解框 ≤{LIMITS["notes"]} —— 哪個顏色算 accent 無法通用判定，人工數')
+    print(f'  · 強調色元素 ≤{LIMITS["accents"]}、註解框 ≤{LIMITS["notes"]}'
+          ' —— 哪個顏色算 accent 無法通用判定，人工數')
+    print('  · port 落點公式 L*k/(N+1)（contract）—— 只驗間距，不驗是否等距分佈')
     print('  · 文字擠成兩行、假捲軸、小球是否真的有位移 —— 看截圖（Taste Gate「渲染實況」組）')
 
 
@@ -596,7 +692,15 @@ def run(path, cycle):
     if not diagram.tagged:
         report.warn('SVG 未標 data-role，本次為啟發式辨識')
     print(f'元素：節點 {len(diagram.nodes)} · 連線 {len(diagram.edges)} '
-          f'· 容器 {len(diagram.containers)} · 文字 {len(diagram.texts)}\n')
+          f'· 容器 {len(diagram.containers)} · 文字 {len(diagram.texts)}')
+    for eid, why in diagram.skipped_edges:
+        print(f'  ⚠️  連線 {eid} 略過：{why}')
+        report.warn(f'連線 {eid} 未參與幾何判定（{why}）')
+    if diagram.slanted:
+        ids = sorted({eid for eid, _ in diagram.slanted})
+        print(f'  ⚠️  {len(diagram.slanted)} 個非正交線段（{ids}）—— 正交判定對它們無效')
+        report.warn(f'非正交線段 {ids}：交叉/穿越/間距判定不適用，需人工確認')
+    print()
 
     check_budget(report, diagram)
     check_bends_and_detour(report, diagram.edges)
@@ -605,6 +709,7 @@ def run(path, cycle):
     check_node_gap(report, diagram.nodes)
     check_containers(report, diagram.nodes, diagram.containers)
     check_ports(report, diagram.edges, diagram.nodes)
+    check_parallel_edges(report, diagram.edges)
     check_label_clearance(report, svg, diagram.edges)
     check_mask_zorder(report, svg)
     check_animation(report, svg, cycle)
@@ -623,12 +728,31 @@ def run(path, cycle):
     return 0
 
 
+def parse_argv(argv):
+    """回傳 (檔案清單, 總循環秒數)；--cycle 放在檔名前後都要能用。"""
+    paths, cycle, i = [], 8.0, 0
+    while i < len(argv):
+        if argv[i] == '--cycle':
+            if i + 1 >= len(argv):
+                raise SystemExit('❌ --cycle 後面要接秒數，例如 --cycle 8.0')
+            try:
+                cycle = float(argv[i + 1])
+            except ValueError:
+                raise SystemExit(f'❌ --cycle 的值不是數字：{argv[i + 1]}')
+            i += 2
+            continue
+        if argv[i].startswith('--'):
+            raise SystemExit(f'❌ 不認得的選項：{argv[i]}')
+        paths.append(argv[i])
+        i += 1
+    return paths, cycle
+
+
 if __name__ == '__main__':
-    paths = [a for a in sys.argv[1:] if not a.startswith('--')]
-    cycle = 8.0
-    if '--cycle' in sys.argv:
-        cycle = float(sys.argv[sys.argv.index('--cycle') + 1])
-    if not paths:
+    files, total_cycle = parse_argv(sys.argv[1:])
+    if not files:
         print(__doc__)
         sys.exit(2)
-    sys.exit(run(paths[0], cycle))
+    if not Path(files[0]).is_file():
+        raise SystemExit(f'❌ 找不到檔案：{files[0]}')
+    sys.exit(run(files[0], total_cycle))

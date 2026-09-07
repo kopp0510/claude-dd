@@ -29,3 +29,7 @@
 
 # 文章草稿（Medium 等，發布前不進公開 repo）
 .drafts/
+
+# Python 快取（skills/tech-diagram-gif/scripts 跑測試時產生）
+__pycache__/
+*.pyc
