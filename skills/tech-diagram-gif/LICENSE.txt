@@ -25,10 +25,18 @@ SOFTWARE.
 Additional attribution
 ----------------------
 
-The "元素數量預算" and "連線可量測規則" sections in
-references/composition-quality-contract.md, and the "產出前檢查清單 (Taste Gate)"
-section in SKILL.md, are adapted (rewritten in Traditional Chinese, not copied
-verbatim) from concepts in:
+These parts are adapted (rewritten in Traditional Chinese, not copied verbatim)
+from concepts in diagram-design:
+
+  - references/composition-quality-contract.md — the "元素數量預算" and
+    "連線可量測規則" sections (both marked "本 skill 追加" in that file)
+  - SKILL.md — 硬閘門 1 ("先判斷該不該畫"), and within the
+    "產出前檢查清單（Taste Gate）" section only the four remove-test items
+    (two in the 結構清單 group, two in the 渲染實況 group); the rest of that
+    checklist restates this skill's own rules and the fireworks-tech-graph
+    budgets, and is not derived from diagram-design.
+
+Source:
 
   diagram-design — https://github.com/cathrynlavery/diagram-design
   MIT License, Copyright (c) 2025 Cathryn Lavery
