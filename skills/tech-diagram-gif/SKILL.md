@@ -6,7 +6,9 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 
 # Tech Diagram GIF — 技術圖表繪製與 GIF 匯出
 
-不引入 Python/cairosvg 管線的技術圖表流程：手寫 SVG（依 vendored 風格規範）→ 瀏覽器渲染自檢 → 匯出無縫循環 GIF。
+不引入 Python/cairosvg **渲染管線**的技術圖表流程：手寫 SVG（依 vendored 風格規範）→ 瀏覽器渲染自檢 → 匯出無縫循環 GIF。
+渲染與匯出全程靠瀏覽器與 ffmpeg，不裝 cairosvg / Pillow 等套件；`scripts/verify-geometry.py`
+是唯一的 Python，純標準庫、無 pip 依賴，只做座標算術，缺 python3 時退化為人工計算，不阻擋出圖。
 風格規範 vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，見 LICENSE.txt）；
 只收編其 markdown 規範，不引入其 Python/cairosvg/FFmpeg 管線。
 
@@ -66,6 +68,9 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
   超出 → 調節點位置，或拆成總覽 + 細節兩張；不縮字級、不壓間距硬塞
 - 節點間距 80px vs 40px、標籤三個間隙數字各量什麼 —— 裁決與說明見 contract
   「與上表衝突時取嚴」節，不要自行挑一個用
+- **節點、容器、連線一律加 `data-role`**（`node` / `container` / `edge`）——
+  `scripts/verify-geometry.py` 優先讀這個標記；沒有標記時它會退化用畫法猜並印警告，
+  猜錯就是靜默漏檢（實測踩過：矩形節點被當成菱形，誤報三處文字溢出）
 - 版面順序與走廊：先排容器與列才排線、保留跨層走廊、legend 不進流程走廊
 - 色票/節點語意色桶照所選風格檔；畫布建議 `viewBox 0 0 1440 1080` —
   **注意風格檔的字級/間距以 960 寬為基準，用 1440 畫布時需等比放大（約 ×1.5）**
@@ -95,6 +100,16 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 | 截圖輸出路徑受限 | `browser_take_screenshot` 只能寫入其 allowed roots（通常是專案根/`.playwright-mcp`）；截完移出並清理，勿留在 repo。`run_code` 裡的 `page.screenshot({path})` 可直接寫任意路徑（實測寫進 scratchpad 成功），連拍時用這條 |
 
 檢查項一律走下方「**產出前檢查清單（Taste Gate）**」中標示為第 4 步的兩組，逐項打勾，不憑印象。
+**先跑腳本、再看截圖**：
+
+```bash
+python3 "$HOME/.claude/skills/tech-diagram-gif/scripts/verify-geometry.py" <diagram.svg> [--cycle 8.0]
+```
+
+它涵蓋「版面幾何」組的全部項目並印出實際數值（不只 pass/fail）；exit 1 表示未通過。
+腳本過了才進渲染，看截圖只判它算不出來的東西（見「渲染實況」組）。
+**改動這支腳本後必須重跑 `scripts/test-verify-geometry.py`** —— 檢查腳本自己會錯，
+而且全判通過與全判失敗看起來都像正常結果（細節見 `scripts/CLAUDE.md`）。
 發現問題 → 改 SVG 重渲染，迴圈至全部通過為止。
 
 ### 5. GIF 匯出
@@ -147,7 +162,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 - [ ] 有沒有兩個節點總是一起出現，該併成一個？
 - [ ] 結構清單已被使用者確認或修改定案？（硬閘門 2）
 
-**版面幾何**（第 4 步 · 讀自己剛寫的座標與 `d=` 路徑算術判定，**不是用眼睛看**）
+**版面幾何**（第 4 步 · 跑 `scripts/verify-geometry.py`，**不是用眼睛看**）
 不過 → 改 SVG 重渲染，不進 GIF 匯出。這些數值在縮到瀏覽器視窗後肉眼分辨不出來，一律用算的。
 
 - [ ] 0 交叉、每邊 ≤2 折、繞路比 ≤1.35、節點間 ≥80px、容器 gutter ≥20px？
@@ -158,12 +173,14 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 - [ ] 連線沒有穿過非端點的節點（不可避免時改虛線，標籤移到可見端）？
 - [ ] 所有動畫 dur 與 begin 整除同一總循環長？（第 3 步）
 - [ ] 錯開相位用負值 `begin`，沒有球會停在 (0,0)？
+- [ ] 文字沒有溢出節點邊界？**非矩形節點（菱形、六角形）肉眼判不出來** ——
+  斜邊上可用寬度隨 y 收窄，腳本用掃描線算實際邊界；臨界時在渲染階段用 `getBBox()` 複驗
 
 **渲染實況**（第 4 步 · 看截圖判定）
 不過 → 改 SVG 重渲染，不進 GIF 匯出。
 （視覺冗餘兩問借鏡 diagram-design，MIT）
 
-- [ ] 文字沒有溢出節點邊界、箭頭不穿節點、標籤不壓線？
+- [ ] 箭頭不穿節點、標籤不壓線、節點內文字沒有擠成兩行黏在一起？
 - [ ] legend 在流程走廊外？
 - [ ] 定格兩個時間點截圖比對過，小球確實有位移？
 - [ ] 四邊像素為背景色（沒有把瀏覽器捲軸截進畫面）？
