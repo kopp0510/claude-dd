@@ -52,7 +52,7 @@ node spacing, and 20px minimum container gutter.
 
 | 規則 | 數值 |
 |---|---:|
-| 邊標籤遮罩與其連線之間的**可見**間隙 | 6–10px（遮罩不得碰到線） |
+| 邊標籤遮罩與其連線之間的**可見**間隙 | **≥6px**（遮罩不得碰到線；6px 顯擁擠時加大到 8–10px，上不封頂） |
 | 同一邊多條連線的相鄰 port 間距 | ≥12px（小節點最低 8px） |
 | 平行同向連線的全程間距 | ≥12px |
 | N 條線分佈於長度 L 的邊時，第 k 條的位置 | `L * k / (N + 1)` |
@@ -73,9 +73,13 @@ node spacing, and 20px minimum container gutter.
 Universal Layout Rules「Minimum clearance between components: 80px」）——
 SKILL.md 第 3 步與 Taste Gate 只寫 80px，不再出現 40px，避免同一張圖同時判過與不過。
 
-標籤相關的三個數字量的不是同一件事，不可互相取代：遮罩與**自己那條線**的可見間隙 6–10px
+標籤相關的三個數字量的不是同一件事，不可互相取代：遮罩與**自己那條線**的可見間隙 ≥6px
 （上節）、標籤相對連線的垂直偏移 5–10px（`svg-layout-best-practices.md`）、
 邊標籤與**無關幾何**的淨空 ≥4px（上表）。
+
+> 第一個數字曾被誤寫成「6–10px」（當成上下限）。上游 diagram-design 的原文是
+> minimum 6px、擁擠時 push to 8–10px —— **6 是下限，8–10 是加大建議，不是上限**。
+> 照誤寫版判定，間隙 12px 的正常圖會被判不合格。
 
 ## Layout grammar
 

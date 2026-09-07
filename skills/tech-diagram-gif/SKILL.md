@@ -106,7 +106,9 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 python3 "$HOME/.claude/skills/tech-diagram-gif/scripts/verify-geometry.py" <diagram.svg> [--cycle 8.0]
 ```
 
-它涵蓋「版面幾何」組的全部項目並印出實際數值（不只 pass/fail）；exit 1 表示未通過。
+它涵蓋「版面幾何」組**除了「強調色元素 ≤2、註解框 ≤2」以外的全部項目**
+（哪個顏色算 accent 無法通用判定，那一項人工數），並印出實際數值（不只 pass/fail）；
+exit 1 表示未通過，結尾會列出它自己沒涵蓋的項目。
 腳本過了才進渲染，看截圖只判它算不出來的東西（見「渲染實況」組）。
 **改動這支腳本後必須重跑 `scripts/test-verify-geometry.py`** —— 檢查腳本自己會錯，
 而且全判通過與全判失敗看起來都像正常結果（細節見 `scripts/CLAUDE.md`）。
@@ -167,7 +169,7 @@ python3 "$HOME/.claude/skills/tech-diagram-gif/scripts/verify-geometry.py" <diag
 
 - [ ] 0 交叉、每邊 ≤2 折、繞路比 ≤1.35、節點間 ≥80px、容器 gutter ≥20px？
 - [ ] 強調色元素 ≤2、註解框 ≤2？
-- [ ] 邊標籤遮罩與其連線之間留 6–10px **可見**間隙，遮罩沒有壓到線？
+- [ ] 邊標籤遮罩與其連線之間留 **≥6px** 可見間隙，遮罩沒有壓到線？（6 是下限，不是區間）
 - [ ] 同一邊多條連線各有自己的 port，相鄰 ≥12px（小節點最低 8px）？
 - [ ] 標籤遮罩沒有被之後才畫的節點蓋掉？（z-order：節點在標籤之後上色）
 - [ ] 連線沒有穿過非端點的節點（不可避免時改虛線，標籤移到可見端）？

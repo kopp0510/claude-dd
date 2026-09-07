@@ -16,13 +16,21 @@
   [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design)，MIT，
   概念改寫未 vendor 任何檔案，歸屬記在該 skill 的 `LICENSE.txt`）：硬閘門新增
   「先判斷該不該畫」、元素數量預算（節點 ≤9 / 連線 ≤12 / 強調色 ≤2 / 分組 ≤4 / 註解框 ≤2）、
-  連線可量測規則（標籤間隙 6–10px、port ≥12px、遮罩 z-order、不穿越非端點節點）、
+  連線可量測規則（標籤間隙 ≥6px、port ≥12px、遮罩 z-order、不穿越非端點節點）、
   「產出前檢查清單（Taste Gate）」20 項。檢查清單**依判定時機與手段分五組**（第 1 步數清單 /
   第 4 步算座標 / 第 4 步看截圖 / 第 5、6 步交付），避免出現「該項要到後面步驟才有素材可判」
   或「第 4 步才發現數量超標只能整份重來」。未採用其 python 幾何驗證腳本（不塞 runtime 依賴）、
   HTML 靜態交付（本 skill 只交 GIF）與 39 型 reference（使用率盤點制）
 - 同輪順帶定調：節點間距**取嚴為 80px**（`svg-layout-best-practices` 的 Universal
   Layout Rules），contract 表列的 40px 是上游 showcase 不及格線，不再出現在閘門裡
+- **`tech-diagram-gif` 新增 `scripts/verify-geometry.py`**（純標準庫、無 pip 依賴、
+  缺 python3 退化為人工算）：把 Taste Gate「版面幾何」組從「用眼睛看」變成可執行的閘門，
+  第 4 步改為「先跑腳本再看截圖」。同批新增 `test-verify-geometry.py`（12 種變異各弄壞
+  一項確認抓得到、1 個回歸案例確認不誤報）與 `scripts/CLAUDE.md`。SVG 需標
+  `data-role`（`node`/`container`/`edge`），無標記時腳本退化用畫法猜並印警告
+- **修正一項翻譯錯誤**：邊標籤遮罩與連線的間隙原寫「6–10px」（讀成上下限），
+  上游 diagram-design 原文是 minimum 6px、擁擠時 push to 8–10px —— **6 是下限不是區間**。
+  照誤寫版判定，間隙 12px 的正常圖會被判不合格。已改為 ≥6px 並在 contract 記下原委
 - **vendor intake 清單補「只借概念、不抄檔案」的歸屬規則**：歸屬要精確到段落／項目，
   不可整節掛名。判準是「能逐條指出哪一段來自誰」。同輪把該 skill 的量化數字從三份手抄
   （第 1 步、第 3 步、Taste Gate）收成一份 —— contract 是唯一來源，SKILL.md 只留
