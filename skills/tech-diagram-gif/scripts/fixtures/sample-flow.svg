@@ -62,7 +62,7 @@
 <!-- ⑥ ⇢ ① 所學回流（2 折） -->
 <path id="e10" d="M 720,650 L 720,320 L 270,320 L 270,226" fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85" marker-end="url(#ad)"/>
 
-<!-- ===== 邊標籤（遮罩與線留 6–10px 可見間隙） ===== -->
+<!-- ===== 邊標籤（遮罩與線留 ≥6px 可見間隙） ===== -->
 <rect x="437" y="152" width="116" height="24" fill="#0a0a0a" opacity="0.92"/>
 <text class="al" x="495" y="169" text-anchor="middle">執行</text>
 
@@ -82,8 +82,8 @@
 <text class="al" x="517" y="673" text-anchor="middle">commit 時觸發</text>
 
 
-<rect x="880" y="266" width="176" height="24" fill="#0a0a0a" opacity="0.92"/>
-<text class="al" x="1046" y="283" text-anchor="end">載入規則與 skills</text>
+<rect x="866" y="266" width="176" height="24" fill="#0a0a0a" opacity="0.92"/>
+<text class="al" x="1032" y="283" text-anchor="end">載入規則與 skills</text>
 
 <rect x="410" y="546" width="188" height="24" fill="#0a0a0a" opacity="0.92"/>
 <text class="al" x="504" y="563" text-anchor="middle" fill="#f87171">缺 CLAUDE.md → 擋回</text>

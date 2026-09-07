@@ -39,6 +39,15 @@ CASES = [
     ('連線穿過非端點節點', '穿過節點',
      lambda s: s.replace('d="M 720,650 L 720,320 L 270,320 L 270,226"',
                          'd="M 720,650 L 720,188 L 270,188 L 270,226"')),
+    ('標籤遮罩與線的間隙 < 6px', '間隙',
+     lambda s: s.replace('<rect x="437" y="152" width="116" height="24"',
+                         '<rect x="437" y="160" width="116" height="24"')),
+    ('標籤遮罩壓在線上', '壓線',
+     lambda s: s.replace('<rect x="437" y="152" width="116" height="24"',
+                         '<rect x="437" y="180" width="116" height="24"')),
+    ('遮罩被之後才畫的節點蓋掉', '蓋掉',
+     lambda s: s.replace('<rect x="452" y="656" width="131" height="24"',
+                         '<rect x="560" y="656" width="131" height="24"')),
     ('節點數 > 9', '節點',
      lambda s: s.replace('<!-- ⑧ commit 成功 -->', ''.join(
          f'<rect x="{60 + i * 4}" y="{980 + i}" width="30" height="20" rx="6" '
@@ -63,6 +72,15 @@ def tag(s):
     s = s.replace('<polygon points="330,634', '<polygon data-role="node" points="330,634')
     return re.sub(r'(<path )(id="e\d+")', r'\1data-role="edge" \2', s)
 
+# 不該被判失敗的情況（回歸案例）：弄壞看起來像壞、實際沒壞的圖
+POSITIVE_CASES = [
+    ('菱形外框內、形狀外的遮罩（z-order 假陽性回歸）',
+     lambda s: s.replace('<!-- ===== 節點',
+                         '<rect x="190" y="636" width="100" height="20" '
+                         'fill="#0a0a0a" opacity="0.92"/>\n<!-- ===== 節點')),
+]
+
+
 def main():
     if not VERIFY.exists() or not FIXTURE.exists():
         print(f'❌ 找不到 {VERIFY} 或 {FIXTURE}')
@@ -77,6 +95,14 @@ def main():
         caught = r.returncode == 1 and kw in r.stdout
         print(f'{name:32} {r.returncode:<5} {"✅ 抓到" if caught else "❌ 沒抓到"}')
         if not caught:
+            bad.append((name, r.returncode, r.stdout[-300:]))
+
+    print()
+    for name, mutate in POSITIVE_CASES:
+        r = run(mutate(src))
+        ok = r.returncode == 0
+        print(f'{name:32} {r.returncode:<5} {"✅ 未誤報" if ok else "❌ 誤報"}')
+        if not ok:
             bad.append((name, r.returncode, r.stdout[-300:]))
 
     print()
@@ -100,7 +126,8 @@ def main():
         for name, rc, out in bad:
             print(f'  - {name}（exit={rc}）\n    {out.strip()[:200]}')
         return 1
-    print(f'✅ {len(CASES)} 種變異全部抓到，原檔通過，標記路徑正常')
+    print(f'✅ {len(CASES)} 種變異全部抓到，{len(POSITIVE_CASES)} 個回歸案例未誤報，'
+          f'原檔通過，標記路徑正常')
     return 0
 
 if __name__ == '__main__':
