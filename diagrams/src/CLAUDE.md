@@ -1,13 +1,32 @@
 # diagrams/src — 圖表產生器
 
-上層 `diagrams/` 的 4 張 GIF 由這裡的兩支腳本產出；改圖一律改腳本再重跑，不要手改 GIF。
+上層 `diagrams/` 每一張 GIF 在這裡都有可重出的來源；**改圖一律改來源再重出，不要手改 GIF**。
+來源分兩類 —— 腳本產生的，與手寫的 SVG。
 
 ## 檔案
+
+### 腳本產生（產物不進版控）
 
 | 檔案 | 產出 |
 |---|---|
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（8 步迴圈在框 ⑤） |
 | `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來） |
+
+### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
+
+用 `tech-diagram-gif` skill 畫的，沒有產生器 —— 這裡的 `.svg` 刪掉圖就再也改不了。
+檔名與上層 GIF 一一對應。
+
+| 檔案 | 類型 |
+|---|---|
+| `dd-pipeline-propagation.style-2.svg` | Style 2 Dark Terminal · 循環流動 |
+| `style-11-event-transit.svg` | Style 11 Event Transit · 事件流地鐵圖（示範情境） |
+| `style-12-ops-pulse.svg` | Style 12 Ops Pulse · 事故排查（示範情境） |
+| `motion-build-to-operate.svg` | Style 8 · 建置→營運五幕敘事動畫 |
+
+`dd-pipeline-propagation.gif`（Style 8 · 循環流動）的來源另在
+`skills/tech-diagram-gif/scripts/fixtures/sample-flow.svg` —— 它同時是幾何檢查的
+測試 fixture，不在此重複一份，改它要一併重跑該 skill 的測試。
 
 兩支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
 中英兩版共用同一份版面座標，只換 `ZH` / `EN` 兩個 dict 的字串。
@@ -15,7 +34,11 @@
 ## 慣例與約束
 
 - **輸出到 cwd**：腳本把 `.svg` 與 `.html` 寫在當下工作目錄，不寫死路徑。
-  請在暫存目錄執行，不要在 repo 內跑（產物不進版控，只有 GIF 進）
+  請在暫存目錄執行，不要在 repo 內跑（**腳本的**產物不進版控，只有 GIF 進；
+  手寫 SVG 是來源不是產物，要進）
+- **手寫 SVG 改完要重跑幾何檢查**：
+  `python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <檔案>`。
+  四份現況皆通過；沒過就不要重出 GIF
 - **兩支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
   新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案（2026-08-31 踩過）
 - **總循環 7.2 秒**：所有 `animateMotion` 的 `dur` 必須整除 7.2，否則 GIF 接不回去。

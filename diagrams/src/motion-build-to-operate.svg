@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1060" width="1440" height="1060">
+<style>
+  text { font-family: -apple-system,'Helvetica Neue','PingFang TC','Noto Sans CJK TC',sans-serif; }
+  .ttl { font-family: Georgia,'Times New Roman','Songti TC','Noto Serif CJK TC',serif;
+         font-size: 31px; font-weight: 700; fill: #f5f0eb; }
+  .sub { font-size: 16px; fill: #6b5f53; }
+  .lbl { font-family: Georgia,'Times New Roman','Songti TC','Noto Serif CJK TC',serif;
+         font-size: 16px; font-weight: 700; fill: #c9a96e; opacity: 0.75; letter-spacing: 0.06em; }
+  .nm  { font-size: 20px; font-weight: 600; }
+  .sm  { font-size: 15px; fill: #a39787; }
+  .al  { font-size: 15px; fill: #8c7e72; }
+</style>
+<defs>
+  <marker id="ag" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#d4a574"/></marker>
+  <marker id="am" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#6ee7b7"/></marker>
+  <marker id="ar" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#f87171"/></marker>
+  <marker id="ad" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c9a96e"/></marker>
+  <radialGradient id="glow" cx="52%" cy="62%" r="34%">
+    <stop offset="0%" stop-color="#d4a574" stop-opacity="0.05"/>
+    <stop offset="100%" stop-color="#d4a574" stop-opacity="0"/></radialGradient>
+</defs>
+
+<rect width="1440" height="1060" fill="#0a0a0a"/>
+<rect width="1440" height="1060" fill="url(#glow)"/>
+
+<text class="ttl" x="80" y="66">DD Pipeline — 建置 → 營運（敘事動畫）</text>
+<text class="sub" x="80" y="94">五幕：開場只有節點 → 連線逐條畫入 → 定格 → 流動營運（佔 60%）→ 淡出回到開場</text>
+
+<!-- ===== 分組容器（先畫，node 之後蓋在上面） ===== -->
+<rect data-role="container" x="80" y="110" width="850" height="160" rx="8" fill="none" stroke="#d4a574" stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>
+<text class="lbl" x="96" y="134">SOURCE OF TRUTH</text>
+
+<rect data-role="container" x="1000" y="110" width="370" height="400" rx="8" fill="none" stroke="#d4a574" stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>
+<text class="lbl" x="1016" y="134">全域 ~/.claude/</text>
+
+<rect data-role="container" x="150" y="600" width="1220" height="360" rx="8" fill="none" stroke="#d4a574" stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>
+<text class="lbl" x="166" y="624">你的專案</text>
+
+<!-- ===== 連線（先於節點，z-order） ===== -->
+<!-- ① → ② 執行 -->
+<path data-role="edge" id="e1" d="M 430,188 L 560,188" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="130" stroke-dashoffset="130"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="130;130;0;0;0" keyTimes="0.0000;0.0500;0.0750;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.0488;0.0500;0.9500;1.0000"/></path>
+<!-- ② → ③ 部署 -->
+<path data-role="edge" id="e2" d="M 900,188 L 1030,188" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="130" stroke-dashoffset="130"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="130;130;0;0;0" keyTimes="0.0000;0.0750;0.1000;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.0738;0.0750;0.9500;1.0000"/></path>
+<!-- ③ → ④ 提供指令 -->
+<path data-role="edge" id="e3" d="M 1185,242 L 1185,400" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="158" stroke-dashoffset="158"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="158;158;0;0;0" keyTimes="0.0000;0.1000;0.1250;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.0988;0.1000;0.9500;1.0000"/></path>
+<!-- ④ → ⑤ 蓋章 + 掛 hook -->
+<path data-role="edge" id="e4" d="M 1185,476 L 1185,650" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="174" stroke-dashoffset="174"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="174;174;0;0;0" keyTimes="0.0000;0.1250;0.1500;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1237;0.1250;0.9500;1.0000"/></path>
+<!-- ⑤ → ⑥ 在此執行 -->
+<path data-role="edge" id="e5" d="M 1040,692 L 910,692" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="130" stroke-dashoffset="130"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="130;130;0;0;0" keyTimes="0.0000;0.1500;0.1750;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1488;0.1500;0.9500;1.0000"/></path>
+<!-- ⑥ → ⑦ commit 時觸發 -->
+<path data-role="edge" id="e6" d="M 590,692 L 480,692" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="110" stroke-dashoffset="110"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="110;110;0;0;0" keyTimes="0.0000;0.1750;0.2000;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1737;0.1750;0.9500;1.0000"/></path>
+<!-- ⑦ → ⑧ 通過 -->
+<path data-role="edge" id="e7" d="M 330,750 L 330,850" fill="none" stroke="#d4a574" stroke-width="2" stroke-dasharray="100" stroke-dashoffset="100"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="100;100;0;0;0" keyTimes="0.0000;0.2000;0.2250;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1988;0.2000;0.9500;1.0000"/></path>
+<!-- ③ → ⑥ 載入規則與 skills（2 折） -->
+<path data-role="edge" id="e8" d="M 1060,242 L 1060,300 L 850,300 L 850,650" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-dasharray="618" stroke-dashoffset="618"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="618;618;0;0;0" keyTimes="0.0000;0.2250;0.2500;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2238;0.2250;0.9500;1.0000"/></path>
+<!-- ⑦ ⇢ ⑥ 擋回（2 折） -->
+<path data-role="edge" id="e9" d="M 330,634 L 330,580 L 650,580 L 650,650" fill="none" stroke="#f87171" stroke-width="1.5" stroke-dasharray="4,3" stroke-dasharray="444" stroke-dashoffset="444"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="444;444;0;0;0" keyTimes="0.0000;0.2500;0.2750;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2487;0.2500;0.9500;1.0000"/></path>
+<!-- ⑥ ⇢ ① 所學回流（2 折） -->
+<path data-role="edge" id="e10" d="M 720,650 L 720,320 L 270,320 L 270,226" fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85" stroke-dasharray="874" stroke-dashoffset="874"><animate attributeName="stroke-dashoffset" dur="8.0s" repeatCount="indefinite" values="874;874;0;0;0" keyTimes="0.0000;0.2750;0.3000;0.9500;1.0000"/><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2738;0.2750;0.9500;1.0000"/></path>
+
+<!-- ===== 邊標籤（遮罩與線留 ≥6px 可見間隙） ===== -->
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.0750;0.0763;0.9500;1.0000"/><rect data-role="mask" x="437" y="152" width="116" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="495" y="169" text-anchor="middle">執行</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1000;0.1013;0.9500;1.0000"/><rect data-role="mask" x="907" y="152" width="116" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="965" y="169" text-anchor="middle">部署</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1250;0.1263;0.9500;1.0000"/><rect data-role="mask" x="1197" y="308" width="120" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="1207" y="325">提供指令</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1500;0.1512;0.9500;1.0000"/><rect data-role="mask" x="1197" y="551" width="176" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="1207" y="568">蓋章 + 掛 hook</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1750;0.1763;0.9500;1.0000"/><rect data-role="mask" x="917" y="656" width="116" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="975" y="673" text-anchor="middle">在此執行</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2000;0.2012;0.9500;1.0000"/><rect data-role="mask" x="452" y="656" width="131" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="517" y="673" text-anchor="middle">commit 時觸發</text></g>
+
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2500;0.2513;0.9500;1.0000"/><rect data-role="mask" x="866" y="266" width="176" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="1032" y="283" text-anchor="end">載入規則與 skills</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2750;0.2762;0.9500;1.0000"/><rect data-role="mask" x="410" y="546" width="188" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="504" y="563" text-anchor="middle" fill="#f87171">缺 CLAUDE.md → 擋回</text></g>
+
+<g opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3000;0.3013;0.9500;1.0000"/><rect data-role="mask" x="330" y="286" width="212" height="24" fill="#0a0a0a" opacity="0.92"/><text class="al" x="436" y="303" text-anchor="middle">第 7、8 步所學回流</text></g>
+
+<!-- ===== 節點（後畫，蓋住標籤遮罩不到之處） ===== -->
+<!-- ① claude-dd repo -->
+<rect data-role="node" x="110" y="150" width="320" height="76" rx="6" fill="#111111" stroke="#94a3b8" stroke-width="1.5"/>
+<text class="nm" x="130" y="182" fill="#94a3b8">claude-dd repo</text>
+<text class="sm" x="130" y="206">skills / agents / commands 的唯一真相</text>
+
+<!-- ② install-dd-pipeline.sh -->
+<rect data-role="node" x="560" y="150" width="340" height="76" rx="6" fill="#111111" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="nm" x="580" y="182" fill="#fbbf24">install-dd-pipeline.sh</text>
+<text class="sm" x="580" y="206">--update 只更新 skills 與 agents</text>
+
+<!-- ③ ~/.claude/ -->
+<rect data-role="node" x="1030" y="150" width="310" height="92" rx="6" fill="#111111" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="nm" x="1050" y="182" fill="#38bdf8">~/.claude/</text>
+<text class="sm" x="1050" y="206">全域 profile：CLAUDE.md +</text>
+<text class="sm" x="1050" y="228">skills + agents + commands</text>
+
+<!-- ④ /dd-init -->
+<rect data-role="node" x="1040" y="400" width="290" height="76" rx="6" fill="#111111" stroke="#fbbf24" stroke-width="1.5"/>
+<text class="nm" x="1060" y="432" fill="#fbbf24">/dd-init</text>
+<text class="sm" x="1060" y="456">專案初始化指令</text>
+
+<!-- ⑤ 你的專案 -->
+<rect data-role="node" x="1040" y="650" width="290" height="84" rx="6" fill="#111111" stroke="#a78bfa" stroke-width="1.5"/>
+<text class="nm" x="1060" y="682" fill="#a78bfa">專案設定</text>
+<text class="sm" x="1060" y="706">專案 CLAUDE.md +</text>
+<text class="sm" x="1060" y="726">.git/hooks/pre-commit</text>
+
+<!-- ⑥ 8 步開發迴圈 -->
+<rect data-role="node" x="590" y="650" width="320" height="84" rx="6" fill="#111111" stroke="#5a9e6f" stroke-width="1.5"/>
+<text class="nm" x="610" y="682" fill="#5a9e6f">8 步開發迴圈</text>
+<text class="sm" x="610" y="706">實作+測試 → commit → 簡化 → review</text>
+<text class="sm" x="610" y="726">→ 再測 → commit → 沉澱 → 評分</text>
+
+<!-- ⑦ pre-commit gate（決策菱形 · focal 1） -->
+<polygon data-role="node" points="330,634 480,692 330,750 180,692" fill="#111111" stroke="#f87171" stroke-width="2"/>
+<text class="nm" x="330" y="686" text-anchor="middle" fill="#f87171" font-size="16">pre-commit gate</text>
+<text x="330" y="708" text-anchor="middle" font-size="14" fill="#a39787">CLAUDE.md 同批更新？</text>
+
+<!-- ⑧ commit 成功 -->
+<rect data-role="node" x="200" y="850" width="260" height="68" rx="6" fill="#111111" stroke="#5a9e6f" stroke-width="1.5"/>
+<text class="nm" x="220" y="882" fill="#5a9e6f">commit 成功</text>
+<text class="sm" x="220" y="904">改碼與文件同批落地</text>
+
+<!-- ===== 小球（等速兩檔：短線 2s、長線 8s；皆整除 8s） ===== -->
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e1"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e1"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" begin="-0.5s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" begin="-0.5s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" begin="-1s" repeatCount="indefinite"><mpath href="#e3"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" begin="-1s" repeatCount="indefinite"><mpath href="#e3"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" begin="-1.5s" repeatCount="indefinite"><mpath href="#e4"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" begin="-1.5s" repeatCount="indefinite"><mpath href="#e4"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" begin="-0.25s" repeatCount="indefinite"><mpath href="#e5"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" begin="-0.25s" repeatCount="indefinite"><mpath href="#e5"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" begin="-0.75s" repeatCount="indefinite"><mpath href="#e6"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" begin="-0.75s" repeatCount="indefinite"><mpath href="#e6"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#d4a574" opacity="0.22"><animateMotion dur="2s" begin="-1.25s" repeatCount="indefinite"><mpath href="#e7"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#d4a574"><animateMotion dur="2s" begin="-1.25s" repeatCount="indefinite"><mpath href="#e7"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#6ee7b7" opacity="0.22"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#6ee7b7"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#6ee7b7" opacity="0.22"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#6ee7b7"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#f87171" opacity="0.22"><animateMotion dur="8s" begin="-2s" repeatCount="indefinite"><mpath href="#e9"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#f87171"><animateMotion dur="8s" begin="-2s" repeatCount="indefinite"><mpath href="#e9"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#c9a96e" opacity="0.22"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#c9a96e"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="8" fill="#c9a96e" opacity="0.22"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;0.22;0.22;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+<circle r="4" fill="#c9a96e"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3488;0.3500;0.9500;1.0000"/></circle>
+
+<!-- ===== legend（流程走廊外，底部橫條） ===== -->
+<line x1="80" y1="995" x2="1360" y2="995" stroke="#d4a574" stroke-width="0.5" opacity="0.25"/>
+<line x1="80" y1="1022" x2="128" y2="1022" stroke="#d4a574" stroke-width="2"/>
+<text class="al" x="138" y="1027">主流程</text>
+<line x1="250" y1="1022" x2="298" y2="1022" stroke="#6ee7b7" stroke-width="1.5"/>
+<text class="al" x="308" y="1027">載入</text>
+<line x1="400" y1="1022" x2="448" y2="1022" stroke="#f87171" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text class="al" x="458" y="1027">gate 擋回</text>
+<line x1="610" y1="1022" x2="658" y2="1022" stroke="#c9a96e" stroke-width="1.5" stroke-dasharray="6,3"/>
+<text class="al" x="668" y="1027">所學回流（dogfood）</text>
+<path data-role="decoration" d="M 554,188 L 560,188" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.0750;0.0763;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 1024,188 L 1030,188" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1000;0.1013;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 1185,394 L 1185,400" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1250;0.1263;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 1185,644 L 1185,650" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1500;0.1512;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 916,692 L 910,692" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.1750;0.1763;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 486,692 L 480,692" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2000;0.2012;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 330,844 L 330,850" fill="none" stroke="#d4a574" stroke-width="2" marker-end="url(#ag)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2250;0.2263;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 850,644 L 850,650" fill="none" stroke="#6ee7b7" stroke-width="2" marker-end="url(#am)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2500;0.2513;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 650,644 L 650,650" fill="none" stroke="#f87171" stroke-width="2" marker-end="url(#ar)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.2750;0.2762;0.9500;1.0000"/></path>
+<path data-role="decoration" d="M 270,232 L 270,226" fill="none" stroke="#c9a96e" stroke-width="2" marker-end="url(#ad)" opacity="0"><animate attributeName="opacity" dur="8.0s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0.0000;0.3000;0.3013;0.9500;1.0000"/></path>
+</svg>
