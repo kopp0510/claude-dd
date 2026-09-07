@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 720" width="1440" height="720">
+<style>
+  text { font-family: -apple-system,'Helvetica Neue','PingFang TC','Noto Sans CJK TC',sans-serif; fill:#17213c; }
+  .ttl { font-size:26px; font-weight:700; }
+  .sub { font-size:15px; fill:#6b7280; }
+  .stamp { font-size:13px; font-weight:700; fill:#8a94a6; letter-spacing:0.12em; }
+  .nm { font-size:19px; font-weight:700; }
+  .sm { font-size:14px; fill:#5b6577; }
+  .al { font-size:14px; fill:#6b7280; }
+  .badge { font-size:12px; fill:#4b5563; }
+  .lbl { font-size:14px; font-weight:700; fill:#9aa3b2; letter-spacing:0.1em; }
+  .med { font-size:16px; font-weight:700; fill:#fffdf8; }
+</style>
+<defs>
+  <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+    <circle cx="2" cy="2" r="1.1" fill="#dfd6c4" opacity="0.55"/>
+  </pattern>
+  <marker id="m-rail" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 8 3, 0 6" fill="#e4475b"/></marker>
+  <marker id="m-dlq" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 8 3, 0 6" fill="#c62828"/></marker>
+  <marker id="m-state" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 8 3, 0 6" fill="#00897b"/></marker>
+</defs>
+
+<rect width="1440" height="720" fill="#fbf7ee"/>
+<rect width="1440" height="720" fill="url(#dots)"/>
+
+<text class="ttl" x="60" y="58">訂單事件線路圖</text>
+<text class="sub" x="60" y="84">示範情境（非 claude-dd 實況）— 用來展示 Style 11 Event Transit 的畫法</text>
+<text class="stamp" x="1380" y="52" text-anchor="end">EVENT METRO · 1 TOPIC LINE</text>
+
+<rect data-role="container" x="60" y="190" width="1320" height="180" rx="10" fill="none" stroke="#c9bfa8" stroke-width="1" stroke-dasharray="7,5"/>
+<text class="lbl" x="76" y="214">TOPIC RAIL — orders.v2</text>
+<rect data-role="container" x="860" y="430" width="480" height="170" rx="10" fill="none" stroke="#c9bfa8" stroke-width="1" stroke-dasharray="7,5"/>
+<text class="lbl" x="876" y="454">SINKS</text>
+
+<path data-role="edge" id="e1" d="M 190,280 L 280,280" fill="none" stroke="#e4475b" stroke-width="2.8" marker-end="url(#m-rail)"/>
+<path data-role="edge" id="e2" d="M 440,280 L 520,280" fill="none" stroke="#e4475b" stroke-width="2.8" marker-end="url(#m-rail)"/>
+<path data-role="edge" id="e3" d="M 710,280 L 790,280" fill="none" stroke="#e4475b" stroke-width="2.8" marker-end="url(#m-rail)"/>
+<path data-role="edge" id="e4" d="M 960,280 L 1042,280" fill="none" stroke="#e4475b" stroke-width="2.8" marker-end="url(#m-rail)"/>
+<path data-role="edge" id="e5" d="M 1078,280 L 1160,280" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#m-rail)"/>
+<path data-role="edge" id="e6" d="M 1250,334 L 1250,460" fill="none" stroke="#00897b" stroke-width="2.2" marker-end="url(#m-state)"/>
+<path data-role="edge" id="e7" d="M 1060,298 L 1060,480" fill="none" stroke="#c62828" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#m-dlq)"/>
+<path data-role="edge" id="e8" d="M 615,334 L 615,405 L 960,405 L 960,480" fill="none" stroke="#c62828" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#m-dlq)"/>
+
+<rect data-role="mask" x="222" y="246" width="46" height="22" fill="#fbf7ee" opacity="0.95"/>
+<text class="al" x="245" y="262" text-anchor="middle">產生</text>
+<rect data-role="mask" x="726" y="246" width="58" height="22" fill="#fbf7ee" opacity="0.95"/>
+<text class="al" x="755" y="262" text-anchor="middle">已驗證</text>
+<rect data-role="mask" x="1086" y="246" width="70" height="22" fill="#fbf7ee" opacity="0.95"/>
+<text class="al" x="1121" y="262" text-anchor="middle">消費者群</text>
+<rect data-role="mask" x="1262" y="378" width="72" height="22" fill="#fbf7ee" opacity="0.95"/>
+<text class="al" x="1272" y="394">物化投影</text>
+<rect data-role="mask" x="700" y="373" width="90" height="22" fill="#fbf7ee" opacity="0.95"/>
+<text class="al" x="745" y="389" text-anchor="middle" fill="#c62828">schema 失敗</text>
+<rect data-role="mask" x="1072" y="360" width="76" height="22" fill="#fbf7ee" opacity="0.95"/>
+<text class="al" x="1082" y="376" fill="#c62828">重試耗盡</text>
+
+<polygon data-role="node" points="140,230 183,255 183,305 140,330 97,305 97,255" fill="#fffdf8" stroke="#17213c" stroke-width="1.6"/>
+<text class="nm" x="140" y="278" text-anchor="middle" font-size="15">訂單 API</text>
+<text class="sm" x="140" y="296" text-anchor="middle" font-size="12">producer</text>
+
+<ellipse cx="280" cy="280" rx="20" ry="34" fill="#efe7d6" stroke="#17213c" stroke-width="1.6"/>
+<rect data-role="node" x="280" y="246" width="160" height="68" fill="#fffdf8" stroke="none"/>
+<line x1="280" y1="246" x2="440" y2="246" stroke="#17213c" stroke-width="1.6"/>
+<line x1="280" y1="314" x2="440" y2="314" stroke="#17213c" stroke-width="1.6"/>
+<ellipse cx="440" cy="280" rx="20" ry="34" fill="#fffdf8" stroke="#17213c" stroke-width="1.6"/>
+<text class="nm" x="366" y="274" text-anchor="middle" font-size="16">orders.v2</text>
+<text class="badge" x="366" y="294" text-anchor="middle">12 partitions</text>
+
+<rect data-role="node" x="520" y="226" width="190" height="108" rx="8" fill="#fffdf8" stroke="#17213c" stroke-width="1.6"/>
+<circle cx="545" cy="251" r="17" fill="#e4475b"/>
+<text class="med" x="545" y="257" text-anchor="middle">1</text>
+<text class="nm" x="572" y="258">schema 驗證</text>
+<text class="sm" x="540" y="292">registry v2 相容檢查</text>
+<text class="badge" x="540" y="318">lag 120ms</text>
+
+<rect data-role="node" x="790" y="226" width="170" height="108" rx="8" fill="#fffdf8" stroke="#17213c" stroke-width="1.6"/>
+<circle cx="815" cy="251" r="17" fill="#e4475b"/>
+<text class="med" x="815" y="257" text-anchor="middle">2</text>
+<text class="nm" x="842" y="258">風控加值</text>
+<text class="sm" x="808" y="292">查詢黑名單</text>
+<text class="badge" x="808" y="318">fan-out 3</text>
+
+<circle data-role="node" cx="1060" cy="280" r="18" fill="#17213c" stroke="#17213c" stroke-width="1.6"/>
+<text class="badge" x="1060" y="252" text-anchor="middle" font-size="13">junction</text>
+
+<rect data-role="node" x="1160" y="226" width="180" height="108" rx="8" fill="#fffdf8" stroke="#2563eb" stroke-width="1.8"/>
+<circle cx="1185" cy="251" r="17" fill="#2563eb"/>
+<text class="med" x="1185" y="257" text-anchor="middle">3</text>
+<text class="nm" x="1212" y="258" fill="#2563eb">出貨排程</text>
+<text class="sm" x="1178" y="292">group: shipping</text>
+<text class="badge" x="1178" y="318">replay 可重放</text>
+
+<rect data-role="node" x="900" y="480" width="180" height="80" rx="8" fill="#fdf2f2" stroke="#c62828" stroke-width="1.8" stroke-dasharray="7,4"/>
+<text class="nm" x="990" y="516" text-anchor="middle" fill="#c62828" font-size="17">DLQ ✕</text>
+<text class="sm" x="990" y="538" text-anchor="middle" font-size="13">orders.v2.dlq</text>
+
+<ellipse cx="1250" cy="460" rx="50" ry="17" fill="#e6f2f0" stroke="#00897b" stroke-width="1.6"/>
+<rect data-role="node" x="1200" y="460" width="100" height="83" fill="#e6f2f0" stroke="none"/>
+<line x1="1200" y1="460" x2="1200" y2="543" stroke="#00897b" stroke-width="1.6"/>
+<line x1="1300" y1="460" x2="1300" y2="543" stroke="#00897b" stroke-width="1.6"/>
+<ellipse cx="1250" cy="543" rx="50" ry="17" fill="#d5e9e6" stroke="#00897b" stroke-width="1.6"/>
+<rect x="1240" y="475" width="20" height="18" fill="none" stroke="#00897b" stroke-width="1.4"/>
+<text class="sm" x="1250" y="515" text-anchor="middle" font-size="13" fill="#00897b">出貨狀態</text>
+
+<circle r="7" fill="#e4475b" opacity="0.22"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e1"/></animateMotion></circle>
+<circle r="3.5" fill="#e4475b"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e1"/></animateMotion></circle>
+<circle r="7" fill="#e4475b" opacity="0.22"><animateMotion dur="2s" begin="-0.5s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion></circle>
+<circle r="3.5" fill="#e4475b"><animateMotion dur="2s" begin="-0.5s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion></circle>
+<circle r="7" fill="#e4475b" opacity="0.22"><animateMotion dur="2s" begin="-1s" repeatCount="indefinite"><mpath href="#e3"/></animateMotion></circle>
+<circle r="3.5" fill="#e4475b"><animateMotion dur="2s" begin="-1s" repeatCount="indefinite"><mpath href="#e3"/></animateMotion></circle>
+<circle r="7" fill="#e4475b" opacity="0.22"><animateMotion dur="2s" begin="-1.5s" repeatCount="indefinite"><mpath href="#e4"/></animateMotion></circle>
+<circle r="3.5" fill="#e4475b"><animateMotion dur="2s" begin="-1.5s" repeatCount="indefinite"><mpath href="#e4"/></animateMotion></circle>
+<circle r="7" fill="#2563eb" opacity="0.22"><animateMotion dur="2s" begin="-0.25s" repeatCount="indefinite"><mpath href="#e5"/></animateMotion></circle>
+<circle r="3.5" fill="#2563eb"><animateMotion dur="2s" begin="-0.25s" repeatCount="indefinite"><mpath href="#e5"/></animateMotion></circle>
+<circle r="7" fill="#00897b" opacity="0.22"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#e6"/></animateMotion></circle>
+<circle r="3.5" fill="#00897b"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#e6"/></animateMotion></circle>
+<circle r="7" fill="#c62828" opacity="0.22"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e7"/></animateMotion></circle>
+<circle r="3.5" fill="#c62828"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e7"/></animateMotion></circle>
+<circle r="7" fill="#c62828" opacity="0.22"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion></circle>
+<circle r="3.5" fill="#c62828"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion></circle>
+
+<line x1="60" y1="650" x2="1380" y2="650" stroke="#c9bfa8" stroke-width="1" opacity="0.6"/>
+<line x1="60" y1="678" x2="108" y2="678" stroke="#e4475b" stroke-width="2.8"/>
+<text class="al" x="118" y="683">topic rail（主線）</text>
+<line x1="290" y1="678" x2="338" y2="678" stroke="#2563eb" stroke-width="2.4"/>
+<text class="al" x="348" y="683">消費者群</text>
+<line x1="480" y1="678" x2="528" y2="678" stroke="#00897b" stroke-width="2.2"/>
+<text class="al" x="538" y="683">狀態投影</text>
+<line x1="670" y1="678" x2="718" y2="678" stroke="#c62828" stroke-width="2" stroke-dasharray="6,4"/>
+<text class="al" x="728" y="683">死信 / 重試耗盡</text>
+</svg>

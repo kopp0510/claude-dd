@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1060" width="1440" height="1060">
+<style>
+  text { font-family: 'SF Mono','Fira Code','Cascadia Code','Courier New','PingFang TC','Noto Sans CJK TC',monospace;
+         fill: #e2e8f0; letter-spacing: 0.02em; }
+  .ttl { font-size: 24px; font-weight: 700; fill: #e2e8f0; }
+  .sub { font-size: 16px; fill: #475569; }
+  .lbl { font-size: 15px; font-weight: 700; fill: #64748b; letter-spacing: 0.1em; }
+  .nm  { font-size: 20px; font-weight: 700; }
+  .sm  { font-size: 15px; fill: #94a3b8; }
+  .al  { font-size: 15px; fill: #64748b; }
+</style>
+<defs>
+  <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#0f0f1a"/><stop offset="100%" stop-color="#1a1a2e"/>
+  </linearGradient>
+  <marker id="a-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#10b981"/></marker>
+  <marker id="a-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/></marker>
+  <marker id="a-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/></marker>
+  <marker id="a-gold" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#eab308"/></marker>
+</defs>
+
+<rect width="1440" height="1060" fill="url(#bg-grad)"/>
+
+<text class="ttl" x="80" y="62">$ dd-pipeline --trace-propagation</text>
+<text class="sub" x="80" y="92">repo 是唯一真相；全域是它的部署；專案在 gate 底下跑迴圈，學到的再回流</text>
+
+<rect data-role="container" x="80" y="110" width="850" height="160" rx="8" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="6,4"/>
+<text class="lbl" x="96" y="134">SOURCE_OF_TRUTH</text>
+<rect data-role="container" x="1000" y="110" width="370" height="400" rx="8" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="6,4"/>
+<text class="lbl" x="1016" y="134">~/.claude/</text>
+<rect data-role="container" x="150" y="600" width="1220" height="360" rx="8" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="6,4"/>
+<text class="lbl" x="166" y="624">YOUR_PROJECT</text>
+
+<path data-role="edge" id="e1" d="M 430,188 L 560,188" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e2" d="M 900,188 L 1030,188" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e3" d="M 1185,242 L 1185,400" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e4" d="M 1185,476 L 1185,650" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e5" d="M 1040,692 L 910,692" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e6" d="M 590,692 L 480,692" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e7" d="M 330,750 L 330,850" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#a-green)"/>
+<path data-role="edge" id="e8" d="M 1060,242 L 1060,300 L 850,300 L 850,650" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a-blue)"/>
+<path data-role="edge" id="e9" d="M 330,634 L 330,580 L 650,580 L 650,650" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a-red)"/>
+<path data-role="edge" id="e10" d="M 720,650 L 720,320 L 270,320 L 270,226" fill="none" stroke="#eab308" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85" marker-end="url(#a-gold)"/>
+
+<rect data-role="mask" x="437" y="152" width="116" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="495" y="169" text-anchor="middle">exec</text>
+<rect data-role="mask" x="907" y="152" width="116" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="965" y="169" text-anchor="middle">deploy</text>
+<rect data-role="mask" x="1197" y="308" width="120" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="1207" y="325">提供指令</text>
+<rect data-role="mask" x="1197" y="551" width="176" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="1207" y="568">蓋章 + 掛 hook</text>
+<rect data-role="mask" x="917" y="656" width="116" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="975" y="673" text-anchor="middle">在此執行</text>
+<rect data-role="mask" x="452" y="656" width="131" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="517" y="673" text-anchor="middle">pre-commit</text>
+<rect data-role="mask" x="866" y="266" width="176" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="1032" y="283" text-anchor="end">載入規則與 skills</text>
+<rect data-role="mask" x="410" y="546" width="188" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="504" y="563" text-anchor="middle" fill="#ef4444">缺 CLAUDE.md → 擋回</text>
+<rect data-role="mask" x="330" y="286" width="212" height="24" fill="#14142a" opacity="0.95"/>
+<text class="al" x="436" y="303" text-anchor="middle">第 7、8 步所學回流</text>
+
+<rect data-role="node" x="110" y="150" width="320" height="76" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+<text class="nm" x="130" y="182" fill="#e2e8f0">claude-dd/</text>
+<text class="sm" x="130" y="206">skills / agents / commands</text>
+
+<rect data-role="node" x="560" y="150" width="340" height="76" rx="6" fill="#1c1917" stroke="#ea580c" stroke-width="1.5"/>
+<text class="nm" x="580" y="182" fill="#f97316">install-dd-pipeline.sh</text>
+<text class="sm" x="580" y="206">--update</text>
+
+<rect data-role="node" x="1030" y="150" width="310" height="92" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+<text class="nm" x="1050" y="182" fill="#60a5fa">~/.claude/</text>
+<text class="sm" x="1050" y="206">CLAUDE.md + skills +</text>
+<text class="sm" x="1050" y="228">agents + commands</text>
+
+<rect data-role="node" x="1040" y="400" width="290" height="76" rx="6" fill="#1c1917" stroke="#ea580c" stroke-width="1.5"/>
+<text class="nm" x="1060" y="432" fill="#f97316">/dd-init</text>
+<text class="sm" x="1060" y="456">專案初始化指令</text>
+
+<rect data-role="node" x="1040" y="650" width="290" height="84" rx="6" fill="#1e1b4b" stroke="#7c3aed" stroke-width="1.5"/>
+<text class="nm" x="1060" y="682" fill="#a855f7">專案設定</text>
+<text class="sm" x="1060" y="706">CLAUDE.md +</text>
+<text class="sm" x="1060" y="726">.git/hooks/pre-commit</text>
+
+<rect data-role="node" x="590" y="650" width="320" height="84" rx="6" fill="#052e16" stroke="#059669" stroke-width="1.5"/>
+<text class="nm" x="610" y="682" fill="#10b981">8 步開發迴圈</text>
+<text class="sm" x="610" y="706">實作+測試 → commit → 簡化</text>
+<text class="sm" x="610" y="726">→ review → 再測 → commit …</text>
+
+<polygon data-role="node" points="330,634 480,692 330,750 180,692" fill="#1c0f16" stroke="#ef4444" stroke-width="2"/>
+<text class="nm" x="330" y="686" text-anchor="middle" fill="#ef4444" font-size="16">pre-commit gate</text>
+<text x="330" y="708" text-anchor="middle" font-size="14" fill="#94a3b8">CLAUDE.md 同批更新？</text>
+
+<rect data-role="node" x="200" y="850" width="260" height="68" rx="6" fill="#1a1505" stroke="#eab308" stroke-width="1.5"/>
+<text class="nm" x="220" y="882" fill="#eab308">commit OK</text>
+<text class="sm" x="220" y="904">改碼與文件同批落地</text>
+
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e1"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e1"/></animateMotion></circle>
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" begin="-0.5s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" begin="-0.5s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion></circle>
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" begin="-1s" repeatCount="indefinite"><mpath href="#e3"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" begin="-1s" repeatCount="indefinite"><mpath href="#e3"/></animateMotion></circle>
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" begin="-1.5s" repeatCount="indefinite"><mpath href="#e4"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" begin="-1.5s" repeatCount="indefinite"><mpath href="#e4"/></animateMotion></circle>
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" begin="-0.25s" repeatCount="indefinite"><mpath href="#e5"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" begin="-0.25s" repeatCount="indefinite"><mpath href="#e5"/></animateMotion></circle>
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" begin="-0.75s" repeatCount="indefinite"><mpath href="#e6"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" begin="-0.75s" repeatCount="indefinite"><mpath href="#e6"/></animateMotion></circle>
+<circle r="8" fill="#10b981" opacity="0.22"><animateMotion dur="2s" begin="-1.25s" repeatCount="indefinite"><mpath href="#e7"/></animateMotion></circle>
+<circle r="4" fill="#10b981"><animateMotion dur="2s" begin="-1.25s" repeatCount="indefinite"><mpath href="#e7"/></animateMotion></circle>
+<circle r="8" fill="#3b82f6" opacity="0.22"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion></circle>
+<circle r="4" fill="#3b82f6"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion></circle>
+<circle r="8" fill="#3b82f6" opacity="0.22"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion></circle>
+<circle r="4" fill="#3b82f6"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e8"/></animateMotion></circle>
+<circle r="8" fill="#ef4444" opacity="0.22"><animateMotion dur="8s" begin="-2s" repeatCount="indefinite"><mpath href="#e9"/></animateMotion></circle>
+<circle r="4" fill="#ef4444"><animateMotion dur="8s" begin="-2s" repeatCount="indefinite"><mpath href="#e9"/></animateMotion></circle>
+<circle r="8" fill="#eab308" opacity="0.22"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion></circle>
+<circle r="4" fill="#eab308"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion></circle>
+<circle r="8" fill="#eab308" opacity="0.22"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion></circle>
+<circle r="4" fill="#eab308"><animateMotion dur="8s" begin="-4s" repeatCount="indefinite"><mpath href="#e10"/></animateMotion></circle>
+
+<line x1="80" y1="995" x2="1360" y2="995" stroke="#334155" stroke-width="1" opacity="0.5"/>
+<line x1="80" y1="1022" x2="128" y2="1022" stroke="#10b981" stroke-width="2"/>
+<text class="al" x="138" y="1027">main</text>
+<line x1="250" y1="1022" x2="298" y2="1022" stroke="#3b82f6" stroke-width="1.5"/>
+<text class="al" x="308" y="1027">load</text>
+<line x1="400" y1="1022" x2="448" y2="1022" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text class="al" x="458" y="1027">gate 擋回</text>
+<line x1="610" y1="1022" x2="658" y2="1022" stroke="#eab308" stroke-width="1.5" stroke-dasharray="6,3"/>
+<text class="al" x="668" y="1027">所學回流（dogfood）</text>
+</svg>

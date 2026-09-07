@@ -31,6 +31,12 @@
 - **修正一項翻譯錯誤**：邊標籤遮罩與連線的間隙原寫「6–10px」（讀成上下限），
   上游 diagram-design 原文是 minimum 6px、擁擠時 push to 8–10px —— **6 是下限不是區間**。
   照誤寫版判定，間隙 12px 的正常圖會被判不合格。已改為 ≥6px 並在 contract 記下原委
+- **`diagrams/` 新增 5 張 GIF**，把 `tech-diagram-gif` 能畫的類型（4 種風格 × 2 種
+  動畫模式）各出一張：Style 8 / Style 2 的傳播路徑圖、Style 11 事件流地鐵圖、
+  Style 12 事故排查、以及建置→營運五幕敘事動畫。Style 11 / 12 需要 Kafka 拓撲與
+  監控數據，claude-dd 沒有，用示範情境並在圖上標明非實況。
+  手寫 SVG 來源進 `diagrams/src/`（與腳本產生的 SVG 不同，那是產物、這是來源），
+  `diagrams/src/CLAUDE.md` 補上兩類來源的區分
 - **vendor intake 清單補「只借概念、不抄檔案」的歸屬規則**：歸屬要精確到段落／項目，
   不可整節掛名。判準是「能逐條指出哪一段來自誰」。同輪把該 skill 的量化數字從三份手抄
   （第 1 步、第 3 步、Taste Gate）收成一份 —— contract 是唯一來源，SKILL.md 只留
