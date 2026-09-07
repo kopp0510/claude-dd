@@ -1,7 +1,7 @@
 # Composition Quality Contract
 
 > Vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，LICENSE.txt 見上層目錄）。
-> **適用範圍**：量化預算表與 layout grammar 併入 SKILL.md 第 4 步自檢；文末 `validate_svg.py` 驗證指令屬其 Python 管線，不適用本 skill。
+> **適用範圍**：量化預算表與 layout grammar 供 SKILL.md 第 3 步撰寫時遵循、第 4 步照「產出前檢查清單（Taste Gate）」判定；文末 `validate_svg.py` 驗證指令屬其 Python 管線，不適用本 skill。
 
 This contract applies to every visual style. Style references control color,
 typography, material, corner radius, and decorative treatment. They never
@@ -65,6 +65,17 @@ node spacing, and 20px minimum container gutter.
 2. **連線不得穿過非端點的節點** — 預設繞路。真的無法繞（如橫貫的底部服務列）時：
    該線改虛線 `stroke-dasharray="4,3"` 表示「只是路過、不是互動」，
    標籤移到可見端，箭頭只落在真正的終點。
+
+### 與上表衝突時取嚴
+
+上表「Node-to-node whitespace 40px minimum」是上游 showcase profile 的**不及格線**。
+本 skill 的節點間距閘門取嚴用 **80px**（`svg-layout-best-practices.md` 的
+Universal Layout Rules「Minimum clearance between components: 80px」）——
+SKILL.md 第 3 步與 Taste Gate 只寫 80px，不再出現 40px，避免同一張圖同時判過與不過。
+
+標籤相關的三個數字量的不是同一件事，不可互相取代：遮罩與**自己那條線**的可見間隙 6–10px
+（上節）、標籤相對連線的垂直偏移 5–10px（`svg-layout-best-practices.md`）、
+邊標籤與**無關幾何**的淨空 ≥4px（上表）。
 
 ## Layout grammar
 

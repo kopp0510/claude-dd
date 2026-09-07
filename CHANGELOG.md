@@ -12,6 +12,18 @@
 
 ### Added
 
+- **`tech-diagram-gif` 收編 diagram-design 的四項規則**（借鏡自
+  [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design)，MIT，
+  概念改寫未 vendor 任何檔案，歸屬記在該 skill 的 `LICENSE.txt`）：硬閘門新增
+  「先判斷該不該畫」、元素數量預算（節點 ≤9 / 連線 ≤12 / 強調色 ≤2 / 分組 ≤4 / 註解框 ≤2）、
+  連線可量測規則（標籤間隙 6–10px、port ≥12px、遮罩 z-order、不穿越非端點節點）、
+  「產出前檢查清單（Taste Gate）」20 項。檢查清單**依判定時機與手段分五組**（第 1 步數清單 /
+  第 4 步算座標 / 第 4 步看截圖 / 第 5、6 步交付），避免出現「該項要到後面步驟才有素材可判」
+  或「第 4 步才發現數量超標只能整份重來」。未採用其 python 幾何驗證腳本（不塞 runtime 依賴）、
+  HTML 靜態交付（本 skill 只交 GIF）與 39 型 reference（使用率盤點制）
+- 同輪順帶定調：節點間距**取嚴為 80px**（`svg-layout-best-practices` 的 Universal
+  Layout Rules），contract 表列的 40px 是上游 showcase 不及格線，不再出現在閘門裡
+
 - **CI 迴圈步數第五方檢查**：既有的四方一致只數**編號清單**，使用者實際看到的兩類
   文案不在範圍 — 安裝腳本印出的「N 步開發迴圈」，以及散落各處的一行式箭頭摘要。
   第五方補上這兩類：箭頭摘要先合併續行，箭頭 ≥3 且同時含 `commit` 與 `review`
