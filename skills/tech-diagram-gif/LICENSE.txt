@@ -19,3 +19,18 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Additional attribution
+----------------------
+
+The "元素數量預算" and "連線可量測規則" sections in
+references/composition-quality-contract.md, and the "產出前檢查清單 (Taste Gate)"
+section in SKILL.md, are adapted (rewritten in Traditional Chinese, not copied
+verbatim) from concepts in:
+
+  diagram-design — https://github.com/cathrynlavery/diagram-design
+  MIT License, Copyright (c) 2025 Cathryn Lavery
+
+No source files from that project are vendored here.
