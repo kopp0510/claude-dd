@@ -166,6 +166,12 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 號稱 9 萬星但建立僅半年、forks 為整數 → 採用度存疑；且需 `npm -g` binary + Python runtime → 第 3、4 項直接擋下。
 
+> **只借概念、不抄檔案時**（本表第 2、4、5 項不適用，授權仍要處理）：歸屬範圍**精確到段落／項目**，
+> 不可整節掛名。2026-09-07 `tech-diagram-gif` 借鏡 diagram-design（MIT）時，LICENSE.txt 把整節
+> 「產出前檢查清單」掛到對方名下 — 實際只有四項 remove-test 是借的，其餘來自本 skill 與
+> fireworks-tech-graph，同時構成**過度歸屬**（掛了不是人家的）與**不足歸屬**（漏掉真的借的硬閘門 1）。
+> 判準：能逐條指出「哪一段來自誰」才算寫對；寫不出來就是範圍還沒想清楚。commit b28c22c 已修。
+
 ## 殘留清理（手動）
 
 `install-dd-pipeline.sh` 只「部署」`BUILTIN_SKILLS`，**不會清掉**外部來源（如 tresor、舊版安裝包）放進 `~/.claude/skills/` 的殘留。已知會污染目錄的型態：
