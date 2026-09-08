@@ -1,6 +1,6 @@
 ---
 name: task-planner
-description: 微任務規劃專家，將設計拆分為依賴排序的最小可執行任務。當提到任務拆解、微任務、task breakdown、工作分解時自動啟用。
+description: 微任務規劃專家，將設計拆分為依賴排序的最小可執行任務。當提到任務拆解、微任務、task breakdown、工作分解時啟用；或動手前判斷出這件工作要跨多輪 8 步開發迴圈（多個功能段落）才做得完時主動啟用。一輪迴圈內做得完的工作不啟用。
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
