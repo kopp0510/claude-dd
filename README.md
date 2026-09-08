@@ -60,7 +60,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 2. Install 10 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
-5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). Prints `Plugin 檔案不存在` and moves on if a plugin isn't already on disk, and `版本無從判定…跳過` if its version can be resolved from neither `plugin.json` nor `installed_plugins.json`
+5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). Prints `Plugin 檔案不存在` and moves on if a plugin isn't already on disk, and `…都取不到版本字串，跳過` (plus a hint naming the `claude plugin install` command to run) if a version string can be read from neither `plugin.json` nor `installed_plugins.json`
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 

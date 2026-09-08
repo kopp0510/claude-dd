@@ -16,11 +16,16 @@
   路線，不 vendor 進本 repo）：補上「怎麼跑一輪 skill 開發」— 訪談 → 草稿 →
   同一批測試題跑「有 skill / 無 skill」兩組對照 → 評分 → 迭代，與既有
   `writing-great-skills`（純寫作觀念參考）互補而非重疊。
-  連帶修 `install_plugins()`：`plugin.json` 缺 `version` 欄位時（skill-creator 即如此）
-  改讀 `installed_plugins.json` 裡 Claude Code 記的值（缺 version 時它填內容雜湊），
-  jq 與 python3 兩條路徑等價；兩邊都查不到才跳過，訊息由「plugin.json 版本解析失敗」
-  改為「版本無從判定（plugin.json 無 version 欄位且未安裝過，或檔案損毀）」。
-  **不自行編版本號** — `installPath` 用它組 cache 路徑，編錯會指向不存在的目錄
+  連帶修 `install_plugins()` 三處：①`plugin.json` 缺 `version` 欄位時（skill-creator
+  即如此）改讀 `installed_plugins.json` 裡 Claude Code 記的值（缺 version 時它填內容
+  雜湊）②兩處讀取都加**型別護欄，只接受 JSON 字串** — 沒有它時 `"version": null` 在
+  jq 印 `null`（被守衛擋下）、在 python3 印 `None`（**繞過守衛**，寫出
+  `installPath=.../None` 這種指向不存在目錄的紀錄），兩路徑不等價 ③跳過訊息改為只陳述
+  「兩個檔都取不到版本字串」並附上該跑的 `claude plugin install` 指令，不再宣稱成因 —
+  走到那裡的情況有四種（未安裝過／檔案損毀／entry 是空陣列／entry 在但 version 非字串），
+  腳本分辨不出時就不講死。**不自行編版本號** — `installPath` 用它組 cache 路徑，
+  編錯會指向不存在的目錄。等價性以 26 個邊界案例實測（plugin.json 10 例 +
+  installed_plugins.json 16 例），jq 與 python3 兩路徑 0 分歧
 
 - **`tech-diagram-gif` 收編 diagram-design 的四項規則**（借鏡自
   [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design)，MIT，

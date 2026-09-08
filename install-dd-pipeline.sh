@@ -732,31 +732,46 @@ PYEOF
         fi
 
         # 讀取版本號（解析失敗時跳過該 plugin，不中止安裝）
+        # 兩條路徑都只接受 JSON 字串，非字串（null / 數字 / array / object）一律回空字串
+        # 當成「這裡沒有版本」。少了這道型別護欄兩路徑會不等價：`"version": null` 在
+        # jq 印出 "null"、在 python3 印出 "None"，後者會繞過下方守衛寫出
+        # installPath=.../None 這種指向不存在目錄的紀錄。
         local version=""
         if command_exists "jq"; then
-            version=$(jq -r '.version' "$plugin_json" 2>/dev/null) || version=""
+            version=$(jq -r '.version | if type == "string" then . else "" end' "$plugin_json" 2>/dev/null) || version=""
         else
-            version=$(PLUGIN_JSON="$plugin_json" python3 -c "import json, os; print(json.load(open(os.environ['PLUGIN_JSON']))['version'])" 2>/dev/null) || version=""
-        fi
-        # plugin.json 沒有 version 欄位時（官方 skill-creator 即如此，marketplace
-        # 目錄與 cache 兩份都沒有），改讀 installed_plugins.json 裡 Claude Code 自己
-        # 記的值 — 缺 version 時它填內容雜湊（實測 skill-creator 為 85cce0381e78）。
-        # 不可自行編一個版本號：下方 installPath 用它組出 cache 路徑，編錯會指向不存在
-        # 的目錄。兩邊都查不到 = 該 plugin 從未安裝過，維持原本的跳過行為。
-        if { [ -z "$version" ] || [ "$version" = "null" ]; } && [ -f "$installed_file" ]; then
-            if command_exists "jq"; then
-                version=$(jq -r --arg key "$plugin_key" '.plugins[$key][0].version // ""' "$installed_file" 2>/dev/null) || version=""
-            else
-                version=$(INSTALLED_JSON="$installed_file" PLUGIN_KEY="$plugin_key" python3 -c "
+            version=$(PLUGIN_JSON="$plugin_json" python3 -c '
 import json, os
-data = json.load(open(os.environ['INSTALLED_JSON']))
-entry = (data.get('plugins') or {}).get(os.environ['PLUGIN_KEY']) or [{}]
-print(entry[0].get('version') or '')
-" 2>/dev/null) || version=""
+value = json.load(open(os.environ["PLUGIN_JSON"])).get("version")
+print(value if isinstance(value, str) else "")
+' 2>/dev/null) || version=""
+        fi
+        # plugin.json 沒有可用 version 時（官方 skill-creator 即如此，marketplace
+        # 目錄與 cache 兩份都沒有這個欄位），改讀 installed_plugins.json 裡 Claude Code
+        # 自己記的值 — 缺 version 時它填內容雜湊（實測 skill-creator 為 85cce0381e78）。
+        # 不可自行編一個版本號：下方 installPath 用它組出 cache 路徑，編錯會指向不存在
+        # 的目錄。同樣的型別護欄，理由同上。
+        if [ -z "$version" ]; then
+            if command_exists "jq"; then
+                version=$(jq -r --arg key "$plugin_key" '.plugins[$key][0].version | if type == "string" then . else "" end' "$installed_file" 2>/dev/null) || version=""
+            else
+                version=$(INSTALLED_JSON="$installed_file" PLUGIN_KEY="$plugin_key" python3 -c '
+import json, os
+data = json.load(open(os.environ["INSTALLED_JSON"]))
+entry = (data.get("plugins") or {}).get(os.environ["PLUGIN_KEY"]) or [{}]
+value = entry[0].get("version") if isinstance(entry[0], dict) else None
+print(value if isinstance(value, str) else "")
+' 2>/dev/null) || version=""
             fi
         fi
-        if [ -z "$version" ] || [ "$version" = "null" ]; then
-            echo -e "$tree_char $plugin: ${YELLOW}${WARN} 版本無從判定（plugin.json 無 version 欄位且未安裝過，或檔案損毀），跳過${NC}"
+        # 只陳述「查過哪兩個地方、都沒拿到」，不宣稱成因 — 走到這裡的情況不只一種
+        # （未安裝過／檔案損毀／entry 是空陣列／entry 在但 version 不是字串），
+        # 腳本分辨不出是哪一種時就不要講死（同 mcp_scope() 的 unknown 處理）。
+        if [ -z "$version" ]; then
+            local cont_char="│  "
+            [ "$i" -eq "$count" ] && cont_char="   "
+            echo -e "$tree_char $plugin: ${YELLOW}${WARN} plugin.json 與 installed_plugins.json 都取不到版本字串，跳過${NC}"
+            echo -e "$cont_char （若尚未安裝過，先跑 claude plugin install ${plugin}@${PLUGINS_MARKETPLACE}）"
             continue
         fi
 
