@@ -103,6 +103,7 @@ OPTIONAL_MCP=(
 # 官方 Plugins
 OFFICIAL_PLUGINS=(
     "claude-md-management"
+    "skill-creator"
 )
 
 PLUGINS_MARKETPLACE="claude-plugins-official"
@@ -266,7 +267,7 @@ show_help() {
     echo "安裝內容："
     echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用）"
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
-    echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（CLAUDE.md 管理工具，巢狀 CLAUDE.md 維護依賴）"
+    echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（claude-md-management：巢狀 CLAUDE.md 維護依賴；skill-creator：skill 建立與 eval）"
     echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：8 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
@@ -737,8 +738,25 @@ PYEOF
         else
             version=$(PLUGIN_JSON="$plugin_json" python3 -c "import json, os; print(json.load(open(os.environ['PLUGIN_JSON']))['version'])" 2>/dev/null) || version=""
         fi
+        # plugin.json 沒有 version 欄位時（官方 skill-creator 即如此，marketplace
+        # 目錄與 cache 兩份都沒有），改讀 installed_plugins.json 裡 Claude Code 自己
+        # 記的值 — 缺 version 時它填內容雜湊（實測 skill-creator 為 85cce0381e78）。
+        # 不可自行編一個版本號：下方 installPath 用它組出 cache 路徑，編錯會指向不存在
+        # 的目錄。兩邊都查不到 = 該 plugin 從未安裝過，維持原本的跳過行為。
+        if { [ -z "$version" ] || [ "$version" = "null" ]; } && [ -f "$installed_file" ]; then
+            if command_exists "jq"; then
+                version=$(jq -r --arg key "$plugin_key" '.plugins[$key][0].version // ""' "$installed_file" 2>/dev/null) || version=""
+            else
+                version=$(INSTALLED_JSON="$installed_file" PLUGIN_KEY="$plugin_key" python3 -c "
+import json, os
+data = json.load(open(os.environ['INSTALLED_JSON']))
+entry = (data.get('plugins') or {}).get(os.environ['PLUGIN_KEY']) or [{}]
+print(entry[0].get('version') or '')
+" 2>/dev/null) || version=""
+            fi
+        fi
         if [ -z "$version" ] || [ "$version" = "null" ]; then
-            echo -e "$tree_char $plugin: ${YELLOW}${WARN} plugin.json 版本解析失敗，跳過${NC}"
+            echo -e "$tree_char $plugin: ${YELLOW}${WARN} 版本無從判定（plugin.json 無 version 欄位且未安裝過，或檔案損毀），跳過${NC}"
             continue
         fi
 

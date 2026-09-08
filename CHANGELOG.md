@@ -12,6 +12,16 @@
 
 ### Added
 
+- **`skill-creator` 納入 `OFFICIAL_PLUGINS`**（Anthropic 官方 plugin，走 `/plugin`
+  路線，不 vendor 進本 repo）：補上「怎麼跑一輪 skill 開發」— 訪談 → 草稿 →
+  同一批測試題跑「有 skill / 無 skill」兩組對照 → 評分 → 迭代，與既有
+  `writing-great-skills`（純寫作觀念參考）互補而非重疊。
+  連帶修 `install_plugins()`：`plugin.json` 缺 `version` 欄位時（skill-creator 即如此）
+  改讀 `installed_plugins.json` 裡 Claude Code 記的值（缺 version 時它填內容雜湊），
+  jq 與 python3 兩條路徑等價；兩邊都查不到才跳過，訊息由「plugin.json 版本解析失敗」
+  改為「版本無從判定（plugin.json 無 version 欄位且未安裝過，或檔案損毀）」。
+  **不自行編版本號** — `installPath` 用它組 cache 路徑，編錯會指向不存在的目錄
+
 - **`tech-diagram-gif` 收編 diagram-design 的四項規則**（借鏡自
   [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design)，MIT，
   概念改寫未 vendor 任何檔案，歸屬記在該 skill 的 `LICENSE.txt`）：硬閘門新增

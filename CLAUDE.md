@@ -127,6 +127,13 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   區分 `none`（確定沒有）／`unparseable`（檔案損毀，無從判定）／`unknown`（缺 jq
   與 python3，只有字串證據）；jq 與 python3 兩條路徑須逐項等價（型別護欄要對齊），
   否則同一台機器裝不裝 jq 會得到不同結論
+- `OFFICIAL_PLUGINS` 新增項目前先確認該 plugin 的 `.claude-plugin/plugin.json`
+  **有沒有 `version` 欄位** — 官方 `skill-creator` 就沒有（marketplace 與 cache 兩份都沒有）。
+  缺 version 時 `install_plugins()` 改讀 `installed_plugins.json` 裡 Claude Code 自己記的值
+  （它填內容雜湊，如 `85cce0381e78`）；**不可自行編版本號**，`installPath` 是用它組出
+  cache 路徑，編錯會指向不存在的目錄。代價是這類 plugin 必須先手動
+  `claude plugin install <name>@claude-plugins-official` 過一次，安裝腳本才登記得起來 —
+  README 兩份的「必要條件」段落須註明此限制
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
