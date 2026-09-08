@@ -42,7 +42,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 - Required MCP: `playwright` — the installer checks for it but will not install it, so set up [playwright MCP](https://github.com/microsoft/playwright-mcp) first
 - **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, reporting "疑似已設定…範圍未知" instead of a real scope. The install still succeeds, so it's easy to miss that you got less than advertised
 - Optional: `ffmpeg` — used by tech-diagram-gif for GIF export. Without it that skill degrades to delivering SVG instead of failing. On macOS: `brew install ffmpeg`
-- The claude-md-management plugin must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one
+- The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. `skill-creator` additionally has to have been **installed at least once** (`claude plugin install skill-creator@claude-plugins-official`): its `plugin.json` carries no `version` field, so the installer falls back to the version Claude Code recorded in `installed_plugins.json`, and before the first install there is nothing to fall back to
 
 ### First-time install
 
@@ -60,7 +60,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 2. Install 10 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
-5. Register the official plugin (claude-md-management — the dependency behind nested CLAUDE.md maintenance). Prints `Plugin 檔案不存在` and moves on if the plugin isn't already on disk
+5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). Prints `Plugin 檔案不存在` and moves on if a plugin isn't already on disk, and `版本無從判定…跳過` if its version can be resolved from neither `plugin.json` nor `installed_plugins.json`
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
@@ -195,6 +195,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | Plugin | Purpose |
 |--------|---------|
 | claude-md-management | Auditing and updating nested CLAUDE.md files (`claude-md-improver` skill + `/revise-claude-md`) — the documentation-maintenance dependency of the 8-step cycle |
+| skill-creator | Authoring skills and measuring them: interview → draft → run the same eval prompts with and without the skill → grade → iterate. Complements `writing-great-skills`, which is the reference for *how to write* one. Its `scripts/quick_validate.py` needs PyYAML (`pip3 install pyyaml`); the rest of the skill works without it |
 
 ### Recommended third-party plugin (not managed by the installer)
 

@@ -41,7 +41,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 - 必要 MCP：`playwright`（腳本只檢查不安裝，請先[安裝 playwright MCP](https://github.com/microsoft/playwright-mcp)）
 - **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過，MCP 檢查退化成字串比對、回報「疑似已設定…範圍未知」而非真實 scope。安裝仍會成功，所以很容易沒注意到拿到的是縮水版
 - 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
-- claude-md-management plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載
+- claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 另需**至少安裝過一次**（`claude plugin install skill-creator@claude-plugins-official`）：它的 `plugin.json` 沒有 `version` 欄位，安裝腳本改讀 `installed_plugins.json` 裡 Claude Code 記下的版本，首次安裝前無值可讀
 
 ### 首次安裝
 
@@ -59,7 +59,7 @@ cd claude-dd
 2. 安裝 10 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
-5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過
+5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；`plugin.json` 與 `installed_plugins.json` 都讀不到版本時印「版本無從判定…跳過」
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
@@ -208,6 +208,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | Plugin | 功能 |
 |--------|------|
 | claude-md-management | 巢狀 CLAUDE.md 稽核與更新（`claude-md-improver` skill + `/revise-claude-md`）— 8 步迴圈的文件維護依賴 |
+| skill-creator | skill 撰寫與量測：訪談 → 草稿 → 同一批測試題跑「有 skill / 無 skill」兩組 → 評分 → 迭代。與 `writing-great-skills`（純寫作參考）互補。其 `scripts/quick_validate.py` 需要 PyYAML（`pip3 install pyyaml`），其餘功能不受影響 |
 
 ### 推薦第三方 Plugin（安裝腳本不管理）
 
