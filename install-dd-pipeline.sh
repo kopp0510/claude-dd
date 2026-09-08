@@ -376,6 +376,48 @@ check_builtin_skills() {
     echo ""
 }
 
+# 判斷 plugin 在 settings.json 的啟用狀態，回傳
+# enabled / disabled / none / unparseable / unknown（比照 mcp_scope() 的降級分級）。
+# 不可用字串 grep 下定論：`enabledPlugins` 是 {key: bool}，停用是「鍵在、值為 false」，
+# grep 只看得到鍵在 —— 實測 ralph-wiggum 值為 false 卻被舊版回報「已啟用」。
+plugin_enabled_state() {
+    local key="$1" file="$2" out=""
+
+    file_exists "$file" || { echo "none"; return; }
+
+    if command_exists "jq"; then
+        # 型別護欄與 python3 分支對齊：頂層或 enabledPlugins 非物件時回 none，
+        # 而不是讓 filter 報錯（報錯會被下方誤讀成 unparseable）
+        out=$(jq -r --arg key "$key" '
+            if type != "object" then "none"
+            else (.enabledPlugins // {}) as $e
+                | if ($e | type) != "object" then "none"
+                  elif $e[$key] == true then "enabled"
+                  elif $e[$key] == false then "disabled"
+                  else "none" end
+            end' "$file" 2>/dev/null) || out=""
+    elif command_exists "python3"; then
+        out=$(PLUGIN_KEY="$key" SETTINGS_FILE="$file" python3 -c '
+import json, os, sys
+try:
+    with open(os.environ["SETTINGS_FILE"]) as f:
+        data = json.load(f)
+except Exception:
+    sys.exit(1)
+enabled = data.get("enabledPlugins") if isinstance(data, dict) else None
+value = enabled.get(os.environ["PLUGIN_KEY"]) if isinstance(enabled, dict) else None
+print("enabled" if value is True else "disabled" if value is False else "none")
+' 2>/dev/null) || out=""
+    else
+        # 兩者皆缺：只有字串證據，鍵在也證明不了是 true 還是 false
+        grep -q "\"$key\"" "$file" 2>/dev/null && echo "unknown" || echo "none"
+        return
+    fi
+
+    # 空輸出 = 解析失敗或空檔：回報「無從判定」而非「沒啟用」
+    [ -n "$out" ] && echo "$out" || echo "unparseable"
+}
+
 # 檢查 Plugins（僅檢查，不安裝）
 check_plugins() {
     print_step "5/7" "檢查官方 Plugins"
@@ -390,11 +432,13 @@ check_plugins() {
         local tree_char="├──"
         [ "$i" -eq "$count" ] && tree_char="└──"
 
-        if [ -f "$settings_file" ] && grep -q "\"$plugin_key\"" "$settings_file"; then
-            echo -e "$tree_char $plugin: ${GREEN}${CHECK} 已啟用${NC}"
-        else
-            echo -e "$tree_char $plugin: ${YELLOW}未啟用${NC}"
-        fi
+        case "$(plugin_enabled_state "$plugin_key" "$settings_file")" in
+            enabled)     echo -e "$tree_char $plugin: ${GREEN}${CHECK} 已啟用${NC}" ;;
+            disabled)    echo -e "$tree_char $plugin: ${YELLOW}已停用（settings.json 記為 false）${NC}" ;;
+            unparseable) echo -e "$tree_char $plugin: ${YELLOW}${WARN} settings.json 無法解析，啟用狀態無從判定${NC}" ;;
+            unknown)     echo -e "$tree_char $plugin: ${YELLOW}${WARN} 缺 jq 與 python3，疑似已設定但啟用與否未知${NC}" ;;
+            *)           echo -e "$tree_char $plugin: ${YELLOW}未啟用${NC}" ;;
+        esac
     done
 
     echo ""
