@@ -57,6 +57,16 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
    - <依偵測結果填入：playwright 真的開瀏覽器登入、操作 UI、截圖驗證前端可用>
      - 截圖一律存 `.screenshots/`（已 gitignore）；勿丟專案根目錄
+     - ⚠️ **React 專案**：`browser_click` / `browser_fill_form` 常常不觸發 onClick 與
+       受控輸入（工具回報成功但畫面 state 沒變，照著它的回報就會宣稱「測過了」其實沒點到）。
+       改用 `browser_evaluate` 直接操作 DOM；填欄位要用 native value setter 再 dispatch
+       `input`，否則 React 讀不到值：
+       ```js
+       const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+       set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true }));
+       ```
+       表單送不出去時（後端零請求）改用 `form.requestSubmit()`。
+       **判斷有沒有真的送出，看後端有沒有收到請求，不是看畫面。**
 6. **再 commit**（最終版本）
 7. **沉澱本輪所學**（有才做）— 本輪若留下踩雷、指令或慣例，用
    claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
