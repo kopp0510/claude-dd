@@ -120,9 +120,12 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
   README 變英文不改變本專案的註解語言 — 專案 CLAUDE.md（衝突順序第 3 位）優先於
   全域模板 §1.1 程式碼註解列的「跟隨 README 語言」（第 5 位）；回應語言在 §1.1
   本就固定繁中，與 README 語言無關
-- 查 `~/.claude.json` 的內容（MCP 等）務必真正解析 JSON 判斷 scope，**不可用字串 grep** —
-  該檔同時存放所有專案的 scoped 設定，純比對會把別的專案的設定誤判為已安裝
-  （`mcp_scope()` 為此而寫：jq → python3 → 退化標示無法判定）
+- 查 `~/.claude.json`（MCP）與 `~/.claude/settings.json`（plugin 啟用狀態）務必
+  真正解析 JSON，**不可用字串 grep** — 前者同時存放所有專案的 scoped 設定，純比對會把
+  別的專案的設定誤判為已安裝；後者的 `enabledPlugins` 是 `{key: bool}`，**停用是
+  「鍵在、值為 false」**，grep 只看得到鍵在（實測 `ralph-wiggum` 值為 `false` 卻被舊版
+  回報「已啟用」）。兩者各有專屬 helper：`mcp_scope()` 與 `plugin_enabled_state()`，
+  同為 jq → python3 → 退化標示無法判定
 - 檢查類輸出的鐵則：**不確定就說不確定，不可退化成有把握的斷言**。`mcp_scope()`
   區分 `none`（確定沒有）／`unparseable`（檔案損毀，無從判定）／`unknown`（缺 jq
   與 python3，只有字串證據）；jq 與 python3 兩條路徑須逐項等價（型別護欄要對齊），

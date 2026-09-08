@@ -65,6 +65,13 @@
 
 ### Fixed
 
+- **`--check` 把停用中的 plugin 回報成「已啟用」**：`check_plugins()` 原本用
+  `grep -q "\"$plugin_key\""` 判斷 settings.json，但 `enabledPlugins` 是
+  `{key: bool}`，**停用是「鍵在、值為 false」**，grep 只看得到鍵在。實測本機
+  `ralph-wiggum` 值為 `false` 卻被報成「✅ 已啟用」。新增 `plugin_enabled_state()`
+  比照 `mcp_scope()` 的分級：`enabled` / `disabled` / `none` / `unparseable`
+  （檔案損毀，無從判定）/ `unknown`（缺 jq 與 python3，只有字串證據、分不出
+  true 與 false）。jq 與 python3 兩路徑以 15 例邊界測試驗過 0 分歧
 - 六張 GIF 的循環接點會跳：球的 `begin` 是 `dur` 的整數倍時，「跑完一圈跳回起點」
   剛好落在 GIF 循環接點上。另外 `dev-loop` 的框間連線只有 20px，而球含光暈直徑 16px，
   停在終點時整個箭頭被蓋住 — 那 5 條短連線改為只留箭頭
