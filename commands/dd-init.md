@@ -66,7 +66,9 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
        set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true }));
        ```
        表單送不出去時（後端零請求）改用 `form.requestSubmit()`。
-       **判斷有沒有真的送出，看後端有沒有收到請求，不是看畫面。**
+       **判斷有沒有真的送出，看後端有沒有收到請求，不是看畫面。** 拿不到後端 log 時，
+       在瀏覽器裡數請求數也算數（驗「前端擋下來、根本沒送出」特別好用）：
+       `performance.getEntriesByType('resource').filter(r => r.name.includes('/api/x')).length`
 6. **再 commit**（最終版本）
 7. **沉澱本輪所學**（有才做）— 本輪若留下踩雷、指令或慣例，用
    claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
