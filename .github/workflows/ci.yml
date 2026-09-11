@@ -423,12 +423,12 @@ jobs:
           echo doc > 模組/CLAUDE.md
           expect "補上放行" pass commit u5
 
-          # 11. 根目錄的程式碼（路徑沒有斜線，目錄算成「.」）和含空白的目錄名也要追得到
+          # 11. 根目錄的程式碼（路徑沒有斜線，目錄算成「.」）和含空白的目錄名也要查
           echo 1 > top.js && mkdir "my dir" && echo 1 > "my dir/a.js"
           expect "SKIP 根目錄與含空白目錄的程式碼" pass skip_commit t1
           echo t >> README.md
           expect "之後的正常 commit 要擋這兩個目錄" block commit t2
-          # 整行比對：提示文字裡也有「  CLAUDE.md（」開頭的行，用 said 會誤中
+          # 整行比對：根目錄這時還沒有 CLAUDE.md，要列在「缺少」清單；said 是子字串比對，「  CLAUDE.md（」開頭的行也會中
           grep -qx '  CLAUDE.md' "$OUT" || { echo "❌ 輸出沒有列出根目錄的 CLAUDE.md"; sed 's/^/    /' "$OUT"; fail=1; }
           said "my dir/CLAUDE.md"
           echo doc > CLAUDE.md
@@ -438,6 +438,17 @@ jobs:
           expect "補上放行" pass commit t4
           echo t >> README.md
           expect "之後不再追討這兩個目錄" pass commit t5
+          # 根目錄已經有 CLAUDE.md 時：它的路徑是其他目錄 CLAUDE.md 路徑的字尾，別的目錄更新 CLAUDE.md 不能抵掉它
+          echo 2 >> top.js
+          expect "SKIP 改根目錄程式碼" pass skip_commit t6
+          echo more >> "my dir/CLAUDE.md"
+          expect "只 staged my dir/CLAUDE.md：根目錄還欠，照擋" block commit t7
+          said "  CLAUDE.md（段落起點之後"
+          echo more >> CLAUDE.md
+          expect "補上根目錄放行" pass commit t8
+          # 同批 staged 這條路也要認得含空白的目錄名
+          echo 1 > "my dir/b.js" && echo more2 >> "my dir/CLAUDE.md"
+          expect "含空白目錄的程式碼和它的 CLAUDE.md 同批：放行" pass commit t9
 
           exit $fail
 
