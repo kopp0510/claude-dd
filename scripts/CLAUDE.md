@@ -36,7 +36,13 @@
 - 新增要部署的腳本：檔案放這裡 + 加入 `DD_SCRIPTS` 陣列 + `--force` 重新部署
 - 腳本必須通過 `shellcheck -S warning` 且可在 macOS bash 3.2 執行。CI 的 ShellCheck step
   是逐檔列出的（`.github/workflows/ci.yml`），新增腳本要自己加進清單，否則 CI 根本不會檢查它
+- 變數後面緊接全形字（`）`、`：`）一律寫 `${var}`。`$var）` 在 macOS bash 3.2 會把全形字吃掉一半：
+  變數值不見、只剩亂碼。實測 `zh_TW.UTF-8`、`en_US.UTF-8` 都會，macOS 的 `C.UTF-8` 與 Linux bash 5.2
+  （`C.UTF-8`）不會；不報錯，shellcheck 連 style 級都不警告（2026-09-11，gate 的 `rm ${BASE_FILE}）` 踩過）
 - gate 的檢查邏輯改動時，同步檢視全域模板 §3.9 對 gate 行為的描述
+- 改了 gate 或它的 CI 情境，要故意把 gate 改壞一行（例如拿掉 `grep -qxF "$md"` 的 `-x`），用上面的本機跑法
+  確認會出現 ❌。全綠不代表有在檢查：2026-09-11 拿掉 `-x`、讓 staged 清單被空白拆開，這兩種改壞法
+  在當時的 57 個情境下照樣全過，補到 61 個才抓到
 
 ## 與上層的關係
 
