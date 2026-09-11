@@ -423,6 +423,22 @@ jobs:
           echo doc > 模組/CLAUDE.md
           expect "補上放行" pass commit u5
 
+          # 11. 根目錄的程式碼（路徑沒有斜線，目錄算成「.」）和含空白的目錄名也要追得到
+          echo 1 > top.js && mkdir "my dir" && echo 1 > "my dir/a.js"
+          expect "SKIP 根目錄與含空白目錄的程式碼" pass skip_commit t1
+          echo t >> README.md
+          expect "之後的正常 commit 要擋這兩個目錄" block commit t2
+          # 整行比對：提示文字裡也有「  CLAUDE.md（」開頭的行，用 said 會誤中
+          grep -qx '  CLAUDE.md' "$OUT" || { echo "❌ 輸出沒有列出根目錄的 CLAUDE.md"; sed 's/^/    /' "$OUT"; fail=1; }
+          said "my dir/CLAUDE.md"
+          echo doc > CLAUDE.md
+          expect "只補根目錄：my dir 還欠，照擋" block commit t3
+          said "my dir/CLAUDE.md"
+          echo doc > "my dir/CLAUDE.md"
+          expect "補上放行" pass commit t4
+          echo t >> README.md
+          expect "之後不再追討這兩個目錄" pass commit t5
+
           exit $fail
 
       - name: Sandbox 端到端安裝測試（非互動）
