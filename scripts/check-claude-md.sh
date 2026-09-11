@@ -8,7 +8,7 @@
 # 段落起點：SKIP 不是豁免。起點記在 .git/dd-segment-base（worktree 各自一份），之後的正常
 #   commit 會連「起點以來跳過檢查、到現在還沒補 CLAUDE.md」的目錄一起查
 #   --start-segment  段落開始前記起點（還有欠帳時拒絕：起點往後移會把欠帳洗掉）
-#   --segment-base   印出起點，給迴圈步驟 3、4、8 算整段範圍（沒記過就失敗，不印空字串）
+#   --segment-base   印出起點，給迴圈步驟 3、4、8 算整段範圍（沒記過或已失效就失敗，不印空字串）
 
 top=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "❌ check-claude-md.sh：不在 git repo 內"; exit 1; }
 cd "$top" || exit 1
@@ -17,10 +17,17 @@ cd "$top" || exit 1
 CODE_EXT='js|jsx|ts|tsx|mjs|cjs|py|go|rs|java|kt|rb|php|sh|bash|c|h|cpp|hpp|cs|swift|sql|vue|svelte'
 # 任一路徑段命中即排除的目錄
 EXCLUDE_DIRS='(^|/)(\.git|node_modules|dist|build|out|coverage|vendor|\.next|\.screenshots|__pycache__|\.venv|venv|tmp|test-data|migrations)(/|$)'
+# 同一組規則給 awk 用：從環境變數讀，awk 才不會再處理一次反斜線
+export CODE_RE="\\.($CODE_EXT)\$" EXCLUDE_RE="$EXCLUDE_DIRS"
 
 BASE_FILE=$(git rev-parse --git-path dd-segment-base)
 case "$BASE_FILE" in /*) ;; *) BASE_FILE="$top/$BASE_FILE" ;; esac
 EMPTY_TREE=$(git hash-object -t tree /dev/null)   # 還沒有任何 commit 時，起點記成空樹
+
+# git 預設把非 ASCII 路徑加引號跳脫（"src/\344…"），副檔名就比對不到 — 列檔案一律關掉
+gitq() {
+    git -c core.quotePath=false "$@"
+}
 
 # stdin 的檔案清單 → 含程式碼的目錄（去重）
 code_dirs_of() {
@@ -48,62 +55,87 @@ read_base() {
     return 1
 }
 
-# 起點以來「改了程式碼、之後沒有 commit 更新該目錄 CLAUDE.md」的目錄。
-# 照 commit 先後結算：程式碼改動記成欠帳，同一個或更晚的 commit 更新 CLAUDE.md 才算補上。
-# 所以起點再舊也不會變寬鬆 — 較早的 CLAUDE.md 更新抵不掉之後才跳過檢查的程式碼
+# 這個目錄（不含子目錄）在 index 裡還有沒有程式碼檔：程式碼整個刪掉或搬走了，就沒東西要寫。
+# 看 index 不看工作目錄 — 只在工作目錄刪掉、沒 staged 的話，這次 commit 裡其實還在
+still_has_code() {
+    gitq ls-files -- ":(literal)$1" | DIR="$1" awk '
+        { p = $0; if (!sub(/\/[^\/]*$/, "", p)) p = "." }
+        p == ENVIRON["DIR"] && $0 ~ ENVIRON["CODE_RE"] { found = 1; exit }
+        END { exit !found }'
+}
+
+# 起點以來、到 HEAD 為止還沒補 CLAUDE.md 的目錄。
+# 沿著 commit 的祖先關係結算：改程式碼記帳，要由看得到那段程式碼的後代 commit 更新該目錄的
+# CLAUDE.md 才算補上，merge 時把各條線的欠帳合起來。所以起點再舊也不會變寬鬆，
+# 平行分支上看不到那段程式碼的 CLAUDE.md 更新也抵不掉
 owed_dirs() {
-    local range line files="" owed="" md
+    local head range fork
+    head=$(git rev-parse --verify -q HEAD) || return 0
     if [ "$base" = "$EMPTY_TREE" ]; then
-        git rev-parse --verify -q HEAD >/dev/null || return 0
-        range=HEAD
-    elif git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
-        range="$base..HEAD"
+        range=$head
+    elif git merge-base --is-ancestor "$base" "$head" 2>/dev/null; then
+        range="$base..$head"
+    elif fork=$(git merge-base "$base" "$head" 2>/dev/null); then
+        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡（換過分支或改寫過歷史？），改從共同祖先 $fork 算起" >&2
+        range="$fork..$head"
     else
-        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡（換過分支或改寫過歷史？），這次只檢查 staged" >&2
-        echo "   段落開始前重記起點：check-claude-md.sh --start-segment" >&2
+        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡，也找不到共同祖先，這次只檢查 staged" >&2
+        echo "   段落開始前重記起點：$0 --start-segment" >&2
         return 0
     fi
-    # 每個 commit 以一行 \001 開頭，後面是它改到的檔案；結尾多補一行 \001 結算最後一個 commit
-    while IFS= read -r line; do
-        case "$line" in
-            $'\001')
-                owed=$(printf '%s\n%s\n' "$owed" "$(printf '%s\n' "$files" | code_dirs_of)" | grep -v '^$' | sort -u)
-                md=$(printf '%s\n' "$files" | grep -E '(^|/)CLAUDE\.md$' | while IFS= read -r f; do dirname "$f"; done)
-                [ -n "$md" ] && owed=$(printf '%s\n' "$owed" | grep -vxF "$md")
-                files=""
-                ;;
-            ?*)
-                files="$files
-$line"
-                ;;
-        esac
-    done <<EOF
-$(git log --reverse --format='%x01' --name-only --diff-filter=ACMR "$range"; printf '\001\n')
-EOF
-    printf '%s\n' "$owed" | grep -v '^$'
+    # 第一份輸入：每個 commit（\001 開頭那行）新增/修改/改名的檔案；merge 用 -c，只列它自己改的
+    # 第二份輸入：同一段 commit 由舊到新（父一定排在子前面），後面接著它的父 commit
+    HEAD_SHA="$head" awk '
+        function dir(p) { if (!sub(/\/[^\/]*$/, "", p)) p = "."; return p }
+        FILENAME == ARGV[1] {
+            if (substr($0, 1, 1) == "\001") c = substr($0, 2)
+            else if ($0 != "") files[c] = files[c] "\n" $0
+            next
+        }
+        {
+            split("", cur)
+            for (i = 2; i <= NF; i++) {
+                n = split(owed[$i], a, "\n")
+                for (j = 1; j <= n; j++) if (a[j] != "") cur[a[j]] = 1
+            }
+            n = split(files[$1], f, "\n")
+            for (j = 1; j <= n; j++) if (f[j] ~ ENVIRON["CODE_RE"] && f[j] !~ ENVIRON["EXCLUDE_RE"]) cur[dir(f[j])] = 1
+            for (j = 1; j <= n; j++) if (f[j] ~ /(^|\/)CLAUDE\.md$/) delete cur[dir(f[j])]
+            s = ""
+            for (k in cur) s = s "\n" k
+            owed[$1] = s
+        }
+        END {
+            n = split(owed[ENVIRON["HEAD_SHA"]], a, "\n")
+            for (j = 1; j <= n; j++) if (a[j] != "") print a[j]
+        }
+    ' <(gitq log --root -c --format='%x01%H' --name-only --diff-filter=ACMR "$range") \
+      <(git rev-list --reverse --topo-order --parents "$range") \
+        | sort | while IFS= read -r d; do
+            still_has_code "$d" && echo "$d"
+        done
 }
 
 case "$1" in
     --start-segment)
-        if read_base; then
-            owed=$(owed_dirs)
-            if [ -n "$owed" ]; then
-                echo "❌ 還有 commit 跳過檢查、到現在還沒補的 CLAUDE.md，先補完再記新起點："
-                printf '%s\n' "$owed" | while IFS= read -r d; do echo "  $(md_of "$d")"; done
-                echo "（起點往後移會把這筆欠帳洗掉。確定要放棄追蹤：rm $BASE_FILE）"
-                exit 1
-            fi
+        owed=""
+        read_base && owed=$(owed_dirs)
+        if [ -n "$owed" ]; then
+            echo "❌ 還有 commit 跳過檢查、到現在還沒補的 CLAUDE.md，先補完再記新起點："
+            printf '%s\n' "$owed" | while IFS= read -r d; do echo "  $(md_of "$d")"; done
+            echo "（起點往後移會把這筆欠帳洗掉。確定要放棄追蹤：rm ${BASE_FILE}）"
+            exit 1
         fi
         head_or_empty > "$BASE_FILE"
         echo "段落起點：$(cat "$BASE_FILE")"
         exit 0
         ;;
     --segment-base)
-        if read_base; then
+        if read_base && { [ "$base" = "$EMPTY_TREE" ] || git merge-base --is-ancestor "$base" HEAD 2>/dev/null; }; then
             echo "$base"
             exit 0
         fi
-        echo "❌ 還沒記段落起點：段落開始前先跑 check-claude-md.sh --start-segment" >&2
+        echo "❌ 沒有可用的段落起點（沒記過，或起點已不在目前分支的歷史裡）：段落開始前先跑 $0 --start-segment" >&2
         exit 1
         ;;
 esac
@@ -117,7 +149,7 @@ if [ "$SKIP_DOC_CHECK" = "1" ]; then
     exit 0
 fi
 
-staged=$(git diff --cached --name-only --diff-filter=ACMR)
+staged=$(gitq diff --cached --name-only --diff-filter=ACMR)
 staged_dirs=$(printf '%s\n' "$staged" | code_dirs_of)
 owed=""
 read_base && owed=$(owed_dirs)
@@ -130,22 +162,20 @@ owed_hit=0
 while IFS= read -r d; do
     [ -z "$d" ] && continue
     md=$(md_of "$d")
-    in_staged=0
-    printf '%s\n' "$staged_dirs" | grep -qxF "$d" && in_staged=1
-    # 欠帳的目錄後來整個刪掉了：沒東西要寫
-    [ "$in_staged" = 0 ] && [ ! -d "$d" ] && continue
+    # CLAUDE.md 存在且這次一起 staged：這個目錄過關
+    [ -f "$md" ] && printf '%s\n' "$staged" | grep -qxF "$md" && continue
+
+    if printf '%s\n' "$staged_dirs" | grep -qxF "$d"; then
+        reason="該目錄有程式碼變更，但 CLAUDE.md 未一起 staged"
+    else
+        reason="段落起點之後有 commit 跳過檢查改了這裡的程式碼，CLAUDE.md 到現在還沒補"
+        owed_hit=1
+    fi
 
     if [ ! -f "$md" ]; then
         missing="$missing
   $md"
-        [ "$in_staged" = 0 ] && owed_hit=1
-    elif ! printf '%s\n' "$staged" | grep -qxF "$md"; then
-        if [ "$in_staged" = 1 ]; then
-            reason="該目錄有程式碼變更，但 CLAUDE.md 未一起 staged"
-        else
-            reason="段落起點之後有 commit 跳過檢查改了這裡的程式碼，CLAUDE.md 到現在還沒補"
-            owed_hit=1
-        fi
+    else
         stale="$stale
   ${md}（${reason}）"
     fi

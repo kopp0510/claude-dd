@@ -91,12 +91,18 @@
   那些目錄的程式碼就不會被查。rental-line 段落 1 實際發生：第一個 commit 用 SKIP 建了
   `backend/src` 等 4 個沒有 CLAUDE.md 的程式碼目錄，最後一個 commit 沒動程式碼，gate 直接
   放行（約一小時後才手動補上）。用 gate 同一套規則重算 rental-line 的 commit，13 段裡有 8 段
-  有 commit 是跳過檢查才進得去。修法：新增**段落起點**（記在 `.git/dd-segment-base`）——
-  `--start-segment` 在段落開始前記下，忘了記時第一個 SKIP commit 自動記；之後每個正常
-  commit 照 commit 先後結算起點以來的欠帳（改程式碼記帳、之後更新該目錄 CLAUDE.md 才銷帳），
-  所以起點再舊也不會變寬鬆。還有欠帳時 `--start-segment` 拒絕重記（會把欠帳洗掉）；
-  `--segment-base` 印出起點，給迴圈步驟 3、4、8 算整段範圍。CI 新增 22 個情境檢查
-  （含還沒有 HEAD 的第一個 commit、舊起點、換分支後起點失效）
+  有 commit 是跳過檢查才進得去。修法：新增**段落起點**（`git rev-parse --git-path dd-segment-base`，
+  worktree 各自一份）—— `--start-segment` 在段落開始前記下，忘了記時第一個 SKIP commit 自動記；
+  之後每個正常 commit 沿著 commit 的祖先關係結算起點以來的欠帳（改程式碼記帳，要由看得到那段
+  程式碼的後代 commit 更新該目錄 CLAUDE.md 才銷帳，merge commit 自己補的也算），所以起點再舊
+  也不會變寬鬆，平行分支上的 CLAUDE.md 更新也抵不掉。起點被 amend／rebase 改寫時改從共同祖先算；
+  目錄在 index 裡已經沒有程式碼就不再追討；還有欠帳時 `--start-segment` 拒絕重記；
+  `--segment-base` 印出起點給迴圈步驟 3、4、8 算範圍，起點失效就失敗。整段一次掃完，
+  起點到 HEAD 有 1000 個 commit 時約 0.08 秒。CI 新增 52 個情境檢查（含還沒有 HEAD 的第一個
+  commit、舊起點、起點被改寫、merge、程式碼刪掉或搬走、只在工作目錄刪掉）
+- **非 ASCII 路徑完全不檢查**（原始版本就有）：git 預設把中文路徑加引號跳脫（`"功能/\345…"`），
+  結尾變成引號，副檔名永遠比對不到 —— staged `功能/a.js` 又沒有 CLAUDE.md，原始版本 exit 0 放行。
+  列檔案的 git 指令改用 `core.quotePath=false`
 - **`--check` 把停用中的 plugin 回報成「已啟用」**：`check_plugins()` 原本用
   `grep -q "\"$plugin_key\""` 判斷 settings.json，但 `enabledPlugins` 是
   `{key: bool}`，**停用是「鍵在、值為 false」**，grep 只看得到鍵在。實測本機
