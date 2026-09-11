@@ -197,7 +197,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | frontend-design | 前端視覺設計 |
 | review | 綜合審查 wrapper |
 | self-improving-agent | 記憶審計與知識沉澱 |
-| task-planner | 微任務拆解 |
+| task-planner | 功能段落規劃，進度表寫進設計文件 |
 | tech-diagram-gif | 技術圖表繪製與 GIF 匯出（風格規範 vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)） |
 | verification-gate | 完成前驗證閘門（宣稱完成須附新鮮證據） |
 | worktree-manager | Git worktree 隔離 |

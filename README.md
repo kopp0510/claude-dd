@@ -184,7 +184,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | frontend-design | Frontend visual design |
 | review | Combined-review wrapper |
 | self-improving-agent | Memory auditing and knowledge distillation |
-| task-planner | Micro-task breakdown |
+| task-planner | Feature-segment planning, with the progress table written into the design doc |
 | tech-diagram-gif | Technical diagrams with GIF export (style specs vendored from [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)) |
 | verification-gate | Pre-completion gate — claiming done requires fresh evidence |
 | worktree-manager | Git worktree isolation |
