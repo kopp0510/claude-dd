@@ -166,7 +166,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
   *殘餘*：那條是 context 規則不是強制。想敷衍還是過得了。gate 提高的是造假的成本，不是讓造假變不可能。
 - **小改動的摩擦。** 為了一個只想順手改一下的目錄補寫 `CLAUDE.md`，確實是額外成本。
   *對策*：gate 只對程式碼副檔名觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄 —
-  改 markdown、設定檔、資產都不會被擋；檢查點 commit 有 `SKIP_DOC_CHECK=1`。
+  改 markdown、設定檔、資產都不會被擋；檢查點 commit 有 `SKIP_DOC_CHECK=1`，但只是延後：之後的正常 commit 一樣要補。
   *殘餘*：真正新開一個放程式碼的目錄時，第一次 commit 就是得寫一份。這是這套機制的定價；
   而逃生口的強度，取決於你有多不想去按它。
 - **檔案越多，矛盾越多。** 官方原文：「兩條規則互相牴觸時，Claude 可能任選一條」。
