@@ -118,7 +118,7 @@ Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the pr
 8. Score & fix the CLAUDE.md files this round touched — compute the scope first, then `claude-md-improver` audits only those files
 ```
 
-Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 would immediately drop new content into the files it just cleaned up. Skipping 7 does not skip 8: at steps 2 and 6 the gate forces updates to the CLAUDE.md of any directory whose code changed, and those edits need auditing too — the gate only confirms something was written, not that it was written correctly. Step 8 computes its scope first, because `claude-md-improver` defaults to finding every CLAUDE.md in the repo (one project here has 87 of them).
+Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 would immediately drop new content into the files it just cleaned up. Skipping 7 does not skip 8: at steps 2 and 6 the gate forces updates to the CLAUDE.md of any directory whose code changed, and those edits need auditing too — the gate only confirms something was written, not that it was written correctly. Step 8 computes its scope first, because `claude-md-improver` defaults to finding every CLAUDE.md in the repo (one project here has 87 of them). Steps 3, 4 and 8 all measure the increment from its recorded start — set with `~/.claude/scripts/check-claude-md.sh --start-segment` before step 1, read back with `--segment-base` — because an increment usually spans several commits and the last commit alone misses most of them.
 
 Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (including a 12-item Fowler code-smell baseline), and real-environment verification owns behaviour.
 
@@ -135,7 +135,7 @@ The full path from zero to daily use (install once, stamp each project once, the
 - Every folder containing code needs a `CLAUDE.md`; it is updated in the same batch as the code, and the update cascades upward through the parent layers
 - The gate is `~/.claude/scripts/check-claude-md.sh`, hooked in by `/dd-init`. It goes into `.git/hooks/pre-commit`, unless `git config core.hooksPath` is set — git ignores `.git/hooks/` entirely in that case, so the hook goes into that directory instead. (This repo is itself in the second case.) Its error message tells the AI agent directly to read the directory, generate or update the file itself, and retry
 - It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. Touching only markdown or config never triggers it
-- Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly
+- Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly. Skipping is not a pardon: the gate tracks every directory skipped since the increment's start, and the next normal commit — even one with no code in it — is blocked until those directories' `CLAUDE.md` files are updated
 
 ## Why nested CLAUDE.md files
 

@@ -103,6 +103,14 @@
 - **非 ASCII 路徑完全不檢查**（原始版本就有）：git 預設把中文路徑加引號跳脫（`"功能/\345…"`），
   結尾變成引號，副檔名永遠比對不到 —— staged `功能/a.js` 又沒有 CLAUDE.md，原始版本 exit 0 放行。
   列檔案的 git 指令改用 `core.quotePath=false`
+- **迴圈步驟 3、4、8 只看最後一個 commit**：simplifier 包裝器預設 `git diff HEAD~1`、
+  步驟 8 算範圍用 `git show HEAD`、本地 code-reviewer agent 不給範圍時只看還沒 staged 的改動，
+  但一段常有好幾個 commit。rental-line 13 段裡有 11 段只看最後一個 commit 會漏掉 CLAUDE.md
+  （全部 96 份只看得到 31 份；段落 1 算出來是空的，第一個 commit 建的 5 份都不在範圍內。
+  該專案 2026-09-09 已在自己的 CLAUDE.md 改用 `<base>..HEAD`，這次回寫）。全域模板 §3.9、
+  `/dd-init` 蓋章版、code-simplifier 包裝器改成段落開始前跑 `--start-segment`、範圍用
+  `--segment-base` 算；蓋章版加 `dd-loop-rev: 2`，標記是 `8step` 但沒有 rev 的專案跑 `/dd-init`
+  會提議升級。UPGRADING 補上這個升級步驟，並更正「`/dd-init` 會跳過既有區塊」的過期說法
 - **`--check` 把停用中的 plugin 回報成「已啟用」**：`check_plugins()` 原本用
   `grep -q "\"$plugin_key\""` 判斷 settings.json，但 `enabledPlugins` 是
   `{key: bool}`，**停用是「鍵在、值為 false」**，grep 只看得到鍵在。實測本機

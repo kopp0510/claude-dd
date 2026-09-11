@@ -123,7 +123,7 @@ git pull && ./install-dd-pipeline.sh --force
 8. 評分 & 修正本輪動過的 `CLAUDE.md` — 先算範圍，再讓 `claude-md-improver` 只審那幾份
 ```
 
-步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 的 gate 會逼著更新改碼目錄的 `CLAUDE.md`，那些改動一樣要審 —— gate 只確認「有寫」、不確認「寫得對」。步驟 8 的第一個動作是算範圍，因為 `claude-md-improver` 預設會找出 repo 裡的每一份 `CLAUDE.md`（這裡有個專案就有 87 份）。
+步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 的 gate 會逼著更新改碼目錄的 `CLAUDE.md`，那些改動一樣要審 —— gate 只確認「有寫」、不確認「寫得對」。步驟 8 的第一個動作是算範圍，因為 `claude-md-improver` 預設會找出 repo 裡的每一份 `CLAUDE.md`（這裡有個專案就有 87 份）。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出）—— 一段常有好幾個 commit，只看最後一個會漏掉大半。
 
 三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
 
@@ -140,7 +140,7 @@ git pull && ./install-dd-pipeline.sh --force
   但若專案設了 `git config core.hooksPath`，git 會完全忽略 `.git/hooks/`，此時改掛到該目錄下（本 repo 自己就是這種情況）。
   錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔不會被擋
-- 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過
+- 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 
 ## 為什麼要巢狀 CLAUDE.md
 

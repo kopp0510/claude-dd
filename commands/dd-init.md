@@ -36,9 +36,10 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 - **補充模式**（CLAUDE.md 已存在）：
   - 無 `## 開發流程` 區塊 → 用 **Edit** 在末尾加入
   - 已含區塊 → **版本檢查**：
-    - 含 `dd-loop-version: 8step` 標記 → 已是現行版，跳過並告知
-    - 含 `6step` / `7step` 標記，或無標記、或缺 code-review 步驟 → 舊版/手寫版：
-      列出與現行版的差異（6step 缺步驟 7、8；7step 缺步驟 8），
+    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 2` → 已是現行版，跳過並告知
+    - 含 `6step` / `7step` 標記、有 `8step` 但沒有 `dd-loop-rev: 2`，或無標記、或缺 code-review 步驟 → 舊版/手寫版：
+      列出與現行版的差異（6step 缺步驟 7、8；7step 缺步驟 8；8step 沒有 rev 缺「段落起點」，
+      步驟 3、4、8 只看最後一個 commit），
       **AskUserQuestion 詢問是否升級**。同意 → 升級為現行版但**保留在地內容**
       （專案特有註記、具體驗證指令、額外規則行），補上版本標記；拒絕 → 保留原樣
 
@@ -46,12 +47,16 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 
 ```markdown
 ## 開發流程（每個功能段落依序走）
-<!-- dd-loop-version: 8step；供 /dd-init 判斷是否提議升級，勿刪 -->
+<!-- dd-loop-version: 8step；dd-loop-rev: 2；供 /dd-init 判斷是否提議升級，勿刪 -->
+
+段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`（要印出「段落起點：…」才算記好；
+什麼都沒印 = 舊版 gate，到 claude-dd repo 跑 `./install-dd-pipeline.sh --force`）。
+一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出。
 
 1. **實作功能 + 首輪測試通過**（相關既有測試跑綠 + 基本手動驗證，不可帶紅燈進 commit）
 2. **commit**（第一次 — 保留簡化前還原點）
-3. 跑 **code-simplifier**（對該段新增/修改的程式碼，官方 agent）
-4. 跑 **code-review**（該段 diff，每段全量跑；修掉 Critical/Important 才續行）
+3. 跑 **code-simplifier**（對該段新增/修改的程式碼：`git diff <起點>`，官方 agent）
+4. 跑 **code-review**（該段 diff：`git diff <起點>`，範圍要明講給 reviewer；每段全量跑；修掉 Critical/Important 才續行）
 5. **再測一次** — 確認步驟 3、4 沒破壞行為，不可只跑單元測試：
    - 重跑步驟 1 的相關測試
    - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
@@ -74,7 +79,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
    它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
 8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審：
-   `{ git show --name-only --pretty=format: HEAD; git status --porcelain | awk '{print $NF}'; } | grep 'CLAUDE\.md$' | sort -u`
+   `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && { git diff --name-only "$base" HEAD; git status --porcelain | awk '{print $NF}'; } | grep 'CLAUDE\.md$' | sort -u`
    算出幾份就只審那幾份（用 claude-md-improver）。該 skill 預設會 find 全部，
    不先算範圍會全 repo 掃。範圍是空的才跳過
 
@@ -104,7 +109,9 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 
 在 git repo 中時，把 `~/.claude/scripts/check-claude-md.sh` 掛進專案 pre-commit：
 
-1. 檢查 `~/.claude/scripts/check-claude-md.sh` 存在（不存在 → 提示跑 `./install-dd-pipeline.sh --force`，跳過本 Phase）
+1. 檢查 `~/.claude/scripts/check-claude-md.sh` 存在（不存在 → 提示跑 `./install-dd-pipeline.sh --force`，跳過本 Phase）；
+   存在但 `grep -q -- '--start-segment' ~/.claude/scripts/check-claude-md.sh` 找不到 → 是舊版 gate
+   （不認得段落起點，參數會被靜默忽略），提示跑 `--force` 更新，掛載照常進行
 2. 先查 `git config --get core.hooksPath`：有值時 git 會**完全忽略** `.git/hooks/`，
    gate 掛載點改為該目錄下的 `pre-commit`（該檔已含 `check-claude-md.sh` 呼叫
    → 跳過並告知；如 claude-dd repo 自身的 `scripts/githooks` 即此情況）；
@@ -122,7 +129,8 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
    - 已存在且未含 `check-claude-md.sh` → 在檔尾 **Edit** 追加上面的呼叫行（保留既有內容）
    - 已含 → 跳過並告知
 4. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
-   檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 6）必須全過
+   檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 6）必須全過；
+   SKIP 過的目錄會記帳，之後第一個正常 commit（就算沒改程式碼）一樣要補上它們的 CLAUDE.md
 
 ### Phase 4: 檢查巢狀 CLAUDE.md 依賴
 

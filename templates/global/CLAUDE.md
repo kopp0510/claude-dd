@@ -222,10 +222,18 @@
 
 每完成一個**功能段落**(非每行改動),依序走:
 
+**段落開始前先記起點**:`~/.claude/scripts/check-claude-md.sh --start-segment`(要印出「段落起點：…」才算記好;
+什麼都沒印 = 部署的是舊版 gate,到 claude-dd repo 跑 `./install-dd-pipeline.sh --force`)。一段常有好幾個 commit,
+步驟 3、4、8 都要看「起點到現在」的整段,下文的 `<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base`
+的輸出。只看最後一個 commit 會漏:rental-line 段落 1 照舊指令算步驟 8 的範圍是空的,
+第一個 commit 建的 5 份 CLAUDE.md 都不在範圍內
+
 1. **實作功能 + 首輪測試通過**(相關既有單元/整合測試跑綠 + 基本手動驗證;不可帶紅燈進 commit)
 2. **commit**(第一次 — 保留簡化前還原點)
-3. 跑 **code-simplifier**(官方 agent,只針對該段新增/修改的程式碼)
+3. 跑 **code-simplifier**(官方 agent,只針對該段新增/修改的程式碼:`git diff <起點>`)
 4. 跑 **code-review**(該段 diff;每段全量跑,修掉 Critical/Important 級發現才續行)
+   - 範圍要明講:依序跑時 `git diff <起點>`(含步驟 3 還沒 commit 的簡化),並行時 `git diff <起點> HEAD`。
+     沒講的話,本地 code-reviewer agent 預設只看還沒 staged 的 `git diff`,已 commit 的整段都審不到
    - 若與步驟 3 的 simplifier **並行**跑,要在 prompt 裡明確要求 reviewer 一律用
      `git show <commit>:<路徑>` 取檔案內容、**不要讀工作目錄** —— simplifier 正在改那些檔案,
      讀到一半底下被換掉會讓整份回報作廢(實際發生過)。行號之後自己重新定位即可
@@ -244,7 +252,8 @@
 8. **評分 & 修正本輪動過的 CLAUDE.md** — **第一個動作是算範圍,不是開始審**:
 
    ```bash
-   { git show --name-only --pretty=format: HEAD; git status --porcelain | awk '{print $NF}'; } \
+   base=$(~/.claude/scripts/check-claude-md.sh --segment-base) &&
+   { git diff --name-only "$base" HEAD; git status --porcelain | awk '{print $NF}'; } \
      | grep 'CLAUDE\.md$' | sort -u
    ```
 
@@ -270,7 +279,7 @@
   主觀建議(太囉嗦、結構可更好)→ **提一次就好,不動手**。判準是「能不能實跑驗證」
 - **步驟 7、8 動到檔案就要 commit**:`.md` 不在 gate 的程式碼副檔名清單裡,不會被擋,
   但留著未提交的改動會混進下一輪
-- 專案裝有 CLAUDE.md pre-commit gate(`/dd-init` 安裝)時:改碼目錄缺 CLAUDE.md 或未同批更新會被擋 commit。步驟 2 檢查點可用 `SKIP_DOC_CHECK=1 git commit`;步驟 6 最終 commit **必須全過,不可用 SKIP 繞過**
+- 專案裝有 CLAUDE.md pre-commit gate(`/dd-init` 安裝)時:改碼目錄缺 CLAUDE.md 或未同批更新會被擋 commit。步驟 2 檢查點可用 `SKIP_DOC_CHECK=1 git commit`;步驟 6 最終 commit **必須全過,不可用 SKIP 繞過**。**SKIP 不是豁免**:gate 會追查起點以來被跳過、還沒補 CLAUDE.md 的目錄,之後第一個正常 commit(就算沒改程式碼)一樣擋;還有欠帳時 `--start-segment` 會拒絕重記起點
 - **被 gate 擋下時自主修復,不回問使用者**:
   - 缺 CLAUDE.md → 讀該目錄全部檔案,自行產生(格式:該層職責一句話 → 關鍵檔案與用途 → 此層慣例/約束 → 與上層的關係;寫實際讀到的內容,禁止空殼或佔位文字)
   - 未同批更新 → 比對本次變更把受影響段落更新進該 CLAUDE.md,並逐層檢查上層是否需堆疊更新
