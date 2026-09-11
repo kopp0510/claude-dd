@@ -49,14 +49,18 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 ## 開發流程（每個功能段落依序走）
 <!-- dd-loop-version: 8step；dd-loop-rev: 2；供 /dd-init 判斷是否提議升級，勿刪 -->
 
-段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`（要印出「段落起點：…」才算記好；
-什麼都沒印 = 舊版 gate，到 claude-dd repo 跑 `./install-dd-pipeline.sh --force`）。
-一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出。
+段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好。
+沒印出這行就是沒記好；若是舊版 gate（grep 不到 `--start-segment`），它會照常檢查 staged，印出「commit 已擋下」也不要照著補檔或 commit，
+先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。
+一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出
+（exit 非 0 或輸出是空的 = 範圍沒算出來，不是範圍為空）。忘了記下一段的起點時，範圍會連上一段一起算——只會多審，不會漏。
 
 1. **實作功能 + 首輪測試通過**（相關既有測試跑綠 + 基本手動驗證，不可帶紅燈進 commit）
 2. **commit**（第一次 — 保留簡化前還原點）
 3. 跑 **code-simplifier**（對該段新增/修改的程式碼：`git diff <起點>`，官方 agent）
-4. 跑 **code-review**（該段 diff：`git diff <起點>`，範圍要明講給 reviewer；每段全量跑；修掉 Critical/Important 才續行）
+4. 跑 **code-review**（該段 diff；每段全量跑；修掉 Critical/Important 才續行）
+   - 範圍要明講給 reviewer：依序跑時 `git diff <起點>` 加上 `git ls-files --others --exclude-standard`（步驟 3 新增、還沒 commit 的檔案 `git diff` 看不到）
+   - 與步驟 3 並行時用 `git diff <起點> HEAD`，並要求 reviewer 一律用 `git show HEAD:<路徑>` 取檔案、不讀工作目錄（simplifier 正在改，讀到一半會被換掉）
 5. **再測一次** — 確認步驟 3、4 沒破壞行為，不可只跑單元測試：
    - 重跑步驟 1 的相關測試
    - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
@@ -79,9 +83,9 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
    它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
 8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審：
-   `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && { git diff --name-only "$base" HEAD; git status --porcelain | awk '{print $NF}'; } | grep 'CLAUDE\.md$' | sort -u`
+   `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] && { git -c core.quotePath=false diff --name-only "$base" HEAD; git -c core.quotePath=false status --porcelain -uall | awk '{print $NF}'; } | grep 'CLAUDE\.md$' | sort -u`
    算出幾份就只審那幾份（用 claude-md-improver）。該 skill 預設會 find 全部，
-   不先算範圍會全 repo 掃。範圍是空的才跳過
+   不先算範圍會全 repo 掃。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）
 
 驗證不過 → 修完重跑步驟 5，不可帶著紅燈進步驟 6。
 
@@ -111,7 +115,8 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 
 1. 檢查 `~/.claude/scripts/check-claude-md.sh` 存在（不存在 → 提示跑 `./install-dd-pipeline.sh --force`，跳過本 Phase）；
    存在但 `grep -q -- '--start-segment' ~/.claude/scripts/check-claude-md.sh` 找不到 → 是舊版 gate
-   （不認得段落起點，參數會被靜默忽略），提示跑 `--force` 更新，掛載照常進行
+   （不認得段落起點參數：沒有 staged 時什麼都不印，有 staged 程式碼時照常擋 commit），
+   提示到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force` 更新，掛載照常進行
 2. 先查 `git config --get core.hooksPath`：有值時 git 會**完全忽略** `.git/hooks/`，
    gate 掛載點改為該目錄下的 `pre-commit`（該檔已含 `check-claude-md.sh` 呼叫
    → 跳過並告知；如 claude-dd repo 自身的 `scripts/githooks` 即此情況）；

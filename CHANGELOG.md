@@ -110,7 +110,11 @@
   該專案 2026-09-09 已在自己的 CLAUDE.md 改用 `<base>..HEAD`，這次回寫）。全域模板 §3.9、
   `/dd-init` 蓋章版、code-simplifier 包裝器改成段落開始前跑 `--start-segment`、範圍用
   `--segment-base` 算；蓋章版加 `dd-loop-rev: 2`，標記是 `8step` 但沒有 rev 的專案跑 `/dd-init`
-  會提議升級。UPGRADING 補上這個升級步驟，並更正「`/dd-init` 會跳過既有區塊」的過期說法
+  會提議升級。UPGRADING 補上這個升級步驟，並更正「`/dd-init` 會跳過既有區塊」的過期說法。
+  連帶補上：步驟 4 依序跑時另附 `git ls-files --others --exclude-standard`（簡化新增、還沒 commit
+  的檔案 `git diff` 看不到）；蓋章版補上並行時的範圍寫法；步驟 8 指令加 `core.quotePath=false`
+  與 `-uall`（中文目錄、未追蹤新目錄裡的 CLAUDE.md 原本都會漏）；CI 檢查 dd-init 裡的
+  dd-loop-rev 前後一致
 - **`--check` 把停用中的 plugin 回報成「已啟用」**：`check_plugins()` 原本用
   `grep -q "\"$plugin_key\""` 判斷 settings.json，但 `enabledPlugins` 是
   `{key: bool}`，**停用是「鍵在、值為 false」**，grep 只看得到鍵在。實測本機

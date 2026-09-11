@@ -222,18 +222,22 @@
 
 每完成一個**功能段落**(非每行改動),依序走:
 
-**段落開始前先記起點**:`~/.claude/scripts/check-claude-md.sh --start-segment`(要印出「段落起點：…」才算記好;
-什麼都沒印 = 部署的是舊版 gate,到 claude-dd repo 跑 `./install-dd-pipeline.sh --force`)。一段常有好幾個 commit,
+**段落開始前先記起點**:`~/.claude/scripts/check-claude-md.sh --start-segment`,印出「段落起點：…」才算記好。
+沒印出這行就是沒記好;若 `grep -q -- '--start-segment' ~/.claude/scripts/check-claude-md.sh` 找不到,是部署了
+舊版 gate —— 它不認得這個參數,會照常檢查 staged,就算印出「commit 已擋下」也不要照著補檔或 commit,
+先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。一段常有好幾個 commit,
 步驟 3、4、8 都要看「起點到現在」的整段,下文的 `<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base`
-的輸出。只看最後一個 commit 會漏:rental-line 段落 1 照舊指令算步驟 8 的範圍是空的,
-第一個 commit 建的 5 份 CLAUDE.md 都不在範圍內
+的輸出(exit 非 0 或輸出是空的 = 範圍沒算出來,不是範圍為空)。只看最後一個 commit 會漏:實測某專案段落 1
+照舊指令算步驟 8 的範圍是空的,第一個 commit 建的 5 份 CLAUDE.md 都不在範圍內。
+忘了記下一段的起點時,範圍會連上一段一起算 —— 只會多審,不會漏
 
 1. **實作功能 + 首輪測試通過**(相關既有單元/整合測試跑綠 + 基本手動驗證;不可帶紅燈進 commit)
 2. **commit**(第一次 — 保留簡化前還原點)
 3. 跑 **code-simplifier**(官方 agent,只針對該段新增/修改的程式碼:`git diff <起點>`)
 4. 跑 **code-review**(該段 diff;每段全量跑,修掉 Critical/Important 級發現才續行)
-   - 範圍要明講:依序跑時 `git diff <起點>`(含步驟 3 還沒 commit 的簡化),並行時 `git diff <起點> HEAD`。
-     沒講的話,本地 code-reviewer agent 預設只看還沒 staged 的 `git diff`,已 commit 的整段都審不到
+   - 範圍要明講:依序跑時 `git diff <起點>` 加上 `git ls-files --others --exclude-standard`(步驟 3 新增、
+     還沒 commit 的檔案 `git diff` 看不到),並行時 `git diff <起點> HEAD`。沒講的話,本地 code-reviewer agent
+     預設只看還沒 staged 的 `git diff`,已 commit 的整段都審不到
    - 若與步驟 3 的 simplifier **並行**跑,要在 prompt 裡明確要求 reviewer 一律用
      `git show <commit>:<路徑>` 取檔案內容、**不要讀工作目錄** —— simplifier 正在改那些檔案,
      讀到一半底下被換掉會讓整份回報作廢(實際發生過)。行號之後自己重新定位即可
@@ -252,15 +256,16 @@
 8. **評分 & 修正本輪動過的 CLAUDE.md** — **第一個動作是算範圍,不是開始審**:
 
    ```bash
-   base=$(~/.claude/scripts/check-claude-md.sh --segment-base) &&
-   { git diff --name-only "$base" HEAD; git status --porcelain | awk '{print $NF}'; } \
+   base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] &&
+   { git -c core.quotePath=false diff --name-only "$base" HEAD
+     git -c core.quotePath=false status --porcelain -uall | awk '{print $NF}'; } \
      | grep 'CLAUDE\.md$' | sort -u
    ```
 
    算出幾份就只審那幾份,用 `claude-md-management:claude-md-improver`。
    **該 skill 的 Phase 1 寫的是「find 全部」,不先算範圍就會全 repo 掃** —
    實測有專案含 87 份 CLAUDE.md,那會產出跟本輪無關的長報告,看兩次就會開始跳過、
-   規則等於沒有。範圍算出來是空的才跳過這一步
+   規則等於沒有。範圍算出來是空的才跳過這一步(指令 exit 非 0 是範圍沒算出來,不算空)
 
 > 步驟 1 的測試證明「做出來是對的」,步驟 5 證明「簡化與修 review 沒把對的改壞」— 目的不同,缺一不可。
 

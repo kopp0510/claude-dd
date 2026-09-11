@@ -188,7 +188,14 @@ jobs:
             [ "$got" = "$n_tpl" ] || { echo "❌ $name 是 $got 步，與全域模板 §3.9 的 $n_tpl 步不一致"; fail=1; }
           done
           [ "$tag" = "${n_tpl}step" ] || { echo "❌ dd-loop-version 是 ${tag}，應為 ${n_tpl}step — 標記過期會讓 /dd-init 誤判舊專案已是最新"; fail=1; }
-          [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記對得上"
+          # dd-loop-rev（同一個步數裡的修訂版）：蓋章標記與 Phase 1 偵測文字只改一邊時，
+          # 會把剛蓋章的專案判成舊版、或把舊專案判成最新，兩種都不報錯
+          if ! grep -qE '^<!-- dd-loop-version: [0-9a-z]+；dd-loop-rev: [0-9]+；' commands/dd-init.md; then
+            echo "❌ dd-init 蓋章版標記抓不到 dd-loop-rev（標記格式改了的話，這裡的 regex 要跟著改）"; fail=1
+          fi
+          revs=$(grep -oE 'dd-loop-rev: [0-9]+' commands/dd-init.md | sort -u | tr '\n' ' ')
+          [ "$(printf '%s' "$revs" | wc -w | tr -d ' ')" -eq 2 ] || { echo "❌ dd-init.md 裡的 dd-loop-rev 不只一種（或一個都沒有）：${revs}"; fail=1; }
+          [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記與 dd-loop-rev 都對得上"
           exit $fail
 
       - name: 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要）
