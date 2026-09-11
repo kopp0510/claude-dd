@@ -6,7 +6,7 @@
 git pull && ./install-dd-pipeline.sh --force
 ```
 
-以下是需要額外處理的兩種升級情境。
+以下是需要額外處理的三種升級情境。
 
 ## 從舊版部署（全量 / 分桶時期）升級
 
@@ -42,7 +42,17 @@ git checkout HEAD -- install-dd-pipeline.sh                   # 還原最新版�
 已在跑舊版（或手寫 5 步版）開發流程的專案：
 
 1. 到該專案跑一次 `/dd-init` — 會補上缺的部分（pre-commit gate、`.screenshots/`（僅前端專案）、plugin 檢查）
-2. **注意**：專案 CLAUDE.md 若已有 `## 開發流程` 區塊，`/dd-init` 會跳過不覆蓋 —
-   要升級成 8 步版（新增 code-review 步驟、顯性化首輪測試、收尾沉澱與評分），請手動編輯該區塊，
-   或刪掉舊區塊後重跑 `/dd-init` 重蓋
+2. **注意**：專案 CLAUDE.md 若已有 `## 開發流程` 區塊，`/dd-init` 會看區塊裡的版本標記 ——
+   舊版（`6step` / `7step` / 沒有標記）會列出與現行版的差異並詢問是否升級，同意才改，
+   專案自己加的內容會保留；不想讓它改就選拒絕，再自行手動編輯
 3. 舊 DD Pipeline 專案的 `claude_docs/`、`PROJECT_STATE.md` 不受影響，可保留或自行清理
+
+## 已是 8 步迴圈的專案：補上「段落起點」
+
+2026-09-11 起，步驟 3、4、8 改從段落起點算整段，gate 也會追查 SKIP 跳過、之後沒補的
+CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「未發布」）。
+
+1. 先跑 `./install-dd-pipeline.sh --force` — 舊版 gate 不認得 `--start-segment`，會什麼都不印就結束
+2. 到專案跑 `/dd-init` — 區塊標記是 `8step` 但沒有 `dd-loop-rev: 2` 的，會被判定為舊版並詢問是否升級。
+   **這一步不能省**：專案 CLAUDE.md 的優先序高於全域 CLAUDE.md，舊區塊「只看最後一個 commit」的寫法
+   會蓋過全域模板的新寫法
