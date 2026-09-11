@@ -34,7 +34,8 @@
 ## 此層慣例
 
 - 新增要部署的腳本：檔案放這裡 + 加入 `DD_SCRIPTS` 陣列 + `--force` 重新部署
-- 腳本必須通過 `shellcheck -S warning`（CI 強制）且可在 macOS bash 3.2 執行
+- 腳本必須通過 `shellcheck -S warning` 且可在 macOS bash 3.2 執行。CI 的 ShellCheck step
+  是逐檔列出的（`.github/workflows/ci.yml`），新增腳本要自己加進清單，否則 CI 根本不會檢查它
 - gate 的檢查邏輯改動時，同步檢視全域模板 §3.9 對 gate 行為的描述
 
 ## 與上層的關係
