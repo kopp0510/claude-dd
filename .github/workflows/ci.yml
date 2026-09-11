@@ -239,6 +239,96 @@ jobs:
           [ $fail -eq 0 ] && echo "✅ 兩類文案都與 $n 步一致"
           exit $fail
 
+      - name: gate 段落起點（SKIP 跳過的目錄，之後的正常 commit 要補上 CLAUDE.md）
+        run: |
+          # 2026-09-11 修的漏洞：gate 原本只看「這次 commit」staged 的檔案。rental-line 段落 1
+          # 第一個 commit 用 SKIP 建了 4 個沒有 CLAUDE.md 的程式碼目錄，最後一個 commit 沒改
+          # 程式碼，gate 就放行了。現在記段落起點，正常 commit 時把起點以來欠的目錄一起查
+          GATE="$PWD/scripts/check-claude-md.sh"
+          OUT="$(mktemp)"
+          cd "$(mktemp -d)"
+          git init -q
+          git config user.email ci@example.com
+          git config user.name ci
+          printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+          chmod +x .git/hooks/pre-commit
+          BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+          fail=0
+          expect() {  # $1=說明 $2=預期（pass / block） 其餘=指令
+            desc="$1"; want="$2"; shift 2
+            if "$@" > "$OUT" 2>&1; then got=pass; else got=block; fi
+            if [ "$got" = "$want" ]; then
+              echo "✅ $desc"
+            else
+              echo "❌ ${desc}：預期 ${want}，實際 ${got}"; sed 's/^/    /' "$OUT"; fail=1
+            fi
+          }
+          commit() { git add -A && git commit -qm "$1"; }
+          skip_commit() { git add -A && SKIP_DOC_CHECK=1 git commit -qm "$1"; }
+          said() { grep -qF "$1" "$OUT" || { echo "❌ 輸出沒提到：$1"; sed 's/^/    /' "$OUT"; fail=1; }; }
+
+          # 1. rental-line 段落 1：起點在第一個 commit 之前（還沒有 HEAD）
+          expect "還沒有 HEAD 也能記起點" pass "$GATE" --start-segment
+          mkdir src && echo a > src/a.js
+          expect "SKIP 的檢查點 commit 放行" pass skip_commit c1
+          echo readme > README.md
+          expect "之後只改 README 的正常 commit 要擋（src 欠 CLAUDE.md）" block commit c2
+          said "src/CLAUDE.md"
+          echo doc > src/CLAUDE.md
+          expect "補上 src/CLAUDE.md 就放行" pass commit c3
+          echo more >> README.md
+          expect "欠的補完，之後不再追討" pass commit c4
+
+          # 2. 有欠帳時不准重記起點（起點往後移會把欠帳洗掉）
+          expect "沒有欠帳時可以重記起點" pass "$GATE" --start-segment
+          echo b > src/b.js
+          expect "SKIP 改 src/b.js" pass skip_commit c5
+          expect "有欠帳時拒絕重記起點" block "$GATE" --start-segment
+          said "src"
+          echo doc2 >> src/CLAUDE.md
+          expect "補完放行" pass commit c6
+
+          # 3. 起點再舊也不能變寬鬆：舊的 CLAUDE.md 更新抵不掉之後才 SKIP 的程式碼
+          echo c > src/c.js && echo doc3 >> src/CLAUDE.md
+          expect "X：程式碼和 CLAUDE.md 一起 commit" pass commit x
+          echo d > src/d.js
+          expect "Y：SKIP 只改程式碼" pass skip_commit y
+          echo z >> README.md
+          expect "Z：只改 README 也要擋（Y 欠的帳）" block commit z
+          echo doc4 >> src/CLAUDE.md
+          expect "補上放行" pass commit z2
+
+          # 4. 沒 SKIP 的 commit 規則不變：改到的目錄這次就要一起 staged CLAUDE.md
+          echo e >> src/a.js
+          expect "起點之後更新過 CLAUDE.md，這次沒 staged 仍要擋" block commit n1
+          echo doc5 >> src/CLAUDE.md
+          expect "同批補上放行" pass commit n2
+
+          # 5. --segment-base：有起點就印；沒有就失敗，不能印空字串給 git diff 吃
+          expect "有起點時印得出來" pass "$GATE" --segment-base
+          rm -f "$BASE_FILE"
+          expect "沒有起點時要失敗" block "$GATE" --segment-base
+
+          # 6. 忘了記起點：第一個 SKIP 自動記下，照樣追得到
+          echo f > src/f.js
+          expect "沒記起點直接 SKIP" pass skip_commit auto1
+          [ -f "$BASE_FILE" ] || { echo "❌ SKIP 沒有自動記下起點"; fail=1; }
+          echo r >> README.md
+          expect "之後的正常 commit 擋下 src/CLAUDE.md" block commit auto2
+          echo doc6 >> src/CLAUDE.md
+          expect "補上放行" pass commit auto3
+
+          # 7. 起點不在目前分支的歷史裡（換過分支、改寫過歷史）：警告後只查 staged，不可整個爆掉
+          git checkout -qb side && echo s > side.txt
+          expect "在 side 分支 commit" pass commit side
+          git rev-parse HEAD > "$BASE_FILE"
+          git checkout -q -
+          echo q >> README.md
+          expect "起點失效時只查 staged 並放行" pass commit w1
+          said "不在目前分支的歷史裡"
+
+          exit $fail
+
       - name: Sandbox 端到端安裝測試（非互動）
         run: |
           # runner 無 claude CLI，放一個只回版本號的假 binary 讓環境檢查通過

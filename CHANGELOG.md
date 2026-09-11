@@ -86,6 +86,17 @@
 
 ### Fixed
 
+- **gate 放行了「用 SKIP 跳過、之後也沒補」的 CLAUDE.md**：gate 原本只看「這一次 commit」
+  staged 的檔案，檢查點 commit 用 `SKIP_DOC_CHECK=1` 跳過的目錄，只要最終 commit 沒再碰
+  那些目錄的程式碼就不會被查。rental-line 段落 1 實際發生：第一個 commit 用 SKIP 建了
+  `backend/src` 等 4 個沒有 CLAUDE.md 的程式碼目錄，最後一個 commit 沒動程式碼，gate 直接
+  放行（約一小時後才手動補上）。用 gate 同一套規則重算 rental-line 的 commit，13 段裡有 8 段
+  有 commit 是跳過檢查才進得去。修法：新增**段落起點**（記在 `.git/dd-segment-base`）——
+  `--start-segment` 在段落開始前記下，忘了記時第一個 SKIP commit 自動記；之後每個正常
+  commit 照 commit 先後結算起點以來的欠帳（改程式碼記帳、之後更新該目錄 CLAUDE.md 才銷帳），
+  所以起點再舊也不會變寬鬆。還有欠帳時 `--start-segment` 拒絕重記（會把欠帳洗掉）；
+  `--segment-base` 印出起點，給迴圈步驟 3、4、8 算整段範圍。CI 新增 22 個情境檢查
+  （含還沒有 HEAD 的第一個 commit、舊起點、換分支後起點失效）
 - **`--check` 把停用中的 plugin 回報成「已啟用」**：`check_plugins()` 原本用
   `grep -q "\"$plugin_key\""` 判斷 settings.json，但 `enabledPlugins` 是
   `{key: bool}`，**停用是「鍵在、值為 false」**，grep 只看得到鍵在。實測本機
