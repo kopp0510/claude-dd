@@ -148,6 +148,16 @@ def build(L):
   <marker id="ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
     <polygon points="0 0,8 3,0 6" fill="{ROSE}"/></marker>
 ''')
+    o.append('</defs>\n')
+    o.append(f'<rect width="1440" height="1080" fill="{BG}"/>\n<rect width="1440" height="1080" fill="url(#glow)"/>\n')
+    o.append(f'<text x="100" y="92" class="ttl">{esc(L["title"])}</text>\n')
+    o.append(f'<text x="100" y="132" class="sub">{esc(L["sub"])}</text>\n')
+
+    for (cx, cy, cw, ch), lbl in zip((GA, GB, GC), L["groups"]):
+        o.append(f'<rect data-role="container" x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="8" fill="none" stroke="{GOLD}" '
+                 f'stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>\n')
+        o.append(f'<text x="{cx+24}" y="{cy+28}" class="grp">{esc(lbl)}</text>\n')
+
     # 連線畫在 <defs> 外、小球的 <mpath> 直接指向它：verify-geometry.py 會先剝掉 <defs>，
     # 放在裡面用 <use> 引用的話連線數算成 0，交叉、折數、穿越檢查全部空轉
     paths = {
@@ -162,16 +172,6 @@ def build(L):
         "p78": poly((XS[0]+BW, cc), (XS[1]-12, cc)),
         "next": poly((XS[1]+BW/2, YC+BHX), (XS[1]+BW/2, 878), (60, 878), (60, ca), (XS[0]-12, ca)),
     }
-    o.append('</defs>\n')
-    o.append(f'<rect width="1440" height="1080" fill="{BG}"/>\n<rect width="1440" height="1080" fill="url(#glow)"/>\n')
-    o.append(f'<text x="100" y="92" class="ttl">{esc(L["title"])}</text>\n')
-    o.append(f'<text x="100" y="132" class="sub">{esc(L["sub"])}</text>\n')
-
-    for (cx, cy, cw, ch), lbl in zip((GA, GB, GC), L["groups"]):
-        o.append(f'<rect data-role="container" x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="8" fill="none" stroke="{GOLD}" '
-                 f'stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>\n')
-        o.append(f'<text x="{cx+24}" y="{cy+28}" class="grp">{esc(lbl)}</text>\n')
-
     def edge(k, style):
         return f'  <path id="{k}" data-role="edge" d="{paths[k]}" fill="none" {style}/>\n'
     for k in ("p12", "p23", "p34", "p45", "p56", "p67", "p78"):

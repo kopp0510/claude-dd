@@ -92,7 +92,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 （`diagrams/src/CLAUDE.md` 漏寫 `gen_usage.py` 不產 html、第 8 步條文自己用了
 在該時機為空的 `git diff --cached`），驗證可行後才推進全域模板與 `/dd-init`。
 
-要跨好幾段的工作由 `task-planner` 拆成段落與小任務：小任務只走步驟 1、2，整段做完才跑 3–8，
+要跨好幾段的工作由 `task-planner` 拆成段落與小任務：小任務只走步驟 1、2，全部 commit 完，整段才跑 3–8，
 進度表連同規則區塊照抄進專案的設計文件。照抄進去的那份不會跟著 skill 更新 ——
 改了 `skills/task-planner/SKILL.md` 的規則區塊，已經在用的專案手上仍是舊版。
 
