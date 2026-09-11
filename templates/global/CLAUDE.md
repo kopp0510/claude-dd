@@ -348,7 +348,7 @@
 **規則**:同時只能一項 `in_progress`,完成立即 `completed`,不批次更新。
 
 **粒度**:task 開在 §3.9 的「功能段落」層級,一個 task 走一圈 8 步迴圈。
-`task-planner` 產的微任務降為段落內的實作 checklist,不進 task 追蹤。
+`task-planner` 產的小任務降為段落內的實作 checklist,不進 task 追蹤。
 
 > 新版 Claude Code 若提供原生 Task 工具(`TaskCreate` / `TaskUpdate` / `TaskList`),
 > 優先使用原生工具,觸發條件與規則同上;舊版才用 TodoWrite。
@@ -356,9 +356,9 @@
 > **兩者都沒有時**(實際遇過:某些 build 兩組都不提供,`ToolSearch` 找不到,
 > 關鍵字搜尋只回 `TaskOutput` / `TaskStop` —— 那是背景 job 的輸出與中止,不是待辦)
 > **不可宣稱「沒有 task 工具」就跳過追蹤**。退化成**檔案式追蹤**:把功能段落寫進
-> 專案設計文件(`docs/designs/`)的進度表(格式照 `task-planner`),**開工先把該段標
-> `IN_PROGRESS`(沒有這列就先加),步驟 3–8 跑完才改 `DONE` 並補上 commit 範圍**。
-> 粒度與規則同上(一列 = 一個功能段落 = 一圈 8 步迴圈)。
+> 專案設計文件(`docs/designs/`)的進度表(格式照 `task-planner`;沒有設計文件,就算只有
+> 一段也照它的做法開一份短的),**開工先把該段標 `IN_PROGRESS`(沒有這列就先加),
+> 步驟 3–8 跑完才改 `DONE` 並補上 commit 範圍**。粒度與規則同上(一列 = 一個功能段落 = 一圈 8 步迴圈)。
 >
 > 檔案式其實比工具式耐用 —— 跨 session 留著、進 git、使用者不開對話也看得到。
 > 代價是沒人提醒你更新,所以**開工就先改狀態**比收工才補可靠
