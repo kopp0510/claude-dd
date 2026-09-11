@@ -152,19 +152,6 @@ def build(L):
   <marker id="ax" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
     <polygon points="0 0,8 3,0 6" fill="{T3}"/></marker>
 ''')
-    # 連線畫在 <defs> 外、小球的 <mpath> 直接指向它：verify-geometry.py 會先剝掉 <defs>，
-    # 放在裡面用 <use> 引用的話連線數算成 0，交叉、折數、穿越檢查全部空轉
-    y1, y2, y3 = [r + BH / 2 for r in ROWS]
-    paths = {
-        "p12": poly((COL_L+BW, y1), (COL_R-12, y1)),
-        "p23": poly((COL_R+BW/2, ROWS[0]+BH), (COL_R+BW/2, 352), (COL_L+BW/2, 352), (COL_L+BW/2, ROWS[1]-12)),
-        "p34": poly((COL_L+BW, y2), (COL_R-12, y2)),
-        "p45": poly((COL_R+BW/2, ROWS[1]+BH), (COL_R+BW/2, 562), (COL_L+BW/2, 562), (COL_L+BW/2, ROWS[2]-12)),
-        "p56": poly((COL_L+BW, y3), (COL_R-12, y3)),
-        "p65": poly((COL_R+BW/2, ROWS[2]+BH), (COL_R+BW/2, 790), (COL_L+BW/2, 790), (COL_L+BW/2, ROWS[2]+BH+12)),
-        "p67": poly((COL_R+BW*0.75, ROWS[2]+BH), (COL_R+BW*0.75, Y7-12)),
-        "p71": poly((COL_R, Y7+BH/2), (140, Y7+BH/2), (140, y1), (COL_L-12, y1)),
-    }
     o.append('</defs>\n')
     o.append(f'<rect width="1440" height="1080" fill="{BG}"/>\n')
     o.append('<rect width="1440" height="1080" fill="url(#glow)"/>\n')
@@ -180,6 +167,18 @@ def build(L):
         o.append(f'<text x="{gx+24}" y="{gy+27}" class="grp">{esc(lbl)}</text>\n')
 
     # 可見連線（淡）
+    # 連線畫在 <defs> 外、小球的 <mpath> 直接指向它：verify-geometry.py 會先剝掉 <defs>，
+    # 放在裡面用 <use> 引用的話連線數算成 0，交叉、折數、穿越檢查全部空轉
+    y1, y2, y3 = [r + BH / 2 for r in ROWS]
+    paths = {
+        "p12": poly((COL_L+BW, y1), (COL_R-12, y1)),
+        "p23": poly((COL_R+BW/2, ROWS[0]+BH), (COL_R+BW/2, 352), (COL_L+BW/2, 352), (COL_L+BW/2, ROWS[1]-12)),
+        "p34": poly((COL_L+BW, y2), (COL_R-12, y2)),
+        "p45": poly((COL_R+BW/2, ROWS[1]+BH), (COL_R+BW/2, 562), (COL_L+BW/2, 562), (COL_L+BW/2, ROWS[2]-12)),
+        "p56": poly((COL_L+BW, y3), (COL_R-12, y3)),
+        "p65": poly((COL_R+BW/2, ROWS[2]+BH), (COL_R+BW/2, 790), (COL_L+BW/2, 790), (COL_L+BW/2, ROWS[2]+BH+12)),
+        "p71": poly((COL_R, Y7+BH/2), (140, Y7+BH/2), (140, y1), (COL_L-12, y1)),
+    }
     def edge(k, style):
         return f'  <path id="{k}" data-role="edge" d="{paths[k]}" fill="none" {style}/>\n'
     for k in ("p12", "p23", "p34", "p45", "p56"):

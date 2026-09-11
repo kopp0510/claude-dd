@@ -127,7 +127,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
 
-**要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落（`S1`、`S2`…），段落裡再列小任務（`S2-1`、`S2-2`…），進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2（實作、驗證、commit，訊息結尾帶編號）；小任務全部 commit 完，整段才跑一次步驟 3–8，跑完才在表上標 `DONE`。規劃先給你批准才寫檔；換 session 或 `/compact` 之後照表接手；卡住或冒出新工作都會停下來問。
+**要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落（`S1`、`S2`…），段落裡再列小任務（`S2-1`、`S2-2`…），進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2（實作、驗證、commit，訊息第一行結尾帶編號）；小任務全部 commit 完，整段才跑一次步驟 3–8，跑完才在表上標 `DONE`。規劃先給你批准才寫檔；換 session 或 `/compact` 之後照表接手；卡住或冒出新工作都會停下來問。
 
 ![claude-dd 8 步開發迴圈](diagrams/claude-dd-dev-loop.zh-TW.gif)
 

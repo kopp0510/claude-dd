@@ -43,8 +43,8 @@
   連線要畫在 `<defs>` 外、標 `data-role="edge"`、座標只用 M/L（`poly()` 產生），小球的 `<mpath>` 直接指向它 ——
   腳本會先剝掉 `<defs>`、也不認 H/V 簡寫。2026-09-11 以前放在 defs 用 `<use>` 引用，連線數算成 0，
   交叉、折數、穿越檢查全部空轉，輸出卻看不出來
-- **兩支都有 8/31 畫圖時就在的未通過項**（早於 9/7 的 composition contract）：框距 32px、loop 的容器 gutter 12px、
-  loop 的 `next` 3 折、usage 的 `p65` 繞路比 1.35、usage 的 ⑦ 在容器外，以及文字溢出。改圖只看有沒有**新增**失敗項。
+- **兩支都有 8/31 畫圖時就在的未通過項**（規則多數 8/10 就在 contract 裡，9/7 才有 verify-geometry.py 去量）：
+  loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 `p65` 繞路比 1.35、⑦ 在容器外，以及文字溢出。改圖只看有沒有**新增**失敗項。
   文字溢出是腳本估算，英文版誤報十幾處；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（2026-09-11 四張都 ≥12px）
 - **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
 - **兩支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
@@ -82,5 +82,5 @@
 ## 與上層的關係
 
 `../` 只放成品 GIF（兩份 README 直接嵌）。圖上的文字宣稱（元件數量、迴圈步數、
-目錄用途）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md` 與 `README`；
-那些數字改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
+目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README` 與
+`skills/task-planner/SKILL.md`；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
