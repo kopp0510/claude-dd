@@ -92,6 +92,10 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 （`diagrams/src/CLAUDE.md` 漏寫 `gen_usage.py` 不產 html、第 8 步條文自己用了
 在該時機為空的 `git diff --cached`），驗證可行後才推進全域模板與 `/dd-init`。
 
+要跨好幾段的工作由 `task-planner` 拆成段落與小任務：小任務只走步驟 1、2，整段做完才跑 3–8，
+進度表連同規則區塊照抄進專案的設計文件。照抄進去的那份不會跟著 skill 更新 ——
+改了 `skills/task-planner/SKILL.md` 的規則區塊，已經在用的專案手上仍是舊版。
+
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
 `~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有

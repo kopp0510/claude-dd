@@ -11,13 +11,13 @@ GREEN, VIOLET, BLUE, ROSE, AMBER, GRAY = "#5a9e6f", "#a78bfa", "#38bdf8", "#f871
 
 ZH = dict(
     title="claude-dd 8 步開發迴圈",
-    sub="每個功能段落都走這一圈 · 1–6 一定要做；7 有東西才做；8 只要動過 CLAUDE.md 就要做",
+    sub="每個功能段落都走這一圈，開始前先記起點 · 1–6 一定要做；7 有東西才做；8 只要動過 CLAUDE.md 就要做",
     groups=["A · 做出來（證明它是對的）",
             "B · 整理它（證明沒把對的改壞）",
             "C · 留下來（沉澱，然後檢查）"],
     a=[("① 實作 + 首輪測試", ["相關既有測試跑綠", "加基本手動驗證", "不可帶紅燈進 commit"], GREEN),
-       ("② commit（第一次）", ["保留簡化前的還原點", "被 gate 擋下時這一步",
-                             "可用 SKIP_DOC_CHECK=1"], AMBER)],
+       ("② commit（第一次）", ["保留簡化前的還原點", "可用 SKIP_DOC_CHECK=1，之後要補",
+                             "還有小任務回 ①，做完才進 ③"], AMBER)],
     anote=("測兩次，目的不同", ["步驟 1 證明「做出來是對的」",
                              "步驟 5 證明「整理沒把對的改壞」",
                              "兩者缺一不可，不能互相取代"]),
@@ -33,27 +33,27 @@ ZH = dict(
     c=[("⑦ 沉澱本輪所學（有才做）", ["踩雷、指令、慣例",
                                 "用 /revise-claude-md 寫進 CLAUDE.md",
                                 "沒有值得留的就跳過"], GOLD_DIM),
-       ("⑧ 評分 & 修正", ["先算範圍：只審本輪動過的",
+       ("⑧ 評分 & 修正", ["先算範圍：起點以來動過的",
                         "improver 審那幾份，不全 repo 掃",
                         "驗得出來的錯直接修，不問"], BLUE)],
     cnote=("步驟 7、8 的分工", ["7 是「加」— 把本輪學到的寫進去",
                             "8 是「整理」— 檢查那幾份寫得對不對",
                             "7 跳過不代表 8 跳過：gate 逼出來的改動也要審"]),
     legend=[("主流程", GOLD, False), ("⑤ 驗證不過 → 修完重跑 ⑤", ROSE, True),
-            ("下一個功能段落 → 回到 ①", GOLD_DIM, True)],
-    foot="Style 8 · Dark Luxury · claude-dd 8 步開發迴圈 · 依全域 CLAUDE.md §3.9 繪製",
+            ("回到 ①：② 還有小任務、⑧ 做下一段", GOLD_DIM, True)],
+    foot="Style 8 · Dark Luxury · claude-dd 8 步開發迴圈 · 依全域 CLAUDE.md §3.9 與 task-planner 繪製",
 )
 
 EN = dict(
     title="claude-dd 8-step development loop",
-    sub="every feature increment runs this once · 1–6 always; 7 only if you learned something; 8 whenever a CLAUDE.md changed",
+    sub="every feature increment runs this once, from a recorded start point · 1–6 always; 7 only if you learned something; 8 whenever a CLAUDE.md changed",
     groups=["A · Build it (prove it is right)",
             "B · Clean it up (prove cleanup didn't break it)",
             "C · Keep it (capture, then check)"],
     a=[("① Implement + first tests", ["existing related tests go green", "plus a basic manual check",
                                       "never enter a commit with a red light"], GREEN),
-       ("② commit (first one)", ["a restore point before simplification", "this is the step where",
-                                 "SKIP_DOC_CHECK=1 is allowed"], AMBER)],
+       ("② commit (first one)", ["a restore point before simplification", "SKIP_DOC_CHECK=1 ok; repay later",
+                                 "small tasks left? back to ①"], AMBER)],
     anote=("Two test rounds, two purposes", ['step 1 proves "what you built is right"',
                                              'step 5 proves "cleanup didn\'t break it"',
                                              "neither substitutes for the other"]),
@@ -69,15 +69,15 @@ EN = dict(
     c=[("⑦ Capture the learnings (if any)", ["gotchas, commands, conventions",
                                              "/revise-claude-md folds them in",
                                              "nothing worth keeping? skip it"], GOLD_DIM),
-       ("⑧ Score & fix", ["first compute the scope",
+       ("⑧ Score & fix", ["scope: changed since the start",
                           "improver audits only those files",
                           "objective errors get fixed, no asking"], BLUE)],
     cnote=("How steps 7 and 8 divide the work", ["7 adds — this round's learnings go in",
                                                  "8 checks — are those files written correctly",
                                                  "skipping 7 does not skip 8: gate-forced edits count too"]),
     legend=[("main flow", GOLD, False), ("⑤ fails → fix, then rerun ⑤", ROSE, True),
-            ("next feature increment → back to ①", GOLD_DIM, True)],
-    foot="Style 8 · Dark Luxury · claude-dd 8-step development loop · drawn from global CLAUDE.md §3.9",
+            ("back to ①: small tasks left (②) or next increment (⑧)", GOLD_DIM, True)],
+    foot="Style 8 · Dark Luxury · claude-dd 8-step development loop · drawn from global CLAUDE.md §3.9 and task-planner",
 )
 
 BW, BHX = 268, 108
@@ -92,8 +92,13 @@ def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def poly(*pts):
+    # 正交折線只用 M/L 絕對座標：verify-geometry.py 不認 H/V 簡寫
+    return "M " + " L ".join(f"{x:g} {y:g}" for x, y in pts)
+
+
 def box(x, y, name, lines, color):
-    o = [f'  <g><rect x="{x}" y="{y}" width="{BW}" height="{BHX}" rx="6" fill="{SURF}" '
+    o = [f'  <g><rect data-role="node" x="{x}" y="{y}" width="{BW}" height="{BHX}" rx="6" fill="{SURF}" '
          f'stroke="{color}" stroke-width="1.5"/>\n',
          f'    <text x="{x+16}" y="{y+27}" class="nm" fill="{color}">{esc(name)}</text>\n']
     for i, ln in enumerate(lines):
@@ -143,36 +148,39 @@ def build(L):
   <marker id="ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
     <polygon points="0 0,8 3,0 6" fill="{ROSE}"/></marker>
 ''')
+    # 連線畫在 <defs> 外、小球的 <mpath> 直接指向它：verify-geometry.py 會先剝掉 <defs>，
+    # 放在裡面用 <use> 引用的話連線數算成 0，交叉、折數、穿越檢查全部空轉
     paths = {
-        "p12": f"M {XS[0]+BW} {ca} H {XS[1]-12}",
-        "p23": f"M {XS[1]+BW/2} {YA+BHX} V 388 H {XS[0]+BW/2} V {YB-12}",
-        "p34": f"M {XS[0]+BW} {cb} H {XS[1]-12}",
-        "p45": f"M {XS[1]+BW} {cb} H {XS[2]-12}",
-        "p56": f"M {XS[2]+BW} {cb} H {XS[3]-12}",
-        "p67": f"M {XS[3]+BW/2} {YB+BHX} V 664 H {XS[0]+BW/2} V {YC-12}",
-        "back": f"M {XS[2]+BW-40} {YB+BHX} V 604 H {XS[2]+40} V {YB+BHX+12}",
-        "p78": f"M {XS[0]+BW} {cc} H {XS[1]-12}",
-        "next": f"M {XS[1]+BW/2} {YC+BHX} V 878 H 60 V {ca} H {XS[0]-12}",
+        "p12": poly((XS[0]+BW, ca), (XS[1]-12, ca)),
+        "p23": poly((XS[1]+BW/2, YA+BHX), (XS[1]+BW/2, 388), (XS[0]+BW/2, 388), (XS[0]+BW/2, YB-12)),
+        "task": poly((XS[1]+60, YA+BHX), (XS[1]+60, 346), (XS[0]+BW-60, 346), (XS[0]+BW-60, YA+BHX+12)),
+        "p34": poly((XS[0]+BW, cb), (XS[1]-12, cb)),
+        "p45": poly((XS[1]+BW, cb), (XS[2]-12, cb)),
+        "p56": poly((XS[2]+BW, cb), (XS[3]-12, cb)),
+        "p67": poly((XS[3]+BW/2, YB+BHX), (XS[3]+BW/2, 664), (XS[0]+BW/2, 664), (XS[0]+BW/2, YC-12)),
+        "back": poly((XS[2]+BW-40, YB+BHX), (XS[2]+BW-40, 604), (XS[2]+40, 604), (XS[2]+40, YB+BHX+12)),
+        "p78": poly((XS[0]+BW, cc), (XS[1]-12, cc)),
+        "next": poly((XS[1]+BW/2, YC+BHX), (XS[1]+BW/2, 878), (60, 878), (60, ca), (XS[0]-12, ca)),
     }
-    for k, d in paths.items():
-        o.append(f'  <path id="{k}" d="{d}" fill="none"/>\n')
     o.append('</defs>\n')
     o.append(f'<rect width="1440" height="1080" fill="{BG}"/>\n<rect width="1440" height="1080" fill="url(#glow)"/>\n')
     o.append(f'<text x="100" y="92" class="ttl">{esc(L["title"])}</text>\n')
     o.append(f'<text x="100" y="132" class="sub">{esc(L["sub"])}</text>\n')
 
     for (cx, cy, cw, ch), lbl in zip((GA, GB, GC), L["groups"]):
-        o.append(f'<rect x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="8" fill="none" stroke="{GOLD}" '
+        o.append(f'<rect data-role="container" x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="8" fill="none" stroke="{GOLD}" '
                  f'stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>\n')
         o.append(f'<text x="{cx+24}" y="{cy+28}" class="grp">{esc(lbl)}</text>\n')
 
+    def edge(k, style):
+        return f'  <path id="{k}" data-role="edge" d="{paths[k]}" fill="none" {style}/>\n'
     for k in ("p12", "p23", "p34", "p45", "p56", "p67", "p78"):
-        o.append(f'  <use href="#{k}" stroke="{GOLD}" stroke-width="1.6" opacity="0.32" fill="none" '
-                 f'marker-end="url(#ag)"/>\n')
-    o.append(f'  <use href="#back" stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.34" '
-             f'fill="none" marker-end="url(#ar)"/>\n')
-    o.append(f'  <use href="#next" stroke="{GOLD_DIM}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.45" '
-             f'fill="none" marker-end="url(#ad)"/>\n')
+        o.append(edge(k, f'stroke="{GOLD}" stroke-width="1.6" opacity="0.32" marker-end="url(#ag)"'))
+    o.append(edge("back", f'stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.34" '
+                          f'marker-end="url(#ar)"'))
+    for k in ("task", "next"):
+        o.append(edge(k, f'stroke="{GOLD_DIM}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.45" '
+                         f'marker-end="url(#ad)"'))
 
     for (n, ls, c), x in zip(L["a"], XS):
         o.append(box(x, YA, n, ls, c))
@@ -191,6 +199,7 @@ def build(L):
     o.append(ball("p67", GOLD, 7.2, -4.5))
     o.append(ball("back", ROSE, 7.2, -2.1))
     o.append(ball("next", GOLD_DIM, 7.2, -6.0))
+    o.append(ball("task", GOLD_DIM, 3.6, -1.5))
 
     lx = 100
     for text, col, dash in L["legend"]:

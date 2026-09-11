@@ -39,7 +39,8 @@
 - 變數後面緊接全形字（`）`、`：`）一律寫 `${var}`。`$var）` 在 macOS bash 3.2 會把全形字吃掉一半：
   變數值不見、只剩亂碼。實測 `zh_TW.UTF-8`、`en_US.UTF-8` 都會，macOS 的 `C.UTF-8` 與 Linux bash 5.2
   （`C.UTF-8`）不會；不報錯，shellcheck 連 style 級都不警告（2026-09-11，gate 的 `rm ${BASE_FILE}）` 踩過）
-- gate 的檢查邏輯改動時，同步檢視全域模板 §3.9 對 gate 行為的描述
+- gate 的檢查邏輯改動時，同步檢視全域模板 §3.9 對 gate 行為的描述，以及 `skills/task-planner/SKILL.md`
+  進度表規則區塊用到的 gate 行為（有欠帳時 `--start-segment` 拒絕、SKIP 記帳、補 CLAUDE.md 看 `git diff <起點> -- <目錄>`）
 - 改了 gate 或它的 CI 情境，要故意把 gate 改壞一行（例如拿掉 `grep -qxF "$md"` 的 `-x`），用上面的本機跑法
   確認會出現 ❌。全綠不代表有在檢查：2026-09-11 拿掉 `-x`、讓 staged 清單被空白拆開，這兩種改壞法
   在當時的 57 個情境下照樣全過，補到 61 個才抓到

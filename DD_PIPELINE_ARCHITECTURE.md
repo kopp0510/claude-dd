@@ -97,6 +97,9 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`，但 SKIP 不是豁免：
 段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit 一樣擋。
 
+要跨好幾段的工作由 `task-planner` 拆成段落（一段一圈）與小任務（只走步驟 1、2，
+全部 commit 完整段才跑 3–8），進度表寫進專案 `docs/designs/` 的設計文件，換 session 照表接手。
+
 本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md
 「開發本 repo」一節。
 

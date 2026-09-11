@@ -122,11 +122,13 @@ Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 wou
 
 Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (including a 12-item Fowler code-smell baseline), and real-environment verification owns behaviour.
 
+**Work that spans several increments** goes to `task-planner` first: it splits the work into increments run in order (`S1`, `S2`, …), lists small tasks inside each one (`S2-1`, `S2-2`, …), and writes the progress table into the design doc under `docs/designs/`. A small task runs only steps 1 and 2 (implement, verify, commit, with its ID at the end of the message); once every small task in an increment is committed, the increment runs steps 3–8 once, and only then is it marked `DONE`. The plan is shown to you for approval before anything is written; a new session or `/compact` picks up from the table; a blocked increment or newly discovered work stops for a question.
+
 ![claude-dd 8-step development loop](diagrams/claude-dd-dev-loop.gif)
 
 Step 1 proves the thing you built is right; step 5 proves that simplifying it and applying review findings didn't break it. Different purposes — neither substitutes for the other.
 
-The full path from zero to daily use (install once, stamp each project once, then every feature increment runs the same loop):
+The full path from zero to daily use (install once, stamp each project once, split big work into increments, then every feature increment runs the same loop):
 
 ![claude-dd usage flow](diagrams/claude-dd-usage-flow.gif)
 
