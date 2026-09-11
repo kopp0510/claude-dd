@@ -83,7 +83,7 @@
 3. `ffmpeg -framerate 20 -i f%03d.png -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 out.gif`
 4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再覆蓋 `../*.gif`
 
-細節見 `tech-diagram-gif` skill；本目錄只保存 claude-dd 自己這 6 張的來源。
+細節見 `tech-diagram-gif` skill；上面四步是三支腳本那 6 張的做法，手寫 SVG 的圖照該 skill 重出。
 
 ## 與上層的關係
 
