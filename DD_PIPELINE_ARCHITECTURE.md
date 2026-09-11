@@ -94,7 +94,8 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章。
 配套：巢狀 CLAUDE.md 堆疊維護，由 **pre-commit gate**
 （`scripts/check-claude-md.sh`）強制 — 改碼目錄缺 CLAUDE.md 或未同批更新
-即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
+即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`，但 SKIP 不是豁免：
+段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit 一樣擋。
 
 本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md
 「開發本 repo」一節。
