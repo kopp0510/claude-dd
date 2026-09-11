@@ -53,6 +53,14 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
    agent 接手做完，結果用指令核對，不看 agent 自述。2026-09-11 改寫 task-planner：只讀乾跑抓到二十多處；沙盒實跑
    又抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏
 4. 執行 `./install-dd-pipeline.sh --force` 部署
+5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
+   在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
+   --permission-mode dontAsk --allowedTools "Skill Read Glob Grep" --disallowedTools "Edit Write NotebookEdit Bash Agent"
+   < /dev/null > out.jsonl`，正反各一個（該叫的大需求、不該叫的小改動），解析 jsonl 看有沒有 `Launching skill:`，
+   並確認 `permission_denials` 是空的 —— dontAsk 沒加 `--allowedTools Skill` 會把 Skill 擋掉，只證明它「想叫」。
+   prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不了「不含關鍵字」這種說法；每次約 US$0.4–1.6。
+   這種 session 沒有寫檔工具也沒有 AskUserQuestion，只測得到「叫不叫、出不出得了草稿」，批准之後的步驟要另外在沙盒實跑。
+   2026-09-11 task-planner：三個功能的需求叫起了，一行字的改動沒叫，已有進度表、說「照設計文件繼續做」也沒叫
 
 ### Skill hook 路徑規範（強制）
 
