@@ -52,7 +52,9 @@ git checkout HEAD -- install-dd-pipeline.sh                   # 還原最新版�
 2026-09-11 起，步驟 3、4、8 改從段落起點算整段，gate 也會追查 SKIP 跳過、之後沒補的
 CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「未發布」）。
 
-1. 先跑 `./install-dd-pipeline.sh --force` — 舊版 gate 不認得 `--start-segment`，會什麼都不印就結束
+1. 先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。舊版 gate 不認得 `--start-segment`：
+   沒有 staged 時什麼都不印；有 staged 程式碼時會照常檢查、印出「commit 已擋下」—— 那不是真的要你補檔，
+   不要照著做，先更新 gate
 2. 到專案跑 `/dd-init` — 區塊標記是 `8step` 但沒有 `dd-loop-rev: 2` 的，會被判定為舊版並詢問是否升級。
    **這一步不能省**：專案 CLAUDE.md 的優先序高於全域 CLAUDE.md，舊區塊「只看最後一個 commit」的寫法
    會蓋過全域模板的新寫法
