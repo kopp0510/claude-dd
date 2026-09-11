@@ -47,7 +47,12 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 
 1. 在 `skills/<skill-name>/` 建立 `SKILL.md`
 2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_SKILLS` 陣列加入名稱
-3. 執行 `./install-dd-pipeline.sh --force` 部署
+3. 部署前先乾跑（新增或改寫都要）：派 subagent 照 repo 裡這份 `SKILL.md` 做一遍，逐條引用原文回報哪一句讓它卡住、
+   只能用猜的、或兩句互相矛盾。skill 有分支就每條各跑一次（例如有沒有設計文件）；只讀的步驟拿實際在用的專案跑、
+   不准寫檔；會寫檔或 commit 的步驟改在 scratchpad 的拋棄式 repo 真的跑，跨 session 的流程再派一個只讀專案文件的
+   agent 接手做完，結果用指令核對，不看 agent 自述。2026-09-11 改寫 task-planner：只讀乾跑抓到二十多處；沙盒實跑
+   又抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏
+4. 執行 `./install-dd-pipeline.sh --force` 部署
 
 ### Skill hook 路徑規範（強制）
 
