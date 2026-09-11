@@ -9,8 +9,8 @@
 
 | 檔案 | 產出 |
 |---|---|
-| `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（8 步迴圈在框 ⑤） |
-| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來） |
+| `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（8 步迴圈在框 ⑤；大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
+| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務） |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
 
@@ -39,6 +39,14 @@
 - **手寫 SVG 改完要重跑幾何檢查**：
   `python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <檔案>`。
   四份現況皆通過；沒過就不要重出 GIF
+- **兩支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
+  連線要畫在 `<defs>` 外、標 `data-role="edge"`、座標只用 M/L（`poly()` 產生），小球的 `<mpath>` 直接指向它 ——
+  腳本會先剝掉 `<defs>`、也不認 H/V 簡寫。2026-09-11 以前放在 defs 用 `<use>` 引用，連線數算成 0，
+  交叉、折數、穿越檢查全部空轉，輸出卻看不出來
+- **兩支都有 8/31 畫圖時就在的未通過項**（早於 9/7 的 composition contract）：框距 32px、loop 的容器 gutter 12px、
+  loop 的 `next` 3 折、usage 的 `p65` 繞路比 1.35、usage 的 ⑦ 在容器外，以及文字溢出。改圖只看有沒有**新增**失敗項。
+  文字溢出是腳本估算，英文版誤報十幾處；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（2026-09-11 四張都 ≥12px）
+- **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
 - **兩支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
   新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案（2026-08-31 踩過）
 - **總循環 7.2 秒**：所有 `animateMotion` 的 `dur` 必須整除 7.2，否則 GIF 接不回去。

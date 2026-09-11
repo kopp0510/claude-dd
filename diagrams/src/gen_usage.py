@@ -13,7 +13,7 @@ MINT = "#6ee7b7"
 
 ZH = dict(
     title="claude-dd 使用流程",
-    sub="從零到日常 · 裝一次、每個專案蓋章一次、之後每個功能段落走同一個迴圈",
+    sub="從零到日常 · 裝一次、每個專案蓋章一次、大工作先拆段落、每個功能段落走同一個迴圈",
     steps=["STEP 1 · 首次安裝（一次性）",
            "STEP 2 · 專案初始化（每個專案一次）",
            "STEP 3 · 日常開發（每個功能段落）"],
@@ -34,17 +34,20 @@ ZH = dict(
     notes=[
         ("全域 CLAUDE.md 走互動比對", ["已有自己的規則時可先看 diff", "再決定要不要覆蓋"]),
         ("已有 ## 開發流程 區塊時", ["列出與現行版差異並詢問", "是否升級，保留在地內容"]),
+        ("大工作先用 task-planner 拆段落", ["進度表寫進 docs/designs/ 設計文件",
+                                       "小任務只走步驟 1–2，各自 commit",
+                                       "全部做完，整段才跑步驟 3–8"]),
         ("gate 的逃生口", ["檢查點 commit（步驟 2）：", "SKIP_DOC_CHECK=1 git commit",
-                          "最終 commit（步驟 6）必須全過"]),
+                          "欠的 CLAUDE.md 之後照樣要補", "最終 commit（步驟 6）必須全過"]),
     ],
     legend=[("主流程", GOLD, False), ("gate 擋下 → 修完重試", ROSE, True),
             ("可攜：換機器重建 → 回到 ①", MINT, False)],
-    foot="Style 8 · Dark Luxury · claude-dd 使用流程 · 依 README 安裝章節與 dd-init 實際 Phase 繪製",
+    foot="Style 8 · Dark Luxury · claude-dd 使用流程 · 依 README 安裝章節、dd-init 實際 Phase 與 task-planner 繪製",
 )
 
 EN = dict(
     title="claude-dd usage flow",
-    sub="From zero to daily use · install once, stamp each project once, then every feature increment runs the same loop",
+    sub="From zero to daily use · install once, stamp each project once, split big work into increments, then every increment runs the same loop",
     steps=["STEP 1 · First-time install (once)",
            "STEP 2 · Project setup (once per project)",
            "STEP 3 · Daily development (every increment)"],
@@ -68,12 +71,16 @@ EN = dict(
                                                 "then decide whether to overwrite"]),
         ("if a workflow section already exists", ["differences are listed and you are asked",
                                                   "local content is preserved"]),
+        ("big work: task-planner splits it first", ["progress table goes in docs/designs/",
+                                                    "small tasks run steps 1–2, one commit each",
+                                                    "all done, then the increment runs 3–8"]),
         ("gate escape hatch", ["checkpoint commit (step 2):", "SKIP_DOC_CHECK=1 git commit",
+                               "skipped CLAUDE.md must still be paid back",
                                "final commit (step 6) must pass cleanly"]),
     ],
     legend=[("main flow", GOLD, False), ("gate blocks → fix → retry", ROSE, True),
             ("portable: rebuild on a new machine → back to ①", MINT, False)],
-    foot="Style 8 · Dark Luxury · claude-dd usage flow · drawn from the README install section and dd-init's actual phases",
+    foot="Style 8 · Dark Luxury · claude-dd usage flow · drawn from the README install section, dd-init's actual phases and task-planner",
 )
 
 # ── 版面座標 ──
@@ -83,16 +90,21 @@ GRP = [(180, 168, 860, 162), (180, 378, 860, 162), (180, 588, 860, 186)]
 ROWS = [204, 414, 624]           # ①③⑤ 與 ②④⑥ 的 y
 Y7 = 822                          # ⑦
 NOTE_X = 1080
-NOTE_Y = [227, 437, 635]
+NOTE_Y = [227, 437, 612, 720]
 
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def poly(*pts):
+    # 正交折線只用 M/L 絕對座標：verify-geometry.py 不認 H/V 簡寫
+    return "M " + " L ".join(f"{x:g} {y:g}" for x, y in pts)
+
+
 def box(x, y, name, l1, l2, color):
     return f'''  <g>
-    <rect x="{x}" y="{y}" width="{BW}" height="{BH}" rx="6" fill="{SURF}" stroke="{color}" stroke-width="1.5"/>
+    <rect data-role="node" x="{x}" y="{y}" width="{BW}" height="{BH}" rx="6" fill="{SURF}" stroke="{color}" stroke-width="1.5"/>
     <text x="{x+18}" y="{y+25}" class="nm" fill="{color}">{esc(name)}</text>
     <text x="{x+18}" y="{y+47}" class="sm">{esc(l1)}</text>
     <text x="{x+18}" y="{y+65}" class="xs">{esc(l2)}</text>
@@ -140,20 +152,19 @@ def build(L):
   <marker id="ax" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
     <polygon points="0 0,8 3,0 6" fill="{T3}"/></marker>
 ''')
-    # 小球路徑（隱形定義）
+    # 連線畫在 <defs> 外、小球的 <mpath> 直接指向它：verify-geometry.py 會先剝掉 <defs>，
+    # 放在裡面用 <use> 引用的話連線數算成 0，交叉、折數、穿越檢查全部空轉
     y1, y2, y3 = [r + BH / 2 for r in ROWS]
     paths = {
-        "p12": f"M {COL_L+BW} {y1} H {COL_R-12}",
-        "p23": f"M {COL_R+BW/2} {ROWS[0]+BH} V 352 H {COL_L+BW/2} V {ROWS[1]-12}",
-        "p34": f"M {COL_L+BW} {y2} H {COL_R-12}",
-        "p45": f"M {COL_R+BW/2} {ROWS[1]+BH} V 562 H {COL_L+BW/2} V {ROWS[2]-12}",
-        "p56": f"M {COL_L+BW} {y3} H {COL_R-12}",
-        "p65": f"M {COL_R+BW/2} {ROWS[2]+BH} V 790 H {COL_L+BW/2} V {ROWS[2]+BH+12}",
-        "p67": f"M {COL_R+BW*0.75} {ROWS[2]+BH} V {Y7-12}",
-        "p71": f"M {COL_R} {Y7+BH/2} H 140 V {y1} H {COL_L-12}",
+        "p12": poly((COL_L+BW, y1), (COL_R-12, y1)),
+        "p23": poly((COL_R+BW/2, ROWS[0]+BH), (COL_R+BW/2, 352), (COL_L+BW/2, 352), (COL_L+BW/2, ROWS[1]-12)),
+        "p34": poly((COL_L+BW, y2), (COL_R-12, y2)),
+        "p45": poly((COL_R+BW/2, ROWS[1]+BH), (COL_R+BW/2, 562), (COL_L+BW/2, 562), (COL_L+BW/2, ROWS[2]-12)),
+        "p56": poly((COL_L+BW, y3), (COL_R-12, y3)),
+        "p65": poly((COL_R+BW/2, ROWS[2]+BH), (COL_R+BW/2, 790), (COL_L+BW/2, 790), (COL_L+BW/2, ROWS[2]+BH+12)),
+        "p67": poly((COL_R+BW*0.75, ROWS[2]+BH), (COL_R+BW*0.75, Y7-12)),
+        "p71": poly((COL_R, Y7+BH/2), (140, Y7+BH/2), (140, y1), (COL_L-12, y1)),
     }
-    for k, d in paths.items():
-        o.append(f'  <path id="{k}" d="{d}" fill="none"/>\n')
     o.append('</defs>\n')
     o.append(f'<rect width="1440" height="1080" fill="{BG}"/>\n')
     o.append('<rect width="1440" height="1080" fill="url(#glow)"/>\n')
@@ -164,16 +175,17 @@ def build(L):
 
     # 分組容器
     for (gx, gy, gw, gh), lbl in zip(GRP, L["steps"]):
-        o.append(f'<rect x="{gx}" y="{gy}" width="{gw}" height="{gh}" rx="8" fill="none" '
+        o.append(f'<rect data-role="container" x="{gx}" y="{gy}" width="{gw}" height="{gh}" rx="8" fill="none" '
                  f'stroke="{GOLD}" stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>\n')
         o.append(f'<text x="{gx+24}" y="{gy+27}" class="grp">{esc(lbl)}</text>\n')
 
     # 可見連線（淡）
-    style_solid = f'stroke="{GOLD}" stroke-width="1.6" opacity="0.32" fill="none"'
+    def edge(k, style):
+        return f'  <path id="{k}" data-role="edge" d="{paths[k]}" fill="none" {style}/>\n'
     for k in ("p12", "p23", "p34", "p45", "p56"):
-        o.append(f'  <use href="#{k}" {style_solid} marker-end="url(#ag)"/>\n')
-    o.append(f'  <use href="#p65" stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.32" fill="none" marker-end="url(#ar)"/>\n')
-    o.append(f'  <use href="#p71" stroke="{MINT}" stroke-width="1.6" opacity="0.34" fill="none" marker-end="url(#am)"/>\n')
+        o.append(edge(k, f'stroke="{GOLD}" stroke-width="1.6" opacity="0.32" marker-end="url(#ag)"'))
+    o.append(edge("p65", f'stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.32" marker-end="url(#ar)"'))
+    o.append(edge("p71", f'stroke="{MINT}" stroke-width="1.6" opacity="0.34" marker-end="url(#am)"'))
 
     # 節點
     for i, (n, a, b, c) in enumerate(L["boxes"][:6]):
