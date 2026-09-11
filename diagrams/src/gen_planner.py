@@ -22,11 +22,11 @@ ZH = dict(
         resume=("換 session 或 /compact", ["先讀進度表", "從做到的地方接著做"]),
         tasks=("小任務 S2-1、S2-2…", ["一個一個做：實作、驗證、commit", "只走迴圈的步驟 1、2"]),
         whole=("整段跑步驟 3–8", ["小任務全部 commit 完才跑", "簡化、審查、再測、commit…"]),
-        done=("標 DONE", ["步驟 3–8 全部跑完才標", "寫回進度表"]),
+        done=("標 DONE", ["3–8 跑完才標，寫回進度表", "全部 DONE 就收工"]),
     ),
-    one="1 段", many="2 段以上", next="下一段",
+    one="1 段", many="2 段以上", next="還有下一段",
     notes=[("怎麼估段落數", ["照功能數算，不照分層數算", "同一個功能的資料、API、畫面算一段",
-                           "帳款、權限這類高風險另算一段"]),
+                           "產生帳款、改權限規則這類高風險工作，", "不跟其他功能算同一段"]),
            ("小任務 commit 了，不等於這段做完", ["步驟 3、4、8 看的是整段的改動",
                                          "所以小任務全部做完，整段才跑 3–8"])],
     legend=[("主流程", GOLD, False), ("下一段：回到小任務", GOLD_DIM, True),
@@ -36,8 +36,8 @@ ZH = dict(
 
 EN = dict(
     title="claude-dd: how big work runs",
-    sub="work that spans several increments · count increments first; at two or more, task-planner takes over · small tasks run steps 1–2, the whole increment runs 3–8",
-    groups=["Before starting · count increments", "Progress table · in docs/designs/", "Each increment · top to bottom"],
+    sub="work that spans several increments · count increments first; at two or more, task-planner takes over · small tasks run only steps 1–2, the whole increment runs 3–8",
+    groups=["Before starting · count increments", "Progress table · in docs/designs/", "Each increment · follow the table"],
     nodes=dict(
         ask=("Hand over the work", ["say what should be built", "e.g. three features at once"]),
         count=("Count increments", ["estimate N"]),
@@ -45,13 +45,14 @@ EN = dict(
         plan=("task-planner drafts", ["increments, small tasks, tests", "files written after you approve"]),
         table=("Progress table", ["survives sessions, lives in git", "S1, S2… top to bottom"]),
         resume=("New session or /compact", ["reads the progress table first", "resumes where it stopped"]),
-        tasks=("Small tasks S2-1, S2-2…", ["one at a time, loop steps 1–2", "each: build, verify, commit"]),
-        whole=("Run steps 3–8", ["once, on the whole increment", "after every small task is in"]),
-        done=("Mark DONE", ["only after steps 3–8 finish", "written back to the table"]),
+        tasks=("Small tasks S2-1, S2-2…", ["one by one: build, verify, commit", "loop steps 1–2 only"]),
+        whole=("Whole increment: 3–8", ["after every small task is in", "simplify, review, re-verify…"]),
+        done=("Mark DONE", ["after 3–8, written to the table", "all DONE: the work is finished"]),
     ),
     one="just 1", many="2 or more", next="next increment",
     notes=[("How increments are counted", ["by feature, not by layer", "a feature's data, API and UI = one",
-                                           "billing or permission work: its own"]),
+                                           "high-risk work, e.g. generating bills or",
+                                           "changing permission rules: own increment"]),
            ("A committed small task is not a done increment", ["steps 3, 4 and 8 read the whole increment's diff",
                                                                "so 3–8 run once, after every small task"])],
     legend=[("main flow", GOLD, False), ("next increment: back to small tasks", GOLD_DIM, True),
@@ -66,7 +67,7 @@ YS = [186, 386, 586, 766]
 # 三個分組，每個節點都要在某個容器裡：verify-geometry.py 把容器外的節點記成未通過
 GROUPS = [(76, 146, 958, 164), (406, 346, 958, 164), (736, 546, 628, 344)]
 # 節點落在哪一欄、哪一列；count 是菱形，其餘是矩形。
-# 強調色只給兩個焦點（決策與進度表），其他節點用同一個金色
+# 強調色只給兩個焦點（決策與進度表），岔出去的 loop 用灰，其餘同一個金色
 PLACE = dict(ask=(0, 0, GOLD_DIM), count=(1, 0, AMBER), loop=(2, 0, GRAY),
              plan=(1, 1, GOLD_DIM), table=(2, 1, GREEN), resume=(3, 1, GOLD_DIM),
              tasks=(2, 2, GOLD_DIM), whole=(3, 2, GOLD_DIM), done=(3, 3, GOLD_DIM))
@@ -87,7 +88,8 @@ def text_width(s, size):
 
 
 def box(x, y, name, lines, color):
-    # 節點文字寫明 font-size：verify-geometry.py 依 class 猜字級（nm→20、sm→15），不寫會誤報溢出
+    # 節點文字的字級只寫在 font-size 屬性，CSS 的 .nm/.sm 不設：verify-geometry.py 讀屬性，沒寫就依 class
+    # 猜（nm→20、sm→15）而誤報溢出；CSS 又會蓋過屬性，兩邊各寫一份的話，只改 CSS 檢查仍照舊數字估
     o = [f'  <g><rect data-role="node" x="{x}" y="{y}" width="{BW}" height="{BH}" rx="6" fill="{SURF}" '
          f'stroke="{color}" stroke-width="1.5"/>\n',
          f'    <text x="{x+16}" y="{y+28}" class="nm" font-size="15" fill="{color}">{esc(name)}</text>\n']
@@ -139,8 +141,8 @@ def build(L):
   .ttl {{ font-family: {SERIF}; font-size: 40px; font-weight: 700; fill: {T1}; }}
   .sub {{ font-size: 13px; fill: {T2}; }}
   .grp {{ font-family: {SERIF}; font-size: 16px; font-weight: 700; fill: {GOLD_DIM}; }}
-  .nm  {{ font-size: 15px; font-weight: 600; }}
-  .sm  {{ font-size: 11.5px; fill: {T2}; }}
+  .nm  {{ font-weight: 600; }}
+  .sm  {{ fill: {T2}; }}
   .el  {{ font-size: 11px; fill: {T2}; }}
   .nh  {{ font-size: 12.5px; fill: {T2}; }}
   .nb  {{ font-size: 11px; fill: {T3}; }}
@@ -182,8 +184,8 @@ def build(L):
         "start":  poly((mid[2], YS[1]+BH), (mid[2], YS[2]-12)),
         "whole":  poly((XS[2]+BW, c2), (XS[3]-12, c2)),
         "done":   poly((mid[3], YS[2]+BH), (mid[3], YS[3]-12)),
-        # 標 DONE 回到小任務：還有「還有小任務」不畫成自己繞回自己的線 —— 起訖點太近，
-        # 繞路比會爆表；一個一個做寫在小任務框裡
+        # 標 DONE 回到小任務、做下一段。小任務做完一個接下一個，不畫成繞回自己的線 —— 起訖點太近，
+        # 繞路比會爆表；改在小任務框裡寫「一個一個做」
         "next":   poly((XS[3], c3), (mid[2], c3), (mid[2], YS[2]+BH+12)),
     }
     def edge(k, style):

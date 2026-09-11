@@ -76,9 +76,11 @@
   有繞回來的圈（每一段裡小任務一個個做，整段才跑 3–8，標 DONE 再做下一段），還有換 session 照表接手；
   原本兩張圖只順帶提一句。來源是新的產生器 `diagrams/src/gen_planner.py`，照 `verify-geometry.py` 畫：
   兩版幾何檢查 0 項不過（舊兩張各有 8/31 留下的未通過項），渲染後量到節點文字離框邊最少 15px，
-  GIF 循環接點與相鄰幀的 PSNR 只差 0.08／0.03dB，四邊都是底色。為了過檢查的三個做法寫進
-  `diagrams/src/CLAUDE.md`：節點文字直接寫 `font-size`（檢查腳本依 class 猜的字級比 CSS 大）、
-  九個節點都放進容器、邊標籤底下墊 `data-role="mask"` 的底色塊
+  GIF 循環接點與相鄰幀的 PSNR 只差 0.04／0.03dB，四邊都是底色。為了過檢查的三個做法寫進
+  `diagrams/src/CLAUDE.md`：節點文字的字級只寫在 `font-size` 屬性、CSS 不設（檢查腳本讀屬性，沒寫就依 class
+  猜，猜得比實際大）、九個節點都放進容器、邊標籤底下墊 `data-role="mask"` 的底色塊。review 抓到「怎麼估段落數」
+  把高風險講寬了：英文版寫成 billing or permission work，連 SKILL 說要跟功能放一起的「沿用既有的權限檢查」
+  都包了進去，已照 §4.1 改成「產生帳款、改權限規則這類高風險工作」
 - **`skill-creator` 納入 `OFFICIAL_PLUGINS`**（Anthropic 官方 plugin，走 `/plugin`
   路線，不 vendor 進本 repo）：補上「怎麼跑一輪 skill 開發」— 訪談 → 草稿 →
   同一批測試題跑「有 skill / 無 skill」兩組對照 → 評分 → 迭代，與既有
