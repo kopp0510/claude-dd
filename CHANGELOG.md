@@ -71,6 +71,14 @@
 
 ### Added
 
+- **README 新增「大工作怎麼跑」圖**（`diagrams/claude-dd-task-planner*.gif`，中英各一，放在兩份 README
+  的 task-planner 段落下面）。那段文字有分岔（估出 1 段照一般迴圈、2 段以上交給 task-planner）、
+  有繞回來的圈（每一段裡小任務一個個做，整段才跑 3–8，標 DONE 再做下一段），還有換 session 照表接手；
+  原本兩張圖只順帶提一句。來源是新的產生器 `diagrams/src/gen_planner.py`，照 `verify-geometry.py` 畫：
+  兩版幾何檢查 0 項不過（舊兩張各有 8/31 留下的未通過項），渲染後量到節點文字離框邊最少 15px，
+  GIF 循環接點與相鄰幀的 PSNR 只差 0.08／0.03dB，四邊都是底色。為了過檢查的三個做法寫進
+  `diagrams/src/CLAUDE.md`：節點文字直接寫 `font-size`（檢查腳本依 class 猜的字級比 CSS 大）、
+  九個節點都放進容器、邊標籤底下墊 `data-role="mask"` 的底色塊
 - **`skill-creator` 納入 `OFFICIAL_PLUGINS`**（Anthropic 官方 plugin，走 `/plugin`
   路線，不 vendor 進本 repo）：補上「怎麼跑一輪 skill 開發」— 訪談 → 草稿 →
   同一批測試題跑「有 skill / 無 skill」兩組對照 → 評分 → 迭代，與既有
