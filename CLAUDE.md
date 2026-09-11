@@ -91,7 +91,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 `~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有
 `core.hooksPath` 時改掛該目錄，見下方「開發本 repo」）— 改碼目錄缺
 CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
-SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後第一個正常 commit
+SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit
 （就算沒改程式碼）一樣擋；細節見 `scripts/CLAUDE.md`。
 
 > **舊 DD Pipeline（已刪除）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
@@ -109,8 +109,9 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - gate 規則與逃生口（`SKIP_DOC_CHECK=1`）同各專案：改 `.sh` 等程式碼檔時，
   該目錄的 CLAUDE.md 必須同批更新
 - 記段落起點、取範圍都用 repo 這份：`scripts/check-claude-md.sh --start-segment` /
-  `--segment-base`（全域模板寫的是 `~/.claude/scripts/` 那份）。hook 跑的是 repo 這份，
-  部署那份要等 `--force` 才跟上，改 gate 的期間兩份行為可能不同
+  `--segment-base`（全域模板寫的是 `~/.claude/scripts/` 那份）。本 repo 的 hook 跑 repo 這份，
+  其他專案的 hook 跑部署那份；安裝腳本不帶 `--force` 也會覆蓋部署那份，gate 還沒驗證完
+  別跑安裝，驗證完 commit 後再重跑，其他專案才會用到新版
 - 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項
