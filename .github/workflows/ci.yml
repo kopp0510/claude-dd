@@ -266,9 +266,11 @@ jobs:
           commit() { git add -A && git commit -qm "$1"; }
           skip_commit() { git add -A && SKIP_DOC_CHECK=1 git commit -qm "$1"; }
           said() { grep -qF "$1" "$OUT" || { echo "❌ 輸出沒提到：$1"; sed 's/^/    /' "$OUT"; fail=1; }; }
+          base_is() { [ "$(cat "$BASE_FILE" 2>/dev/null)" = "$1" ] || { echo "❌ 起點應為 ${1}，實際是 $(cat "$BASE_FILE" 2>/dev/null)"; fail=1; }; }
 
           # 1. rental-line 段落 1：起點在第一個 commit 之前（還沒有 HEAD）
           expect "還沒有 HEAD 也能記起點" pass "$GATE" --start-segment
+          base_is "$(git hash-object -t tree /dev/null)"
           mkdir src && echo a > src/a.js
           expect "SKIP 的檢查點 commit 放行" pass skip_commit c1
           echo readme > README.md
@@ -281,10 +283,13 @@ jobs:
 
           # 2. 有欠帳時不准重記起點（起點往後移會把欠帳洗掉）
           expect "沒有欠帳時可以重記起點" pass "$GATE" --start-segment
+          base_is "$(git rev-parse HEAD)"
           echo b > src/b.js
-          expect "SKIP 改 src/b.js" pass skip_commit c5
+          expect "SKIP 改 src/b.js（起點不動）" pass skip_commit c5
+          base_is "$(git rev-parse HEAD~1)"
           expect "有欠帳時拒絕重記起點" block "$GATE" --start-segment
-          said "src"
+          said "先補完再記新起點"
+          base_is "$(git rev-parse HEAD~1)"
           echo doc2 >> src/CLAUDE.md
           expect "補完放行" pass commit c6
 
@@ -295,37 +300,121 @@ jobs:
           expect "Y：SKIP 只改程式碼" pass skip_commit y
           echo z >> README.md
           expect "Z：只改 README 也要擋（Y 欠的帳）" block commit z
+          said "src/CLAUDE.md"
           echo doc4 >> src/CLAUDE.md
           expect "補上放行" pass commit z2
 
           # 4. 沒 SKIP 的 commit 規則不變：改到的目錄這次就要一起 staged CLAUDE.md
           echo e >> src/a.js
           expect "起點之後更新過 CLAUDE.md，這次沒 staged 仍要擋" block commit n1
+          said "未一起 staged"
           echo doc5 >> src/CLAUDE.md
           expect "同批補上放行" pass commit n2
 
           # 5. --segment-base：有起點就印；沒有就失敗，不能印空字串給 git diff 吃
           expect "有起點時印得出來" pass "$GATE" --segment-base
+          said "$(cat "$BASE_FILE" 2>/dev/null || echo 沒有起點檔)"
           rm -f "$BASE_FILE"
           expect "沒有起點時要失敗" block "$GATE" --segment-base
 
-          # 6. 忘了記起點：第一個 SKIP 自動記下，照樣追得到
+          # 6. 忘了記起點：第一個 SKIP 自動記下；之後再 SKIP，起點也不動
           echo f > src/f.js
           expect "沒記起點直接 SKIP" pass skip_commit auto1
           [ -f "$BASE_FILE" ] || { echo "❌ SKIP 沒有自動記下起點"; fail=1; }
+          said "$(cat "$BASE_FILE" 2>/dev/null || echo 沒有起點檔)"
+          mkdir p && echo 1 > p/x.js
+          expect "再 SKIP p/x.js（起點不動）" pass skip_commit auto2
+          base_is "$(git rev-parse HEAD~2)"
           echo r >> README.md
-          expect "之後的正常 commit 擋下 src/CLAUDE.md" block commit auto2
-          echo doc6 >> src/CLAUDE.md
-          expect "補上放行" pass commit auto3
+          expect "兩個 SKIP 欠的目錄都要擋" block commit auto3
+          said "src/CLAUDE.md"
+          said "p/CLAUDE.md"
+          echo doc6 >> src/CLAUDE.md && echo pdoc > p/CLAUDE.md
+          expect "補上放行" pass commit auto4
 
-          # 7. 起點不在目前分支的歷史裡（換過分支、改寫過歷史）：警告後只查 staged，不可整個爆掉
-          git checkout -qb side && echo s > side.txt
-          expect "在 side 分支 commit" pass commit side
-          git rev-parse HEAD > "$BASE_FILE"
+          # 7. 起點被改寫、不在目前分支的歷史裡：改從共同祖先算，欠帳不能跟著消失
+          expect "重記起點" pass "$GATE" --start-segment
+          git checkout -qb br-rewritten && echo s > side.txt
+          expect "另一條線上的 commit（模擬被改寫的起點）" pass commit side
+          side=$(git rev-parse HEAD)
           git checkout -q -
+          mkdir r && echo 1 > r/a.js
+          expect "SKIP r/a.js" pass skip_commit r1
+          echo "$side" > "$BASE_FILE"
+          expect "起點失效時 --segment-base 要失敗" block "$GATE" --segment-base
           echo q >> README.md
-          expect "起點失效時只查 staged 並放行" pass commit w1
+          expect "起點失效：從共同祖先算，照樣擋 r 欠的帳" block commit w1
           said "不在目前分支的歷史裡"
+          said "r/CLAUDE.md"
+          expect "起點失效也不准重記起點把欠帳洗掉" block "$GATE" --start-segment
+          echo rdoc > r/CLAUDE.md
+          expect "補上放行" pass commit w2
+          mkdir w && echo 1 > w/a.js
+          expect "staged 的程式碼目錄照查" block commit w3
+          said "w/CLAUDE.md"
+          echo wdoc > w/CLAUDE.md
+          expect "同批補上放行" pass commit w4
+
+          # 8. 欠帳的目錄後來沒有程式碼了：沒東西要補。看的是 index，只在工作目錄刪掉不算
+          expect "重記起點（取代失效的起點）" pass "$GATE" --start-segment
+          mkdir gone && echo g > gone/g.js
+          expect "SKIP 建 gone/g.js（沒有 CLAUDE.md）" pass skip_commit g1
+          git rm -rq gone
+          expect "刪掉整個 gone/ 的正常 commit 放行" pass commit g2
+          expect "目錄已刪，重記起點不再拒絕" pass "$GATE" --start-segment
+          mkdir mv && echo m > mv/m.js && echo '{}' > mv/data.json
+          expect "SKIP 建 mv/m.js" pass skip_commit mv1
+          git mv mv/m.js src/m.js && echo doc7 >> src/CLAUDE.md
+          expect "程式碼搬進 src（同批更新 src/CLAUDE.md），mv 只剩 data.json：放行" pass commit mv2
+          mkdir keep && echo k > keep/k.js
+          expect "SKIP 建 keep/k.js" pass skip_commit k1
+          rm -rf keep && echo k >> README.md && git add README.md
+          expect "只在工作目錄刪掉、沒 staged：commit 裡還有 keep/k.js，要擋" block git commit -qm k2
+          said "keep/CLAUDE.md"
+          git checkout -- keep
+          echo kdoc > keep/CLAUDE.md
+          expect "補上放行" pass commit k3
+
+          # 9. merge：平行分支上看不到那段程式碼的 CLAUDE.md 更新不算補上；merge commit 自己補的算
+          expect "重記起點" pass "$GATE" --start-segment
+          git checkout -qb br-feat
+          mkdir feat && echo f > feat/a.js
+          export GIT_AUTHOR_DATE=2030-01-01T00:00:00 GIT_COMMITTER_DATE=2030-01-01T00:00:00
+          expect "br-feat 上 SKIP 建 feat/a.js（日期較早）" pass skip_commit f1
+          git checkout -q -
+          mkdir -p feat && echo fdoc > feat/CLAUDE.md
+          export GIT_AUTHOR_DATE=2030-01-02T00:00:00 GIT_COMMITTER_DATE=2030-01-02T00:00:00
+          expect "主線先建 feat/CLAUDE.md（看不到 feat/a.js，日期較晚）" pass commit m1
+          unset GIT_AUTHOR_DATE GIT_COMMITTER_DATE
+          git merge -q --no-edit br-feat
+          echo mm >> README.md
+          expect "merge 後的正常 commit 要擋：主線那份 CLAUDE.md 沒看過 feat/a.js" block commit m2
+          said "feat/CLAUDE.md"
+          echo fdoc2 >> feat/CLAUDE.md
+          expect "補上放行" pass commit m3
+          git checkout -qb br-feat2
+          mkdir feat2 && echo f > feat2/a.js
+          expect "br-feat2 上 SKIP 建 feat2/a.js" pass skip_commit f2
+          git checkout -q -
+          git merge -q --no-commit --no-ff br-feat2
+          echo f2doc > feat2/CLAUDE.md && git add feat2/CLAUDE.md
+          expect "merge commit 自己補上 feat2/CLAUDE.md：放行" pass git commit -qm merge2
+          echo y >> README.md
+          expect "之後不再追討 feat2" pass commit after2
+
+          # 10. 非 ASCII 路徑也要查（git 預設把中文路徑加引號跳脫，原本比對不到副檔名）
+          mkdir 功能 && echo 1 > 功能/a.js
+          expect "staged 中文目錄的程式碼、沒有 CLAUDE.md：要擋" block commit u1
+          said "功能/CLAUDE.md"
+          echo doc > 功能/CLAUDE.md
+          expect "補上放行" pass commit u2
+          mkdir 模組 && echo 1 > 模組/b.js
+          expect "SKIP 中文目錄的程式碼" pass skip_commit u3
+          echo u >> README.md
+          expect "之後的正常 commit 要擋 模組/CLAUDE.md" block commit u4
+          said "模組/CLAUDE.md"
+          echo doc > 模組/CLAUDE.md
+          expect "補上放行" pass commit u5
 
           exit $fail
 
