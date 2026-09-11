@@ -124,6 +124,8 @@ Three quality mechanisms, one axis each: the simplifier owns readability, code-r
 
 **Work that spans several increments** goes to `task-planner` first: it splits the work into increments run in order (`S1`, `S2`, …), lists small tasks inside each one (`S2-1`, `S2-2`, …), and writes the progress table into the design doc under `docs/designs/`. A small task runs only steps 1 and 2 (implement, verify, commit, with its ID at the end of the subject line); once every small task in an increment is committed, the increment runs steps 3–8 once, and only then is it marked `DONE`. The plan is shown to you for approval before anything is written; a new session or `/compact` picks up from the table; a blocked increment or newly discovered work stops for a question. You don't have to ask for it: the global CLAUDE.md tells Claude to write down how many increments it expects before starting complex work, and to call `task-planner` itself at two or more.
 
+![claude-dd: how big work runs](diagrams/claude-dd-task-planner.gif)
+
 ![claude-dd 8-step development loop](diagrams/claude-dd-dev-loop.gif)
 
 Step 1 proves the thing you built is right; step 5 proves that simplifying it and applying review findings didn't break it. Different purposes — neither substitutes for the other.

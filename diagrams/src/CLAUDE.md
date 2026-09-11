@@ -11,6 +11,7 @@
 |---|---|
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（8 步迴圈在框 ⑤；大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
 | `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務） |
+| `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
 
@@ -28,7 +29,7 @@
 `skills/tech-diagram-gif/scripts/fixtures/sample-flow.svg` —— 它同時是幾何檢查的
 測試 fixture，不在此重複一份，改它要一併重跑該 skill 的測試。
 
-兩支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
+三支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
 中英兩版共用同一份版面座標，只換 `ZH` / `EN` 兩個 dict 的字串。
 
 ## 慣例與約束
@@ -39,15 +40,19 @@
 - **手寫 SVG 改完要重跑幾何檢查**：
   `python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <檔案>`。
   四份現況皆通過；沒過就不要重出 GIF
-- **兩支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
+- **三支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
   連線要畫在 `<defs>` 外、標 `data-role="edge"`、座標只用 M/L（`poly()` 產生），小球的 `<mpath>` 直接指向它 ——
   腳本會先剝掉 `<defs>`、也不認 H/V 簡寫。2026-09-11 以前放在 defs 用 `<use>` 引用，連線數算成 0，
   交叉、折數、穿越檢查全部空轉，輸出卻看不出來
-- **兩支都有 8/31 畫圖時就在的未通過項**（規則多數 8/10 就在 contract 裡，9/7 才有 verify-geometry.py 去量）：
-  loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 `p65` 繞路比 1.35、⑦ 在容器外，以及文字溢出。改圖只看有沒有**新增**失敗項。
+- **`gen_loop.py`、`gen_usage.py` 有 8/31 畫圖時就在的未通過項**（規則多數 8/10 就在 contract 裡，9/7 才有 verify-geometry.py 去量）：
+  loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 `p65` 繞路比 1.35、⑦ 在容器外，以及文字溢出。改這兩張只看有沒有**新增**失敗項。
   文字溢出是腳本估算，英文版誤報十幾處；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（2026-09-11 四張都 ≥12px）
+- **`gen_planner.py` 是照檢查腳本畫的，兩版都 0 項不過，改它要維持全過**。三個做法是為了過檢查：
+  節點文字直接寫 `font-size`（腳本依 class 猜字級，`nm` 當 20、`sm` 當 15，比 CSS 大，舊兩張的溢出誤報就是這樣來的）；
+  九個節點都放進容器（容器外的節點算未通過）；邊標籤底下墊 `data-role="mask"` 的底色塊（沒有的話標籤間隙沒量到，只印警告）。
+  分組標題靠右是因為有連線從容器上緣左半邊進來 —— 文字壓線腳本量不到，只能看截圖
 - **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
-- **兩支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
+- **三支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
   新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案（2026-08-31 踩過）
 - **總循環 7.2 秒**：所有 `animateMotion` 的 `dur` 必須整除 7.2，否則 GIF 接不回去。
   錯開相位一律用**負值** `begin`（正延遲會讓小球停在左上角）
@@ -71,16 +76,16 @@
 
 ## 完整重出 GIF 的流程
 
-1. 在暫存目錄跑兩支腳本 → 得到 4 份 `.svg` 與 `.html`
+1. 在暫存目錄跑三支腳本 → 得到 6 份 `.svg` 與 `.html`
 2. playwright 開 `file://<暫存>/xxx.html`，`pauseAnimations()` 後
    `setCurrentTime(i*7.2/144)` 逐幀截圖，144 幀
 3. `ffmpeg -framerate 20 -i f%03d.png -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 out.gif`
 4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再覆蓋 `../*.gif`
 
-細節見 `tech-diagram-gif` skill；本目錄只保存 claude-dd 自己這 4 張的來源。
+細節見 `tech-diagram-gif` skill；本目錄只保存 claude-dd 自己這 6 張的來源。
 
 ## 與上層的關係
 
 `../` 只放成品 GIF（兩份 README 直接嵌）。圖上的文字宣稱（元件數量、迴圈步數、
-目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README` 與
-`skills/task-planner/SKILL.md`；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
+目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README`、
+`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）與 `skills/task-planner/SKILL.md`；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
