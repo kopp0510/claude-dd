@@ -10,7 +10,7 @@
 
 1. **A pre-commit hook that blocks commits** when a directory containing code has no `CLAUDE.md`, or has one that wasn't staged in the same commit. This one is real enforcement — it's a shell script with `exit 1`, it doesn't care what the AI decided.
 2. **A global `CLAUDE.md`** that tells Claude to cite a source for API signatures, version numbers, and project facts, and bans hedges like "should be" / "probably".
-3. **A 8-step loop** stamped into each project's `CLAUDE.md` so every feature increment goes through simplify → review → re-verify before the final commit.
+3. **An 8-step loop** stamped into each project's `CLAUDE.md` so every feature increment goes through simplify → review → re-verify before the final commit.
 
 Be clear about the difference: only #1 is enforcement. Claude Code loads `CLAUDE.md` as context, not as configuration — [the docs say so plainly](https://code.claude.com/docs/en/memory) ("Claude treats them as context, not enforced configuration"). #2 and #3 raise the floor and leave a record you can audit; they do not guarantee compliance. Anything that must happen every time belongs in a hook, which is exactly why the gate exists.
 
@@ -64,7 +64,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
-Plus two unnumbered steps: a pre-flight check that validates every skill's `hooks.json` command paths (a relative path aborts the install before anything is deployed), and a closing one that deploys `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`.
+Plus two unnumbered steps: a pre-flight check before step 2 that validates every skill's `hooks.json` command paths (a relative path aborts the install before anything is deployed), and one between steps 6 and 7 that deploys `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`.
 
 ### Install options
 
@@ -138,7 +138,7 @@ The full path from zero to daily use (install once, stamp each project once, spl
 
 - Every folder containing code needs a `CLAUDE.md`, updated in the same batch as the code. The cascade upward through the parent layers is a §3.9 rule, **not** something the gate checks — it only looks at the directory whose code changed, so a stale parent produces no signal at all
 - The gate is `~/.claude/scripts/check-claude-md.sh`, hooked in by `/dd-init`. It goes into `.git/hooks/pre-commit`, unless `git config core.hooksPath` is set — git ignores `.git/hooks/` entirely in that case, so the hook goes into that directory instead. (This repo is itself in the second case.) Its error message tells the AI agent directly to read the directory, generate or update the file itself, and retry
-- It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. A markdown-only change does not trigger it *by itself* — but while the increment still has outstanding SKIP debt, even a commit with no code in it is blocked
+- It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. A markdown- or config-only change does not trigger it *by itself* — but see the next point: SKIP debt blocks it anyway
 - Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly. Skipping is not a pardon: the gate tracks every directory skipped since the increment's start, and the next normal commit — even one with no code in it — is blocked until those directories' `CLAUDE.md` files are updated
 
 ## Why nested CLAUDE.md files
@@ -256,7 +256,16 @@ The installer only manages what **this repo deployed**. Leftovers written into `
 
 MIT License
 
-Vendored content: `skills/writing-great-skills/` (from [mattpocock/skills](https://github.com/mattpocock/skills), MIT); the Fowler smell baseline section of `agents/code-reviewer.md` is adapted from the same source.
+Vendored content, each shipping its own upstream licence file:
+
+| Path | Licence | Upstream |
+|------|---------|----------|
+| `skills/writing-great-skills/LICENSE.txt` | MIT | [mattpocock/skills](https://github.com/mattpocock/skills) — the Fowler smell baseline section of `agents/code-reviewer.md` is adapted from the same source |
+| `skills/frontend-design/LICENSE.txt` | Apache-2.0 | attribution/NOTICE terms apply |
+| `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors (style rules only; see the file for exactly which parts) |
+| `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+
+Intake rules: [CLAUDE.md, "第三方 Skill / Agent 收編檢查清單"](CLAUDE.md) *(Traditional Chinese)*.
 
 ## Contributing
 

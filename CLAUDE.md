@@ -35,7 +35,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
-- `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署也不在 `scripts/*.sh` 這個 glob 內）
+- `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `diagrams/` — 兩份 README 嵌的 6 張 GIF（使用流程、8 步迴圈、大工作怎麼跑 × 中英），另有 tech-diagram-gif
   各風格的示範 GIF（2026-09-07 加入）；每張的來源與重出方式見 `diagrams/src/CLAUDE.md`
   （改來源再重出，勿手改 GIF）。
@@ -94,12 +94,15 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 1. 在 `scripts/` 建立 `<name>.sh`（必須通過 `shellcheck -S warning`，且可在 macOS bash 3.2 執行）
 2. 加入 `install-dd-pipeline.sh` 頂層的 `DD_SCRIPTS` 陣列 —— 漏加的話 `create_scripts()` 不會部署它，
-   使用者機器上 `~/.claude/scripts/` 根本沒這支腳本（gate 就住在這一層）。2026-09-12 起 CI 的
+   使用者機器上 `~/.claude/scripts/` 根本沒這支腳本（gate 就住在這一層）。CI 的
    「陣列與目錄一致性」有第五組 `DD_SCRIPTS ↔ scripts/*.sh` 會擋
-3. 加進 `.github/workflows/ci.yml` 的 ShellCheck 檔案清單 —— **那份清單是逐檔寫死的**，沒加等於完全不檢查
+3. 加進 `.github/workflows/ci.yml` 的 ShellCheck 檔案清單 —— **那份清單是逐檔寫死的**，沒加等於完全不檢查。
+   同批更新 `DD_PIPELINE_ARCHITECTURE.md` CI 防線表裡寫死的「shellcheck（warning 級，N 支腳本）」
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 
 > `scripts/githooks/` 是本 repo 自用、不部署，也不在 `scripts/*.sh` 這個 glob 內。
+> 撰寫腳本本身的規矩（bash 3.2 相容、變數緊貼全形字要寫 `${var}`、改了 gate 要故意改壞一行驗證）
+> 見 `scripts/CLAUDE.md`「此層慣例」，那份是腳本內容的單一維護來源；這一節只管「怎麼讓它被部署與被檢查」。
 
 ## 核心工作法：8 步開發迴圈
 
@@ -192,8 +195,13 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   於 2026-09-12 補上），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
   **CI 不驗、只能手動同步的區塊**（不寫總數 — 沒窮舉過，寫個數字只會變成下一個過期宣稱）：
   兩份 README 的安裝步驟清單、指令一覽、官方 Plugins、第三方 Plugin 推薦、MCP 必要表、
-  MCP 可選表、前置需求段落、MCP 退化狀態表；以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字與
-  CI 防線表（新增 CI step 時要同步那張表）。動到部署陣列、MCP、plugin、CI step 時逐項巡一遍
+  MCP 可選表、前置需求段落、MCP 退化狀態表、**CLAUDE.md 維護規則那 4 條**、**「為什麼要巢狀」
+  底下的 gate 對策段落**、**散文裡的「8 步／8-step」字樣**（各 9 處；四方只數圍欄內的編號項、
+  第五方只認箭頭行與安裝腳本輸出，標題與內文的步數字樣五道防線一道都碰不到）、
+  **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
+  以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字、CI 防線表、授權清單。
+  **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案**、
+  **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
   兩份 README 指令範例」名稱完全一致，新增/刪除 flag 忘了同步文件會被擋。
   只驗 flag **名稱**，各 flag 的**語意描述**仍是手動維護

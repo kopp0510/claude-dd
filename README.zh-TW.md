@@ -63,7 +63,7 @@ cd claude-dd
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
-另有兩個不列入編號的附加步驟：**前置**檢查每個 skill 的 `hooks.json` 指令路徑（出現相對路徑就在部署任何檔案之前中止安裝），以及**收尾**部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`。
+另有兩個不列入編號的附加步驟：**步驟 2 之前**檢查每個 skill 的 `hooks.json` 指令路徑（出現相對路徑就在部署任何檔案之前中止安裝），以及**步驟 6 與 7 之間**部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`（它失敗會連帶擋掉後面的全域 CLAUDE.md 那步）。
 
 ### 安裝選項
 
@@ -145,7 +145,7 @@ git pull && ./install-dd-pipeline.sh --force
 - gate 本體是 `~/.claude/scripts/check-claude-md.sh`，由 `/dd-init` 掛上。掛載點為 `.git/hooks/pre-commit`，
   但若專案設了 `git config core.hooksPath`，git 會完全忽略 `.git/hooks/`，此時改掛到該目錄下（本 repo 自己就是這種情況）。
   錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
-- 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但只要這個段落還有 SKIP 欠帳，連完全沒改程式碼的 commit 也照樣被擋
+- 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 
 ## 為什麼要巢狀 CLAUDE.md
@@ -281,8 +281,16 @@ claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 
 MIT License
 
-vendored 內容：`skills/writing-great-skills/`（來自 [mattpocock/skills](https://github.com/mattpocock/skills)，MIT）；
-`agents/code-reviewer.md` 的 Fowler smell baseline 章節改編自同一來源。
+vendored 內容，各自附上游授權檔：
+
+| 路徑 | 授權 | 上游 |
+|------|------|------|
+| `skills/writing-great-skills/LICENSE.txt` | MIT | [mattpocock/skills](https://github.com/mattpocock/skills) — `agents/code-reviewer.md` 的 Fowler smell baseline 章節改編自同一來源 |
+| `skills/frontend-design/LICENSE.txt` | Apache-2.0 | 有歸屬／NOTICE 要求 |
+| `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
+| `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+
+收編規則見 [CLAUDE.md「第三方 Skill / Agent 收編檢查清單」](CLAUDE.md)。
 
 ## 貢獻
 
