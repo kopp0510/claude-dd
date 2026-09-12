@@ -39,7 +39,10 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
 
 ## 與上層的關係
 
-`../SKILL.md`、`../CLAUDE.md`、`../README.md` 三份都對這支 hook 有一句宣稱，
-**改行為就要三份一起改**（上游原本三份都寫「zero overhead on success」，都是錯的）。
+上層有**四句**宣稱散在**三份**檔案裡，**改行為就要四句一起改**：
+`../SKILL.md`（「Token overhead」那行）、`../CLAUDE.md`（Hooks 段）、
+`../README.md` **兩句**（What's Included 表格的 Hooks 列，以及 Design Principles 的
+「Zero capture overhead」）。上游原本四句都寫成「成功時零開銷」，都是錯的 ——
+2026-09-12 第一次修只改到四句中的三句，是 code-review 抓到 README 有兩句才補齊。
 這是 vendored 內容（MIT, Reza Rezvani，`../LICENSE`），本地修改要留得住理由 —— 所以踩雷寫在這裡，
 不寫在 commit 訊息裡。
