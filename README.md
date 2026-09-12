@@ -264,6 +264,7 @@ Vendored content, each shipping its own upstream licence file:
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | attribution/NOTICE terms apply |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors (style rules only; see the file for exactly which parts) |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15` (2026-03-24). No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |
 
 Intake rules: [CLAUDE.md, "第三方 Skill / Agent 收編檢查清單"](CLAUDE.md) *(Traditional Chinese)*.
 
