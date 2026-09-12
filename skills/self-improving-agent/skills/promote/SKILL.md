@@ -28,8 +28,12 @@ Parse the user's description. If vague, ask one clarifying question:
 ### Step 2: Find the pattern in auto-memory
 
 ```bash
-# Search MEMORY.md for related entries
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
+# Search MEMORY.md for related entries. Claude Code replaces EVERY non-alphanumeric
+# character in the resolved absolute cwd with a single "-" (dots, spaces and CJK included).
+MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+# Verify first; a missing directory means "wrong path", not "nothing to promote".
+# Under LC_ALL=C sed goes per byte, so glob as a fallback:
+#   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
 grep -ni "<keywords>" "$MEMORY_DIR/MEMORY.md"
 ```
 
