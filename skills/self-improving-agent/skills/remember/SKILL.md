@@ -39,7 +39,7 @@ Extract from the user's input:
 ### Step 2: Check for duplicates
 
 ```bash
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
+MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
 grep -ni "<keywords>" "$MEMORY_DIR/MEMORY.md" 2>/dev/null
 ```
 
