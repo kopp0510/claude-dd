@@ -71,9 +71,14 @@
   箭頭，動畫交給跨組長路徑
 - **風格是 Style 8 Dark Luxury**：色票與字級跟隨
   `~/.claude/skills/tech-diagram-gif/references/style-8-dark-luxury.md`。
-  畫布 1440×1080。**字級的放大倍率兩類不同**：四張手寫 SVG 照該檔 960 基準 ×1.5
-  （`.nm` 13→20、`.sm` 10→15、`.ttl` 21→31，`verify-geometry.py` 的 `FONT_SIZES` 預設表就是這一組）；
-  三支產生器實際約 ×1.15（`.nm` 15、`.sm` 11.5–12、`.ttl` 40），刻意不照 ×1.5 —— 不要拿其中一組去套另一組
+  畫布 1440×1080。**字級沒有一個統一倍率，不要拿其中一組去套另一組**（以下都是實測值）：
+  - `verify-geometry.py` 的 `FONT_SIZES` 退路表 = 該檔 960 基準 ×1.5（`.nm` 13→20、`.sm` 10→15、
+    `.al` 10→15、`.ttl` 21→31）。真正對得上這組的只有 `fixtures/sample-flow.svg`，以及
+    `dd-pipeline-propagation.style-2.svg` 與 `motion-build-to-operate.svg` 的**節點**字級
+    （`.nm` 20 / `.sm` 15 / `.al` 15；但 style-2 的 `.ttl` 是 24，不是 31）
+  - `style-11-event-transit.svg`、`style-12-ops-pulse.svg` 自成一套：`.nm` 19、`.sm`/`.al` 14、`.ttl` 26
+  - 三支產生器又是另一套：`gen_loop` / `gen_usage` 的 `.nm` 15、`.sm` 11.5–12；
+    `gen_planner` 連 `.nm` / `.sm` 都不設（節點字級寫在 `font-size` 屬性上）。三支都沒有 `.ttl`
 - **字體堆疊含 CJK 後備**（`Songti TC` / `Noto Serif CJK TC` 等），改字體要兩版一起改
 - **legend 與實際連線一一對應**：畫面上沒有的線就不要留在 legend
 - **`gen_usage.py` 框② 的「安裝 7 個步驟」不是迴圈步數**：那是 `install-dd-pipeline.sh`
