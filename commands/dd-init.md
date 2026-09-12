@@ -152,21 +152,39 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 
 ```bash
 git add CLAUDE.md
-[ -f .gitignore ] && git add .gitignore
-git diff --cached --quiet || git commit -m "chore: 初始化 8 步開發迴圈慣例"
+if [ -f .gitignore ]; then
+  git add .gitignore
+  git diff --cached --quiet -- CLAUDE.md .gitignore || \
+    git commit -m "chore: 初始化 8 步開發迴圈慣例" -- CLAUDE.md .gitignore
+else
+  git diff --cached --quiet -- CLAUDE.md || \
+    git commit -m "chore: 初始化 8 步開發迴圈慣例" -- CLAUDE.md
+fi
 ```
 
-⚠️ **不可寫成 `git add CLAUDE.md .gitignore`**：`git add` 是全有全無，純後端/CLI 專案沒有
-`.gitignore`（Phase 2 只在有前端時建），整條會以 exit 128 失敗、**連 CLAUDE.md 也不會被 stage**，
-蓋章好的檔案就這樣留在 untracked。加 `2>/dev/null || true` 只是把錯誤吞掉，Phase 6 照樣印「✅ 初始化完成」。
-最後一行的 `git diff --cached --quiet ||` 是給「Phase 1 判定已是現行版、零 staged」的情況用的，
-沒有它 `git commit` 會以「沒有要提交的檔案」失敗。
+三個寫法都是必要的，任一省略都會出事（都實測過）：
+
+- **不可寫成 `git add CLAUDE.md .gitignore`**：`git add` 是全有全無，純後端/CLI 專案沒有
+  `.gitignore`（Phase 2 只在有前端時建），整條會以 exit 128 失敗、**連 CLAUDE.md 也不會被 stage**，
+  蓋章好的檔案就這樣留在 untracked。加 `2>/dev/null || true` 只是把錯誤吞掉，Phase 6 照樣印「✅ 初始化完成」。
+- **`git commit` 要帶 pathspec（`-- CLAUDE.md …`）**：不帶的話提交的是**整個 index**，
+  使用者做到一半、早就 staged 的程式碼會被一起掛到「初始化」這個 commit 底下，而且毫無提示。
+  帶 pathspec 之後 hook 拿到的是臨時 index、只看得到這幾個檔，連誤擋都不會發生。
+- **`git diff --cached --quiet` 的 pathspec 要跟 commit 一致**：不一致的話，別人的 staged 變更
+  會讓 guard 誤判「有東西要提交」，接著 `git commit -- CLAUDE.md` 卻以「沒有要提交的變更」收場。
+  這道 guard 本身是給「Phase 1 判定已是現行版、零 staged」用的，沒有它 `git commit` 會失敗。
+- **用 `if … fi` 而不是 `[ -f .gitignore ] && git add .gitignore`**：後者在檔案不存在時整行回 exit 1。
+  在 `set -e` 腳本裡無害（AND-list 非最後一個指令的失敗不觸發），但這個區塊是給 agent 照做的，
+  agent 常把它拆成一次一行跑，那一行單獨跑就是「無輸出 + exit 1」，看起來像失敗、會被誤「修」。
 
 > 註：`.git/hooks/` 不入版控，pre-commit gate 不需 add。
 >
-> **gate 看的是整個 index，不是只看這次新 add 的檔案**。使用者原本就有 staged 的程式碼變更時，
-> 這個 commit 一樣會被擋（那些目錄缺 CLAUDE.md 或沒同批更新）。被擋時不要用 `SKIP_DOC_CHECK=1` 繞過 —— 那會記一筆欠帳；
-> 先 `git status` 看是誰的變更，把不屬於初始化的先 `git restore --staged`，或照 gate 的訊息補上該目錄的 CLAUDE.md。
+> **gate 看的是整個 index，不是只看這次新 add 的檔案。** 上面的 `git commit` 帶 pathspec 正是為了
+> 隔開這件事：hook 只會看到 CLAUDE.md / .gitignore，使用者原本 staged 的東西既不會被擋、也不會被提交。
+>
+> 若你改寫成不帶 pathspec 的版本，兩種壞結果都會回來：使用者有 staged 程式碼且該目錄缺 CLAUDE.md → 被擋；
+> 該目錄的 CLAUDE.md 剛好也在 index 裡 → gate 放行，但**他做到一半的程式碼被一起掛進「初始化」這個 commit**，
+> 沒有任何提示。被擋時不要用 `SKIP_DOC_CHECK=1` 繞過（那會記一筆欠帳），先 `git status` 看是誰的變更。
 
 ### Phase 6: 完成訊息
 

@@ -23,12 +23,17 @@ Performs a comprehensive audit of Claude Code's auto-memory and produces actiona
 
 ```bash
 # Find the project's auto-memory directory.
-# Claude Code encodes the absolute cwd by replacing BOTH "/" and "_" with "-",
-# e.g. /Users/me/project/my_project/app -> -Users-me-project-my-project-app
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
+# Claude Code encodes the RESOLVED absolute cwd by replacing EVERY non-alphanumeric
+# character with a single "-" — not just "/" and "_". Dots, spaces and CJK all become "-":
+#   /Users/me/pj/my_project/v1.2  ->  -Users-me-pj-my-project-v1-2
+#   /Users/me/pj/測試 目錄        ->  -Users-me-pj-------
+MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 
-# Fallback if that directory is missing — locate it before concluding anything:
-# ls -d ~/.claude/projects/*"$(basename "$PWD")"*
+# ALWAYS verify the directory exists before concluding anything about auto-memory.
+# Under LC_ALL=C/POSIX, sed substitutes per byte rather than per character, so any
+# non-ASCII path segment produces too many dashes. Fall back to a glob in that case:
+#   ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
+# Report "auto-memory may be disabled" only after BOTH lookups come up empty.
 
 # List all memory files
 ls -la "$MEMORY_DIR"/

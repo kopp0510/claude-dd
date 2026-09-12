@@ -36,7 +36,12 @@ A learning qualifies for skill extraction when ANY of these are true:
 Read the user's description. Search auto-memory for related entries:
 
 ```bash
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
+# Claude Code replaces EVERY non-alphanumeric character in the resolved absolute cwd
+# with a single "-" (dots, spaces and CJK included).
+MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+# Verify first; a missing directory means "wrong path", not "auto-memory has nothing".
+# Under LC_ALL=C sed goes per byte, so glob as a fallback:
+#   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
 grep -rni "<keywords>" "$MEMORY_DIR/"
 ```
 

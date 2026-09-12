@@ -20,8 +20,13 @@ Quick overview of your project's memory state across all memory systems.
 ### Step 1: Locate all memory files
 
 ```bash
-# Auto-memory directory
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
+# Auto-memory directory. Claude Code replaces EVERY non-alphanumeric character in the
+# resolved absolute cwd with a single "-" (dots, spaces and CJK included).
+MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+
+# The counts below are 0 when the path is wrong, which reads exactly like "healthy".
+# Verify the directory first; under LC_ALL=C sed goes per byte, so glob as a fallback:
+#   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
 
 # Count lines in MEMORY.md
 wc -l "$MEMORY_DIR/MEMORY.md" 2>/dev/null || echo "0"

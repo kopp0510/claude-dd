@@ -134,6 +134,35 @@
 
 ### Fixed
 
+- **`/dd-init` 在沒有 `.gitignore` 的專案不會把 CLAUDE.md 送進版控**：Phase 5 原本寫
+  `git add CLAUDE.md .gitignore 2>/dev/null || true`。`git add` 是全有全無，純後端/CLI 專案
+  沒有 `.gitignore`（Phase 2 只在有前端 UI 時才建），整條以 exit 128 失敗、**staged 清單為空**，
+  接著 `git commit` 也失敗，但 Phase 6 照樣印「✅ 初始化完成」—— 蓋章好的 CLAUDE.md 就留在 untracked。
+  改成兩條獨立的 `git add`，並讓 `git commit` 與 guard 都帶 pathspec（`-- CLAUDE.md …`）：
+  不帶 pathspec 的話提交的是整個 index，使用者做到一半、早就 staged 的程式碼會被一起掛進
+  「初始化」這個 commit 而毫無提示（實測重現過）。帶了之後 hook 拿到的是臨時 index、只看得到這幾個檔，
+  連誤擋都不會發生。同時把 `[ -f .gitignore ] && git add …` 改成 `if … fi`（前者在檔案不存在時整行回
+  exit 1，agent 把區塊拆成一行一行跑時會看成失敗）。四種情境實測：無 .gitignore、有 .gitignore、
+  零 staged、使用者另有無關的 staged 變更 —— CLAUDE.md 都進版控，使用者的檔案原封不動留在 index。
+  第 158 行原本保證「此 commit 只動 CLAUDE.md/.gitignore，會通過 gate」也一併更正：gate 看的是整個 index
+- **安裝腳本的「s) 顯示完整 diff 後再決定」選了會直接中止安裝**：全域 CLAUDE.md 互動選單（情境 4）的
+  `s` 分支裡 `diff "$target" "$source"` 單獨成行，內容不同時回 exit 1，配上檔頭的 `set -e` 直接結束整個
+  安裝行程，講好的「看完後要覆蓋嗎」永遠問不到，而且中止點之後的安裝步驟全部沒跑。補 `|| true`。
+  同一函式上面的 `diff … | head -30` 反而沒事 —— 管線取的是 `head` 的結束狀態。
+  `bash -n` 與 `shellcheck -S warning` 對修正前的版本都是全過的，這類錯只能靠帶 `set -e` 的隔離重現抓到；
+  根目錄 CLAUDE.md 補上通則（`diff`／`grep`／`cmp` 回非 0 是正常結果，一律 `|| true` 或放進管線，
+  後者以腳本沒開 `set -o pipefail` 為前提）
+- **`self-improving-agent` 五個 sub-skill 算出的記憶體目錄一律不存在**：`extract`／`promote`／
+  `remember`／`review`／`status` 都用 `sed 's|/|%2F|g; …'` 把 cwd 編成 `%2F` 形式，而 Claude Code 實際是
+  **把解析後絕對路徑裡每一個非英數字元各換成一個 `-`**（`/`、`_`、`.`、空白、中文都算）。後果全部靜默且
+  回報成功：`remember` 印「✅ Saved to auto-memory」但寫到不存在的路徑、`status` 讀到 0 個檔判為 healthy、
+  `review` 判定「auto-memory may be disabled」。改用 `pwd -P | sed 's/[^a-zA-Z0-9]/-/g'`（`-P` 是因為
+  Claude Code 記的是實體路徑，macOS 的 `/tmp` 就是 symlink）。中途採用過只換 `/` 與 `_` 的版本，被
+  code-review 以 CLI bundle 內的 `replace(/[^a-zA-Z0-9]/g,"-")` 與真實 session 建出的目錄推翻；
+  修正版拿 Claude Code 自己建的三個目錄對照全中，含 `測試 目錄/v1.2_x` → `-------v1-2-x` 這種。
+  五處都補上驗證與 glob fallback：`LC_ALL=C`／`POSIX` 下 sed 會逐 byte 而非逐字元，非 ASCII 路徑會多出
+  一堆 `-`，而這個 repo 是可攜設定庫，Linux 上踩得到。原本 `review` 唯一那條 fallback 也是壞的
+  （拿未編碼的 basename 去比對已編碼的目錄名，`*my_project*` 無匹配）
 - **gate 放行了「用 SKIP 跳過、之後也沒補」的 CLAUDE.md**：gate 原本只看「這一次 commit」
   staged 的檔案，檢查點 commit 用 `SKIP_DOC_CHECK=1` 跳過的目錄，只要最終 commit 沒再碰
   那些目錄的程式碼就不會被查。rental-line 段落 1 實際發生：第一個 commit 用 SKIP 建了
