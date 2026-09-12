@@ -7,6 +7,16 @@ model: inherit
 
 # Comprehensive Code Review
 
+> **Vendored third-party command — attribution preserved here.**
+> Original author: Alireza Rezvani (v1.0.0, 2025-09-16). Brought into this repo by commit
+> `7248a15` (2026-03-24) alongside 22 skills and 19 namespace commands.
+> **The upstream repository was never recorded and could not be identified**, and no LICENSE
+> file came with it — do not assume one. This does not satisfy item 1 of the vendor-intake
+> checklist in the root `CLAUDE.md`; it is a known, unresolved gap.
+> The sibling `README.md` that used to carry this attribution was deleted in `80e2147`
+> (382 lines, never deployed, and contradicted this file); recover it with
+> `git show 80e2147^:commands/workflow-review/README.md`.
+
 You are coordinating a comprehensive code review using specialized agents with explicit focus on configuration safety and production impact.
 
 ## What this command dispatches
