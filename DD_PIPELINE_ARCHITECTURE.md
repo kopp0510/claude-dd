@@ -114,7 +114,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 | README（英/繁中兩份）/ CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
 | 安裝 flag 三方對照（case 分支 ↔ `--help` ↔ 兩份 README） | flag 名稱三方漂移（只驗名稱，語意描述仍手動維護） |
 | §7.2 觸發目標部署驗證（含抓不到與漏反引號兩道護欄） | 全域模板指向未部署元件；章節重編號或某列漏反引號讓這道檢查靜默失效 |
-| 迴圈步數四方一致（模板 §3.9 ↔ 蓋章版 ↔ 兩份 README ↔ 版本標記） | 編號清單的步數漂移 |
+| 迴圈步數四方一致（模板 §3.9 ↔ 蓋章版 ↔ 兩份 README ↔ 版本標記） | 編號清單的步數漂移；另驗 `dd-loop-rev` 的標記格式與檔內唯一性 |
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
 | gate 情境測試（段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
 | Sandbox 端到端非互動安裝 | 只有執行期才會出現的安裝 bug |
@@ -125,7 +125,8 @@ CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 
 ## 授權
 
-Root MIT（LICENSE）。vendored 內容各自附上游授權
-（`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`、
-`skills/tech-diagram-gif/LICENSE.txt`），
+Root MIT（LICENSE）。vendored 內容各自附上游授權，共 4 份
+（`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`（Apache-2.0，有歸屬要求）、
+`skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
+**新增 vendored 元件時，這裡與兩份 README 的授權段落要同批更新**（沒有任何 CI 檢查會擋）。
