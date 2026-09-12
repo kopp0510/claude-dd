@@ -150,9 +150,12 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
      結尾是 `exit 0`、`exit $?` 或 `exec …` 的話，追加在檔尾就是死碼、永遠不會執行，
      要插在那行**之前**；否則在檔尾 **Edit** 追加（保留既有內容）。
      這件事沒做對會靜默失效兩層：hook 照跑但 gate 那行沒執行，而下次跑 `/dd-init` 時
-     下一點的「已含」是純字串比對 —— 字串就在檔案裡，於是每次都回報「已裝」，永遠不會修好
+     **下一條分支**的「已含」是純字串比對 —— 字串就在檔案裡，於是每次都回報「已裝」，永遠不會修好
    - 已含 → 跳過並告知
-4. **兩條分支跑完都要 `chmod +x <掛載點>`**（`test -x <掛載點> || chmod +x <掛載點>`）。
+4. **上面三條分支跑完都要 `chmod +x <掛載點>`**（`test -x <掛載點> || chmod +x <掛載點>`），
+   **包含「已含 → 跳過」那條** —— 那條最容易漏，卻正是最可能沒有執行位元的情境：
+   `core.hooksPath` 那份 hook 進了版控，被以 mode 100644 commit 後 clone 出來，
+   內容有 gate 呼叫（所以判定「已含」直接跳過）但跑不起來，永遠修不好。
    建立分支用 **Write** 產出的檔案是 644，追加分支若接手的是一個沒有執行位元的既有 hook
    （手動複製 `.git/`、解壓縮，或 `core.hooksPath` 那份被以 mode 100644 commit 進版控後 clone 出來），
    結果都是 **gate 等於沒裝**。git 只會印一行 `hint: The '.git/hooks/pre-commit' hook was ignored`，

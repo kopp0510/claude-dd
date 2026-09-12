@@ -97,6 +97,11 @@ CASES = [
     # 文字爆框卻判通過，完全靜默。改成讀 <style> 之後才抓得到。
     ('只放大 <style> 的字級（font-size 屬性不動）', '溢出',
      lambda s: s.replace('.nm  { font-size: 20px;', '.nm  { font-size: 30px;')),
+    # 同一個 rule block 裡重複宣告，瀏覽器取最後一個。若腳本改回取第一個（20px），
+    # 這張圖會被當成沒溢出而判過 —— 靜默漏檢，所以這條要獨立於上一條存在。
+    ('<style> 同規則重複宣告 font-size（要取最後一個）', '溢出',
+     lambda s: s.replace('.nm  { font-size: 20px;',
+                         '.nm  { font-size: 20px; font-size: 30px;')),
 ]
 
 # (案例名, 變異函式, stdout 必須出現的片段)
@@ -132,6 +137,21 @@ POSITIVE_CASES = [
                               '<circle data-role="node" cx="700" cy="900" r="30" '
                               'fill="#111111" stroke="#5a9e6f"/>\n<!-- ⑧ commit 成功 -->'),
      '節點 9'),
+    # 改字級時把舊值註解留在下面是很常見的習慣。css_font_sizes() 若不先剝掉 CSS 註解，
+    # 會採用註解裡的 30px 而誤報溢出 —— 假陽性，而且輸出看起來完全像正常結果。
+    ('<style> 註解裡的舊字級不可被採用',
+     lambda s: s.replace('.nm  { font-size: 20px; font-weight: 600; }',
+                         '.nm  { font-size: 20px; font-weight: 600; }\n'
+                         '  /* 舊值 .nm { font-size: 30px; } */'),
+     '文字 37'),
+    # 誤報方向的回歸：<style> 把字級「縮小」時也必須採用。這條專門擋一種很像優化的改法 ——
+    # 「只在 CSS 值比內建表大時才採用」。那樣改的話上面兩條放大案例照樣全綠，但 gen_loop /
+    # gen_usage 的誤報（loop-en 曾一次 17 處）會整組回來。字縮到 10px、文字加長到 20px 會爆框
+    # 的長度：讀 <style> 就不該報，不讀（或只採用較大值）就會誤報一處。
+    ('<style> 把字級縮小時不可誤報',
+     lambda s: s.replace('.nm  { font-size: 20px;', '.nm  { font-size: 10px;')
+                .replace('>claude-dd repo<', '>claude-dd repo' + '補' * 12 + '<'),
+     '文字 37'),
 ]
 
 # 只該產生警告、不該判失敗的情況

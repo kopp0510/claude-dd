@@ -204,8 +204,12 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字、CI 防線表、授權清單、
   **「安裝腳本 N 個編號步驟」**（`print_step "n/N"` 改了要跟著改）與
   **「shellcheck（warning 級，N 支腳本）」**（ci.yml 那份清單是逐檔寫死的）。
-  這兩個數字 2026-09-12 實測仍正確（7 個編號步驟、4 支腳本），但沒有任何檢查會擋它們過期 ——
-  數字宣稱那道 CI step 是逐檔寫死 README 與根目錄 CLAUDE.md 的，不涵蓋架構文件。
+  這兩個沒有任何檢查會擋它們過期（數字宣稱那道 CI step 是逐檔寫死 README 與根目錄
+  CLAUDE.md 的，不涵蓋架構文件）。**要核對就自己數，不要在這裡抄一份**：
+  `grep -oE 'print_step "[0-9]+/[0-9]+"' install-dd-pipeline.sh | sort -u` 與
+  `awk '/shellcheck -S warning/,/^$/' .github/workflows/ci.yml`。
+  （2026-09-12 初稿真的在這裡寫了「7 個編號步驟、4 支腳本」，跟本條自己的「不寫死數量」
+  直接打架，是 simplifier 抓到的 —— 這已經是同一個坑的第二次。）
   **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案**、
   **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
@@ -232,8 +236,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
   `DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
 - **動到 `commands/dd-init.md` 的蓋章區塊（三個反引號圍起來、開頭是 `## 開發流程` 的那一整塊）
-  就必須同步跳 `dd-loop-rev`** — `:39` 的判定式與 `:51` 的標記兩處，外加 `UPGRADING.md`
-  寫死的 rev 值與 CHANGELOG 未發布區塊。Phase 1 的判定是「rev 等於現行值 → 已是現行版，跳過」，
+  就必須同步跳 `dd-loop-rev`** — 兩處，用 `grep -n 'dd-loop-rev' commands/dd-init.md` 找
+  （Phase 1 的判定式與蓋章標記；**不要在這裡寫行號**，2026-09-12 才因為同一份檔案加了兩行，
+  讓原本寫的 `:51` 指到 code fence 起始行），外加 `UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊。
+  **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊；Phase 0–6 的執行指示在區塊外，
+  改它們不必跳 rev（用上面那個 grep 的兩個行號夾出範圍就看得出來）。Phase 1 的判定是「rev 等於現行值 → 已是現行版，跳過」，
   不跳號的話已蓋章的專案永遠拿不到這次修正，跑 `/dd-init` 還會被告知「已是最新」。
   CI 只驗 dd-init.md 檔內 rev 前後一致（種類數 == 2），**不驗「內容改了 rev 有沒有跳」**，
   UPGRADING.md 那份 CI 根本不看。2026-09-12 踩過：同一輪前面已有一個 commit 動過蓋章區塊沒跳號，

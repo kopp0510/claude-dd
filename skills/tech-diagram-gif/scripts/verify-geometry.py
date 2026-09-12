@@ -35,7 +35,7 @@ LIMITS = dict(nodes=9, edges=12, containers=4, notes=2,
 FONT_SIZES = {'nm': 20, 'sm': 15, 'al': 15, 'ttl': 31, 'lbl': 16, 'sub': 16}
 DEFAULT_FONT_SIZE = 15
 
-CSS_RULE_RE = re.compile(r'([^{}]+)\{([^{}]*)\}', re.S)
+CSS_RULE_RE = re.compile(r'([^{}]+)\{([^{}]*)\}')
 CSS_FONT_SIZE_RE = re.compile(r'font-size\s*:\s*([0-9.]+)px')
 CSS_CLASS_RE = re.compile(r'\.([A-Za-z_][\w-]*)')
 
@@ -341,7 +341,7 @@ def css_font_sizes(svg):
 
     為什麼要讀：不讀的話字級只能靠 FONT_SIZES 猜。實測 gen_loop / gen_usage 的
     .nm 是 15px、.sm 是 11.5–12px，都寫在 <style> 裡，被當成表上的 20 / 15 一路高估，
-    英文版因此誤報十幾處文字溢出（diagrams/src/CLAUDE.md 記過）；反方向則是靜默漏檢 ——
+    英文版因此誤報十幾處文字溢出（同目錄 CLAUDE.md 的字級那條記過）；反方向則是靜默漏檢 ——
     把字級只在 <style> 放大的圖判成通過。
 
     優先序跟著瀏覽器走：CSS 規則勝過 font-size 屬性（presentation attribute 特異性最低）。
@@ -349,21 +349,27 @@ def css_font_sizes(svg):
     """
     sizes = {}
     for block in re.findall(r'<style\b[^>]*>(.*?)</style>', svg, re.S):
+        # 先剝掉 CSS 註解：不剝的話「把舊值註解留在下面」這個常見習慣會讓註解裡的
+        # 舊字級蓋掉真正生效的規則（實測 /* .nm { font-size: 30px } */ 會算成 30），
+        # 而且完全沒有訊號 —— 正是本層 CLAUDE.md 說的最危險失敗模式
+        block = re.sub(r'/\*.*?\*/', '', block, flags=re.S)
         for selector, decls in CSS_RULE_RE.findall(block):
-            m = CSS_FONT_SIZE_RE.search(decls)
-            if m is None:
+            found = CSS_FONT_SIZE_RE.findall(decls)
+            if not found:
                 continue
+            # 同一個區塊重複宣告時取**最後一個** —— 瀏覽器就是這樣，取第一個會跟本函式
+            # 宣稱的「優先序跟著瀏覽器走」對不上（實測 `font-size:20px;font-size:15px`
+            # 取第一個算出 20、瀏覽器用 15，圖會被當成字比實際小而漏掉溢出）
             for cls in CSS_CLASS_RE.findall(selector):   # 一條規則可掛多個 class
-                sizes[cls] = float(m.group(1))
+                sizes[cls] = float(found[-1])
     return sizes
 
 
-def parse_texts(svg, css_sizes=None):
+def parse_texts(svg, css_sizes):
     """文字錨點、內容、字級與對齊方式；<tspan> 等子元素的文字一併取出。
 
     字級優先序：<style> 的 class 規則 > font-size 屬性 > FONT_SIZES > DEFAULT_FONT_SIZE。
     """
-    css_sizes = css_sizes or {}
     texts = []
     for m in re.finditer(r'<text\b([^>]*)>(.*?)</text>', svg, re.S):
         a = attrs_of('<text ' + m.group(1) + '>')

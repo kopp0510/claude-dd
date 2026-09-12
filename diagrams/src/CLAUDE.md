@@ -39,7 +39,7 @@
   手寫 SVG 是來源不是產物，要進）
 - **手寫 SVG 改完要重跑幾何檢查**：
   `python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <檔案> --cycle 8.0`。
-  這四張的總循環是 8s（`dur` 只有 2s / 4s / 8s），剛好等於腳本預設值，但**還是要明寫** ——
+  這四張的總循環是 8s（`dur` 只用 2s / 4s / 8s / `8.0s`，全部整除 8），剛好等於腳本預設值，但**還是要明寫** ——
   不寫就等於預設值幫你猜對了，下一張改成別的總循環時不會有任何訊號。
   四份現況皆通過；沒過就不要重出 GIF
 - **三支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
@@ -71,7 +71,9 @@
   箭頭，動畫交給跨組長路徑
 - **風格是 Style 8 Dark Luxury**：色票與字級跟隨
   `~/.claude/skills/tech-diagram-gif/references/style-8-dark-luxury.md`。
-  畫布 1440×1080，字級已按該檔的 960 基準 ×1.5 放大
+  畫布 1440×1080。**字級的放大倍率兩類不同**：四張手寫 SVG 照該檔 960 基準 ×1.5
+  （`.nm` 13→20、`.sm` 10→15、`.ttl` 21→31，`verify-geometry.py` 的 `FONT_SIZES` 預設表就是這一組）；
+  三支產生器實際約 ×1.15（`.nm` 15、`.sm` 11.5–12、`.ttl` 40），刻意不照 ×1.5 —— 不要拿其中一組去套另一組
 - **字體堆疊含 CJK 後備**（`Songti TC` / `Noto Serif CJK TC` 等），改字體要兩版一起改
 - **legend 與實際連線一一對應**：畫面上沒有的線就不要留在 legend
 - **`gen_usage.py` 框② 的「安裝 7 個步驟」不是迴圈步數**：那是 `install-dd-pipeline.sh`
