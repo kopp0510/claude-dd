@@ -21,7 +21,8 @@ jobs:
             install-dd-pipeline.sh \
             scripts/check-claude-md.sh \
             scripts/githooks/pre-commit \
-            skills/self-improving-agent/hooks/error-capture.sh
+            skills/self-improving-agent/hooks/error-capture.sh \
+            skills/self-improving-agent/hooks/test-error-capture.sh
 
       - name: help smoke test
         run: ./install-dd-pipeline.sh --help
@@ -35,6 +36,11 @@ jobs:
       # 這支負面測試是唯一的防線。純標準庫，ubuntu runner 自帶 python3，無額外依賴。
       - name: tech-diagram-gif 幾何閘門自我測試（變異 / 回歸 / 警告案例）
         run: python3 skills/tech-diagram-gif/scripts/test-verify-geometry.py
+
+      # 這支 hook 的失效是完全靜默的（零輸出、exit 0，與「真的沒錯誤」無法區分），
+      # shellcheck 與 bash -n 都驗不出來 —— 只有行為測試抓得到。純 bash，無外部依賴。
+      - name: error-capture hook 行為測試（觸發 / 靜默各情境）
+        run: ./skills/self-improving-agent/hooks/test-error-capture.sh
 
       - name: 陣列與目錄一致性（ALL_* 四組 + DD_SCRIPTS）
         run: |

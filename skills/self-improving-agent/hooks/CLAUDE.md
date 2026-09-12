@@ -27,13 +27,12 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   對整份輸出比，變成一票否決：輸出裡任何一處出現 `console.error` 或 `no error`，
   同一份輸出裡真正的失敗全部被吞掉，而且是完全靜默（零輸出、exit 0，跟「這次沒錯」長得一模一樣）。
   2026-09-12 修掉，兩個實測會踩到的真實案例已寫成註解留在檔內
-- **改這支腳本要跑三個情境對照**（沒有自動化測試，CI 只跑 `shellcheck -S warning`）：
-  ① `src/a.ts:3 console.error(e)` + `Build failed with 1 error` 必須觸發
-  ② `cat: nope: No such file or directory` 必須觸發（**煙霧測試** —— 舊版新版都會觸發，
-     只證明沒把整支弄壞；能分辨新舊的是 ① 和 ③）
-  ③ `web: compiled with no errors` + `api: Build failed with 3 errors` 必須觸發
-  （`no error` 是 `no errors` 的子字串，這條專抓一票否決的回歸）
-  另外 `const errorHandler = (e) => {}` 這種純粹在講錯誤處理的程式碼必須靜默
+- **改這支腳本後必須跑 `./test-error-capture.sh`**（同目錄，純 bash 無依賴，CI 也會跑）。
+  9 個情境：4 個必須觸發、5 個必須靜默。**新增行為時同批補一個情境進去** ——
+  沒有情境守著的行為等於沒寫，而這支 hook 的失效是零輸出 exit 0，跟「真的沒錯誤」長得一樣。
+  其中三個是 2026-09-12「一票否決」那個 bug 的回歸測試：真錯誤與 `console.error` 同在一份
+  輸出、`no errors` 與 `Build failed` 並存、被排除的行在前而真錯誤在後。
+  「單純找不到檔案」那條是**煙霧測試** —— 修好前後都會觸發，只證明沒把整支弄壞
 - 它在 CI 的 ShellCheck 清單裡（`.github/workflows/ci.yml`，逐檔寫死），
   bash 3.2 相容、`set -eu` 下不可用會回非 0 的裸指令
 
