@@ -75,7 +75,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部 `PROMOTED_*` 陣列：10 skills、4 agents、dd-init、workflow-review；
+（清單 = 腳本頂部 `PROMOTED_*` 陣列：10 個 promoted Skills、4 個 promoted Agents、dd-init、workflow-review；
 2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
@@ -112,7 +112,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 | Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
 | 陣列 ↔ 目錄一致性（`ALL_*` 四組 + `DD_SCRIPTS ↔ scripts/*.sh`） | 陣列漏列 / 目錄改名未同步 / 新腳本沒進部署清單 |
-| README（英/繁中兩份）/ CLAUDE.md 數字宣稱 ↔ 陣列 | 文件數字過期 |
+| 數字宣稱 ↔ 陣列（README 英/繁中兩份 + 根目錄 CLAUDE.md + **本文件**） | 文件數字過期。本文件涵蓋元件數、安裝編號步驟數、shellcheck 腳本數 |
 | 安裝 flag 三方對照（case 分支 ↔ `--help` ↔ 兩份 README） | flag 名稱三方漂移（只驗名稱，語意描述仍手動維護） |
 | §7.2 觸發目標部署驗證（含抓不到與漏反引號兩道護欄） | 全域模板指向未部署元件；章節重編號或某列漏反引號讓這道檢查靜默失效 |
 | 迴圈步數四方一致（模板 §3.9 ↔ 蓋章版 ↔ 兩份 README ↔ 版本標記） | 編號清單的步數漂移；另驗 `dd-loop-rev` 的標記格式與檔內唯一性 |

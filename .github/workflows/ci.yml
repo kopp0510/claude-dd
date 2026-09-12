@@ -15,7 +15,7 @@ jobs:
       - name: Bash 語法檢查
         run: bash -n install-dd-pipeline.sh
 
-      - name: ShellCheck（warning 級，全部 shell 腳本）
+      - name: ShellCheck（warning 級，清單逐檔寫死 — 新增腳本要自己加進來）
         run: |
           shellcheck -S warning \
             install-dd-pipeline.sh \
@@ -36,7 +36,7 @@ jobs:
       - name: tech-diagram-gif 幾何閘門自我測試（變異 / 回歸 / 警告案例）
         run: python3 skills/tech-diagram-gif/scripts/test-verify-geometry.py
 
-      - name: 陣列與目錄一致性（ALL_* = 部署清單）
+      - name: 陣列與目錄一致性（ALL_* 四組 + DD_SCRIPTS）
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -70,7 +70,7 @@ jobs:
             "$(ls scripts/*.sh | xargs -n1 basename | sort)"
           exit $fail
 
-      - name: 數字宣稱一致性（README / CLAUDE.md ↔ 腳本陣列）
+      - name: 數字宣稱一致性（README ×2 / CLAUDE.md / 架構文件 ↔ 腳本陣列）
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -123,6 +123,25 @@ jobs:
           ck "CLAUDE.md NS command 總數" \
             "$(grep -oE "[0-9]+ 個命名空間 command 目錄" CLAUDE.md | grep -oE "^[0-9]+")" \
             "${#ALL_NS_COMMANDS[@]}"
+
+          # DD_PIPELINE_ARCHITECTURE.md（2026-09-12 補）：這份文件原本完全不在數字檢查範圍內，
+          # 改陣列時會靜默過期。ck() 的 claimed 為空時會判失敗，所以抓不到也不會靜默放過。
+          ck "架構文件 promoted skills 數" \
+            "$(grep -oE "[0-9]+ 個 promoted Skills" DD_PIPELINE_ARCHITECTURE.md | grep -oE "^[0-9]+")" \
+            "${#PROMOTED_SKILLS[@]}"
+          ck "架構文件 promoted agents 數" \
+            "$(grep -oE "[0-9]+ 個 promoted Agents" DD_PIPELINE_ARCHITECTURE.md | grep -oE "^[0-9]+")" \
+            "${#PROMOTED_AGENTS[@]}"
+          # 安裝腳本的編號步驟數 = print_step "n/N" 裡最大的 N
+          ck "架構文件 安裝編號步驟數" \
+            "$(grep -oE "[0-9]+ 個編號步驟" DD_PIPELINE_ARCHITECTURE.md | grep -oE "^[0-9]+")" \
+            "$(grep -oE 'print_step "[0-9]+/[0-9]+"' install-dd-pipeline.sh \
+               | grep -oE '/[0-9]+' | tr -d '/' | sort -rn | head -1)"
+          # shellcheck 清單逐檔寫死，數它列了幾個檔名（不含 shellcheck 指令那行）
+          ck "架構文件 shellcheck 腳本數" \
+            "$(grep -oE "[0-9]+ 支腳本" DD_PIPELINE_ARCHITECTURE.md | grep -oE "^[0-9]+")" \
+            "$(awk '/shellcheck -S warning/,/^$/' .github/workflows/ci.yml \
+               | grep -cE '(\.sh|pre-commit)( \\)?$')"
           exit $fail
 
       - name: 安裝 flag 三方對照（README ↔ --help ↔ 腳本 case 分支）
