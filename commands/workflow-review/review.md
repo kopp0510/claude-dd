@@ -66,6 +66,25 @@ never existed in this repo.
 - Validate timeout and retry configurations
 - Review database migration safety
 
+**For every numeric value that changed, ask two things: what evidence supports the new number,
+and what happens when the system actually reaches it?** A config diff is a behaviour change
+with no test covering it. Name these patterns explicitly when you see them:
+
+- **Pool sizes** — lowering starves callers under load; raising can exceed the *backing
+  service's* own connection cap, which then fails somewhere that looks unrelated. Check both
+  directions against the downstream limit, not just this app's.
+- **Timeouts** — a caller's timeout must stay longer than its callee's, or it abandons work
+  that would have succeeded and the retry lands on a still-busy backend. Shortening one turns
+  "slow but correct" into "failed".
+- **Retries** — retries plus a short timeout multiply load exactly when the system is already
+  struggling. Require backoff, jitter, and a cap on total attempts.
+- **Memory / heap limits** — raising a heap can push the process past its container limit,
+  turning GC pressure into an OOM kill. The two numbers have to move together.
+- **Cache TTLs** — a single uniform TTL expires everything at once and hands the origin the
+  whole load in one spike. Look for jitter on expiry.
+- **Rollback cost** — can this be reverted without a redeploy, and who notices if it's wrong?
+  A value that needs a deploy to undo deserves more scrutiny than one behind a flag.
+
 ### Security Analysis
 - Authentication and authorization checks
 - Input validation and sanitization
