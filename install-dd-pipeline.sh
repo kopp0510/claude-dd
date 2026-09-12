@@ -1150,7 +1150,9 @@ create_global_claude_md() {
             echo -e "└── ${GREEN}✅ 已覆蓋，舊版已備份（完成訊息會顯示位置）${NC}"
             ;;
         s|S)
-            diff "$target" "$source"
+            # 內容不同時 diff 回 exit 1，腳本有 set -e，單獨執行會直接中止整個安裝
+            # （上面情境 4 的 `diff | head -30` 沒事，是因為管線取的是 head 的結束狀態）
+            diff "$target" "$source" || true
             echo ""
             ask "看完後要覆蓋嗎？[y/N]: " "N"
             if [[ "$REPLY" =~ ^[Yy]$ ]]; then
