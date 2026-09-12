@@ -289,6 +289,7 @@ vendored 內容，各自附上游授權檔：
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | 有歸屬／NOTICE 要求 |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15`（2026-03-24）收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |
 
 收編規則見 [CLAUDE.md「第三方 Skill / Agent 收編檢查清單」](CLAUDE.md)。
 

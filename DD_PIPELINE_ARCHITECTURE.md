@@ -127,8 +127,11 @@ CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 
 ## 授權
 
-Root MIT（LICENSE）。vendored 內容各自附上游授權，共 4 份
+Root MIT（LICENSE）。vendored 內容各自附上游授權
 （`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`（Apache-2.0，有歸屬要求）、
 `skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
+**一個例外**：`commands/workflow-review/` 同為第三方（Alireza Rezvani，`7248a15` 收編），
+但**未隨附 LICENSE、上游 repo 從未記錄**，歸屬只記在 `review.md` 檔頭 ——
+不符收編檢查清單第 1 項，尚未解決（查不出上游就不能編一個授權上去）。
 **新增 vendored 元件時，這裡與兩份 README 的授權段落要同批更新**（沒有任何 CI 檢查會擋）。
