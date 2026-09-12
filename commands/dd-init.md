@@ -148,14 +148,25 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
 
 ### Phase 5: Git commit
 
-在 git repo 中時（`|| true` 容錯）：
+在 git repo 中時：
 
 ```bash
-git add CLAUDE.md .gitignore 2>/dev/null || true
-git commit -m "chore: 初始化 8 步開發迴圈慣例"
+git add CLAUDE.md
+[ -f .gitignore ] && git add .gitignore
+git diff --cached --quiet || git commit -m "chore: 初始化 8 步開發迴圈慣例"
 ```
 
-> 註：`.git/hooks/` 不入版控，pre-commit gate 不需 add。此 commit 只動 CLAUDE.md/.gitignore，會通過 gate。
+⚠️ **不可寫成 `git add CLAUDE.md .gitignore`**：`git add` 是全有全無，純後端/CLI 專案沒有
+`.gitignore`（Phase 2 只在有前端時建），整條會以 exit 128 失敗、**連 CLAUDE.md 也不會被 stage**，
+蓋章好的檔案就這樣留在 untracked。加 `2>/dev/null || true` 只是把錯誤吞掉，Phase 6 照樣印「✅ 初始化完成」。
+最後一行的 `git diff --cached --quiet ||` 是給「Phase 1 判定已是現行版、零 staged」的情況用的，
+沒有它 `git commit` 會以「沒有要提交的檔案」失敗。
+
+> 註：`.git/hooks/` 不入版控，pre-commit gate 不需 add。
+>
+> **gate 看的是整個 index，不是只看這次新 add 的檔案**。使用者原本就有 staged 的程式碼變更時，
+> 這個 commit 一樣會被擋（那些目錄缺 CLAUDE.md 或沒同批更新）。被擋時不要用 `SKIP_DOC_CHECK=1` 繞過 —— 那會記一筆欠帳；
+> 先 `git status` 看是誰的變更，把不屬於初始化的先 `git restore --staged`，或照 gate 的訊息補上該目錄的 CLAUDE.md。
 
 ### Phase 6: 完成訊息
 
