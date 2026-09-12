@@ -2,10 +2,11 @@
 # Self-Improving Agent — Error Capture Hook
 # Fires on PostToolUse (Bash) to detect command failures.
 # Zero output unless an error PATTERN matches the command's output text.
-# It is NOT exit-status based: Claude Code's tool_response carries only
-# stdout / stderr / interrupted / isImage / noOutputExpected — there is no exit
-# code field to read — so a command that succeeded but printed "failed" or
-# "error:" still fires. Matching is per line (see EXCLUSIONS below).
+# It is NOT exit-status based: Claude Code's tool_response carries no numeric exit
+# code at all (stdout / stderr / interrupted / isImage / noOutputExpected on every
+# record, plus occasional extras — measured field list in CLAUDE.md next to this
+# file). So a command that succeeded but printed "failed" or "error:" still fires.
+# Matching is per line (see EXCLUSIONS below).
 #
 # Interface: Claude Code passes hook input as JSON on stdin (tool_name /
 # tool_input / tool_response). Detected errors are returned as

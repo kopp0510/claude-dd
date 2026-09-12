@@ -68,10 +68,12 @@ Use those exact strings as `subagent_type`.
 
 The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It scans the command's output text for error patterns and surfaces a short reminder (via `hookSpecificOutput.additionalContext`) suggesting `/self-improving-agent:remember` to save the solution — it does not write to auto-memory itself. Zero overhead unless an error pattern matches.
 
-It matches the output **text**, not the exit status — Claude Code passes the hook only
-`stdout` / `stderr` / `interrupted` / `isImage` / `noOutputExpected`, with no exit code field —
-so a command that succeeded while printing `failed` or `error:` will also fire. Matching is
-per line, so one incidental `console.error` no longer silences a real failure beside it.
+It matches the output **text**, not the exit status. The `tool_response` Claude Code hands the
+hook carries no numeric exit code at all — `stdout` / `stderr` / `interrupted` / `isImage` /
+`noOutputExpected` on every record, plus occasional extras, none of them an exit status (see
+`hooks/CLAUDE.md` for the measured field list; do not restate it as a closed set here). So a
+command that succeeded while printing `failed` or `error:` will also fire. Matching is per
+line, so one incidental `console.error` no longer silences a real failure beside it.
 
 To enable:
 ```json
