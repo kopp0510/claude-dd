@@ -201,7 +201,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，**不要在這裡寫死數量** —
   上一版就在這個括號裡寫了「各 9 處」，跟本條自己的「不寫總數」直接打架）、
   **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
-  以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字、CI 防線表、授權清單。
+  以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字、CI 防線表、授權清單、
+  **「安裝腳本 N 個編號步驟」**（`print_step "n/N"` 改了要跟著改）與
+  **「shellcheck（warning 級，N 支腳本）」**（ci.yml 那份清單是逐檔寫死的）。
+  這兩個數字 2026-09-12 實測仍正確（7 個編號步驟、4 支腳本），但沒有任何檢查會擋它們過期 ——
+  數字宣稱那道 CI step 是逐檔寫死 README 與根目錄 CLAUDE.md 的，不涵蓋架構文件。
   **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案**、
   **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """驗證 SVG 是否符合 Taste Gate「版面幾何」組 — 純標準庫，無 pip 依賴。
 
-用法：python3 verify-geometry.py <diagram.svg> [--cycle 8.0]
+用法：python3 verify-geometry.py <diagram.svg> --cycle <該圖選定的總循環長>
+
+`--cycle` 的預設值 8.0 只對應內附 fixture，不是建議值。總循環不是 8s 卻沒帶這個旗標時，
+動畫週期那項會拿 8.0 去判整除：dur=4s、作者心裡是 7.2s 的壞圖會被判**通過**（8÷4=2），
+而且毫無訊號。反方向（正確的圖被誤判不通過）反而會先印出「總循環 8.0s」，一眼看得出來。
 
 這組檢查項的判定手段是「讀座標算術」，不是看截圖 —— ≥6px 的標籤間隙、
 1.35 的繞路比、菱形斜邊上的文字溢出，縮到瀏覽器視窗後肉眼都分辨不出來。
@@ -25,9 +29,15 @@ LIMITS = dict(nodes=9, edges=12, containers=4, notes=2,
               accents=2,     # 只用於 print_not_covered 的提示文字（無法通用判定）
               port_gap_small=8)   # contract 的例外：小節點（邊長 < 100px）放寬到 8px
 
-# class 名稱對應的預設字級；沒有 class 也沒有 font-size 時用 DEFAULT_FONT_SIZE
+# 字級查不到時的最後退路（Style 8 的 960 基準 ×1.5）。優先序見 parse_texts：
+# <style> 的 class 規則 > font-size 屬性 > 這張表 > DEFAULT_FONT_SIZE。
+# 這張表只是猜測值，猜高了就誤報溢出、猜低了就漏檢，所以能從 SVG 自己讀到就不要用它。
 FONT_SIZES = {'nm': 20, 'sm': 15, 'al': 15, 'ttl': 31, 'lbl': 16, 'sub': 16}
 DEFAULT_FONT_SIZE = 15
+
+CSS_RULE_RE = re.compile(r'([^{}]+)\{([^{}]*)\}', re.S)
+CSS_FONT_SIZE_RE = re.compile(r'font-size\s*:\s*([0-9.]+)px')
+CSS_CLASS_RE = re.compile(r'\.([A-Za-z_][\w-]*)')
 
 
 class Box(NamedTuple):
@@ -326,8 +336,34 @@ def parse_edges(svg, tagged):
     return edges, skipped
 
 
-def parse_texts(svg):
-    """文字錨點、內容、字級與對齊方式；<tspan> 等子元素的文字一併取出。"""
+def css_font_sizes(svg):
+    """從 <style> 區塊讀出 class -> font-size(px)。
+
+    為什麼要讀：不讀的話字級只能靠 FONT_SIZES 猜。實測 gen_loop / gen_usage 的
+    .nm 是 15px、.sm 是 11.5–12px，都寫在 <style> 裡，被當成表上的 20 / 15 一路高估，
+    英文版因此誤報十幾處文字溢出（diagrams/src/CLAUDE.md 記過）；反方向則是靜默漏檢 ——
+    把字級只在 <style> 放大的圖判成通過。
+
+    優先序跟著瀏覽器走：CSS 規則勝過 font-size 屬性（presentation attribute 特異性最低）。
+    只認 px 字面值；em / rem / % / var() 算不出絕對值，跳過讓它退回下一層，不要猜。
+    """
+    sizes = {}
+    for block in re.findall(r'<style\b[^>]*>(.*?)</style>', svg, re.S):
+        for selector, decls in CSS_RULE_RE.findall(block):
+            m = CSS_FONT_SIZE_RE.search(decls)
+            if m is None:
+                continue
+            for cls in CSS_CLASS_RE.findall(selector):   # 一條規則可掛多個 class
+                sizes[cls] = float(m.group(1))
+    return sizes
+
+
+def parse_texts(svg, css_sizes=None):
+    """文字錨點、內容、字級與對齊方式；<tspan> 等子元素的文字一併取出。
+
+    字級優先序：<style> 的 class 規則 > font-size 屬性 > FONT_SIZES > DEFAULT_FONT_SIZE。
+    """
+    css_sizes = css_sizes or {}
     texts = []
     for m in re.finditer(r'<text\b([^>]*)>(.*?)</text>', svg, re.S):
         a = attrs_of('<text ' + m.group(1) + '>')
@@ -335,9 +371,12 @@ def parse_texts(svg):
         x, y = num(a, 'x'), num(a, 'y')
         if x is None or y is None or not body:
             continue
-        size = num(a, 'font-size')
+        cls = a.get('class', '')
+        size = css_sizes.get(cls)
         if size is None:
-            size = FONT_SIZES.get(a.get('class', ''), DEFAULT_FONT_SIZE)
+            size = num(a, 'font-size')
+        if size is None:
+            size = FONT_SIZES.get(cls, DEFAULT_FONT_SIZE)
         texts.append(Text(x, y, body, size, a.get('text-anchor', 'start')))
     return texts
 
@@ -439,7 +478,9 @@ def parse(svg):
     slanted = [(eid, i) for eid, pts in edges.items()
                for i, ((x1, y1), (x2, y2)) in enumerate(segments(pts))
                if x1 != x2 and y1 != y2]
-    return Diagram(nodes, containers, edges, parse_texts(body), tagged, skipped, slanted)
+    # css_font_sizes 讀原始 svg，不是剝掉 defs 的 body —— <style> 有時就放在 <defs> 裡
+    return Diagram(nodes, containers, edges, parse_texts(body, css_font_sizes(svg)),
+                   tagged, skipped, slanted)
 
 
 # -------------------------------------------------------------------- 檢查
@@ -772,6 +813,8 @@ def print_not_covered():
     print(f'  · 強調色元素 ≤{LIMITS["accents"]}、註解框 ≤{LIMITS["notes"]}'
           ' —— 哪個顏色算 accent 無法通用判定，人工數')
     print('  · port 落點公式 L*k/(N+1)（contract）—— 只驗間距，不驗是否等距分佈')
+    print('  · 字級：只認 <style> 裡的 px 字面值與 font-size 屬性；em/rem/%/var() 與'
+          ' 外部 CSS 讀不到，會退回內建預設表（Style 8 ×1.5）去估文字寬度')
     print('  · 文字擠成兩行、假捲軸、小球是否真的有位移 —— 看截圖（Taste Gate「渲染實況」組）')
 
 

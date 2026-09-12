@@ -36,11 +36,13 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 - **補充模式**（CLAUDE.md 已存在）：
   - 無 `## 開發流程` 區塊 → 用 **Edit** 在末尾加入
   - 已含區塊 → **版本檢查**：
-    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 3` → 已是現行版，跳過並告知
-    - 含 `6step` / `7step` 標記、有 `8step` 但 rev 比 3 舊（沒有 rev 標記，或 rev 是更早的號碼），或無標記、或缺 code-review 步驟 → 舊版/手寫版：
+    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 4` → 已是現行版，跳過並告知
+    - 含 `6step` / `7step` 標記、有 `8step` 但 rev 比 4 舊（沒有 rev 標記，或 rev 是更早的號碼），或無標記、或缺 code-review 步驟 → 舊版/手寫版：
       列出與現行版的差異（6step 缺步驟 7、8；7step 缺步驟 8；8step 沒有 rev 缺「段落起點」，
-      步驟 3、4、8 只看最後一個 commit；rev 比 3 舊的，步驟 8 算範圍用 `status --porcelain` 加 `awk '{print $NF}'`，
-      含空白的目錄名會被切斷、少列一份卻照樣 exit 0，而且「忘了記起點只會多審」那句沒有但書），
+      步驟 3、4、8 只看最後一個 commit；rev 1–2 的步驟 8 算範圍用 `status --porcelain` 加 `awk '{print $NF}'`，
+      含空白的目錄名會被切斷、少列一份卻照樣 exit 0，而且「忘了記起點只會多審」那句沒有但書；
+      rev 3 缺「有進度表時起點以表上為準」的例外、缺步驟 4 的「語意無從判定就交回使用者」，
+      且把「逐層堆疊更新」說成由 gate 把關），
       **AskUserQuestion 詢問是否升級**。同意 → 升級為現行版但**保留在地內容**
       （專案特有註記、具體驗證指令、額外規則行），補上版本標記；拒絕 → 保留原樣
 
@@ -48,7 +50,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 
 ```markdown
 ## 開發流程（每個功能段落依序走）
-<!-- dd-loop-version: 8step；dd-loop-rev: 3；供 /dd-init 判斷是否提議升級，勿刪 -->
+<!-- dd-loop-version: 8step；dd-loop-rev: 4；供 /dd-init 判斷是否提議升級，勿刪 -->
 
 段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好。
 沒印出這行就是沒記好；若是舊版 gate（grep 不到 `--start-segment`），它會照常檢查 staged，印出「commit 已擋下」也不要照著補檔或 commit，
@@ -57,6 +59,9 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 （exit 非 0 或輸出是空的 = 範圍沒算出來，不是範圍為空）。忘了記下一段的起點時，範圍會連上一段一起算——只會多審，不會漏；
 但這只在起點檔已經存在時成立：從沒跑過 `--start-segment` 的專案要等第一個 `SKIP_DOC_CHECK=1` commit 才會自動補記，
 起點就落在段落中間，它前面的 commit 步驟 3、4、8 全看不到，而 gate 印「記下段落起點 …」、`--segment-base` 也正常 exit 0，兩個訊號都看不出範圍縮水。
+**有進度表時 `--segment-base` 不是最終答案**：專案有 `task-planner` 產的進度表（根目錄 CLAUDE.md 開頭的指路句會寫明檔名，通常在 `docs/designs/`）時，
+`<起點>` 以**表上這段 commits 欄的起點**為準。回頭做 `BLOCKED` 過的段落時兩者會不一樣 —— 中間插做別段會把 `--segment-base` 往後推，
+用它就漏掉這段先前已經寫好的部分；表上那個較舊、較寬，只會多審。
 
 1. **實作功能 + 首輪測試通過**（相關既有測試跑綠 + 基本手動驗證，不可帶紅燈進 commit）
 2. **commit**（第一次 — 保留簡化前還原點）
@@ -64,6 +69,8 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 4. 跑 **code-review**（該段 diff；每段全量跑；修掉 Critical/Important 才續行）
    - 範圍要明講給 reviewer：依序跑時 `git diff <起點>` 加上 `git ls-files --others --exclude-standard`（步驟 3 新增、還沒 commit 的檔案 `git diff` 看不到）
    - 與步驟 3 並行時用 `git diff <起點> HEAD`，並要求 reviewer 一律用 `git show HEAD:<路徑>` 取檔案、不讀工作目錄（simplifier 正在改，讀到一半會被換掉）
+   - 發現若是「行為變了，但**無從判定哪個才是預期**」（程式碼、測試、文件都沒寫明語意），**用 AskUserQuestion 把選擇交回使用者**，
+     不要自己選一邊也不要讓 reviewer 選。金額、權限、資料保留期這類決定選錯了不會報錯，只會靜靜地錯下去
 5. **再測一次** — 確認步驟 3、4 沒破壞行為，不可只跑單元測試：
    - 重跑步驟 1 的相關測試
    - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
@@ -85,7 +92,9 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 7. **沉澱本輪所學**（有才做）— 本輪若留下踩雷、指令或慣例，用
    claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
    它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
-8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審：
+8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審。
+   下面這行是**沒有進度表**時的寫法；有進度表時 `base` 改填表上這段 commits 欄的起點
+   （步驟 3、4 寫 `<起點>` 會自動套用上面那條例外，只有這裡把指令寫死）：
    `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] && { git -c core.quotePath=false diff --name-only "$base" HEAD; git -c core.quotePath=false diff --name-only HEAD; git -c core.quotePath=false ls-files --others --exclude-standard; } | grep 'CLAUDE\.md$' | sort -u`
    算出幾份就只審那幾份（用 claude-md-improver）。該 skill 預設會 find 全部，
    不先算範圍會全 repo 掃。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）。
@@ -97,7 +106,9 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 ## CLAUDE.md 維護
 
 - 每個有程式碼的資料夾都要有 CLAUDE.md（說明該層職責與慣例）
-- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（程式碼改了 → 文件跟著改，pre-commit gate 會擋）
+- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（程式碼改了 → 文件跟著改）。
+  **gate 只擋改碼的那一層**（缺 CLAUDE.md 或沒同批更新）；往上逐層堆疊是這裡的工作流規則，
+  gate 不檢查，上層過期不會有任何訊號
 - 步驟 7 處理的是「本輪學到什麼」，與上一條的「程式碼改了所以文件要同步」是兩件事
 - **步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 被 gate 逼著更新的 CLAUDE.md
   也要進步驟 8 的範圍 — gate 只確認「有寫」、不確認「寫得對」
@@ -135,10 +146,18 @@ grep -qxF '.screenshots/' .gitignore 2>/dev/null || echo '.screenshots/' >> .git
      "$HOME/.claude/scripts/check-claude-md.sh" || exit 1
      ```
 
-     然後對掛載點檔案 `chmod +x`
-   - 已存在且未含 `check-claude-md.sh` → 在檔尾 **Edit** 追加上面的呼叫行（保留既有內容）
+   - 已存在且未含 `check-claude-md.sh` → 先看**既有內容的最後一行**：
+     結尾是 `exit 0`、`exit $?` 或 `exec …` 的話，追加在檔尾就是死碼、永遠不會執行，
+     要插在那行**之前**；否則在檔尾 **Edit** 追加（保留既有內容）。
+     這件事沒做對會靜默失效兩層：hook 照跑但 gate 那行沒執行，而下次跑 `/dd-init` 時
+     下一點的「已含」是純字串比對 —— 字串就在檔案裡，於是每次都回報「已裝」，永遠不會修好
    - 已含 → 跳過並告知
-4. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
+4. **兩條分支跑完都要 `chmod +x <掛載點>`**（`test -x <掛載點> || chmod +x <掛載點>`）。
+   建立分支用 **Write** 產出的檔案是 644，追加分支若接手的是一個沒有執行位元的既有 hook
+   （手動複製 `.git/`、解壓縮，或 `core.hooksPath` 那份被以 mode 100644 commit 進版控後 clone 出來），
+   結果都是 **gate 等於沒裝**。git 只會印一行 `hint: The '.git/hooks/pre-commit' hook was ignored`，
+   沒有任何步驟要求檢查它
+5. 告知使用者 gate 行為：缺 CLAUDE.md 或改碼未同步更新 → commit 被擋；
    檢查點 commit（迴圈步驟 2）可用 `SKIP_DOC_CHECK=1 git commit`，最終 commit（步驟 6）必須全過；
    SKIP 過的目錄會記帳，之後第一個正常 commit（就算沒改程式碼）一樣要補上它們的 CLAUDE.md
 
@@ -205,7 +224,8 @@ fi
 📌 開始開發：
 實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
   → 沉澱本輪所學 → 評分&修正
-每個功能段落走一圈；CLAUDE.md 堆疊更新由 pre-commit gate 把關。
+每個功能段落走一圈。gate 把關的是「改碼的那一層有沒有 CLAUDE.md、有沒有同批更新」；
+逐層往上堆疊更新是 §3.9 的工作流規則，gate 不檢查，上層過期不會有任何訊號。
 ```
 
 ---

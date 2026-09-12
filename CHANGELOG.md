@@ -186,7 +186,7 @@
   （全部 96 份只看得到 31 份；段落 1 算出來是空的，第一個 commit 建的 5 份都不在範圍內。
   該專案 2026-09-09 已在自己的 CLAUDE.md 改用 `<base>..HEAD`，這次回寫）。全域模板 §3.9、
   `/dd-init` 蓋章版、code-simplifier 包裝器改成段落開始前跑 `--start-segment`、範圍用
-  `--segment-base` 算；蓋章版加 `dd-loop-rev`（目前是 `3`），標記是 `8step` 但 rev 比現行值舊
+  `--segment-base` 算；蓋章版加 `dd-loop-rev`（目前是 `4`），標記是 `8step` 但 rev 比現行值舊
   （沒有 rev 標記或號碼更早）的專案跑 `/dd-init` 會提議升級。UPGRADING 補上這個升級步驟，
   並更正「`/dd-init` 會跳過既有區塊」的過期說法。
   連帶補上：步驟 4 依序跑時另附 `git ls-files --others --exclude-standard`（簡化新增、還沒 commit

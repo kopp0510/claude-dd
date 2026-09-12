@@ -31,6 +31,11 @@ jobs:
           source ./install-dd-pipeline.sh
           validate_skill_hooks
 
+      # 幾何閘門自己會錯，而且全判通過（漏檢）與全判失敗（假陽性）看起來都像正常結果 ——
+      # 這支負面測試是唯一的防線。純標準庫，ubuntu runner 自帶 python3，無額外依賴。
+      - name: tech-diagram-gif 幾何閘門自我測試（變異 / 回歸 / 警告案例）
+        run: python3 skills/tech-diagram-gif/scripts/test-verify-geometry.py
+
       - name: 陣列與目錄一致性（ALL_* = 部署清單）
         run: |
           source ./install-dd-pipeline.sh
