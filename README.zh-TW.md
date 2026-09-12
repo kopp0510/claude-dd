@@ -63,7 +63,7 @@ cd claude-dd
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
-另有一個不列入編號的附加步驟：部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`。
+另有兩個不列入編號的附加步驟：**前置**檢查每個 skill 的 `hooks.json` 指令路徑（出現相對路徑就在部署任何檔案之前中止安裝），以及**收尾**部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`。
 
 ### 安裝選項
 
@@ -133,17 +133,19 @@ git pull && ./install-dd-pipeline.sh --force
 
 ![claude-dd 8 步開發迴圈](diagrams/claude-dd-dev-loop.zh-TW.gif)
 
+步驟 1 的測試證明「做出來是對的」，步驟 5 證明「簡化與修 review 沒把對的改壞」—— 目的不同，缺一不可。
+
 從零到日常的完整路徑（裝一次、每個專案蓋章一次、大工作先拆段落、每個功能段落走同一個迴圈）：
 
 ![claude-dd 使用流程](diagrams/claude-dd-usage-flow.zh-TW.gif)
 
 ### CLAUDE.md 維護規則（pre-commit gate 強制）
 
-- 每個含程式碼的資料夾都要有 CLAUDE.md；改碼時同批更新，並逐層堆疊更新上層
+- 每個含程式碼的資料夾都要有 CLAUDE.md；改碼時同批更新。逐層堆疊更新上層是 §3.9 的規則，**gate 不檢查** —— 它只看改到程式碼的那一層，上層過期不會有任何訊號
 - gate 本體是 `~/.claude/scripts/check-claude-md.sh`，由 `/dd-init` 掛上。掛載點為 `.git/hooks/pre-commit`，
   但若專案設了 `git config core.hooksPath`，git 會完全忽略 `.git/hooks/`，此時改掛到該目錄下（本 repo 自己就是這種情況）。
   錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
-- 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔不會被擋
+- 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但只要這個段落還有 SKIP 欠帳，連完全沒改程式碼的 commit 也照樣被擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 
 ## 為什麼要巢狀 CLAUDE.md
@@ -170,7 +172,8 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
   *殘餘*：那條是 context 規則不是強制。想敷衍還是過得了。gate 提高的是造假的成本，不是讓造假變不可能。
 - **小改動的摩擦。** 為了一個只想順手改一下的目錄補寫 `CLAUDE.md`，確實是額外成本。
   *對策*：gate 只對程式碼副檔名觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄 —
-  改 markdown、設定檔、資產都不會被擋；檢查點 commit 有 `SKIP_DOC_CHECK=1`，但只是延後：之後的正常 commit 一樣要補。
+  改 markdown、設定檔、資產**本身**不會觸發；檢查點 commit 有 `SKIP_DOC_CHECK=1`，但只是延後：之後的正常 commit 一樣要補，
+  而且在補完之前，連只改 markdown 的 commit 都會被擋。
   *殘餘*：真正新開一個放程式碼的目錄時，第一次 commit 就是得寫一份。這是這套機制的定價；
   而逃生口的強度，取決於你有多不想去按它。
 - **檔案越多，矛盾越多。** 官方原文：「兩條規則互相牴觸時，Claude 可能任選一條」。
@@ -193,6 +196,8 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | `/workflow-review:review` | 綜合程式碼審查（安全、效能、配置）。這是命名空間指令，冒號形式才是可呼叫的名稱 |
 
 ## Promoted Skills（預設部署，10 個）
+
+> 「Promoted」指該元件有實證使用紀錄，因此預設部署。沒有使用紀錄的元件是**直接刪掉**、不是留著不部署 —— 要取回見 git 歷史。
 
 | Skill | 說明 |
 |-------|------|

@@ -64,7 +64,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
-Plus one unnumbered step that deploys `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`.
+Plus two unnumbered steps: a pre-flight check that validates every skill's `hooks.json` command paths (a relative path aborts the install before anything is deployed), and a closing one that deploys `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`.
 
 ### Install options
 
@@ -136,9 +136,9 @@ The full path from zero to daily use (install once, stamp each project once, spl
 
 ### CLAUDE.md maintenance rules (enforced by pre-commit gate)
 
-- Every folder containing code needs a `CLAUDE.md`; it is updated in the same batch as the code, and the update cascades upward through the parent layers
+- Every folder containing code needs a `CLAUDE.md`, updated in the same batch as the code. The cascade upward through the parent layers is a §3.9 rule, **not** something the gate checks — it only looks at the directory whose code changed, so a stale parent produces no signal at all
 - The gate is `~/.claude/scripts/check-claude-md.sh`, hooked in by `/dd-init`. It goes into `.git/hooks/pre-commit`, unless `git config core.hooksPath` is set — git ignores `.git/hooks/` entirely in that case, so the hook goes into that directory instead. (This repo is itself in the second case.) Its error message tells the AI agent directly to read the directory, generate or update the file itself, and retry
-- It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. Touching only markdown or config never triggers it
+- It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. A markdown-only change does not trigger it *by itself* — but while the increment still has outstanding SKIP debt, even a commit with no code in it is blocked
 - Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly. Skipping is not a pardon: the gate tracks every directory skipped since the increment's start, and the next normal commit — even one with no code in it — is blocked until those directories' `CLAUDE.md` files are updated
 
 ## Why nested CLAUDE.md files
@@ -159,7 +159,7 @@ The gate demands one `CLAUDE.md` per code-bearing directory rather than one big 
   *Mitigation*: §3.9 of the global template dictates the repair format when the gate fires — read every file in the directory, then write "one line on this layer's job → key files and their purpose → conventions and constraints here → relationship to the parent", with an explicit ban on placeholder or shell content.
   *Residual*: that rule is context, not enforcement. A determined shortcut still passes. The gate raises the cost of faking it; it doesn't make faking impossible.
 - **Friction on small changes.** Adding a `CLAUDE.md` for a directory you only meant to touch once is real overhead.
-  *Mitigation*: the gate only fires on code extensions and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends, so markdown, config and asset changes never trigger it; `SKIP_DOC_CHECK=1` covers checkpoint commits — as a deferral, not a pardon: the next normal commit still asks for the file.
+  *Mitigation*: the gate only fires on code extensions and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends, so a markdown, config or asset change does not trigger it by itself; `SKIP_DOC_CHECK=1` covers checkpoint commits — as a deferral, not a pardon: the next normal commit still asks for the file, and until then even a markdown-only commit is blocked.
   *Residual*: the first commit that puts code into a genuinely new directory does cost you a file. That's the deal, and the escape hatch is only as strong as your willingness not to reach for it.
 - **More files, more contradictions.** "If two rules contradict each other, Claude may pick one arbitrarily."
   *Mitigation*: `claude-md-improver` (from the claude-md-management plugin) is the tool for this cleanup — it audits existing files against a quality baseline. (`/revise-claude-md` is a different job: folding this session's learnings in at loop close-out.) §3.9 also asks for a cascade check up the parent layers after each change.
