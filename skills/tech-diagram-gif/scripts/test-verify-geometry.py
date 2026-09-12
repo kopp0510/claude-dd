@@ -92,6 +92,11 @@ CASES = [
      lambda s: s.replace('<!-- ⑧ commit 成功 -->', ''.join(
          f'<rect x="{60 + i * 4}" y="{980 + i}" width="30" height="20" rx="6" '
          f'fill="#111111" stroke="#5a9e6f"/>' for i in range(3)) + '<!-- ⑧ commit 成功 -->')),
+    # 只把 <style> 裡的字級放大，font-size 屬性一個字都不動。2026-09-12 以前腳本
+    # 完全不解析 <style>、字級一律查 FONT_SIZES，這個變異在舊版是 exit 0 / 零個 ❌ ——
+    # 文字爆框卻判通過，完全靜默。改成讀 <style> 之後才抓得到。
+    ('只放大 <style> 的字級（font-size 屬性不動）', '溢出',
+     lambda s: s.replace('.nm  { font-size: 20px;', '.nm  { font-size: 30px;')),
 ]
 
 # (案例名, 變異函式, stdout 必須出現的片段)

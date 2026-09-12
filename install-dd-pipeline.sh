@@ -1011,7 +1011,12 @@ uninstall() {
     echo "├── ~/.claude/templates/dd/（舊版部署殘留；現行版本已不再部署文件模板）"
     echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"
     echo "├── ~/.claude/agents/ 中的 ${#ALL_AGENTS[@]} 個內建 agent"
-    echo "└── 官方 Plugins 設定（claude-md-management）"
+    echo "├── ~/.claude/scripts/ 中的 ${#DD_SCRIPTS[@]} 個輔助腳本（含 pre-commit gate — 移除後各專案掛著的 hook 會失效）"
+    # 由陣列生成，不寫死名字：寫死時漏掉 skill-creator，使用者同意移除一個、實際被取消登記兩個。
+    # 用 printf 串接而非 IFS='、' —— IFS 是逐位元組的，全形頓號 3 個位元組只會取第一個，接出亂碼
+    local plugin_list
+    plugin_list=$(printf '、%s' "${OFFICIAL_PLUGINS[@]}")
+    echo "└── 官方 Plugins 設定（${plugin_list#、}）"
     echo ""
 
     if [ "${ASSUME_YES:-false}" = true ]; then
@@ -1183,8 +1188,9 @@ show_completion() {
     echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
     echo "   供 wrapper skills 透過 Task tool 調用"
     echo ""
-    echo -e "${GREEN}📌 已啟用的 Plugin：${NC}"
-    echo "   claude-md-management — 使用 /revise-claude-md 管理 CLAUDE.md"
+    echo -e "${GREEN}📌 已啟用的 Plugin（${#OFFICIAL_PLUGINS[@]} 個）：${NC}"
+    echo "   claude-md-management — 使用 /revise-claude-md 與 /claude-md-improver 管理 CLAUDE.md"
+    echo "   skill-creator — 建立新 skill 的鷹架"
     echo ""
     echo -e "${GREEN}📌 查看說明：${NC}"
     echo "   參閱 README.zh-TW.md（繁體中文）/ README.md（English）"

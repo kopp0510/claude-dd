@@ -72,6 +72,10 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
   —— `scripts/verify-geometry.py` 優先讀這個標記；沒有標記時它會退化用畫法猜並印警告，
   猜錯就是靜默漏檢（實測踩過：矩形節點被當成菱形而誤報溢出；漸層畫布讓兩項遮罩檢查
   一起空轉卻印「全部通過」）
+- **字級只寫一邊**：寫在 `<style>` 的 class 規則或 `font-size` 屬性都可以，但不要兩邊都寫。
+  `verify-geometry.py` 的取值順序跟瀏覽器一致（`<style>` > 屬性 > 內建預設表），
+  兩邊都寫時雖然仍算得對，人卻容易只改其中一邊。另外只認 **px 字面值** ——
+  用 `em` / `rem` / `%` / `var()` 的話腳本讀不到，會退回預設表去估，文字溢出那項就不準
 - 版面順序與走廊：先排容器與列才排線、保留跨層走廊、legend 不進流程走廊
 - 色票/節點語意色桶照所選風格檔；畫布建議 `viewBox 0 0 1440 1080` —
   **注意風格檔的字級/間距以 960 寬為基準，用 1440 畫布時需等比放大（約 ×1.5）**
@@ -104,8 +108,12 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 **先跑腳本、再看截圖**：
 
 ```bash
-python3 "$HOME/.claude/skills/tech-diagram-gif/scripts/verify-geometry.py" <diagram.svg> [--cycle 8.0]
+python3 "$HOME/.claude/skills/tech-diagram-gif/scripts/verify-geometry.py" <diagram.svg> --cycle <第 3 步選定的總循環>
 ```
+
+**`--cycle` 一定要帶**，填第 3 步選定的總循環長（本 skill 的範例是 7.2s）。
+腳本預設是 8.0，那只對應內附 fixture；總循環不是 8s 卻沒帶旗標時，一張 dur=4s 的壞圖
+會被判**通過**（8÷4=2）且毫無訊號 —— 這是這道閘門唯一的靜默漏檢。
 
 它涵蓋「版面幾何」組**除了「強調色元素 ≤2、註解框 ≤2」以外的全部項目**
 （哪個顏色算 accent 無法通用判定，那一項人工數），並印出實際數值（不只 pass/fail）；

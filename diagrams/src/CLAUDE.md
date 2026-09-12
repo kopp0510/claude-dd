@@ -38,7 +38,9 @@
   請在暫存目錄執行，不要在 repo 內跑（**腳本的**產物不進版控，只有 GIF 進；
   手寫 SVG 是來源不是產物，要進）
 - **手寫 SVG 改完要重跑幾何檢查**：
-  `python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <檔案>`。
+  `python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <檔案> --cycle 8.0`。
+  這四張的總循環是 8s（`dur` 只有 2s / 4s / 8s），剛好等於腳本預設值，但**還是要明寫** ——
+  不寫就等於預設值幫你猜對了，下一張改成別的總循環時不會有任何訊號。
   四份現況皆通過；沒過就不要重出 GIF
 - **三支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
   連線要畫在 `<defs>` 外、標 `data-role="edge"`、座標只用 M/L（`poly()` 產生），小球的 `<mpath>` 直接指向它 ——
@@ -46,10 +48,13 @@
   交叉、折數、穿越檢查全部空轉，輸出卻看不出來
 - **`gen_loop.py`、`gen_usage.py` 有 8/31 畫圖時就在的未通過項**（規則多數 8/10 就在 contract 裡，9/7 才有 verify-geometry.py 去量）：
   loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 `p65` 繞路比 1.35、⑦ 在容器外，以及文字溢出。改這兩張只看有沒有**新增**失敗項。
-  文字溢出是腳本估算，英文版誤報十幾處；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（2026-09-11 四張都 ≥12px）
+  文字溢出是腳本估算；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（2026-09-11 四張都 ≥12px）。
+  **2026-09-12 起誤報少很多**：腳本改成會讀 SVG 自己 `<style>` 裡的字級，不再把 `.nm` 一律當 20、`.sm` 一律當 15
+  （這兩支實際是 15 與 11.5–12，全部高估）。實測 `loop-zh-TW` 的溢出失敗項因此從 1 降到 0
 - **`gen_planner.py` 是照檢查腳本畫的，兩版都 0 項不過，改它要維持全過**。三個做法是為了過檢查：
-  節點文字的字級只寫在 `font-size` 屬性、CSS 不設（腳本沒讀到屬性就依 class 查表：`nm` 當 20、`sm` 當 15，表裡沒有的 class 如 `xs` 一律當 15，
-  都比實際大，舊兩張的溢出誤報就是這樣來的；CSS 又會蓋過屬性，兩邊都寫的話，只改 CSS 時檢查仍照舊數字估）；
+  節點文字的字級只寫在 `font-size` 屬性、CSS 不設（**2026-09-12 之後這條只剩「別兩邊都寫」的意義**：
+  腳本已經會讀 `<style>`，優先序跟瀏覽器一樣是 CSS > 屬性 > 內建預設表，所以只寫一邊就不會估錯。
+  兩邊都寫時腳本取 CSS、瀏覽器也取 CSS，仍然一致，但人容易改錯邊）；
   九個節點都放進容器（容器外的節點算未通過）；邊標籤底下墊 `data-role="mask"` 的底色塊（沒有的話標籤間隙沒量到，只印警告）。
   分組標題靠右是因為有連線從容器上緣左半邊進來 —— 文字壓線腳本量不到，只能看截圖
 - **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
@@ -81,7 +86,20 @@
 2. playwright 開 `file://<暫存>/xxx.html`，`pauseAnimations()` 後
    `setCurrentTime(i*7.2/144)` 逐幀截圖，144 幀
 3. `ffmpeg -framerate 20 -i f%03d.png -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 out.gif`
-4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再覆蓋 `../*.gif`
+4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再**照下表逐張覆蓋這 6 個檔名**
+   （不要用 `../*.gif` —— 上層有 11 張，其中 5 張是手寫 SVG 出的，不由這個流程產生）：
+
+   | 產出的 SVG | 覆蓋到 |
+   |---|---|
+   | `usage-en.svg` | `../claude-dd-usage-flow.gif` |
+   | `usage-zh-TW.svg` | `../claude-dd-usage-flow.zh-TW.gif` |
+   | `loop-en.svg` | `../claude-dd-dev-loop.gif` |
+   | `loop-zh-TW.svg` | `../claude-dd-dev-loop.zh-TW.gif` |
+   | `planner-en.svg` | `../claude-dd-task-planner.gif` |
+   | `planner-zh-TW.svg` | `../claude-dd-task-planner.zh-TW.gif` |
+
+   命名慣例：英文版用無後綴檔名、繁中版加 `.zh-TW`（與 README 同一套）；
+   字根對照 usage→usage-flow、loop→dev-loop、planner→task-planner
 
 細節見 `tech-diagram-gif` skill；上面四步是三支腳本那 6 張的做法，手寫 SVG 的圖照該 skill 重出。
 
