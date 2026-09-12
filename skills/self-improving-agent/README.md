@@ -62,7 +62,7 @@ Space freed for new learnings
 |-----------|-------|-------------|
 | Skills | 5 | review, promote, extract, status, remember |
 | Agents | 2 | memory-analyst, skill-extractor |
-| Hooks | 1 | PostToolUse error capture (zero overhead on success) |
+| Hooks | 1 | PostToolUse error capture (zero overhead unless an error pattern matches the output text; there is no exit code in the hook input) |
 | Reference docs | 3 | memory architecture, promotion rules, rules directory patterns |
 | Templates | 2 | rule template, skill template |
 

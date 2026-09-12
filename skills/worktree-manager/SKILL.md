@@ -31,4 +31,9 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 - 一個分支只能有一個 worktree；已被 worktree 佔用的分支不能再 checkout
 - 子模組專案需特殊處理，先確認再建
-- worktree 共用主 repo 的 `.gitignore`；額外忽略規則用 `.git/info/exclude`
+- worktree 共用主 repo 的 `.gitignore`，`info/exclude` 也是共用的 —— 它住在 common dir，
+  在哪一邊加規則，主 repo 與所有 worktree 都會生效（git 沒有 per-worktree exclude 機制；
+  實測寫進 `.git/worktrees/<name>/info/exclude` 根本不被讀取）
+- **worktree 內不可寫死 `.git/info/exclude`**：worktree 的 `.git` 是一個指向 gitdir 的**檔案**、
+  不是目錄，照字面路徑寫入必定 `not a directory` 失敗（已複現，exit 1）。
+  要取真實路徑用 `git rev-parse --path-format=absolute --git-path info/exclude`

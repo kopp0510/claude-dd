@@ -1,7 +1,7 @@
 ---
 name: code-simplifier
 description: 調用官方 code-simplifier agent 簡化程式碼。當使用者要求簡化、降低複雜度、清理冗餘，或執行 8 步開發迴圈步驟 3 時啟用。不適用於 PR 審查（用 code-reviewer）。
-allowed-tools: Task, Read, Grep, Glob
+allowed-tools: Task, Bash, Read, Grep, Glob
 ---
 
 # Code Simplifier — 官方 agent 包裝器
@@ -13,7 +13,9 @@ allowed-tools: Task, Read, Grep, Glob
 
 - **8 步開發迴圈步驟 3**（最常見）：範圍 = 該功能段落從起點到現在的變更（`git diff <起點>`，
   起點 = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出），**不詢問**，直接執行。
-  一段常有好幾個 commit，`HEAD~1` 只看得到最後一個；取不到起點（指令 exit 非 0 或輸出是空的）時當成「範圍不明」問一題，不要退回 `HEAD~1`
+  一段常有好幾個 commit，`HEAD~1` 只看得到最後一個；取不到起點（指令 exit 非 0 或輸出是空的）時當成「範圍不明」問一題，不要退回 `HEAD~1`。
+  **專案有 `task-planner` 進度表時例外**：起點改用表上這段 commits 欄的起點。回頭做 `BLOCKED` 過的段落時，
+  中間插做別段會把 `--segment-base` 往後推，用它會漏掉這段先前已寫好的部分
 - **使用者指明檔案/目錄/片段**：照指示，不追問
 - **範圍不明**：問一題 —「要簡化哪個範圍？（預設：最近修改的檔案）」，其餘參數用預設
 

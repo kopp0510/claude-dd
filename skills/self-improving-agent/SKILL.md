@@ -143,7 +143,9 @@ Monitors command output for errors. When detected, returns a short reminder to C
 truncated context snippet, suggesting `/self-improving-agent:remember` to save the
 solution. It does not write to auto-memory itself — saving stays an explicit decision.
 
-**Token overhead:** Zero on success. ~40 tokens only when an error is detected.
+**Token overhead:** Zero unless an error pattern matches; ~40 tokens when one does.
+This is text matching on the command's output, **not** exit status — the hook input carries
+no exit code field, so a command that succeeded while printing `failed` or `error:` also fires.
 
 ## Platform Support
 

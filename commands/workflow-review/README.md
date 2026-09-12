@@ -3,6 +3,10 @@
 > **Author**: Alireza Rezvani
 > **Version**: 1.0.0
 > **Created**: September 16, 2025
+>
+> **This file is reference only and is NOT deployed** — `install-dd-pipeline.sh` deletes it from
+> `~/.claude/commands/workflow-review/` after copying (CI asserts its absence). `review.md`
+> in this directory is the executable command and is authoritative wherever the two disagree.
 
 Perform multi-perspective automated code reviews using specialized agents with explicit Task tool invocations for quality, security, architecture, performance, and maintainability analysis.
 
@@ -77,13 +81,16 @@ The `/review` command follows this systematic approach:
 - Checks for injection risks, XSS, CSRF protection
 
 ### 3. Architecture Review
-- Uses Task tool with subagent_type="architect-reviewer"
+- **No dedicated sub-agent.** Reviewed directly in this command's own context — same as
+  `review.md` states. (Earlier versions of this file named `architect-reviewer`; no such
+  agent has ever existed in this repo.)
 - Evaluates service boundaries, coupling, cohesion
 - Assesses scalability and design patterns
 - Reviews long-term maintainability
 
 ### 4. Performance Analysis
-- Uses Task tool with subagent_type="performance-engineer"
+- **No dedicated sub-agent.** Reviewed directly in this command's own context.
+  (Earlier versions named `performance-engineer`; it has never existed here either.)
 - Identifies bottlenecks and resource usage
 - Analyzes response times and optimization opportunities
 - Reviews database queries and caching strategies
@@ -313,9 +320,7 @@ The `/review` command works seamlessly with other utilities:
   "review": {
     "agents": {
       "code_reviewer": "subagent_type=code-reviewer",
-      "security_auditor": "subagent_type=security-auditor",
-      "architect": "subagent_type=architect-reviewer",
-      "performance": "subagent_type=performance-engineer"
+      "security_auditor": "subagent_type=security-auditor"
     },
     "config_patterns": {
       "risky_extensions": [".yml", ".yaml", ".json", ".properties", ".env"],
@@ -361,7 +366,8 @@ The `/review` command works seamlessly with other utilities:
 When extending the `/review` command:
 
 1. **Add New Check Types**: Extend `check_types` array
-2. **New Agent Integration**: Use Task tool with appropriate subagent_type
+2. **New Agent Integration**: Use Task tool with a subagent_type that actually exists — check
+   `PROMOTED_AGENTS` in `install-dd-pipeline.sh` first, and add the dimension to `review.md` too
 3. **Pattern Detection**: Add configuration risk patterns
 4. **Report Templates**: Maintain consistent output format
 

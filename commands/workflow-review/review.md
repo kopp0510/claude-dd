@@ -13,17 +13,18 @@ You are coordinating a comprehensive code review using specialized agents with e
 
 This command builds on automatic skill detections:
 
-**Before This Command Runs:**
-- code-reviewer skill has flagged code quality issues in real-time
-- security-auditor, secret-scanner, dependency-auditor skills have detected security concerns
+**What is actually deployed** (claude-dd `PROMOTED_AGENTS`): `code-reviewer`, `code-simplifier`,
+`security-auditor`, `senior-devops` — all **agents**, not skills. There are no `secret-scanner`
+or `dependency-auditor` components; earlier versions of this section named them and they have
+never existed in this repo.
 
 **This Command Coordinates:**
-- Aggregates all skill findings into one report
-- Invokes sub-agents for deep analysis beyond skill capabilities
+- Dispatches `security-auditor` via the Task tool for the security dimension
+- Reviews architecture and performance inline (no dedicated sub-agent for either)
 - Prioritizes issues by severity (CRITICAL → LOW)
 - Provides comprehensive recommendations
 
-**Workflow:** Skills detect → This command aggregates + invokes experts → Comprehensive report
+**Workflow:** This command reviews inline + dispatches the security agent → Comprehensive report
 
 ## Review Process
 

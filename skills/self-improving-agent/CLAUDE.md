@@ -55,12 +55,23 @@ Shows line counts, topic files, stale entries, and recommendations.
 
 ## Agents
 
-- **memory-analyst**: Spawned by `/self-improving-agent:review` to analyze patterns across memory files
-- **skill-extractor**: Spawned by `/self-improving-agent:extract` to generate complete skill packages
+Both register under the **plugin** namespace: `self-improving-agent:memory-analyst` and
+`self-improving-agent:skill-extractor` (plugin name + agent name — not the agent name twice).
+Use those exact strings as `subagent_type`.
+
+- **skill-extractor**: spawned by `/self-improving-agent:extract` Step 4 to generate complete skill packages
+- **memory-analyst**: available for cross-file pattern analysis. `/self-improving-agent:review`
+  does **not** spawn it — that flow runs inline, start to finish. Spawn it yourself when you
+  want an independent second pass over the memory files.
 
 ## Hooks
 
-The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It detects command failures and surfaces a short reminder (via `hookSpecificOutput.additionalContext`) suggesting `/self-improving-agent:remember` to save the solution — it does not write to auto-memory itself. Zero overhead on successful commands.
+The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It detects command failures and surfaces a short reminder (via `hookSpecificOutput.additionalContext`) suggesting `/self-improving-agent:remember` to save the solution — it does not write to auto-memory itself. Zero overhead unless an error pattern matches.
+
+It matches the output **text**, not the exit status — Claude Code passes the hook only
+`stdout` / `stderr` / `interrupted` / `isImage` / `noOutputExpected`, with no exit code field —
+so a command that succeeded while printing `failed` or `error:` will also fire. Matching is
+per line, so one incidental `console.error` no longer silences a real failure beside it.
 
 To enable:
 ```json
