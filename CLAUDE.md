@@ -138,6 +138,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
 - 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的部署陣列（CI 會擋不一致）
+- skill / command frontmatter 的 `allowed-tools` 是**該輪的免確認預授權**，不是工具白名單。
+  官方文件：「It does not restrict which tools are available: every tool remains callable」，
+  要真的拿掉工具得用 `disallowed-tools`，而且預授權在使用者下一則訊息後就失效。
+  所以漏列**不會**讓步驟執行不出來，只會多一次權限詢問；只有當該 skill 內文寫著
+  「不詢問，直接執行」時才構成矛盾，嚴重度是 minor。2026-09-12 稽核時 4 個 agent 同時誤判過
 - README 有英文（`README.md`，GitHub 預設顯示）與繁中（`README.zh-TW.md`）兩份，**內容須同批更新**。
   CI 對兩份都驗數字宣稱與 Promoted Skills 表格，正規式為語言無關（`.github/workflows/ci.yml`）。
   CHANGELOG.md 與 UPGRADING.md 維持純繁中，英文 README 連向它們時須標註 *(Traditional Chinese)*。
@@ -202,7 +207,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 |---|---|---|---|
 | 1 | **授權相容** | LICENSE 存在且相容（MIT/Apache 可；GPL/未標需評估）。frontmatter 若寫 `license: … LICENSE.txt`，該檔**必須同目錄存在** | 補齊 LICENSE 或移除懸空 frontmatter |
 | 2 | **hook 路徑絕對化** | grep `hooks/hooks.json`，`command` 路徑須以 `/`、`$HOME/`、`~/` 或 `${CLAUDE_PLUGIN_ROOT}` 開頭（validator 會先剝掉 `bash`/`node` 等直譯器前綴再判斷）；相對路徑（`./`）不合格。詳見上方「Skill hook 路徑規範」 | 併入前改寫（`validate_skill_hooks()` 也會擋） |
-| 3 | **CLI / pkg 事實驗證** | 任何 `npm install` / CLI args / 套件名，先 `npm view <pkg>` 或讀官方 README 證實，**不靠名稱推論** | 無法證實 → 不收 |
+| 3 | **事實驗證（不只 CLI）** | 任何靠名稱推論不出來的東西都要實跑證實：`npm install` / CLI args / 套件名（`npm view <pkg>` 或官方 README），以及**路徑算式、編碼規則、目錄命名**（實際跑一次拿真實輸出對照）。2026-09-12 踩過：self-improving-agent 五處 `%2F` 編碼算出的記憶體目錄從來不存在，收編時沒人跑過一次 | 無法證實 → 不收 |
 | 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
 | 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
 | 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
