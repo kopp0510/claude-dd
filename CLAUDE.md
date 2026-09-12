@@ -279,7 +279,9 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
 | 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → **同批**同步兩份 README 的 Promoted Skills 表格與數字、本檔「目錄結構」的總數、`DD_PIPELINE_ARCHITECTURE.md` 的元件數字、以及三處授權段的 vendored 清單 → 跑 `--force` → 納入 source of truth | — |
 
-> **典型踩雷**（實際評估）：某第三方 UI/UX skill 號稱 9 萬星但建立僅半年、forks 為整數 → 採用度存疑；且需 `npm -g` binary + Python runtime → 第 3、4 項直接擋下。
+> **典型踩雷**（實際評估）：某第三方 UI/UX skill 需要 `npm -g` 安裝的 binary 外加 Python runtime，
+> 第 3、4 項直接擋下。**不收的理由只寫「它不符合本 repo 的哪一項約束」就夠了** —— 這是公開 repo，
+> 不要在這裡評論別人專案的人氣、品質或維護者。那些是讀者無從查證、對本清單也毫無作用的話。
 
 > **只借概念、不抄檔案時**（本表第 2、4、5 項不適用，授權仍要處理）：歸屬範圍**精確到段落／項目**，
 > 不可整節掛名。2026-09-07 `tech-diagram-gif` 借鏡 diagram-design（MIT）時，LICENSE.txt 把整節
