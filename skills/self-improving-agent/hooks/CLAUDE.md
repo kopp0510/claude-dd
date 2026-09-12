@@ -42,8 +42,14 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   **想知道某個改動有沒有被守到，就自己做一次變異測試**：改壞那一處 → 跑測試 → 還原。
   2026-09-12 就是這樣量的：第一版有一批變異溜過去，補了 stdout、第一行、hookEventName、
   雙分支四類情境之後才守住
-- 它在 CI 的 ShellCheck 清單裡（`.github/workflows/ci.yml`，逐檔寫死），
-  bash 3.2 相容、`set -eu` 下不可用會回非 0 的裸指令
+- **兩支都在 CI 的 ShellCheck 清單裡**（`.github/workflows/ci.yml`，逐檔寫死 —— 新增腳本要自己加進去），
+  也都要 bash 3.2 相容。但兩支的 shell 設定**刻意不同**：`error-capture.sh` 是 `set -eu`，
+  裡面不可出現會回非 0 的裸指令；`test-error-capture.sh` 只有 `set -u`，**不可以加 `-e`**。
+  實測（拿一個 `exit 3` 的假 hook 餵給兩個版本）：`set -u` 印 37 行、exit 1、26 個案例
+  全部正確報出 `hook exit=3`；改成 `set -eu` 只印 3 行、exit 3 —— **印完標題就死，
+  一個案例都沒跑**，而且看起來只像「輸出比較短」。它整個工作就是去抓 hook 的非 0 結束碼，
+  加 `-e` 等於把要驗的東西變成自己的死因。
+  （順帶一提，`rc != 0` 那條分支平常沒有情境會走到，就是用這個 `exit 3` 假 hook 驗的）
 
 ## 與上層的關係
 
