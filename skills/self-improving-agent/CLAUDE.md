@@ -66,7 +66,7 @@ Use those exact strings as `subagent_type`.
 
 ## Hooks
 
-The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It detects command failures and surfaces a short reminder (via `hookSpecificOutput.additionalContext`) suggesting `/self-improving-agent:remember` to save the solution — it does not write to auto-memory itself. Zero overhead unless an error pattern matches.
+The `error-capture.sh` hook fires on `PostToolUse` (Bash only). It scans the command's output text for error patterns and surfaces a short reminder (via `hookSpecificOutput.additionalContext`) suggesting `/self-improving-agent:remember` to save the solution — it does not write to auto-memory itself. Zero overhead unless an error pattern matches.
 
 It matches the output **text**, not the exit status — Claude Code passes the hook only
 `stdout` / `stderr` / `interrupted` / `isImage` / `noOutputExpected`, with no exit code field —

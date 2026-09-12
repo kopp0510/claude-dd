@@ -9,9 +9,7 @@ model: inherit
 
 You are coordinating a comprehensive code review using specialized agents with explicit focus on configuration safety and production impact.
 
-## Integration with Skills
-
-This command builds on automatic skill detections:
+## What this command dispatches
 
 **What is actually deployed** (claude-dd `PROMOTED_AGENTS`): `code-reviewer`, `code-simplifier`,
 `security-auditor`, `senior-devops` — all **agents**, not skills. There are no `secret-scanner`

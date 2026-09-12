@@ -38,7 +38,9 @@ allowed-tools: Read, Bash, Grep, Glob
 **`-u` 不可省**：裸 `git stash` 不收未追蹤的新檔，修復若是「新增一個檔案」就整個沒被藏起來，
 第一步照樣通過 —— 得到的是假的 PASS。更糟的是堆疊裡本來就有舊 stash 時：`git stash pop`
 會把**不相干的那筆**彈回工作目錄，整條鏈 exit 0 全綠，還順手污染了工作目錄（實測）。
-堆疊空的時候 `pop` 會 exit 1，這種失敗反而是大聲的。
+真正讓整條鏈靜靜變綠的是這一半：**`git stash -u` 在沒東西可存時 exit 0**
+（只印「沒有要儲存的本機修改」），所以 `&&` 不會斷，後面的 `pop` 把舊 stash 彈出來也 exit 0。
+反過來，堆疊**空的**時候 `pop` 才會 exit 1（「未發現貯存條目。」）—— 那種失敗是大聲的。
 另：這個模式只在修復**還沒 commit** 時成立 —— 8 步迴圈步驟 2 已經 commit 之後，
 stash 無物可存，要改用 `git stash` 以外的方式（例如 `git revert --no-commit` 或在暫存 worktree 比對）。
 

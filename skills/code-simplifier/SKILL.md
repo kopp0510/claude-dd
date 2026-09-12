@@ -14,7 +14,9 @@ allowed-tools: Task, Bash, Read, Grep, Glob
 - **8 步開發迴圈步驟 3**（最常見）：範圍 = 該功能段落從起點到現在的變更（`git diff <起點>`，
   起點 = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出），**不詢問**，直接執行。
   一段常有好幾個 commit，`HEAD~1` 只看得到最後一個；取不到起點（指令 exit 非 0 或輸出是空的）時當成「範圍不明」問一題，不要退回 `HEAD~1`。
-  **專案有 `task-planner` 進度表時例外**：起點改用表上這段 commits 欄的起點。回頭做 `BLOCKED` 過的段落時，
+  **專案有 `task-planner` 進度表時例外**：起點改用表上這段 commits 欄的起點。
+  表在哪不用問 —— 根目錄 CLAUDE.md 第一個 `##` 之前的指路句會寫明檔名（通常在 `docs/designs/`）；
+  沒有那句指路就是沒有進度表，照 `--segment-base` 走。回頭做 `BLOCKED` 過的段落時，
   中間插做別段會把 `--segment-base` 往後推，用它會漏掉這段先前已寫好的部分
 - **使用者指明檔案/目錄/片段**：照指示，不追問
 - **範圍不明**：問一題 —「要簡化哪個範圍？（預設：最近修改的檔案）」，其餘參數用預設
