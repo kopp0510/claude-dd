@@ -88,8 +88,9 @@ def text_width(s, size):
 
 
 def box(x, y, name, lines, color):
-    # 節點文字的字級只寫在 font-size 屬性，CSS 的 .nm/.sm 不設：verify-geometry.py 讀屬性，沒寫就依 class
-    # 猜（nm→20、sm→15）而誤報溢出；CSS 又會蓋過屬性，兩邊各寫一份的話，只改 CSS 檢查仍照舊數字估
+    # 節點文字的字級只寫在 font-size 屬性、CSS 的 .nm/.sm 不設 —— 只寫一邊，人才不會改錯邊。
+    # 2026-09-12 起 verify-geometry.py 的取值順序與瀏覽器一致（<style> > font-size 屬性 > 內建表），
+    # 所以「只改 CSS 檢查仍照舊數字估」已經不成立了；照舊表猜而誤報溢出的問題也一併沒了
     o = [f'  <g><rect data-role="node" x="{x}" y="{y}" width="{BW}" height="{BH}" rx="6" fill="{SURF}" '
          f'stroke="{color}" stroke-width="1.5"/>\n',
          f'    <text x="{x+16}" y="{y+28}" class="nm" font-size="15" fill="{color}">{esc(name)}</text>\n']

@@ -71,6 +71,10 @@
 
 ### Added
 
+- **CI 新增「tech-diagram-gif 幾何閘門自我測試」step**：跑 `scripts/test-verify-geometry.py`
+  （純標準庫，ubuntu runner 自帶 python3）。這支閘門自己會錯，而且全判通過（漏檢）與全判失敗
+  （假陽性）外觀上都像正常結果 —— 在此之前它完全沒有 CI，現成可跑卻沒人跑。同批補進
+  `DD_PIPELINE_ARCHITECTURE.md` 的 CI 防線表
 - **README 新增「大工作怎麼跑」圖**（`diagrams/claude-dd-task-planner*.gif`，中英各一，放在兩份 README
   的 task-planner 段落下面）。那段文字有分岔（估出 1 段照一般迴圈、2 段以上交給 task-planner）、
   有繞回來的圈（每一段裡小任務一個個做，整段才跑 3–8，標 DONE 再做下一段），還有換 session 照表接手；
@@ -109,8 +113,9 @@
   Layout Rules），contract 表列的 40px 是上游 showcase 不及格線，不再出現在閘門裡
 - **`tech-diagram-gif` 新增 `scripts/verify-geometry.py`**（純標準庫、無 pip 依賴、
   缺 python3 退化為人工算）：把 Taste Gate「版面幾何」組從「用眼睛看」變成可執行的閘門，
-  第 4 步改為「先跑腳本再看截圖」。同批新增 `test-verify-geometry.py`（12 種變異各弄壞
-  一項確認抓得到、1 個回歸案例確認不誤報）與 `scripts/CLAUDE.md`。SVG 需標
+  第 4 步改為「先跑腳本再看截圖」。同批新增 `test-verify-geometry.py`（每種變異各弄壞
+  一項確認抓得到，另有回歸案例確認不誤報；案例數見該檔與 `scripts/CLAUDE.md`，
+  本文不寫死數字）與 `scripts/CLAUDE.md`。SVG 需標
   `data-role`（`node`/`container`/`edge`），無標記時腳本退化用畫法猜並印警告
 - **修正一項翻譯錯誤**：邊標籤遮罩與連線的間隙原寫「6–10px」（讀成上下限），
   上游 diagram-design 原文是 minimum 6px、擁擠時 push to 8–10px —— **6 是下限不是區間**。
@@ -134,6 +139,24 @@
 
 ### Fixed
 
+- **`verify-geometry.py` 從不讀 SVG 自己 `<style>` 宣告的字級**，一律查內建預設表，兩個方向都會錯：
+  猜高了誤報（`gen_loop.py` 的 `.nm` 實際 15px 被當成 20px，英文版一次誤報 17 處文字溢出），
+  猜低了**靜默漏檢**（只在 `<style>` 把字級放大的圖，文字爆框卻判通過、exit 0）。改成照瀏覽器的
+  優先序取值（`<style>` 的 class 規則 > `font-size` 屬性 > 內建表 —— 依 SVG 1.1 §6.4，
+  presentation attribute 的特異性為 0，所以 CSS 勝出），只認 px 字面值，同一區塊重複宣告取最後一個，
+  並先剝掉 CSS 註解（否則「把舊值註解留在下面」這個常見習慣會讓註解裡的舊字級蓋掉真正生效的規則）。
+  實測溢出誤報：`loop-zh-TW` 1→0、`loop-en` 17→2、`usage-en` 10→1
+- **`/dd-init` Phase 3 的 gate 掛載有兩個靜默失效路徑**：①三條分支裡只有一條做 `chmod +x`，
+  既有 hook 沒有執行位元時 gate 等於沒裝，git 只印一行 `hook was ignored` 的 hint 就過去了；
+  ②既有 hook 以 `exit 0` 或 `exec` 結尾時，追加在檔尾的呼叫是死碼，而下一條分支的「已含」是純
+  字串比對 —— 字串就在檔案裡，於是每次跑 `/dd-init` 都回報「已裝」，永遠不會修好
+- **`--uninstall` 的移除預告漏列輔助腳本**（含 pre-commit gate，移除後各專案掛著的 hook 會失效），
+  且 plugin 那行寫死一個名字、實際會取消登記兩個。改由 `OFFICIAL_PLUGINS` 陣列生成；完成訊息同病同治
+- **`UPGRADING.md` 的「保留本地客製」做不到**：原本寫「最後一步改成不帶 `--force` 才會出 diff 選單
+  讓你選 `k`」，但前面那個指令的 `--force` 已經先把全域 CLAUDE.md 覆蓋掉，等跑到最後一步兩邊內容
+  一致、腳本直接 return，那個選單**永遠不會出現**（實跑驗證）。改成兩個指令都要拿掉 `--force`，
+  並警告別選 `s`（舊腳本那個分支的裸 `diff` 在 `set -e` 下會中止安裝）。同節補上 `--prune` 掃不到
+  `templates/`，要自己 `rm -rf ~/.claude/templates/dd`，以及「會印 7 行紅字『源檔案不存在』屬預期」
 - **`/dd-init` 在沒有 `.gitignore` 的專案不會把 CLAUDE.md 送進版控**：Phase 5 原本寫
   `git add CLAUDE.md .gitignore 2>/dev/null || true`。`git add` 是全有全無，純後端/CLI 專案
   沒有 `.gitignore`（Phase 2 只在有前端 UI 時才建），整條以 exit 128 失敗、**staged 清單為空**，

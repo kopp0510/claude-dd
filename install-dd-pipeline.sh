@@ -1013,7 +1013,9 @@ uninstall() {
     echo "├── ~/.claude/agents/ 中的 ${#ALL_AGENTS[@]} 個內建 agent"
     echo "├── ~/.claude/scripts/ 中的 ${#DD_SCRIPTS[@]} 個輔助腳本（含 pre-commit gate — 移除後各專案掛著的 hook 會失效）"
     # 由陣列生成，不寫死名字：寫死時漏掉 skill-creator，使用者同意移除一個、實際被取消登記兩個。
-    # 用 printf 串接而非 IFS='、' —— IFS 是逐位元組的，全形頓號 3 個位元組只會取第一個，接出亂碼
+    # 用 printf 串接而非 IFS='、' —— IFS 在 C/POSIX locale 下逐「位元組」取，全形頓號 3 個
+    # 位元組只會用第一個，接出亂碼（實測 bash 3.2：UTF-8 locale 下正常、LC_ALL=C 只剩 \343）。
+    # 本機測不出來，正是不能用它的理由：使用者機器的 locale 不可控
     local plugin_list
     plugin_list=$(printf '、%s' "${OFFICIAL_PLUGINS[@]}")
     echo "└── 官方 Plugins 設定（${plugin_list#、}）"
@@ -1189,8 +1191,18 @@ show_completion() {
     echo "   供 wrapper skills 透過 Task tool 調用"
     echo ""
     echo -e "${GREEN}📌 已啟用的 Plugin（${#OFFICIAL_PLUGINS[@]} 個）：${NC}"
-    echo "   claude-md-management — 使用 /revise-claude-md 與 /claude-md-improver 管理 CLAUDE.md"
-    echo "   skill-creator — 建立新 skill 的鷹架"
+    # 名字一律走訪陣列；說明用 case 補。漏寫說明只會少一句話，不會像寫死清單那樣
+    # 整個項目不見（數量從陣列來、名字用手打，才是最糟的組合：印「3 個」只列 2 個）
+    for plugin in "${OFFICIAL_PLUGINS[@]}"; do
+        case "$plugin" in
+            claude-md-management)
+                echo "   ${plugin} — 用 /revise-claude-md 與 /claude-md-improver 管理 CLAUDE.md" ;;
+            skill-creator)
+                echo "   ${plugin} — 建立新 skill 的鷹架" ;;
+            *)
+                echo "   ${plugin}" ;;
+        esac
+    done
     echo ""
     echo -e "${GREEN}📌 查看說明：${NC}"
     echo "   參閱 README.zh-TW.md（繁體中文）/ README.md（English）"

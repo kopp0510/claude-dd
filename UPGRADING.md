@@ -50,7 +50,10 @@ rm -rf ~/.claude/templates/dd    # 1.0.0 起不再部署文件模板；--prune �
   `~/.claude/CLAUDE.md` 換成 repo 版，等跑到最後一步時兩邊內容已經一致，腳本直接回報
   「與 repo 版本一致」就 return，那個可以選 `k` 的選單**永遠不會出現**（實跑驗證過）。
   `--prune` 與 `--force` 是分開解析的，拿掉 `--force` 不影響清理。
-  已經被蓋掉的話，去完成訊息印出的 `~/.claude/backups/pre-install-<時間戳>/global/` 撈回來自己合併
+  已經被蓋掉的話，去完成訊息印出的 `~/.claude/backups/pre-install-<時間戳>/global/` 撈回來自己合併。
+  **選單出現時只按 `k`，不要按 `s`（顯示完整 diff）** —— 舊版腳本那個分支裡的 `diff` 是裸呼叫，
+  在 `set -e` 下會直接中止整個安裝，講好的第二次詢問永遠問不到（此 bug 已在現行版修掉，
+  但這一步你跑的是 `git checkout` 取回的舊腳本）
 - 被清掉的內容需要時自 git 歷史取回（`git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回部署陣列）
 - `--uninstall` 同樣只認得現行部署清單 — 舊部署請先完成上述清理再解除安裝
 
