@@ -29,7 +29,7 @@ Parse the user's description. If vague, ask one clarifying question:
 
 ```bash
 # Search MEMORY.md for related entries
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
+MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
 grep -ni "<keywords>" "$MEMORY_DIR/MEMORY.md"
 ```
 

@@ -22,12 +22,13 @@ Performs a comprehensive audit of Claude Code's auto-memory and produces actiona
 ### Step 1: Locate memory directory
 
 ```bash
-# Find the project's auto-memory directory
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
+# Find the project's auto-memory directory.
+# Claude Code encodes the absolute cwd by replacing BOTH "/" and "_" with "-",
+# e.g. /Users/me/project/my_project/app -> -Users-me-project-my-project-app
+MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
 
-# Fallback: check common path patterns
-# ~/.claude/projects/<user>/<project>/memory/
-# ~/.claude/projects/<absolute-path>/memory/
+# Fallback if that directory is missing — locate it before concluding anything:
+# ls -d ~/.claude/projects/*"$(basename "$PWD")"*
 
 # List all memory files
 ls -la "$MEMORY_DIR"/

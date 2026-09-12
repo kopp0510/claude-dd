@@ -21,7 +21,7 @@ Quick overview of your project's memory state across all memory systems.
 
 ```bash
 # Auto-memory directory
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
+MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
 
 # Count lines in MEMORY.md
 wc -l "$MEMORY_DIR/MEMORY.md" 2>/dev/null || echo "0"

@@ -36,7 +36,7 @@ A learning qualifies for skill extraction when ANY of these are true:
 Read the user's description. Search auto-memory for related entries:
 
 ```bash
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
+MEMORY_DIR="$HOME/.claude/projects/$(pwd | tr '/_' '--')/memory"
 grep -rni "<keywords>" "$MEMORY_DIR/"
 ```
 
