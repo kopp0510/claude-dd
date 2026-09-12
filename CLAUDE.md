@@ -214,7 +214,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   目前 repo 的腳本都沒開；哪天有人補上，管線這條逃生口就失效，屆時只剩 `|| true`）。2026-09-12 踩過：全域 CLAUDE.md 互動選單的
   `s) 顯示完整 diff` 分支裡 `diff` 單獨成行，選 s 就中止，講好的第二次詢問永遠問不到；
   同一函式上面的 `diff "$target" "$source" | head -30` 反而沒事，正是因為在管線裡。
-  `bash -n` 與 `shellcheck -S warning` 都驗不出這種錯，要靠隔離重現（帶 `set -e` 跑一次）
+  `bash -n` 與 `shellcheck -S warning` 都驗不出這種錯，要靠隔離重現（帶 `set -e` 跑一次）。
+  **最危險的變體是 `n=$(grep -c ...)`**：零命中時 `grep` 回 1，指令替換把這個 1 帶給賦值，
+  `set -e` 當場中止，而且**連一個字都不印** — 沒有錯誤訊息、沒有半截輸出，
+  看起來就跟「這段檢查跑完了、沒事」一模一樣。所以「先確認抓到東西非空、再計數」
+  這個順序有承重，不可為了整理而對調（`ci.yml` §7.2 那兩道護欄即此形狀，註解已標明）
 - **迴圈步數**已有 CI 兩道防線。**四方一致**（全域模板 §3.9 ↔ `/dd-init` 蓋章版 ↔
   兩份 README 清單 ↔ `dd-loop-version` 標記）只數**編號清單**；**第五方**（2026-09-04 補）
   管它看不到的兩類使用者可見文案 — ①安裝腳本印出的「N 步開發迴圈」（排除註解行，
@@ -223,6 +227,20 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   不報錯：2026-08-31 迴圈 6→7→8 時標記停在 `6step`（舊專案跑 `/dd-init` 會被誤判為
   最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
   `DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
+- **動到 `commands/dd-init.md` 的蓋章區塊（三個反引號圍起來、開頭是 `## 開發流程` 的那一整塊）
+  就必須同步跳 `dd-loop-rev`** — `:39` 的判定式與 `:51` 的標記兩處，外加 `UPGRADING.md`
+  寫死的 rev 值與 CHANGELOG 未發布區塊。Phase 1 的判定是「rev 等於現行值 → 已是現行版，跳過」，
+  不跳號的話已蓋章的專案永遠拿不到這次修正，跑 `/dd-init` 還會被告知「已是最新」。
+  CI 只驗 dd-init.md 檔內 rev 前後一致（種類數 == 2），**不驗「內容改了 rev 有沒有跳」**，
+  UPGRADING.md 那份 CI 根本不看。2026-09-12 踩過：同一輪前面已有一個 commit 動過蓋章區塊沒跳號，
+  靠 code-review 才抓到
+- **新增 `.github/workflows/ci.yml` 的檢查 step 必做負面測試**：故意把被檢查的來源改壞一行，
+  確認該 step 真的紅燈，再還原確認回綠。`scripts/CLAUDE.md` 只對 gate 訂了這條規矩、
+  ci.yml 其他 step 沒有 — 而 2026-09-12 新增的兩道護欄，修的正是「抓 0 筆卻印綠燈」。
+  同批補一列進 `DD_PIPELINE_ARCHITECTURE.md` 的 CI 防線表（沒有任何檢查會擋那張表過期）
+- **subagent 回報的行號可能整組對不上，要拿它引的原文 grep 定位後才動手**：2026-09-12
+  code-simplifier 對一份只有 263 行的 `README.md` 報 `README.md:323`，而它描述的內容
+  逐條屬實。行號錯得離譜反而好認，錯個三五行才危險 — 一律以原文比對為準，不信行號
 - `OPTIONAL_MCP` 只收 **MCP server**（會註冊進 `~/.claude.json` `mcpServers` 的東西）；
   plugin 形式的工具（如 claude-mem，`npx claude-mem install` 走 hooks + plugin 系統）
   列進去檢查會**永遠回報未安裝**，應改列 README 的「推薦第三方 Plugin」段落
