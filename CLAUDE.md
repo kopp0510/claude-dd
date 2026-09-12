@@ -35,7 +35,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
-- `scripts/` — 輔助腳本（部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
+- `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署也不在 `scripts/*.sh` 這個 glob 內）
 - `diagrams/` — 兩份 README 嵌的 6 張 GIF（使用流程、8 步迴圈、大工作怎麼跑 × 中英），另有 tech-diagram-gif
   各風格的示範 GIF（2026-09-07 加入）；每張的來源與重出方式見 `diagrams/src/CLAUDE.md`
   （改來源再重出，勿手改 GIF）。
@@ -46,7 +46,9 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 ## 新增 Skill 步驟
 
 1. 在 `skills/<skill-name>/` 建立 `SKILL.md`
-2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_SKILLS` 陣列加入名稱
+2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_SKILLS` 陣列加入名稱，並**同批**同步：兩份 README 的
+   Promoted Skills 表格與標題數字、README 安裝步驟裡的「N 個 promoted Skills」、本檔「目錄結構」
+   那行的總數。CI 的「數字宣稱一致性」會擋，漏改要等 push 才發現
 3. 部署前先乾跑（新增或改寫都要）：派 subagent 照 repo 裡這份 `SKILL.md` 做一遍，逐條引用原文回報哪一句讓它卡住、
    只能用猜的、或兩句互相矛盾。skill 有分支就每條各跑一次（例如有沒有設計文件）；只讀的步驟拿實際在用的專案跑、
    不准寫檔；會寫檔或 commit 的步驟改在 scratchpad 的拋棄式 repo 真的跑，跨 session 的流程再派一個只讀專案文件的
@@ -76,7 +78,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model` —
    自製 agent 用 `inherit`；官方備份（code-reviewer / code-simplifier）維持上游的 `opus`，不要改齊）
-2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱
+2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱，並**同批**同步兩份 README 的
+   promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
 
@@ -84,6 +87,19 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
 - 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
+- 平面指令的檔名**必須 `dd-` 開頭**：CI 的陣列一致性用 `ls commands/dd-*.md` 掃，非此前綴的檔案掃不到，
+  本機安裝正常、push 才紅燈，而訊息只說「陣列與實際目錄不一致」，很難聯想到是檔名前綴
+
+## 新增 Script 步驟
+
+1. 在 `scripts/` 建立 `<name>.sh`（必須通過 `shellcheck -S warning`，且可在 macOS bash 3.2 執行）
+2. 加入 `install-dd-pipeline.sh` 頂層的 `DD_SCRIPTS` 陣列 —— 漏加的話 `create_scripts()` 不會部署它，
+   使用者機器上 `~/.claude/scripts/` 根本沒這支腳本（gate 就住在這一層）。2026-09-12 起 CI 的
+   「陣列與目錄一致性」有第五組 `DD_SCRIPTS ↔ scripts/*.sh` 會擋
+3. 加進 `.github/workflows/ci.yml` 的 ShellCheck 檔案清單 —— **那份清單是逐檔寫死的**，沒加等於完全不檢查
+4. 執行 `./install-dd-pipeline.sh --force` 部署
+
+> `scripts/githooks/` 是本 repo 自用、不部署，也不在 `scripts/*.sh` 這個 glob 內。
 
 ## 核心工作法：8 步開發迴圈
 
@@ -137,7 +153,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - 所有回應和註解使用繁體中文
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
-- 修改 skills/agents/commands 後務必同步更新 install-dd-pipeline.sh 的部署陣列（CI 會擋不一致）
+- 修改 skills / agents / commands / **scripts** 後務必同步更新 install-dd-pipeline.sh 的部署陣列
+  （`PROMOTED_SKILLS`、`PROMOTED_AGENTS`、`DD_COMMANDS`、`NS_COMMANDS`、`DD_SCRIPTS`；五組 CI 都會擋不一致）
 - skill / command frontmatter 的 `allowed-tools` 是**該輪的免確認預授權**，不是工具白名單。
   官方文件：「It does not restrict which tools are available: every tool remains callable」，
   要真的拿掉工具得用 `disallowed-tools`，而且預授權在使用者下一則訊息後就失效。
@@ -171,9 +188,12 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
-  CI 只驗 skills / agents / commands 的陣列與數字，MCP 表格會靜靜過期。
-  CI 不驗的手動同步區塊共 6 類（安裝步驟清單、指令一覽、官方 Plugins、
-  第三方 Plugin 推薦、MCP 必要表、MCP 可選表），雙語化後 × 兩份 README = 12 處
+  CI 驗的陣列一致性只涵蓋 skills / agents / commands / scripts（`DD_SCRIPTS ↔ scripts/*.sh`
+  於 2026-09-12 補上），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
+  **CI 不驗、只能手動同步的區塊**（不寫總數 — 沒窮舉過，寫個數字只會變成下一個過期宣稱）：
+  兩份 README 的安裝步驟清單、指令一覽、官方 Plugins、第三方 Plugin 推薦、MCP 必要表、
+  MCP 可選表、前置需求段落、MCP 退化狀態表；以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字與
+  CI 防線表（新增 CI step 時要同步那張表）。動到部署陣列、MCP、plugin、CI step 時逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
   兩份 README 指令範例」名稱完全一致，新增/刪除 flag 忘了同步文件會被擋。
   只驗 flag **名稱**，各 flag 的**語意描述**仍是手動維護
