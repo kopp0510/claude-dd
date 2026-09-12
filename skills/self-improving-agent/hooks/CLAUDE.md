@@ -9,6 +9,7 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
 | 檔案 | 用途 |
 |---|---|
 | `error-capture.sh` | hook 本體。stdin 收 Claude Code 的 JSON，取 `tool_response` 的 stdout+stderr，逐行比對 `EXCLUSIONS` 與 `ERROR_PATTERNS`，命中則用 `hookSpecificOutput.additionalContext` 回提醒。JSON 讀寫 jq 優先、python3 後備，兩者都沒有就靜靜 exit 0 |
+| `test-error-capture.sh` | 上者的行為測試（CI 會跑）。整套跑兩輪：一輪預設 PATH、一輪把 jq 藏起來逼它走 python3 後備，否則另一條分支零覆蓋。payload 手寫進 JSON，含雙引號或反斜線會生出壞 JSON 讓 hook 靜默 exit 0、案例假通過 —— 所以每個 payload 送出前都先驗 JSON 合法性，不合法就判該案例失敗 |
 | `hooks.json` | 註冊用設定。`command` 必須是 `$HOME/...` 絕對路徑 —— hook 以當下工作目錄為基準執行，寫 `./hooks/xxx.sh` 換個專案就找不到（根目錄 CLAUDE.md「Skill hook 路徑規範」，`validate_skill_hooks()` 會在部署前擋下相對路徑） |
 
 ## 此層約束
@@ -27,12 +28,20 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   對整份輸出比，變成一票否決：輸出裡任何一處出現 `console.error` 或 `no error`，
   同一份輸出裡真正的失敗全部被吞掉，而且是完全靜默（零輸出、exit 0，跟「這次沒錯」長得一模一樣）。
   2026-09-12 修掉，兩個實測會踩到的真實案例已寫成註解留在檔內
-- **改這支腳本後必須跑 `./test-error-capture.sh`**（同目錄，純 bash 無依賴，CI 也會跑）。
-  9 個情境：4 個必須觸發、5 個必須靜默。**新增行為時同批補一個情境進去** ——
-  沒有情境守著的行為等於沒寫，而這支 hook 的失效是零輸出 exit 0，跟「真的沒錯誤」長得一樣。
-  其中三個是 2026-09-12「一票否決」那個 bug 的回歸測試：真錯誤與 `console.error` 同在一份
-  輸出、`no errors` 與 `Build failed` 並存、被排除的行在前而真錯誤在後。
+- **改這支腳本後必須跑 `./test-error-capture.sh`**（同目錄，CI 也會跑）。情境數不寫在這裡
+  （會過期）—— 跑一次就會逐案印出來。**新增行為時同批補一個情境進去**：這支 hook 的失效是
+  零輸出 exit 0，跟「真的沒錯誤」長得一樣，沒有情境守著就等於沒寫。
   「單純找不到檔案」那條是**煙霧測試** —— 修好前後都會觸發，只證明沒把整支弄壞
+- **它守的是逐行比對的「語意」，別把它當全面防線。** 以下是實際做變異測試量出來的，不是推測：
+  守得住 —— exclusion 不可一票否決整份輸出、stdout 與 stderr 兩邊都要讀、回報的要是**第一個**
+  命中行（`break 2` 退化成 `break` 會被抓）、Context 不可空白或被截掉、`hookEventName` 要正確、
+  jq 與 python3 兩條分支都要能動。
+  `ERROR_PATTERNS` / `EXCLUSIONS` 兩張清單**沒有被系統性涵蓋**：只有情境剛好用到的那幾項
+  （`npm ERR!`、`ERROR:`、`Build failed`、`console.error`、`.error(`、`no error` …）受保護，
+  大幅砍清單會被抓到是**副作用不是設計** —— 動到情境沒碰過的項目，測試不會有任何反應。
+  **想知道某個改動有沒有被守到，就自己做一次變異測試**：改壞那一處 → 跑測試 → 還原。
+  2026-09-12 就是這樣量的：第一版有一批變異溜過去，補了 stdout、第一行、hookEventName、
+  雙分支四類情境之後才守住
 - 它在 CI 的 ShellCheck 清單裡（`.github/workflows/ci.yml`，逐檔寫死），
   bash 3.2 相容、`set -eu` 下不可用會回非 0 的裸指令
 

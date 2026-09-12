@@ -71,6 +71,11 @@
 
 ### Added
 
+- **CI 新增「error-capture hook 行為測試」step**：`skills/self-improving-agent/hooks/test-error-capture.sh`
+  （純 bash，整套跑兩輪 —— 一輪預設 PATH、一輪把 jq 藏起來逼它走 python3 後備，否則 ubuntu runner
+  有 jq，後備那條分支在 CI 上永遠零覆蓋）。這支 hook 的失效是零輸出 exit 0，與「真的沒錯誤」
+  外觀相同，shellcheck 完全無感。**它守的是逐行比對的語意，不是 pattern／exclusion 清單的完整性**
+  —— 範圍寫在 `hooks/CLAUDE.md`，別當成全面防線
 - **CI 新增「tech-diagram-gif 幾何閘門自我測試」step**：跑 `scripts/test-verify-geometry.py`
   （純標準庫，ubuntu runner 自帶 python3）。這支閘門自己會錯，而且全判通過（漏檢）與全判失敗
   （假陽性）外觀上都像正常結果 —— 在此之前它完全沒有 CI，現成可跑卻沒人跑。同批補進
@@ -139,6 +144,13 @@
 
 ### Fixed
 
+- **`error-capture.sh` 的 exclusion 一票否決，真實的建置失敗被整段吞掉**：舊版拿整份輸出比對
+  exclusion，輸出裡任何一處出現 `console.error` 或 `no error`，同一份輸出裡真正的失敗全部不報 ——
+  而且是零輸出 exit 0，與「這次真的沒錯誤」外觀完全相同。兩個必踩的真實樣態：TS build 失敗夾帶
+  原始碼片段（`console.error`），以及多服務輸出裡 `compiled with no errors` 與 `Build failed` 並存
+  （`no error` 是 `no errors` 的子字串）。改成**逐行**比對：exclusion 只否決它所在的那一行。
+  同批修正三份文件「成功時零開銷」的說法 —— hook 拿不到 exit code，它做的是文字比對，
+  成功但印了 `failed` 的指令一樣會觸發
 - **`verify-geometry.py` 從不讀 SVG 自己 `<style>` 宣告的字級**，一律查內建預設表，兩個方向都會錯：
   猜高了誤報（`gen_loop.py` 的 `.nm` 實際 15px 被當成 20px，英文版一次誤報 17 處文字溢出），
   猜低了**靜默漏檢**（只在 `<style>` 把字級放大的圖，文字爆框卻判通過、exit 0）。改成照瀏覽器的
