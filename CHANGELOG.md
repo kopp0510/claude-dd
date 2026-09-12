@@ -5,10 +5,18 @@
 每個版本對應一個 git tag（`git show v1.0.0`、`git log v0.4.0..v0.5.0` 可看該版完整內容）。
 升級步驟見 [UPGRADING.md](UPGRADING.md)。
 
+**發版步驟**（「未發布」累積到值得發一版時）：
+
+1. 把 `## 未發布` 改成 `## <版本> — <YYYY-MM-DD>`（不留空的未發布區塊，下次直接新開）
+2. `git commit -m "docs: CHANGELOG 整理為 <版本>"`
+3. `git tag -a v<版本> -m "<一句話重點>"` —— tag 指向上一步那個 commit
+4. `git push origin main --tags`
+5. `gh release create v<版本> --title "v<版本> — <重點>" --notes-file <該節內容>`
+
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
-## 未發布
+## 1.2.0 — 2026-09-12
 
 ### Changed
 
