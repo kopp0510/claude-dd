@@ -37,3 +37,5 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 - **worktree 內不可寫死 `.git/info/exclude`**：worktree 的 `.git` 是一個指向 gitdir 的**檔案**、
   不是目錄，照字面路徑寫入必定 `not a directory` 失敗（已複現，exit 1）。
   要取真實路徑用 `git rev-parse --path-format=absolute --git-path info/exclude`
+  （`--path-format` 需 **git ≥ 2.31**，見該版 release notes；更早的版本只有
+  `git rev-parse --git-path info/exclude`，回的是相對路徑）

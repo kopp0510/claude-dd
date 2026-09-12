@@ -55,16 +55,29 @@ ls .claude/rules/*.md 2>/dev/null | wc -l
 
 For each MEMORY.md entry that references a file path:
 ```bash
-# Verify referenced files still exist.
-# Two things this MUST get right, or it reports garbage:
-#  1. Resolve against BOTH the project root (cwd) and $MEMORY_DIR. MEMORY.md's own links
-#     point at sibling topic files, which do not exist relative to cwd.
-#  2. Skip bare filenames (no "/"). Those are topic-file links like [x](user_role.md),
-#     not project paths — judging them as project paths marks nearly every entry STALE.
-grep -oE '[a-zA-Z0-9_/.-]+\.(ts|js|py|md|json|yaml|yml)' "$MEMORY_DIR/MEMORY.md" \
+# Verify referenced files still exist. There are TWO kinds of reference and they resolve
+# against different roots — lumping them together is how this check breaks:
+#
+#  1. Topic-file links, always written as markdown links with a BARE filename:
+#     [Some title](user_role.md). They live NEXT TO MEMORY.md, so resolve against
+#     $MEMORY_DIR. These are the majority (a real MEMORY.md here: 47 bare vs 1 with a slash).
+#  2. Project paths, which always contain "/". Resolve against the project root (cwd).
+#
+# Bare filenames that are NOT link targets (CLAUDE.md, ci.yml, plugin.json mentioned in
+# prose) are neither kind — the link-target pattern skips them on its own. Do not "simplify"
+# this into one pass: resolving everything against cwd reports ~46 false STALE on a healthy
+# memory dir, and skipping every bare name makes the topic-file check dead code.
+
+# 1. topic files — markdown link targets with no "/", resolved next to MEMORY.md
+grep -oE '\]\([^)/]+\.(ts|js|py|md|json|yaml|yml)\)' "$MEMORY_DIR/MEMORY.md" \
+  | sed 's/^](//; s/)$//' | sort -u | while IFS= read -r f; do
+  [ -f "$MEMORY_DIR/$f" ] || echo "STALE (topic): $f"
+done
+
+# 2. project paths — anything containing "/", including absolute paths, resolved from cwd
+grep -oE '/?([a-zA-Z0-9_.-]+/)+[a-zA-Z0-9_.-]+\.(ts|js|py|md|json|yaml|yml)' "$MEMORY_DIR/MEMORY.md" \
   | sort -u | while IFS= read -r f; do
-  case "$f" in */*) ;; *) continue ;; esac
-  [ -f "$f" ] || [ -f "$MEMORY_DIR/$f" ] || echo "STALE: $f"
+  [ -f "$f" ] || echo "STALE (path): $f"
 done
 ```
 

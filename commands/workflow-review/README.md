@@ -8,15 +8,15 @@
 > `~/.claude/commands/workflow-review/` after copying (CI asserts its absence). `review.md`
 > in this directory is the executable command and is authoritative wherever the two disagree.
 
-Perform multi-perspective automated code reviews using specialized agents with explicit Task tool invocations for quality, security, architecture, performance, and maintainability analysis.
+Perform multi-perspective automated code reviews covering quality, security, architecture, performance, and maintainability. Only the security dimension is delegated to a sub-agent (`security-auditor`, via the Task tool); the rest are reviewed inline in this command's own context.
 
 ## Overview
 
-The `/review` command orchestrates multiple specialized review agents to provide comprehensive code analysis. It focuses particularly on configuration changes that could cause outages, following a "prove it's safe" mentality for configuration modifications.
+The `/review` command runs a multi-dimension code review, dispatching the `security-auditor` agent for the security pass and covering the other dimensions inline. It focuses particularly on configuration changes that could cause outages, following a "prove it's safe" mentality for configuration modifications.
 
 ## Key Features
 
-- **Multi-Agent Review**: Parallel execution of specialized review agents
+- **Multi-Dimension Review**: security delegated to the `security-auditor` agent; quality, architecture and performance reviewed inline
 - **Configuration Safety**: Heightened scrutiny for configuration changes
 - **Production Focus**: Real-world outage pattern detection
 - **Consolidated Reporting**: Unified action plan from multiple perspectives

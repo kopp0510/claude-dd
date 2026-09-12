@@ -13,9 +13,14 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
 
 ## 此層約束
 
-- **它看不到 exit code**。Claude Code 給 hook 的 `tool_response` 只有
-  `stdout` / `stderr` / `interrupted` / `isImage` / `noOutputExpected`（實測掃 15 份 session
-  transcript、2456 筆 Bash 結果，沒有任何退出碼欄位）。所以這支 hook 是**文字比對**，
+- **它看不到 exit code**。`tool_response` 裡**每一筆都有**的是 `stdout` / `stderr` /
+  `interrupted` / `isImage` / `noOutputExpected`，另有偶發欄位 `gitOperation`(230)、
+  `returnCodeInterpretation`(95)、`persistedOutputPath` / `persistedOutputSize`(71)、
+  `backgroundTaskId`(50)、`backgroundCwdHint`(11)、`timedOutAfterMs`(9) ——
+  **共 12 種，不是 5 種**（2026-09-12 掃 `~/.claude/projects` 底下 414 份 transcript、
+  9651 筆帶 stdout/stderr 的 `toolUseResult`；括號是出現筆數）。
+  但**沒有任何一個是數字退出碼**：最接近的 `returnCodeInterpretation` 只有 95 筆，
+  值是 `No matches found` 這種語意註解，不是通用退出狀態。所以這支 hook 是**文字比對**，
   不是「偵測失敗」—— 成功但輸出裡有 `failed`、`error:` 的指令一樣會觸發。
   文件不可寫成「zero overhead on success」，要寫「未命中錯誤字串時」
 - **exclusion 一律逐行比對，不可退回整份輸出比對**。舊版用 `[[ "$OUTPUT" == *"$excl"* ]]`
@@ -24,7 +29,8 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   2026-09-12 修掉，兩個實測會踩到的真實案例已寫成註解留在檔內
 - **改這支腳本要跑三個情境對照**（沒有自動化測試，CI 只跑 `shellcheck -S warning`）：
   ① `src/a.ts:3 console.error(e)` + `Build failed with 1 error` 必須觸發
-  ② `cat: nope: No such file or directory` 必須觸發
+  ② `cat: nope: No such file or directory` 必須觸發（**煙霧測試** —— 舊版新版都會觸發，
+     只證明沒把整支弄壞；能分辨新舊的是 ① 和 ③）
   ③ `web: compiled with no errors` + `api: Build failed with 3 errors` 必須觸發
   （`no error` 是 `no errors` 的子字串，這條專抓一票否決的回歸）
   另外 `const errorHandler = (e) => {}` 這種純粹在講錯誤處理的程式碼必須靜默
