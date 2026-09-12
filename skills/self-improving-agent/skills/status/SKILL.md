@@ -55,9 +55,16 @@ ls .claude/rules/*.md 2>/dev/null | wc -l
 
 For each MEMORY.md entry that references a file path:
 ```bash
-# Verify referenced files still exist
-grep -oE '[a-zA-Z0-9_/.-]+\.(ts|js|py|md|json|yaml|yml)' "$MEMORY_DIR/MEMORY.md" | while read f; do
-  [ ! -f "$f" ] && echo "STALE: $f"
+# Verify referenced files still exist.
+# Two things this MUST get right, or it reports garbage:
+#  1. Resolve against BOTH the project root (cwd) and $MEMORY_DIR. MEMORY.md's own links
+#     point at sibling topic files, which do not exist relative to cwd.
+#  2. Skip bare filenames (no "/"). Those are topic-file links like [x](user_role.md),
+#     not project paths — judging them as project paths marks nearly every entry STALE.
+grep -oE '[a-zA-Z0-9_/.-]+\.(ts|js|py|md|json|yaml|yml)' "$MEMORY_DIR/MEMORY.md" \
+  | sort -u | while IFS= read -r f; do
+  case "$f" in */*) ;; *) continue ;; esac
+  [ -f "$f" ] || [ -f "$MEMORY_DIR/$f" ] || echo "STALE: $f"
 done
 ```
 

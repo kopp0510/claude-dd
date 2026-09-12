@@ -11,7 +11,9 @@ allowed-tools: Read, Grep, Glob, Bash, Write
 ## 硬閘門
 
 **設計未批准前，不寫任何程式碼** — 不呼叫實作技能、不建專案骨架，直到設計呈現且使用者批准。
-啟動時調用 `EnterPlanMode`，設計完成後 `ExitPlanMode` 讓使用者審閱。
+啟動時調用 `EnterPlanMode`。**`ExitPlanMode` 的時機錨在第 5 步逐段確認之後、第 6 步寫設計文件之前** ——
+plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步的 `Write`，那次寫檔會被擋下來。
+第 8 步的「使用者審查」審的是已經落盤的設計文件，不是 plan 本身。
 
 ## 工作流程
 

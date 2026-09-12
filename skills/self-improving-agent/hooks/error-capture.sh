@@ -1,7 +1,11 @@
 #!/bin/bash
 # Self-Improving Agent — Error Capture Hook
 # Fires on PostToolUse (Bash) to detect command failures.
-# Zero output on success — only captures when errors are detected.
+# Zero output unless an error PATTERN matches the command's output text.
+# It is NOT exit-status based: Claude Code's tool_response carries only
+# stdout / stderr / interrupted / isImage / noOutputExpected — there is no exit
+# code field to read — so a command that succeeded but printed "failed" or
+# "error:" still fires. Matching is per line (see EXCLUSIONS below).
 #
 # Interface: Claude Code passes hook input as JSON on stdin (tool_name /
 # tool_input / tool_response). Detected errors are returned as
@@ -107,29 +111,44 @@ EXCLUSIONS=(
     "error-free"
 )
 
-# Check exclusions first
-for excl in "${EXCLUSIONS[@]}"; do
-    if [[ "$OUTPUT" == *"$excl"* ]]; then
-        exit 0
-    fi
-done
-
-# Check for error patterns
+# Match LINE BY LINE: a line only counts as an error if that same line is not itself an
+# excluded false positive. Exclusions used to be tested against the WHOLE output, which made
+# them a one-vote veto — a single incidental "console.error" anywhere silenced every real
+# error beside it. Two real cases that used to exit 0 in total silence:
+#   src/a.ts:3 console.error(e) / Build failed with 1 error   (any TS build failure with source context)
+#   web: compiled with no errors / api: Build failed with 3 errors   ("no error" is a substring of "no errors")
 contains_error=false
 matched_pattern=""
-for pattern in "${ERROR_PATTERNS[@]}"; do
-    if [[ "$OUTPUT" == *"$pattern"* ]]; then
-        contains_error=true
-        matched_pattern="$pattern"
+matched_line=""
+while IFS= read -r line; do
+    excluded=false
+    for excl in "${EXCLUSIONS[@]}"; do
+        if [[ "$line" == *"$excl"* ]]; then
+            excluded=true
+            break
+        fi
+    done
+    if [ "$excluded" = true ]; then
+        continue
+    fi
+    for pattern in "${ERROR_PATTERNS[@]}"; do
+        if [[ "$line" == *"$pattern"* ]]; then
+            contains_error=true
+            matched_pattern="$pattern"
+            matched_line="$line"
+            break
+        fi
+    done
+    if [ "$contains_error" = true ]; then
         break
     fi
-done
+done <<< "$OUTPUT"
 
 # Exit silently if no error
 [ "$contains_error" = false ] && exit 0
 
-# Extract the first 2 matching lines as context (fixed-string match; no hit is not an error)
-context_snippet=$(printf '%s\n' "$OUTPUT" | grep -iF -m 2 -- "$matched_pattern" | tr '\n' ' ' | cut -c1-200) || true
+# The matching line itself is the context (already excluded-checked)
+context_snippet=$(printf '%s' "$matched_line" | cut -c1-200)
 
 # Return a concise reminder via additionalContext — ~40 tokens
 MSG="<error-detected>
