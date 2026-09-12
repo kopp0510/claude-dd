@@ -229,7 +229,10 @@
 步驟 3、4、8 都要看「起點到現在」的整段,下文的 `<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base`
 的輸出(exit 非 0 或輸出是空的 = 範圍沒算出來,不是範圍為空)。只看最後一個 commit 會漏:實測某專案段落 1
 照舊指令算步驟 8 的範圍是空的,第一個 commit 建的 5 份 CLAUDE.md 都不在範圍內。
-忘了記下一段的起點時,範圍會連上一段一起算 —— 只會多審,不會漏
+忘了記下一段的起點時,範圍會連上一段一起算 —— 只會多審,不會漏。
+**但這只在「起點檔已經存在」時成立**:從來沒跑過 `--start-segment` 的專案(例如剛照 UPGRADING 改用段落起點的舊專案),
+要等第一個 `SKIP_DOC_CHECK=1` commit 才會自動補記,起點就落在段落中間,它前面的 commit 步驟 3、4、8 全部看不到。
+這時 gate 印的是「記下段落起點 …」、`--segment-base` 也正常 exit 0,兩個訊號都看不出範圍已經縮水。所以段落開始前一定要自己跑一次
 
 1. **實作功能 + 首輪測試通過**(相關既有單元/整合測試跑綠 + 基本手動驗證;不可帶紅燈進 commit)
 2. **commit**(第一次 — 保留簡化前還原點)
@@ -258,9 +261,16 @@
    ```bash
    base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] &&
    { git -c core.quotePath=false diff --name-only "$base" HEAD
-     git -c core.quotePath=false status --porcelain -uall | awk '{print $NF}'; } \
+     git -c core.quotePath=false diff --name-only HEAD
+     git -c core.quotePath=false ls-files --others --exclude-standard; } \
      | grep 'CLAUDE\.md$' | sort -u
    ```
+
+   後兩條是「還沒 commit 的」(已追蹤的改動 + 未追蹤的新檔)。**不要改用
+   `status --porcelain -uall | awk '{print $NF}'`**:git 對含空白的路徑會加引號
+   (`?? "api server/CLAUDE.md"`,`core.quotePath=false` 只解決非 ASCII),`$NF` 從空白切開
+   就只剩 `server/CLAUDE.md"`,`grep 'CLAUDE\.md$'` 比對不到而丟棄 —— 少列一份卻照樣 exit 0、
+   不印任何錯誤。步驟 7 剛寫出、或被 gate 逼著補出來的 CLAUDE.md 正是「還沒 commit」這個狀態
 
    算出幾份就只審那幾份,用 `claude-md-management:claude-md-improver`。
    **該 skill 的 Phase 1 寫的是「find 全部」,不先算範圍就會全 repo 掃** —
@@ -365,6 +375,11 @@ N ≥ 2 就呼叫 `task-planner`,由它拆段落、出計畫給使用者批准 �
 > 專案設計文件(`docs/designs/`)的進度表(格式與規則區塊照抄 `~/.claude/skills/task-planner/SKILL.md` 的「進度表格式」一節;沒有設計文件,就算只有
 > 一段也照它的做法開一份短的),**開工先把該段標 `IN_PROGRESS`(使用者交代的段落沒有這列就先加,「段落與小任務」也補上它的小任務),
 > 步驟 3–8 跑完才改 `DONE` 並補上 commit 範圍**。粒度與規則同上(一列 = 一個功能段落 = 一圈 8 步迴圈)。
+>
+> **開表的同時,在專案根目錄 CLAUDE.md 第一個 `##` 之前加一段指路**(前後各空一行,照 task-planner 步驟 5 的做法):
+> `進度以 docs/designs/<檔名>.md 的「進度表」為準:開工先讀表,照表下方的規則做。`
+> 那一節照抄過來的規則裡只有「全部 DONE 時刪掉指路」,沒有「建立指路」—— 它預設是 task-planner 寫的。
+> 少了這句,下一個 session 走 §4.1 那條判斷會看不到這張表,於是重估段落數、另開第二張,先前的進度與 commit 範圍就這樣靜靜遺失。
 >
 > 檔案式其實比工具式耐用 —— 跨 session 留著、進 git、使用者不開對話也看得到。
 > 代價是沒人提醒你更新,所以**開工就先改狀態**比收工才補可靠
@@ -544,7 +559,7 @@ C) 先停下討論
 | `fix` / `修` / `改` / `改善` / `audit` / `審查` **+ 任何 `.md` 檔** | `claude-md-management:claude-md-improver` |
 | `把學到的寫進 CLAUDE.md` / `這輪學到的記進文件` / `收工更新 CLAUDE.md` | `claude-md-management:revise-claude-md` |
 | `簡化` / `降複雜度` / `清冗餘` / `refactor 簡化` + (code/檔案) | `code-simplifier` |
-| `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer` |
+| `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer`(agent,派 Task) |
 | `整理 memory` / `沉澱規則` / `把學到的寫成 skill` / `優化 skill` | `self-improving-agent` |
 | `拆任務` / `微任務` / `task breakdown` / `工作分解` | `task-planner` |
 | `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design` |

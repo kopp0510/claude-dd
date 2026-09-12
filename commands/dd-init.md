@@ -83,9 +83,11 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
    它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
 8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審：
-   `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] && { git -c core.quotePath=false diff --name-only "$base" HEAD; git -c core.quotePath=false status --porcelain -uall | awk '{print $NF}'; } | grep 'CLAUDE\.md$' | sort -u`
+   `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] && { git -c core.quotePath=false diff --name-only "$base" HEAD; git -c core.quotePath=false diff --name-only HEAD; git -c core.quotePath=false ls-files --others --exclude-standard; } | grep 'CLAUDE\.md$' | sort -u`
    算出幾份就只審那幾份（用 claude-md-improver）。該 skill 預設會 find 全部，
-   不先算範圍會全 repo 掃。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）
+   不先算範圍會全 repo 掃。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）。
+   後兩條抓「還沒 commit 的」；**不要改用 `status --porcelain -uall | awk '{print $NF}'`** —— 含空白的路徑
+   git 會加引號，`$NF` 切開後比對不到，少列一份卻照樣 exit 0 不報錯
 
 驗證不過 → 修完重跑步驟 5，不可帶著紅燈進步驟 6。
 
