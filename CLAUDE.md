@@ -239,8 +239,10 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   就必須同步跳 `dd-loop-rev`** — 兩處，用 `grep -n 'dd-loop-rev' commands/dd-init.md` 找
   （Phase 1 的判定式與蓋章標記；**不要在這裡寫行號**，2026-09-12 才因為同一份檔案加了兩行，
   讓原本寫的 `:51` 指到 code fence 起始行），外加 `UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊。
-  **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊；Phase 0–6 的執行指示在區塊外，
-  改它們不必跳 rev（用上面那個 grep 的兩個行號夾出範圍就看得出來）。Phase 1 的判定是「rev 等於現行值 → 已是現行版，跳過」，
+  **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊，用
+  ``grep -n '^```' commands/dd-init.md | head -2`` 取得起訖行；Phase 0–6 的執行指示在區塊外，
+  改它們不必跳 rev。注意上面那個 `dd-loop-rev` 的 grep **不能**拿來夾範圍 ——
+  它的第一個命中（Phase 1 判定式）本身就在區塊外。Phase 1 的判定是「rev 等於現行值 → 已是現行版，跳過」，
   不跳號的話已蓋章的專案永遠拿不到這次修正，跑 `/dd-init` 還會被告知「已是最新」。
   CI 只驗 dd-init.md 檔內 rev 前後一致（種類數 == 2），**不驗「內容改了 rev 有沒有跳」**，
   UPGRADING.md 那份 CI 根本不看。2026-09-12 踩過：同一輪前面已有一個 commit 動過蓋章區塊沒跳號，
