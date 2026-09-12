@@ -89,6 +89,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
 - 平面指令的檔名**必須 `dd-` 開頭**：CI 的陣列一致性用 `ls commands/dd-*.md` 掃，非此前綴的檔案掃不到，
   本機安裝正常、push 才紅燈，而訊息只說「陣列與實際目錄不一致」，很難聯想到是檔名前綴
+- 兩種都要**同批**同步本檔「目錄結構」那行的數字（`N 個 dd-* 指令`、`N 個命名空間 command 目錄`）——
+  CI 的「數字宣稱一致性」逐項比對這兩個數字（`ci.yml:120-125`），漏改要等 push 才紅燈
 
 ## 新增 Script 步驟
 
@@ -201,15 +203,9 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，**不要在這裡寫死數量** —
   上一版就在這個括號裡寫了「各 9 處」，跟本條自己的「不寫總數」直接打架）、
   **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
-  以及 `DD_PIPELINE_ARCHITECTURE.md` 的元件數字、CI 防線表、授權清單、
-  **「安裝腳本 N 個編號步驟」**（`print_step "n/N"` 改了要跟著改）與
-  **「shellcheck（warning 級，N 支腳本）」**（ci.yml 那份清單是逐檔寫死的）。
-  這兩個沒有任何檢查會擋它們過期（數字宣稱那道 CI step 是逐檔寫死 README 與根目錄
-  CLAUDE.md 的，不涵蓋架構文件）。**要核對就自己數，不要在這裡抄一份**：
-  `grep -oE 'print_step "[0-9]+/[0-9]+"' install-dd-pipeline.sh | sort -u` 與
-  `awk '/shellcheck -S warning/,/^$/' .github/workflows/ci.yml`。
-  （2026-09-12 初稿真的在這裡寫了「7 個編號步驟、4 支腳本」，跟本條自己的「不寫死數量」
-  直接打架，是 simplifier 抓到的 —— 這已經是同一個坑的第二次。）
+  以及 `DD_PIPELINE_ARCHITECTURE.md` 的 **CI 防線表**與**授權清單**。
+  （該檔的**數字**已於 2026-09-12 納入 CI：元件數、安裝編號步驟數、shellcheck 腳本數
+  四項都在「數字宣稱一致性」裡比對，不再屬於手動區塊。）
   **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案**、
   **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
@@ -281,7 +277,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
 | 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
 | 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
-| 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → 跑 `--force` → 納入 source of truth | — |
+| 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → **同批**同步兩份 README 的 Promoted Skills 表格與數字、本檔「目錄結構」的總數、`DD_PIPELINE_ARCHITECTURE.md` 的元件數字、以及三處授權段的 vendored 清單 → 跑 `--force` → 納入 source of truth | — |
 
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 號稱 9 萬星但建立僅半年、forks 為整數 → 採用度存疑；且需 `npm -g` binary + Python runtime → 第 3、4 項直接擋下。
 
