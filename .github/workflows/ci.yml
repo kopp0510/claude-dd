@@ -153,17 +153,20 @@ jobs:
           fail=0
           # Claude Code 內建 skill 白名單：§7.2 可指向、但不由本 repo 部署的目標
           BUILTIN_CC_SKILLS="claude-api"
-          targets=$(awk '/^### 7\.2/,/^### 7\.3/' templates/global/CLAUDE.md \
-            | awk -F'|' '/^\|/{print $3}' | grep -oE '`[^`]+`' | tr -d '`' | sort -u)
-          # 護欄一：抓不到就是 regex 失效（§7 重新編號、標題改寫、表格改格式都會踩到）。
-          # 沒有這道護欄時 while 迴圈一次都不跑、印綠燈，這個 step 的職責等於整個消失
-          [ -n "$targets" ] || { echo "❌ §7.2 表格抓不到任何觸發目標，awk 範圍 regex 已失效"; exit 1; }
-          # 護欄二：資料列數 ↔ 有反引號的列數。單獨一列掉了反引號會被 grep 靜靜略過，
-          # 那一列的目標從此不受檢查（不能拿 targets 筆數來比 — 它是 sort -u 過的）
+          # 表格第三欄（呼叫目標）只抽一次，兩道護欄與底下的檢查都從這份算 —— 抽兩次的話，
+          # 改了其中一個 awk 範圍、另一個沒跟著改，兩邊會靜靜對不起來
           rows=$(awk '/^### 7\.2/,/^### 7\.3/' templates/global/CLAUDE.md | awk -F'|' '/^\|/{print $3}')
+          targets=$(printf '%s\n' "$rows" | grep -oE '`[^`]+`' | tr -d '`' | sort -u)
+          # 護欄一：抓不到就是 regex 失效（§7 重新編號、標題改寫、表格改欄數都會踩到）。
+          # 沒有這道護欄時 while 迴圈一次都不跑、印綠燈，這個 step 的職責等於整個消失。
+          # ⚠️ 這道必須留在下面 n_ticked 之前：grep -c 零命中回 1，在 bash -e 下會整段靜默
+          # 中止、一個字都不印。把順序調過來就重新打開這個洞
+          [ -n "$targets" ] || { echo "❌ §7.2 抓不到任何觸發目標（§7 重新編號？表格改欄數？整表都沒反引號？）"; exit 1; }
+          # 護欄二：資料列數 ↔ 有反引號的列數。單獨一列掉了反引號會被 grep -oE 靜靜略過，
+          # 那一列的目標從此不受檢查（不能拿 targets 筆數來比 — 它是 sort -u 過的）
           n_rows=$(printf '%s\n' "$rows" | awk '{gsub(/^[ \t]+|[ \t]+$/,"")} $0!="" && $0!="呼叫" && $0!~/^-+$/' | grep -c .)
           n_ticked=$(printf '%s\n' "$rows" | grep -c '`')
-          [ "$n_rows" = "$n_ticked" ] || { echo "❌ §7.2 有 $((n_rows - n_ticked)) 列的目標沒用反引號包住，會被靜靜略過"; exit 1; }
+          [ "$n_rows" = "$n_ticked" ] || { echo "❌ §7.2 資料列 $n_rows 列、有反引號的 $n_ticked 列 —— 某列漏了反引號，或表頭／分隔列的格式改過了"; exit 1; }
           echo "（§7.2 資料列 $n_rows 列，全部有反引號）"
           while IFS= read -r t; do
             [ -z "$t" ] && continue
