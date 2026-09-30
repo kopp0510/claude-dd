@@ -95,7 +95,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 平面指令的檔名**必須 `dd-` 開頭**：CI 的陣列一致性用 `ls commands/dd-*.md` 掃，非此前綴的檔案掃不到，
   本機安裝正常、push 才紅燈，而訊息只說「陣列與實際目錄不一致」，很難聯想到是檔名前綴
 - 兩種都要**同批**同步本檔「目錄結構」那行的數字（`N 個 dd-* 指令`、`N 個命名空間 command 目錄`）——
-  CI 的「數字宣稱一致性」逐項比對這兩個數字（`ci.yml:120-125`），漏改要等 push 才紅燈
+  CI 的「數字宣稱一致性」step 逐項比對這兩個數字（`CLAUDE.md dd 指令總數`、`CLAUDE.md NS command 總數` 兩個 `ck`），漏改要等 push 才紅燈
 - 改 commands（例如 `/dd-init` 的 Phase 指令）也照「新增 Skill 步驟 3」派 subagent 在沙盒 repo 照做一遍；牽涉 hook
   管理工具（pre-commit、lefthook、husky）時用 docker 裝真的工具實測 —— 2026-10-01 改 Phase 3，兩輪乾跑抓到 14 處歧義，
   審查另抓到 husky／lefthook 會在 `npm install` 時把 gate 洗掉
