@@ -1,7 +1,7 @@
 # gate-guard / hooks
 
-一支 PreToolUse(Bash) hook：Claude 要執行的 `git commit` 帶了 `--no-verify`、`-n` 或
-`core.hooksPath` 設定時直接 deny，堵住「被 CLAUDE.md gate 擋下就繞過」這條路。
+一支 PreToolUse(Bash) hook：Claude 要執行的 `git commit` 帶了 `--no-verify`、`-n`，或用
+`-c core.hooksPath=` 當場關掉 hook 時直接 deny，堵住「被 CLAUDE.md gate 擋下就繞過」這條路。
 git 的 `--no-verify` 會跳過 pre-commit hook，gate（`scripts/check-claude-md.sh`）自己看不到那次 commit。
 
 ## 關鍵檔案
@@ -35,8 +35,8 @@ git 的 `--no-verify` 會跳過 pre-commit hook，gate（`scripts/check-claude-m
   （會多擋：被當成旗標而不是訊息）—— 別把它寫成完整防線
 - 外部指令只用 `cat`、`awk`、`jq`／`python3`：測試第 2 輪的 PATH 只放這幾支、第 3 輪只放 `cat`、`awk`，
   多用別的指令（`sed`、`tr`…）會讓那兩輪整排失敗。awk 要同時相容 macOS 的 BWK awk、ubuntu 的 mawk、
-  gawk（2026-10-01 含 busybox 四種 awk 都實測過全套測試）。`index(s, "")` 在 BWK awk 回 1、其他回 0，
-  取 `substr` 之前先確認位置在範圍內
+  gawk（2026-10-01 含 busybox 四種 awk 都實測過全套測試）。`index(s, "")` 在 BWK awk、mawk、gawk 回 1，
+  busybox 回 0（2026-10-01 實測），拿 `substr` 的結果當 `index` 的第二個參數之前，先確認位置在範圍內
 - **改這支後必須跑 `./test-guard-no-verify.sh`**（同目錄，CI 也會跑）；兩支都要過
   `shellcheck -S warning`、可在 macOS bash 3.2 執行。測試腳本是 `set -u`、**不可加 `-e`**：
   它要抓 hook 的非 0 結束碼，加 `-e` 會讓第一個失敗案例直接把測試殺掉
