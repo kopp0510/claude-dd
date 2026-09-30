@@ -26,7 +26,8 @@ jobs:
             skills/self-improving-agent/hooks/test-error-capture.sh \
             skills/gate-guard/hooks/guard-no-verify.sh \
             skills/gate-guard/hooks/test-guard-no-verify.sh \
-            tests/test-gate.sh
+            tests/test-gate.sh \
+            tests/test-install.sh
 
       - name: help smoke test
         run: ./install-dd-pipeline.sh --help
@@ -309,64 +310,13 @@ jobs:
       - name: gate 段落起點（SKIP 跳過的目錄，之後的正常 commit 要補上 CLAUDE.md）
         run: tests/test-gate.sh
 
+      # 情境本體在 tests/test-install.sh（2026-10-01 從這裡搬出去，macOS 那個 job 才能共用同一份）
       - name: Sandbox 端到端安裝測試（非互動）
-        run: |
-          # runner 無 claude CLI，放一個只回版本號的假 binary 讓環境檢查通過
-          mkdir -p /tmp/fakebin
-          printf '#!/bin/sh\necho "2.1.200 (Claude Code)"\n' > /tmp/fakebin/claude
-          chmod +x /tmp/fakebin/claude
-          export PATH="/tmp/fakebin:$PATH"
-
-          # --check：只檢查環境、不得寫入任何檔案（獨立乾淨 sandbox，驗 README 的「不安裝」宣稱）
-          CHECK_SANDBOX="$(mktemp -d)"
-          HOME="$CHECK_SANDBOX" ./install-dd-pipeline.sh --check < /dev/null
-          [ -z "$(ls -A "$CHECK_SANDBOX")" ]
-          echo "✅ --check 未寫入任何檔案"
-
-          SANDBOX="$(mktemp -d)"
-
-          # 首次安裝：非互動環境下互動詢問須走預設值，不得中止
-          HOME="$SANDBOX" ./install-dd-pipeline.sh < /dev/null
-
-          # 驗證部署結果 = 部署清單
-          source ./install-dd-pipeline.sh
-          [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "${#PROMOTED_SKILLS[@]}" ]
-          [ "$(ls "$SANDBOX"/.claude/agents/*.md | wc -l)" -eq "${#PROMOTED_AGENTS[@]}" ]
-          [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
-          [ -d "$SANDBOX/.claude/commands/workflow-review" ]
-          [ ! -f "$SANDBOX/.claude/commands/workflow-review/README.md" ]
-          [ -x "$SANDBOX/.claude/scripts/check-claude-md.sh" ]
-          echo "✅ 首次安裝部署內容正確"
-
-          # 冪等：重跑不得改動內容、不得產生備份
-          HOME="$SANDBOX" ./install-dd-pipeline.sh < /dev/null
-          [ ! -d "$SANDBOX/.claude/backups" ]
-          echo "✅ 重跑冪等（無備份產生 = 無檔案被覆蓋）"
-
-          # --force：內容相同時不重寫，因此同樣不得產生備份
-          HOME="$SANDBOX" ./install-dd-pipeline.sh --force < /dev/null
-          [ ! -d "$SANDBOX/.claude/backups" ]
-          echo "✅ --force 內容相同不重寫（無備份產生）"
-
-          # --update 非互動可用
-          HOME="$SANDBOX" ./install-dd-pipeline.sh --update < /dev/null
-          echo "✅ --update 非互動可用"
-
-          # --commands-only：只裝 commands，不得動到既有 skills
-          skills_before=$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)
-          HOME="$SANDBOX" ./install-dd-pipeline.sh --commands-only < /dev/null
-          [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "$skills_before" ]
-          [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
-          echo "✅ --commands-only 未動到既有 skills"
-
-          # --uninstall 非互動走預設 N：取消移除、不得誤刪
-          HOME="$SANDBOX" ./install-dd-pipeline.sh --uninstall < /dev/null
-          [ -d "$SANDBOX/.claude/skills/code-simplifier" ]
-          echo "✅ 非互動 uninstall 預設取消，未誤刪"
+        run: tests/test-install.sh
 
   # scripts/CLAUDE.md 要求腳本能在 macOS 內建的 bash 3.2 執行，但上面那個 job 只跑 ubuntu（bash 5），
   # 3.2 不支援的寫法（${x,,}、declare -A、mapfile…）在那裡照樣全綠。這個 job 用 macOS 的 /bin/bash
-  # 實跑同一批行為測試。公開 repo 的 macOS runner 不計費
+  # 實跑同一批行為測試與安裝端到端測試。公開 repo 的 macOS runner 不計費
   bash32:
     name: macOS bash 3.2 行為測試
     runs-on: macos-latest
@@ -391,13 +341,6 @@ jobs:
       - name: gate 情境測試
         run: /bin/bash tests/test-gate.sh
 
-      - name: 安裝腳本 --help 與 --check（sandbox HOME，不得寫入）
-        run: |
-          mkdir -p /tmp/fakebin
-          printf '#!/bin/sh\necho "2.1.200 (Claude Code)"\n' > /tmp/fakebin/claude
-          chmod +x /tmp/fakebin/claude
-          /bin/bash install-dd-pipeline.sh --help > /dev/null
-          SANDBOX="$(mktemp -d)"
-          PATH="/tmp/fakebin:$PATH" HOME="$SANDBOX" /bin/bash install-dd-pipeline.sh --check < /dev/null
-          [ -z "$(ls -A "$SANDBOX")" ]
-          echo "✅ bash 3.2 下 --check 跑完且未寫入任何檔案"
+      # 每個 macOS 使用者真正會跑的部署路徑（首次安裝、冪等、--force、--uninstall…）
+      - name: Sandbox 端到端安裝測試（非互動）
+        run: /bin/bash tests/test-install.sh
