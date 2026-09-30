@@ -96,6 +96,9 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   本機安裝正常、push 才紅燈，而訊息只說「陣列與實際目錄不一致」，很難聯想到是檔名前綴
 - 兩種都要**同批**同步本檔「目錄結構」那行的數字（`N 個 dd-* 指令`、`N 個命名空間 command 目錄`）——
   CI 的「數字宣稱一致性」逐項比對這兩個數字（`ci.yml:120-125`），漏改要等 push 才紅燈
+- 改 commands（例如 `/dd-init` 的 Phase 指令）也照「新增 Skill 步驟 3」派 subagent 在沙盒 repo 照做一遍；牽涉 hook
+  管理工具（pre-commit、lefthook、husky）時用 docker 裝真的工具實測 —— 2026-10-01 改 Phase 3，兩輪乾跑抓到 14 處歧義，
+  審查另抓到 husky／lefthook 會在 `npm install` 時把 gate 洗掉
 
 ## 新增 Script 步驟
 
@@ -253,7 +256,9 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **新增 `.github/workflows/ci.yml` 的檢查 step 必做負面測試**：故意把被檢查的來源改壞一行，
   確認該 step 真的紅燈，再還原確認回綠。`scripts/CLAUDE.md` 只對 gate 訂了這條規矩、
   ci.yml 其他 step 沒有 — 而 2026-09-12 新增的兩道護欄，修的正是「抓 0 筆卻印綠燈」。
-  同批補一列進 `DD_PIPELINE_ARCHITECTURE.md` 的 CI 防線表（沒有任何檢查會擋那張表過期）
+  同批補一列進 `DD_PIPELINE_ARCHITECTURE.md` 的 CI 防線表（沒有任何檢查會擋那張表過期）。
+  驗相容性（例如 bash 3.2）時，變異要能改變被驗的結果：3.2 遇到 `${x,,}` 只印 bad substitution、結果照舊，
+  只看 pass／fail 的測試照樣全綠，要把 shell 錯誤訊息判為失敗。寫進文件的變異結果要註明插在哪一行（位置不同，❌ 數從 9 到 61 都有）
 - **subagent 回報的行號可能整組對不上，要拿它引的原文 grep 定位後才動手**：2026-09-12
   code-simplifier 對一份只有 263 行的 `README.md` 報 `README.md:323`，而它描述的內容
   逐條屬實。行號錯得離譜反而好認，錯個三五行才危險 — 一律以原文比對為準，不信行號。
