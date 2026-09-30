@@ -32,6 +32,18 @@
 
 - gate 擋下 commit 時，「其他處理方式」多一行提醒不要用 `--no-verify`／`-n` 繞過
 
+### Fixed
+
+- **`/dd-init` 遇到 pre-commit 套件管理的 hook 時，gate 會變成死碼**。舊規則只看既有 hook 的最後一行是不是
+  `exit`／`exec`；pre-commit 套件產生的 hook 以 `fi` 結尾、每條路都在 `if … fi` 裡 `exec` 或 `exit`，gate 被接在
+  後面永遠不會執行，之後「已含」的字串比對又一直回報已裝。現在：pre-commit 套件產生的 hook 不去改它
+  （`pre-commit install` 會整個重寫），刪掉舊版接在後面的死碼，改給一段 `.pre-commit-config.yaml` 設定
+  （pre-commit 4.6.2 實測）；手寫的 hook 一律把 gate 插在最前面；「已含」改成看位置，不在最前面就搬過去。
+  已經用舊版裝過的專案，重跑一次 `/dd-init` 就會修好
+- `/dd-init` 裝的 gate 那行改成**找不到 gate 腳本時只警告、不擋**：`core.hooksPath` 那份 hook 常會進版控，
+  沒裝 claude-dd 的協作者、或解除安裝 claude-dd 之後，原本每次 commit 都會因為找不到腳本而失敗。
+  掛載點改用 `git rev-parse --git-path hooks/pre-commit` 取得
+
 ## 1.2.0 — 2026-09-12
 
 ### Changed
