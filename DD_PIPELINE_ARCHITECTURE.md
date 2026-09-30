@@ -47,6 +47,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 
 \* gate 掛載點：`.git/hooks/pre-commit`；專案設有 `git config core.hooksPath` 時
 git 會忽略 `.git/hooks/`，`/dd-init` 改掛到該目錄下的 `pre-commit`（本 repo 自身即此情況）。
+pre-commit 套件、lefthook 管理 hook 的專案不改它們產生的檔，改給設定片段；husky v9 掛 `.husky/pre-commit`。
 
 修改一律改 repo 再重新部署；直接改 `~/.claude/` 的 skills / agents / commands /
 scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/backups/`）。

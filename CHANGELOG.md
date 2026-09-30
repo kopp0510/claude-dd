@@ -34,15 +34,20 @@
 
 ### Fixed
 
-- **`/dd-init` 遇到 pre-commit 套件管理的 hook 時，gate 會變成死碼**。舊規則只看既有 hook 的最後一行是不是
-  `exit`／`exec`；pre-commit 套件產生的 hook 以 `fi` 結尾、每條路都在 `if … fi` 裡 `exec` 或 `exit`，gate 被接在
-  後面永遠不會執行，之後「已含」的字串比對又一直回報已裝。現在：pre-commit 套件產生的 hook 不去改它
-  （`pre-commit install` 會整個重寫），刪掉舊版接在後面的死碼，改給一段 `.pre-commit-config.yaml` 設定
-  （pre-commit 4.6.2 實測）；手寫的 hook 一律把 gate 插在最前面；「已含」改成看位置，不在最前面就搬過去。
-  已經用舊版裝過的專案，重跑一次 `/dd-init` 就會修好
-- `/dd-init` 裝的 gate 那行改成**找不到 gate 腳本時只警告、不擋**：`core.hooksPath` 那份 hook 常會進版控，
-  沒裝 claude-dd 的協作者、或解除安裝 claude-dd 之後，原本每次 commit 都會因為找不到腳本而失敗。
-  掛載點改用 `git rev-parse --git-path hooks/pre-commit` 取得
+- **`/dd-init` 遇到 hook 管理工具時，gate 會變成死碼或被默默洗掉**。舊規則只看既有 hook 的最後一行是不是
+  `exit`／`exec`：pre-commit 套件產生的 hook 以 `fi` 結尾、每條路都在 `if … fi` 裡 `exec` 或 `exit`，gate 接在
+  後面永遠不執行，之後「已含」的字串比對又一直回報已裝；husky v9（`.husky/_`）與 lefthook 產生的 hook 則會在
+  下次 `npm install` 被重寫，gate 靜靜消失。現在：pre-commit 套件與 lefthook 不去改它們產生的檔，只刪掉舊版
+  留下的死碼，改給一段 `.pre-commit-config.yaml`／`lefthook.yml` 設定（pre-commit 4.6.2、lefthook 2.1.15 實測；
+  pre-commit 那段帶 `stages: [pre-commit]` 與 `verbose: true`，不在 push 時誤擋、放行訊息不被藏起來）；
+  husky v9 改掛 `.husky/pre-commit`，husky v8 插在 `husky.sh` 那行之後（8.0.3、9.1.7 實測各跑一次、`HUSKY=0`
+  一起跳過）；其他手寫 hook 一律把 gate 插在 shebang 之後，非 shell 的 hook 不插、改問使用者；「已含」改成看位置。
+  用舊版裝過的專案重跑一次 `/dd-init`：手寫 hook 當場修好；pre-commit 套件與 lefthook 要等使用者把設定加進去並 commit
+- `/dd-init` 裝的 gate 那行改成**找不到 gate 腳本時只警告、不擋**，警告寫明「這次 commit 沒檢查改到程式碼的目錄
+  有沒有同批更新 CLAUDE.md」：hook 常會進版控，沒裝 claude-dd 的協作者、或解除安裝 claude-dd 之後，
+  原本每次 commit 都會因為找不到腳本而失敗
+- `/dd-init` 的掛載點改用 `git rev-parse --path-format=absolute --git-path hooks/pre-commit` 取得，在 monorepo
+  子目錄執行也拿到正確的絕對路徑；`core.hooksPath` 是 `/dev/null`、在 repo 外或設在 global 時先告知或詢問
 
 ## 1.2.0 — 2026-09-12
 
