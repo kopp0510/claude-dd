@@ -10,6 +10,7 @@ git 的 `--no-verify` 會跳過 pre-commit hook，gate（`scripts/check-claude-m
 |---|---|
 | `guard-no-verify.sh` | hook 本體。stdin 收 hook JSON，取 `tool_input.command`（jq 優先、python3 後備，兩者都沒有就放行），用 awk 做簡化的 shell 斷詞後判斷；命中就印 `permissionDecision: deny` 的 JSON，理由裡指向正式逃生口 `SKIP_DOC_CHECK=1`。一律 exit 0 |
 | `test-guard-no-verify.sh` | 上者的行為測試（CI 會跑）。指令用 jq／python3 組成 JSON，雙引號與換行才不會生出壞 JSON 讓案例假通過。整套跑兩輪（預設 PATH、藏起 jq 逼走 python3），第 3 輪兩者都藏起來確認放行 |
+| `hooks.json` | 註冊 PreToolUse、matcher `Bash`。`command` 必須是 `$HOME/.claude/skills/gate-guard/hooks/...` 絕對路徑（根目錄 CLAUDE.md「Skill hook 路徑規範」，`validate_skill_hooks()` 會擋相對路徑） |
 
 ## 此層約束
 
@@ -32,6 +33,10 @@ git 的 `--no-verify` 會跳過 pre-commit hook，gate（`scripts/check-claude-m
 
 ## 與上層的關係
 
-`gate-guard` 是只有 hook、沒有 skill 的 plugin，補強 claude-dd 唯一的強制機制 ——
-根目錄 `scripts/check-claude-md.sh` 的 pre-commit gate。gate 被擋時印的訊息也指向同一個逃生口
-（`SKIP_DOC_CHECK=1`），兩邊的說法要一致。
+`gate-guard` 是只有 hook、沒有 skill 的 plugin（上層只有 `.claude-plugin/plugin.json`，沒有 SKILL.md），
+由 `install-dd-pipeline.sh` 的 `PROMOTED_SKILLS` 部署到 `~/.claude/skills/gate-guard/`，Claude Code 把它當
+skills-dir plugin 載入（`gate-guard@skills-dir`）、自動掛上 `hooks.json`。2026-09-30 用全新的
+`claude -p` 實測過：`git commit --no-verify` 被 deny、理由原文照印，一般 commit 照常成功。
+
+它補強 claude-dd 唯一的強制機制 —— 根目錄 `scripts/check-claude-md.sh` 的 pre-commit gate。
+gate 被擋時印的訊息也指向同一個逃生口（`SKIP_DOC_CHECK=1`），兩邊的說法要一致。
