@@ -210,4 +210,5 @@ fi
 echo ""
 echo "其他處理方式："
 echo "  - 檢查點 commit（迴圈步驟 2）：SKIP_DOC_CHECK=1 git commit ...（最終 commit 必須全過）"
+echo "  - 不要用 --no-verify／-n 繞過：hook 整個不跑，沒記段落起點或那是最後一個 commit 時就完全漏查"
 exit 1
