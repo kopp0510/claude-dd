@@ -22,13 +22,11 @@
     `--segment-base` 印出起點給迴圈步驟 3、4、8，起點失效就失敗
   - 列檔案的 git 指令都經過 `gitq`（`core.quotePath=false`）：git 預設把非 ASCII 路徑加引號跳脫，
     副檔名比對不到，中文目錄等於完全不檢查（原始版本就有這個洞）
-  - 行為的回歸測試是 `.github/workflows/ci.yml` 的「gate 段落起點」step。本機照 CI 的方式跑
-    （沒指定 `shell:` 的 step，GitHub Actions 用 `bash -e`；抽出來執行的就是 commit 進去的那份）：
+  - 行為的回歸測試是 `tests/test-gate.sh`（CI 在 ubuntu 與 macOS `/bin/bash` 3.2 各跑一次）。本機跑：
 
     ```bash
-    awk '/^      - name: gate 段落起點/{f=1; next} f && /^      - name:/{exit} f && /^        run: \|/{r=1; next} r' \
-      .github/workflows/ci.yml | sed 's/^          //' > /tmp/gate-test.sh
-    /bin/bash --noprofile --norc -e /tmp/gate-test.sh
+    /bin/bash tests/test-gate.sh              # 測 repo 裡這份 gate
+    /bin/bash tests/test-gate.sh /tmp/gate.sh # 測改壞的副本（變異測試）
     ```
 - `githooks/pre-commit` — 本 repo 自用（dogfood），轉呼叫上面的 gate。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。
@@ -46,8 +44,8 @@
 - gate 的檢查邏輯或輸出改動時，同步檢視全域模板 §3.9 對 gate 行為的描述，以及 `skills/task-planner/SKILL.md`
   進度表規則區塊依賴的 gate 行為：`--start-segment` 印出的起點（完整 SHA，還沒有 commit 時是空樹）、有欠帳時拒絕重記、
   SKIP 記帳、只查 CLAUDE.md 有沒有一起 staged 而不查內容
-- 改了 gate 或它的 CI 情境，要故意把 gate 改壞一行（例如拿掉 `grep -qxF "$md"` 的 `-x`），用上面的本機跑法
-  確認會出現 ❌。全綠不代表有在檢查：2026-09-11 拿掉 `-x`、讓 staged 清單被空白拆開，這兩種改壞法
+- 改了 gate 或它的情境測試，要故意把 gate 改壞一行（例如拿掉 `grep -qxF "$md"` 的 `-x`）存成副本，
+  用上面的第二種跑法確認會出現 ❌。全綠不代表有在檢查：2026-09-11 拿掉 `-x`、讓 staged 清單被空白拆開，這兩種改壞法
   在當時的 57 個情境下照樣全過，補到 61 個才抓到
 
 ## 與上層的關係

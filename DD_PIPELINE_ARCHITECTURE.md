@@ -109,7 +109,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 
 | 檢查 | 防什麼 |
 |---|---|
-| bash -n（安裝腳本）+ shellcheck（warning 級，7 支腳本） | 語法與常見 bash 陷阱 |
+| bash -n（安裝腳本）+ shellcheck（warning 級，8 支腳本） | 語法與常見 bash 陷阱 |
 | `--help` smoke test | 腳本連起碼的執行都掛掉 |
 | Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
@@ -121,7 +121,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 | §7.2 觸發目標部署驗證（含抓不到與漏反引號兩道護欄） | 全域模板指向未部署元件；章節重編號或某列漏反引號讓這道檢查靜默失效 |
 | 迴圈步數四方一致（模板 §3.9 ↔ 蓋章版 ↔ 兩份 README ↔ 版本標記） | 編號清單的步數漂移；另驗 `dd-loop-rev` 的標記格式與檔內唯一性 |
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
-| gate 情境測試（段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
+| gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
 | Sandbox 端到端非互動安裝 | 只有執行期才會出現的安裝 bug |
 
 > 這張表是 CI 覆蓋範圍的單一入口，**新增 CI step 時要同步補一列**（沒有任何檢查會擋它過期）。
