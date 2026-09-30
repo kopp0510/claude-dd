@@ -147,7 +147,7 @@ git pull && ./install-dd-pipeline.sh --force
   錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
-- `git commit --no-verify`／`-n` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到。Claude 這樣下指令時，`gate-guard` 的 PreToolUse hook 會直接擋下，並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude —— 你自己在終端機打 `--no-verify` 擋不到
+- `git commit --no-verify`／`-n` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到。Claude 這樣下指令時，`gate-guard` 的 PreToolUse hook 會直接擋下，並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude —— 你自己在終端機打 `--no-verify` 擋不到。它是全域安裝，所以在每個專案都會擋，包括沒裝 gate 的專案；真的要跳過 hook 時請自己在終端機執行
 
 ## 為什麼要巢狀 CLAUDE.md
 
@@ -198,14 +198,14 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 
 ## Promoted Skills（預設部署，11 個）
 
-> 「Promoted」指該元件有實證使用紀錄，因此預設部署。沒有使用紀錄的元件是**直接刪掉**、不是留著不部署 —— 要取回見 git 歷史。
+> 「Promoted」指該元件有實證使用紀錄，因此預設部署。沒有使用紀錄的元件是**直接刪掉**、不是留著不部署 —— 要取回見 git 歷史。唯一的例外是 `gate-guard`：它是 gate 的防護，不是「用過才收」的 skill。
 
 | Skill | 說明 |
 |-------|------|
 | code-simplifier | 程式碼簡化（迴圈步驟 3 的 wrapper） |
 | design-brainstorm | 蘇格拉底式設計對話（事實自己查、決策才問人） |
 | frontend-design | 前端視覺設計 |
-| gate-guard | 只有 hook、沒有 skill 的 plugin：擋 Claude 用 `git commit --no-verify`／`-n`／`core.hooksPath` 繞過 CLAUDE.md gate |
+| gate-guard | 只有 hook、沒有 skill 的 plugin：擋 Claude 用 `git commit --no-verify`／`-n`／`-c core.hooksPath=` 繞過 CLAUDE.md gate（先用 `git config core.hooksPath` 把 hook 關掉的擋不到） |
 | review | 綜合審查 wrapper |
 | self-improving-agent | 記憶審計與知識沉澱 |
 | task-planner | 功能段落規劃，進度表寫進設計文件 |
