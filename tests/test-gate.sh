@@ -13,8 +13,10 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 GATE="${1:-$ROOT/scripts/check-claude-md.sh}"
 case "$GATE" in /*) ;; *) GATE="$PWD/$GATE" ;; esac
 [ -x "$GATE" ] || { echo "❌ 找不到可執行的 ${GATE}"; exit 2; }
-OUT="$(mktemp)"
-cd "$(mktemp -d)" || exit 2
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT   # 本機會拿來重跑、做變異測試，暫存檔與拋棄式 repo 要清掉
+OUT="$WORK/out"
+mkdir "$WORK/repo" && cd "$WORK/repo" || exit 2
 git init -q
 git config user.email ci@example.com
 git config user.name ci
@@ -26,8 +28,9 @@ expect() {  # $1=說明 $2=預期（pass / block） 其餘=指令
   desc="$1"; want="$2"; shift 2
   if "$@" > "$OUT" 2>&1; then got=pass; else got=block; fi
   # bash 3.2 不支援的寫法常常只印一行錯誤、結果照舊：輸出裡出現 shell 錯誤就算失敗，
-  # 否則 macOS（/bin/bash 3.2）那個 CI job 會照樣全綠
-  if grep -qE 'bad substitution|syntax error|command not found|invalid option|unbound variable' "$OUT"; then
+  # 否則 macOS（/bin/bash 3.2）那個 CI job 會照樣全綠。bash 報腳本錯誤一律是「<腳本>: line N: …」，
+  # 用這個前綴才抓得到 shopt、${a[-1]}、[ -v ] 這類清單外的錯誤；syntax error 另列，awk 的語法錯誤沒有前綴
+  if grep -qE 'bad substitution|syntax error|command not found|invalid option|unbound variable|: line [0-9]+: ' "$OUT"; then
     echo "❌ ${desc}：輸出裡有 shell 錯誤"; sed 's/^/    /' "$OUT"; fail=1; return
   fi
   if [ "$got" = "$want" ]; then
