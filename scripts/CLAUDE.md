@@ -9,6 +9,10 @@
   變更含程式碼檔（副檔名見腳本內 `CODE_EXT`）的目錄，必須存在 CLAUDE.md 且
   同批 staged；逃生口 `SKIP_DOC_CHECK=1`（僅供迴圈檢查點 commit）。由
   `/dd-init` 掛進各專案的 `.git/hooks/pre-commit`。
+  - **擋不到 `git commit --no-verify`／`-n`**：git 直接跳過 pre-commit，gate 整個不跑，
+    SKIP 那種「沒起點就自動記」也不會發生。已經記過段落起點時，之後的正常 commit 會在欠帳裡補抓到；
+    沒記起點、或繞過的就是最後一個 commit，就完全漏查。被擋時的訊息結尾會提醒別這樣繞；
+    Claude 端由 `skills/gate-guard` 的 PreToolUse hook 在執行前 deny
   - **SKIP 不是豁免**：段落起點記在 `git rev-parse --git-path dd-segment-base`
     （`--start-segment` 記下；忘了記時第一個 SKIP commit 自動記）。之後的正常 commit
     沿著 commit 的祖先關係結算起點以來的欠帳：改程式碼記帳，要由看得到那段程式碼的後代
