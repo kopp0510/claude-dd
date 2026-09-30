@@ -13,6 +13,9 @@
 
 - **CI 在兩種 bash 上各跑一次**：ubuntu（bash 5）與 macOS 的 `/bin/bash` 3.2（`.github/workflows/ci.yml`）。
   gate 與它的 hook 都靠 shebang `#!/bin/bash` 執行，所以在 macOS 上測到的就是使用者機器上的那個 bash
+- **輸出裡出現 shell 錯誤就判失敗**（`bad substitution`、`syntax error`、`command not found`、`invalid option`、
+  `unbound variable`）：bash 3.2 不支援的寫法常常只印一行錯誤、判斷結果照舊，只看 pass／block 的話 macOS job 照樣全綠。
+  2026-10-01 實測：在 gate 裡加一行 `${staged,,}`，3.2 下 49 個 ❌、bash 5 下全過 —— 這正是那個 job 要抓的
 - 腳本開頭是 `set -e`（2026-10-01 從 ci.yml 內嵌 step 搬出來時照 GitHub Actions 預設的 `bash -e` 保留）：
   預期會被擋的 commit 一律包在 `expect` 的 `if` 裡，新增情境時別讓會回非 0 的指令裸跑
 - 本機跑：`/bin/bash tests/test-gate.sh`（repo 根目錄或任何地方都可以，gate 路徑以腳本位置推算）
