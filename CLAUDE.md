@@ -64,6 +64,9 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
    prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不了「不含關鍵字」這種說法；每次約 US$0.4–1.6。
    這種 session 沒有寫檔工具也沒有 AskUserQuestion，只測得到「叫不叫、出不出得了草稿」，批准之後的步驟要另外在沙盒實跑。
    2026-09-11 task-planner：三個功能的需求叫起了，一行字的改動沒叫，已有進度表、說「照設計文件繼續做」也沒叫
+6. 只有 hook、沒有 skill 的元件也放 `skills/<名字>/`（`.claude-plugin/plugin.json` + `hooks/hooks.json`，不放 SKILL.md），
+   會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
+   被管的工具（例如 `Bash`），被 hook 擋下的呼叫才會在 tool_result 以「PreToolUse:Bash hook error: <理由>」出現、並列進 `permission_denials`
 
 ### Skill hook 路徑規範（強制）
 
@@ -152,6 +155,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `--segment-base`（全域模板寫的是 `~/.claude/scripts/` 那份）。本 repo 的 hook 跑 repo 這份，
   其他專案的 hook 跑部署那份；安裝腳本不帶 `--force` 也會覆蓋部署那份，gate 還沒驗證完
   別跑安裝，驗證完 commit 後再重跑，其他專案才會用到新版
+- 要在 Claude 的 Bash 工具裡取用安裝腳本的函式或陣列，一律 `bash -c 'source ./install-dd-pipeline.sh && validate_skill_hooks'`：
+  Bash 工具是 zsh，沒有 `BASH_SOURCE`，腳本尾端的 source guard 會失效，整支安裝直接在真實 `~/.claude` 上跑起來（2026-09-30 踩過）
 - 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項
