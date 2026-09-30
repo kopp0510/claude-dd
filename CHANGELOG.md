@@ -16,6 +16,21 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Added
+
+- **gate-guard：擋 Claude 用 `--no-verify` 繞過 CLAUDE.md gate**。`git commit --no-verify`／`-n`／
+  `-c core.hooksPath=` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到；沒記段落起點、或繞過的是
+  最後一個 commit 時就完全漏查。新增只有 hook、沒有 skill 的 plugin `skills/gate-guard`（PreToolUse(Bash)），
+  在 Claude 執行前 deny，理由指向正式逃生口 `SKIP_DOC_CHECK=1`。只擋 `git commit`：`git config core.hooksPath`、
+  `git log -n`、commit 訊息內文的 `-n` 都放行。只擋 Claude，使用者自己在終端機打的不擋。
+  promoted Skills 因此從 10 個變 11 個；CI 加跑它的行為測試（61 個情境）
+
+### Changed
+
+- gate 擋下 commit 時，「其他處理方式」多一行提醒不要用 `--no-verify`／`-n` 繞過
+
 ## 1.2.0 — 2026-09-12
 
 ### Changed

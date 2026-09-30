@@ -1,0 +1,10 @@
+{
+  "name": "gate-guard",
+  "version": "1.0.0",
+  "description": "擋 Claude 用 git commit --no-verify／-n／core.hooksPath 繞過 claude-dd 的 CLAUDE.md pre-commit gate（只有 hook，沒有 skill）",
+  "author": {
+    "name": "Danlio"
+  },
+  "repository": "https://github.com/kopp0510/claude-dd",
+  "license": "MIT"
+}

@@ -31,7 +31,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 
 ## 目錄結構
 
-- `skills/` — 10 個 Skills（每個子目錄含 SKILL.md 定義檔，全數部署；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph）
+- `skills/` — 11 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
@@ -197,7 +197,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   於 2026-09-12 補上），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
   **CI 不驗、只能手動同步的區塊**（不寫總數 — 沒窮舉過，寫個數字只會變成下一個過期宣稱）：
   兩份 README 的安裝步驟清單、指令一覽、官方 Plugins、第三方 Plugin 推薦、MCP 必要表、
-  MCP 可選表、前置需求段落、MCP 退化狀態表、**CLAUDE.md 維護規則那 4 條**、**「為什麼要巢狀」
+  MCP 可選表、前置需求段落、MCP 退化狀態表、**CLAUDE.md 維護規則那幾條**（含 `--no-verify` 與 gate-guard 那條）、**「為什麼要巢狀」
   底下的 gate 對策段落**、**散文裡的「8 步／8-step」字樣**（四方只數圍欄內的編號項、
   第五方只認箭頭行與安裝腳本輸出，標題與內文的步數字樣五道防線一道都碰不到；要改步數時自己
   `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，**不要在這裡寫死數量** —

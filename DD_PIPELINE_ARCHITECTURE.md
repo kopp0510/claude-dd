@@ -75,8 +75,9 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部 `PROMOTED_*` 陣列：10 個 promoted Skills、4 個 promoted Agents、dd-init、workflow-review；
-2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif）。
+（清單 = 腳本頂部 `PROMOTED_*` 陣列：11 個 promoted Skills、4 個 promoted Agents、dd-init、workflow-review；
+2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif，2026-09-30 新增只有 hook 的 gate-guard ——
+它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
@@ -107,11 +108,12 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 
 | 檢查 | 防什麼 |
 |---|---|
-| bash -n（安裝腳本）+ shellcheck（warning 級，5 支腳本） | 語法與常見 bash 陷阱 |
+| bash -n（安裝腳本）+ shellcheck（warning 級，7 支腳本） | 語法與常見 bash 陷阱 |
 | `--help` smoke test | 腳本連起碼的執行都掛掉 |
 | Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
 | error-capture hook 行為測試（`test-error-capture.sh`） | 逐行比對的語意迴歸（exclusion 一票否決、只讀 stderr、回報最後一行、Context 空白或截斷、jq/python3 單分支）—— 這類失效都是零輸出 exit 0，shellcheck 驗不出來。pattern／exclusion 清單只有情境用到的那幾項受保護，非系統性涵蓋 |
+| gate-guard hook 行為測試（`test-guard-no-verify.sh`） | 該擋的 `git commit --no-verify`／`-n`／`core.hooksPath` 沒擋（零輸出 exit 0，跟「沒人繞過」長得一樣），或誤擋 `git config core.hooksPath`、`git log -n`、訊息內文的 `-n`；jq 與 python3 兩條分支都跑 |
 | 陣列 ↔ 目錄一致性（`ALL_*` 四組 + `DD_SCRIPTS ↔ scripts/*.sh`） | 陣列漏列 / 目錄改名未同步 / 新腳本沒進部署清單 |
 | 數字宣稱 ↔ 陣列（README 英/繁中兩份 + 根目錄 CLAUDE.md + **本文件**） | 文件數字過期。本文件涵蓋元件數、安裝編號步驟數、shellcheck 腳本數 |
 | 安裝 flag 三方對照（case 分支 ↔ `--help` ↔ 兩份 README） | flag 名稱三方漂移（只驗名稱，語意描述仍手動維護） |
