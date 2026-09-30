@@ -21,7 +21,8 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 
 repo 只保留**有實證使用紀錄**的元件（2026-08-04 盤點留存 9 skills、4 agents、
 dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來源為當次
-對話的完整管線驗證），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
+對話的完整管線驗證；2026-09-30 新增只有 hook 的 gate-guard —— 它是 gate 的防護、不是「用過才收」的
+元件，是這條規則唯一的例外），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
 `PROMOTED_*` 陣列。
 
 - 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /

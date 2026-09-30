@@ -24,8 +24,9 @@
   `-c core.hooksPath=` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到；沒記段落起點、或繞過的是
   最後一個 commit 時就完全漏查。新增只有 hook、沒有 skill 的 plugin `skills/gate-guard`（PreToolUse(Bash)），
   在 Claude 執行前 deny，理由指向正式逃生口 `SKIP_DOC_CHECK=1`。只擋 `git commit`：`git config core.hooksPath`、
-  `git log -n`、commit 訊息內文的 `-n` 都放行。只擋 Claude，使用者自己在終端機打的不擋。
-  promoted Skills 因此從 10 個變 11 個；CI 加跑它的行為測試（61 個情境）
+  `git log -n`、commit 訊息內文的 `-n` 都放行。只擋 Claude，使用者自己在終端機打的不擋；全域生效，沒裝 gate 的專案也擋（Claude 本來就不該自己跳過 hook）。
+  先用 `git config core.hooksPath` 把 hook 關掉再 commit 的擋不到（改 hooksPath 是正常設定操作，刻意不擋）。
+  promoted Skills 因此從 10 個變 11 個；CI 加跑它的行為測試（該擋、該放行各情境，jq 與 python3 兩條分支都跑）
 
 ### Changed
 

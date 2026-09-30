@@ -75,6 +75,21 @@ run_suite() {
     check '絕對路徑的 git'                           block '/usr/bin/git commit --no-verify -m x'
     check 'bash -c 包起來'                           block 'bash -c "git commit --no-verify -m x"'
     check '換行分隔的第二行'                         block $'git add -A\ngit commit -n -m x'
+    # 2026-10-01 code-review 補的繞過寫法：保留字、重導向、包一層的指令、別名、雙引號裡的 $(…)
+    check 'if … then 裡面'                           block 'if true; then git commit -n -m x; fi'
+    check 'for … do 裡面'                            block 'for i in 1; do git commit -n -m x; done'
+    check '{ … } 群組'                               block '{ git commit -n -m x; }'
+    check '! 反轉結束碼'                             block '! git commit -n -m x'
+    check '2>&1 之後才放 --no-verify'                block 'git commit -m x 2>&1 --no-verify'
+    check '開頭是重導向'                             block '2>/dev/null git commit -n -m x'
+    check 'nice -n 5 包一層'                         block 'nice -n 5 git commit -n -m x'
+    check 'timeout 60 包一層'                        block 'timeout 60 git commit --no-verify -m x'
+    check 'git -c alias 定義繞過的別名'              block 'git -c alias.ci="commit --no-verify" ci -m x'
+    check 'git --attr-source 參數分開寫'             block 'git --attr-source HEAD commit -n -m x'
+    check '雙引號裡的 $(…)'                          block 'out="$(git commit -n -m wip)"'
+    check '雙引號裡的反引號'                         block 'echo "`git commit --no-verify -m wip`"'
+    check 'heredoc 交給 bash 執行'                   block $'bash <<\'EOF\'\ngit commit -n -m x\nEOF'
+    check '-c 吃不到參數時不能吞掉分號'              block 'git -c; git commit --no-verify -m x'
 
     # ---- 要放行 ----
     check '一般 commit'                              allow 'git commit -m "x"'
@@ -91,6 +106,11 @@ run_suite() {
     check 'grep -n'                                  allow 'grep -n "no-verify" README.md'
     check 'echo 印出字樣'                            allow 'echo "git commit --no-verify"'
     check '# 註解裡的字樣'                           allow $'# git commit --no-verify\ngit status'
+    check 'heredoc 訊息內文有 git commit -n'         allow $'git commit -F - <<\'EOF\'\nfeat: gate-guard\n\ngit commit -n 現在會被擋\nEOF'
+    check '先寫訊息檔的 heredoc，再 -F'              allow $'cat > /tmp/msg <<\'EOF\'\ngit commit -n 會被擋\nEOF\ngit commit -F /tmp/msg'
+    check 'heredoc 訊息裡有奇數個雙引號'             allow $'git commit -m "$(cat <<\'EOF\'\nfix: strip trailing " before --no-verify check\nEOF\n)"'
+    check '-m 吃不到參數時不能吞掉分號'              allow 'git commit -m; git log -n 5'
+    check '2>&1 重導向'                              allow 'git commit -m x 2>&1'
     check '不是 Bash 的輸入（沒有 command）'         allow '' '{"tool_name":"Read","tool_input":{"file_path":"/tmp/x"}}'
     check '壞掉的 JSON'                              allow '' 'not json'
 }
@@ -120,16 +140,29 @@ else
     echo "⚠️  jq 與 python3 沒有同時存在，只驗得到其中一條分支"
 fi
 
-# jq 與 python3 都沒有：讀不了 JSON，一律放行（不擋）而且不報錯
+[ -n "$shim" ] && rm -rf "$shim"
+
+# jq 與 python3 都沒有：讀不了 JSON，一律放行（不擋）而且不報錯。PATH 只放 cat 與 awk ——
+# 另外組一份，不沿用第 2 輪的：第 2 輪被跳過時那份是空的，hook 會因為找不到 cat 才放行，案例假通過
+shim=$(mktemp -d) || shim=""
+ok=no
 if [ -n "$shim" ]; then
-    rm -f "$shim/python3"
-    echo
+    ok=yes
+    for t in cat awk; do
+        p=$(command -v "$t") || { ok=no; break; }
+        ln -sf "$p" "$shim/$t" || { ok=no; break; }
+    done
+fi
+echo
+if [ "$ok" = yes ]; then
     echo "=== 第 3 輪：jq 與 python3 都沒有 ==="
     TOOL_PATH="$shim"
     check '讀不了 JSON 時放行'                   allow 'git commit --no-verify -m x'
     TOOL_PATH="$PATH"
-    rm -rf "$shim"
+else
+    echo "⚠️  組不出只有 cat 與 awk 的 PATH，跳過第 3 輪"
 fi
+[ -n "$shim" ] && rm -rf "$shim"
 
 echo
 if [ "$fail" -eq 0 ]; then

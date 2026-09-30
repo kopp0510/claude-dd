@@ -140,7 +140,7 @@ The full path from zero to daily use (install once, stamp each project once, spl
 - The gate is `~/.claude/scripts/check-claude-md.sh`, hooked in by `/dd-init`. It goes into `.git/hooks/pre-commit`, unless `git config core.hooksPath` is set — git ignores `.git/hooks/` entirely in that case, so the hook goes into that directory instead. (This repo is itself in the second case.) Its error message tells the AI agent directly to read the directory, generate or update the file itself, and retry
 - It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. A markdown- or config-only change does not trigger it *by itself* — but see the next point: SKIP debt blocks it anyway
 - Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly. Skipping is not a pardon: the gate tracks every directory skipped since the increment's start, and the next normal commit — even one with no code in it — is blocked until those directories' `CLAUDE.md` files are updated
-- `git commit --no-verify` / `-n` skips the pre-commit hook entirely, so the gate never sees that commit. When Claude tries it, the `gate-guard` PreToolUse hook denies the command and points to `SKIP_DOC_CHECK=1` instead. It only guards Claude — a human typing `--no-verify` in a terminal is not stopped
+- `git commit --no-verify` / `-n` skips the pre-commit hook entirely, so the gate never sees that commit. When Claude tries it, the `gate-guard` PreToolUse hook denies the command and points to `SKIP_DOC_CHECK=1` instead. It only guards Claude — a human typing `--no-verify` in a terminal is not stopped. It is installed globally, so it applies in every project, including ones without the gate; when you really want to skip hooks, run the command yourself
 
 ## Why nested CLAUDE.md files
 
@@ -180,14 +180,14 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 
 ## Promoted Skills (11, deployed by default)
 
-> "Promoted" means the component has an evidenced usage record and therefore ships by default. Components without one were removed rather than kept around — the git history holds them.
+> "Promoted" means the component has an evidenced usage record and therefore ships by default. Components without one were removed rather than kept around — the git history holds them. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
 
 | Skill | Description |
 |-------|-------------|
 | code-simplifier | Code simplification (the wrapper used at step 3 of the loop) |
 | design-brainstorm | Socratic design dialogue — look facts up yourself, only ask the human about decisions |
 | frontend-design | Frontend visual design |
-| gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `core.hooksPath` |
+| gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `-c core.hooksPath=` (turning hooks off beforehand with `git config core.hooksPath` is not caught) |
 | review | Combined-review wrapper |
 | self-improving-agent | Memory auditing and knowledge distillation |
 | task-planner | Feature-increment planning, with the progress table written into the design doc |
