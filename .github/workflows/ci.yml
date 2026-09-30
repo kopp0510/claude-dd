@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:   # 手動在任意分支跑（例如負面測試：gh workflow run CI --ref <分支>）
 
 jobs:
   lint:
@@ -362,3 +363,41 @@ jobs:
           HOME="$SANDBOX" ./install-dd-pipeline.sh --uninstall < /dev/null
           [ -d "$SANDBOX/.claude/skills/code-simplifier" ]
           echo "✅ 非互動 uninstall 預設取消，未誤刪"
+
+  # scripts/CLAUDE.md 要求腳本能在 macOS 內建的 bash 3.2 執行，但上面那個 job 只跑 ubuntu（bash 5），
+  # 3.2 不支援的寫法（${x,,}、declare -A、mapfile…）在那裡照樣全綠。這個 job 用 macOS 的 /bin/bash
+  # 實跑同一批行為測試。公開 repo 的 macOS runner 不計費
+  bash32:
+    name: macOS bash 3.2 行為測試
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 這個 job 存在的理由就是驗 3.2：/bin/bash 哪天不是 3.2 了，後面全綠也不代表驗過
+      - name: 確認 /bin/bash 是 3.2
+        run: |
+          v=$(/bin/bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"')
+          echo "/bin/bash = ${v}"
+          [ "$v" = "3.2" ] || { echo "❌ /bin/bash 不是 3.2，這個 job 驗不到它要驗的東西"; exit 1; }
+
+      # 測試腳本一律用 /bin/bash 明確呼叫（run: 的預設 shell 可能是 Homebrew 的新版 bash）；
+      # 被測的 hook 與 gate 靠 shebang #!/bin/bash 執行，同樣是 3.2
+      - name: error-capture hook 行為測試
+        run: /bin/bash skills/self-improving-agent/hooks/test-error-capture.sh
+
+      - name: gate-guard hook 行為測試
+        run: /bin/bash skills/gate-guard/hooks/test-guard-no-verify.sh
+
+      - name: gate 情境測試
+        run: /bin/bash tests/test-gate.sh
+
+      - name: 安裝腳本 --help 與 --check（sandbox HOME，不得寫入）
+        run: |
+          mkdir -p /tmp/fakebin
+          printf '#!/bin/sh\necho "2.1.200 (Claude Code)"\n' > /tmp/fakebin/claude
+          chmod +x /tmp/fakebin/claude
+          /bin/bash install-dd-pipeline.sh --help > /dev/null
+          SANDBOX="$(mktemp -d)"
+          PATH="/tmp/fakebin:$PATH" HOME="$SANDBOX" /bin/bash install-dd-pipeline.sh --check < /dev/null
+          [ -z "$(ls -A "$SANDBOX")" ]
+          echo "✅ bash 3.2 下 --check 跑完且未寫入任何檔案"

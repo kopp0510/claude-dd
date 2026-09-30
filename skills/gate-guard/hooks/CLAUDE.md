@@ -9,7 +9,7 @@ git 的 `--no-verify` 會跳過 pre-commit hook，gate（`scripts/check-claude-m
 | 檔案 | 用途 |
 |---|---|
 | `guard-no-verify.sh` | hook 本體。stdin 收 hook JSON，取 `tool_input.command`（jq 優先、python3 後備，兩者都沒有就放行），用 awk 做簡化的 shell 斷詞後判斷；命中就印 `permissionDecision: deny` 的 JSON，理由裡指向正式逃生口 `SKIP_DOC_CHECK=1`。一律 exit 0 |
-| `test-guard-no-verify.sh` | 上者的行為測試（CI 會跑）。指令用 jq／python3 組成 JSON，雙引號與換行才不會生出壞 JSON 讓案例假通過。整套跑兩輪（預設 PATH、藏起 jq 逼走 python3），第 3 輪另組只有 `cat`、`awk` 的 PATH 確認放行 —— 不沿用第 2 輪的 PATH，那份在第 2 輪被跳過時是空的，hook 會因為找不到 `cat` 才放行、案例假通過 |
+| `test-guard-no-verify.sh` | 上者的行為測試（CI 會跑）。指令用 jq／python3 組成 JSON，雙引號與換行才不會生出壞 JSON 讓案例假通過。整套跑兩輪（預設 PATH、藏起 jq 逼走 python3），hook 印出任何 stderr 就判失敗（bash 3.2 的 `bad substitution` 常常只印錯誤、結果照舊）；第 3 輪另組只有 `cat`、`awk` 的 PATH 確認放行 —— 不沿用第 2 輪的 PATH，那份在第 2 輪被跳過時是空的，hook 會因為找不到 `cat` 才放行、案例假通過 |
 | `hooks.json` | 註冊 PreToolUse、matcher `Bash`。`command` 必須是 `$HOME/.claude/skills/gate-guard/hooks/...` 絕對路徑（根目錄 CLAUDE.md「Skill hook 路徑規範」，`validate_skill_hooks()` 會擋相對路徑） |
 
 ## 此層約束

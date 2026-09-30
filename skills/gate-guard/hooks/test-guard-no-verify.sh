@@ -24,6 +24,8 @@ fi
 pass=0
 fail=0
 TOOL_PATH="$PATH"   # 第 2 輪換成看不到 jq 的 PATH，逼 hook 走 python3 後備
+ERRF=$(mktemp) || { echo "❌ 建不了暫存檔"; exit 2; }
+trap 'rm -f "$ERRF"' EXIT
 
 # 用 jq／python3 組 JSON，指令裡的雙引號、換行才不會生出壞 JSON（壞 JSON 會讓 hook 靜默放行、案例假通過）
 payload() {
@@ -36,12 +38,20 @@ payload() {
 
 # $1=案例名　$2=block|allow　$3=指令　$4=(選用) 直接給整段 hook 輸入，不用 $3 組
 check() {
-    local name="$1" expect="$2" input out rc got
+    local name="$1" expect="$2" input out rc got err
     input="${4:-$(payload "$3")}"
-    out=$(printf '%s' "$input" | env PATH="$TOOL_PATH" "$HOOK")
+    out=$(printf '%s' "$input" | env PATH="$TOOL_PATH" "$HOOK" 2>"$ERRF")
     rc=$?
     if [ "$rc" -ne 0 ]; then
         printf '%-44s ❌ hook exit=%s（應一律 exit 0）\n' "$name" "$rc"
+        fail=$((fail + 1))
+        return
+    fi
+    # hook 正常時 stderr 一律是空的。bash 3.2 不支援的寫法（例如 ${x,,}）常常只印一行
+    # bad substitution、判斷結果照舊 —— 不看 stderr 的話，macOS 那個 CI job 會照樣全綠
+    err=$(cat "$ERRF")
+    if [ -n "$err" ]; then
+        printf '%-44s ❌ hook 印了 stderr：%s\n' "$name" "$(printf '%s' "$err" | head -1)"
         fail=$((fail + 1))
         return
     fi

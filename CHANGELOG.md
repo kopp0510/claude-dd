@@ -27,6 +27,10 @@
   `git log -n`、commit 訊息內文的 `-n` 都放行。只擋 Claude，使用者自己在終端機打的不擋；全域生效，沒裝 gate 的專案也擋（Claude 本來就不該自己跳過 hook）。
   先用 `git config core.hooksPath` 把 hook 關掉再 commit 的擋不到（改 hooksPath 是正常設定操作，刻意不擋）。
   promoted Skills 因此從 10 個變 11 個；CI 加跑它的行為測試（該擋、該放行各情境，jq 與 python3 兩條分支都跑）
+- **CI 新增 macOS job，用 `/bin/bash` 3.2 實跑行為測試**：腳本規定要能在 macOS 內建的 bash 3.2 執行，但 CI 原本
+  只跑 ubuntu（bash 5），3.2 不支援的寫法在那裡照樣全綠。新 job 跑 error-capture、gate-guard、gate 情境與安裝腳本
+  `--help`／`--check`；gate 情境測試因此從 ci.yml 內嵌搬成 `tests/test-gate.sh`。測試另外把 shell 錯誤訊息判為失敗 ——
+  實測在 gate 加一行 `${staged,,}`，只看結果的話 3.2 下照樣全過。CI 也加上 `workflow_dispatch`，可以手動在任意分支跑
 
 ### Changed
 

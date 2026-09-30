@@ -25,6 +25,11 @@ fail=0
 expect() {  # $1=說明 $2=預期（pass / block） 其餘=指令
   desc="$1"; want="$2"; shift 2
   if "$@" > "$OUT" 2>&1; then got=pass; else got=block; fi
+  # bash 3.2 不支援的寫法常常只印一行錯誤、結果照舊：輸出裡出現 shell 錯誤就算失敗，
+  # 否則 macOS（/bin/bash 3.2）那個 CI job 會照樣全綠
+  if grep -qE 'bad substitution|syntax error|command not found|invalid option|unbound variable' "$OUT"; then
+    echo "❌ ${desc}：輸出裡有 shell 錯誤"; sed 's/^/    /' "$OUT"; fail=1; return
+  fi
   if [ "$got" = "$want" ]; then
     echo "✅ $desc"
   else
