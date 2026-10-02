@@ -87,6 +87,12 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
    promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
+5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：`jq -n --rawfile` 把去掉 frontmatter 的新舊兩份塞成
+   `{名字:{description,prompt}}`，`claude -p --agents <json> --agent <名字> --model opus` 各跑一發，素材挑
+   「後續 commit 已認定真錯誤」的舊 diff（ground truth 現成）。先用 haiku 問一句確認兩個 arm 真的載入不同
+   prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**：2026-10-02 五發實測 api 58–84s、
+   非模型開銷 35–170s，用 wall 做 n=1 比較會得到相反結論。**命中數也要 n≥2**：單發 reviewer 命中的是隨機
+   子集，五發各中 3 項中的 2 項、子集還不同
 
 ## 新增 Command 步驟
 
@@ -161,6 +167,10 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   別跑安裝，驗證完 commit 後再重跑，其他專案才會用到新版
 - 要在 Claude 的 Bash 工具裡取用安裝腳本的函式或陣列，一律 `bash -c 'source ./install-dd-pipeline.sh && validate_skill_hooks'`：
   Bash 工具是 zsh，沒有 `BASH_SOURCE`，腳本尾端的 source guard 會失效，整支安裝直接在真實 `~/.claude` 上跑起來（2026-09-30 踩過）
+- **沙盒用 `claude -p` 測行為前，先 `./install-dd-pipeline.sh --force`**：headless session 載入的是
+  `~/.claude/` 的部署版，不是 repo 這份。2026-10-02 踩過：dd-init 的 rev 跳 5 → 6 後直接去沙盒跑
+  `/dd-init`，它回「含 `dd-loop-rev: 5` → 已是現行版，跳過」—— 那是**舊版的正確行為**，看起來卻像
+  新版判定壞了。部署後重跑才判為舊版並列出 rev 5 缺的兩條
 - 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項
