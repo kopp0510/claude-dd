@@ -125,7 +125,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 的 gate 會逼著更新改碼目錄的 `CLAUDE.md`，那些改動一樣要審 —— gate 只確認「有寫」、不確認「寫得對」。步驟 8 的第一個動作是算範圍，因為 `claude-md-improver` 預設會找出 repo 裡的每一份 `CLAUDE.md`（這裡有個專案就有 87 份）。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出）—— 一段常有好幾個 commit，只看最後一個會漏掉大半。一個例外：專案有 `task-planner` 進度表時，以表上那一列記的起點為準，不用 `--segment-base`。回頭做 `BLOCKED` 過的段落時，`--segment-base` 已經越過你在卡住之前寫的東西，用它會靜靜地把範圍縮小。
 
-三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（含 12 項 Fowler 壞味道基準）、真實環境驗證管行為。
+三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。
 
 **要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落（`S1`、`S2`…），段落裡再列小任務（`S2-1`、`S2-2`…），進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2（實作、驗證、commit，訊息第一行結尾帶編號）；小任務全部 commit 完，整段才跑一次步驟 3–8，跑完才在表上標 `DONE`。規劃先給你批准才寫檔；換 session 或 `/compact` 之後照表接手；卡住或冒出新工作都會停下來問。不用你開口：全域 CLAUDE.md 要求 Claude 在複雜的工作動手前，先在計畫裡寫出「預估 N 個功能段落」，兩段以上就自己叫 `task-planner`。
 
