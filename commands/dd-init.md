@@ -36,7 +36,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 - **補充模式**（CLAUDE.md 已存在）：
   - 無 `## 開發流程` 區塊 → 用 **Edit** 在末尾加入
   - 已含區塊 → **版本檢查**：
-    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 4` → 已是現行版，跳過並告知
+    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 5` → 已是現行版，跳過並告知
     - 含 `6step` / `7step` 標記、有 `8step` 但 rev 比 4 舊（沒有 rev 標記，或 rev 是更早的號碼），或無標記、或缺 code-review 步驟 → 舊版/手寫版：
       列出與現行版的差異（6step 缺步驟 7、8；7step 缺步驟 8；8step 沒有 rev 缺「段落起點」，
       步驟 3、4、8 只看最後一個 commit；rev 1–2 的步驟 8 算範圍用 `status --porcelain` 加 `awk '{print $NF}'`，
@@ -50,7 +50,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 
 ```markdown
 ## 開發流程（每個功能段落依序走）
-<!-- dd-loop-version: 8step；dd-loop-rev: 4；供 /dd-init 判斷是否提議升級，勿刪 -->
+<!-- dd-loop-version: 8step；dd-loop-rev: 5；供 /dd-init 判斷是否提議升級，勿刪 -->
 
 段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好。
 沒印出這行就是沒記好；若是舊版 gate（grep 不到 `--start-segment`），它會照常檢查 staged，印出「commit 已擋下」也不要照著補檔或 commit，
@@ -66,8 +66,12 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 1. **實作功能 + 首輪測試通過**（相關既有測試跑綠 + 基本手動驗證，不可帶紅燈進 commit）
 2. **commit**（第一次 — 保留簡化前還原點）
 3. 跑 **code-simplifier**（對該段新增/修改的程式碼：`git diff <起點>`，官方 agent）
-4. 跑 **code-review**（該段 diff；每段全量跑；修掉 Critical/Important 才續行）
+4. 跑 **code-review**（該段 diff；每段全量跑，例外見下；修掉 Critical/Important 才續行）
    - 範圍要明講給 reviewer：依序跑時 `git diff <起點>` 加上 `git ls-files --others --exclude-standard`（步驟 3 新增、還沒 commit 的檔案 `git diff` 看不到）
+   - prompt 要附上步驟 1（重跑時加步驟 5）已跑過的驗證輸出，明寫「已確認，不要重跑」，否則它會把測試、build、渲染指令整組再跑一遍
+   - 這段沒有「人工寫的程式碼」（diff 全是資料／設定／註解／文件，或改動已被專案的機械檢查完全覆蓋）就不派 agent，
+     改成自己逐條核對、在回報附證據，理由寫進設計文件「段落與小任務」該段底下。
+     判準是**「這段有沒有正確性還沒被機械檢查證明的人工判斷」，不是 diff 多長**
    - 與步驟 3 並行時用 `git diff <起點> HEAD`，並要求 reviewer 一律用 `git show HEAD:<路徑>` 取檔案、不讀工作目錄（simplifier 正在改，讀到一半會被換掉）
    - 發現若是「行為變了，但**無從判定哪個才是預期**」（程式碼、測試、文件都沒寫明語意），**用 AskUserQuestion 把選擇交回使用者**，
      不要自己選一邊也不要讓 reviewer 選。金額、權限、資料保留期這類決定選錯了不會報錯，只會靜靜地錯下去
