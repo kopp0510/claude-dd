@@ -241,10 +241,19 @@
 1. **實作功能 + 首輪測試通過**(相關既有單元/整合測試跑綠 + 基本手動驗證;不可帶紅燈進 commit)
 2. **commit**(第一次 — 保留簡化前還原點)
 3. 跑 **code-simplifier**(官方 agent,只針對該段新增/修改的程式碼:`git diff <起點>`)
-4. 跑 **code-review**(該段 diff;每段全量跑,修掉 Critical/Important 級發現才續行)
+4. 跑 **code-review**(該段 diff;每段全量跑,例外見下;修掉 Critical/Important 級發現才續行)
    - 範圍要明講:依序跑時 `git diff <起點>` 加上 `git ls-files --others --exclude-standard`(步驟 3 新增、
      還沒 commit 的檔案 `git diff` 看不到),並行時 `git diff <起點> HEAD`。沒講的話,本地 code-reviewer agent
      預設只看還沒 staged 的 `git diff`,已 commit 的整段都審不到
+   - **prompt 要附上步驟 1(重跑時加步驟 5)已經跑過的驗證輸出,並明寫「這些已確認,不要重跑」**:
+     沒寫的話它會把你剛跑過的測試、build、渲染指令整組再跑一遍。需要你沒給的輸出時它會列出要查什麼交回來,
+     不會自己擴張範圍(這條寫在 agent 定義的 Scope Discipline)
+   - **這一段沒有「人工寫的程式碼」就不要派 agent**:diff 全是資料、設定、註解或文件,
+     或改動已被專案的機械檢查完全覆蓋(渲染等價比對、round-trip 檢查這類)時,改成自己逐條核對、
+     在回報附證據(可用 `verification-gate` skill),並在進度表的執行紀錄寫明跳過的理由。
+     判準是**「這段有沒有正確性還沒被機械檢查證明的人工判斷」,不是 diff 多長** ——
+     實測一段純機械刪除(有比對腳本逐行保證)的 diff 派了 agent,25 分鐘換到 Critical 0、Important 0;
+     同一個專案裡有新寫腳本的那段,agent 抓到「為了讓檢查轉綠而去改資料、該修的其實是工具」這種自己看不出來的問題
    - 若與步驟 3 的 simplifier **並行**跑,要在 prompt 裡明確要求 reviewer 一律用
      `git show <commit>:<路徑>` 取檔案內容、**不要讀工作目錄** —— simplifier 正在改那些檔案,
      讀到一半底下被換掉會讓整份回報作廢(實際發生過)。行號之後自己重新定位即可
