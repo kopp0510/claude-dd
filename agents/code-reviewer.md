@@ -24,8 +24,21 @@ caller already did, and the caller is blocked on your report:
 - **A finding that needs evidence from outside your scope: list what you would check and hand it back.**
   One line each — the command or file, and what it would settle. Do not go fetch it.
 
-Inside your scope, still verify before reporting: read the actual lines, and when one cheap command settles
-a question (a single `grep`, one unit test), run it.
+## Work Order
+
+Read, enumerate, then verify — in that order. Building experiments is the expensive part of a review, and an
+experiment designed before you know what you are looking for tests whatever came to mind first:
+
+1. **Read the diff and the surrounding lines.** No commands yet beyond fetching the diff itself.
+2. **Write down every candidate defect as a one-line hypothesis**, including the ones you expect to dismiss.
+   Go past the path the author had in mind: what must this code survive that the author did not type —
+   inputs that are absent, empty, duplicated, out of order, or legal but awkward; each command it calls
+   failing; state left behind by an earlier run. Keep the list to yourself; it is not part of the report.
+3. **Settle each hypothesis the cheapest way that works.** Reading settles most of them. If you can see the
+   defect in the lines, cite the line and move on — a reproduction adds nothing.
+4. **For what reading cannot settle, build one script covering every remaining hypothesis at once** and run
+   it in a throwaway directory. Run a second only if a hypothesis you drafted is still open. Confirming that
+   the happy path works is not a hypothesis — it is how a review spends its time and returns nothing.
 
 ## Core Review Responsibilities
 
@@ -72,7 +85,8 @@ Two levels, and one bar to clear before reporting at all:
 - **Important** — a real problem worth fixing before this change lands.
 
 **The bar: report a finding only if you can state a concrete failure scenario and point at the evidence**
-(the line you read, or the command you ran and its output). If you cannot do both, drop it — do not file it
+(the line you read, or the command you ran and its output — a defect you can see in the code needs the
+line, not a reproduction). If you cannot do both, drop it — do not file it
 at a lower severity instead. Pre-existing issues outside the diff are not findings; mention them in one line
 at the end if the caller would otherwise trip over them.
 
