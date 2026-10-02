@@ -242,9 +242,15 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
   `DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
 - **動到 `commands/dd-init.md` 的蓋章區塊（三個反引號圍起來、開頭是 `## 開發流程` 的那一整塊）
-  就必須同步跳 `dd-loop-rev`** — 兩處，用 `grep -n 'dd-loop-rev' commands/dd-init.md` 找
-  （Phase 1 的判定式與蓋章標記；**不要在這裡寫行號**，2026-09-12 才因為同一份檔案加了兩行，
-  讓原本寫的 `:51` 指到 code fence 起始行），外加 `UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊。
+  就必須同步跳 `dd-loop-rev`** — `grep -n 'dd-loop-rev' commands/dd-init.md` 找到的**兩處**
+  （Phase 1 的「已是現行版」判定式與蓋章標記；**不要在這裡寫行號**，2026-09-12 才因為同一份檔案加了兩行，
+  讓原本寫的 `:51` 指到 code fence 起始行），**外加 grep 抓不到的第三處：緊接在後的「舊版/手寫版」判定線
+  「有 `8step` 但 rev 比 N 舊」**（這行不含 `dd-loop-rev` 字串，用 `grep -n 'rev 比' commands/dd-init.md UPGRADING.md` 才找得到，
+  兩檔各一處）。漏改這條會開出一個判定縫隙：舊的現行值既不等於新值（不算現行版）、也不「比舊值舊」（不算舊版），
+  rev 恰好是那個值的專案跑 `/dd-init` 會落在兩條分支之間 —— CI 只驗檔內 `dd-loop-rev` 字串唯一性，
+  看不到寫成「比 N 舊」的那行，照樣綠燈（2026-10-02 rev 4 → 5 時踩過）。
+  同批還要補 `:40` 起那串「列出與現行版的差異」（新增一句「rev N 缺什麼」，不然升級對話框少講這次的差異），
+  以及 `UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊。
   **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊，用
   ``grep -n '^```' commands/dd-init.md | head -2`` 取得起訖行；Phase 0–6 的執行指示在區塊外，
   改它們不必跳 rev。注意上面那個 `dd-loop-rev` 的 grep **不能**拿來夾範圍 ——
