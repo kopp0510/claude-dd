@@ -255,21 +255,29 @@ jobs:
           fi
           revs=$(grep -oE 'dd-loop-rev: [0-9]+' commands/dd-init.md | sort -u | tr '\n' ' ')
           [ "$(printf '%s' "$revs" | wc -w | tr -d ' ')" -eq 2 ] || { echo "❌ dd-init.md 裡的 dd-loop-rev 不只一種（或一個都沒有）：${revs}"; fail=1; }
-          # 判定線「有 8step 但 rev 比 N 舊」的 N 必須等於現行 rev（dd-init.md 與 UPGRADING.md 各一處）。
+          # 「舊版/手寫版」判定線寫的 rev 必須等於現行 rev（dd-init.md 與 UPGRADING.md 各一處）。
           # 這兩行不含 dd-loop-rev 字串，上面那道唯一性檢查看不到：只跳標記不跳判定線的話，
           # 舊的現行值既不等於新值（不算現行版）、也不比舊值舊（不算舊版），跑 /dd-init 會落在兩條分支之間
-          # —— 2026-10-02 rev 4 → 5 時踩過，當時 CI 全綠
+          # —— 2026-10-02 rev 4 → 5 時踩過，當時 CI 全綠。
+          # 錨在分支標籤（舊版/手寫版、判定為舊版）而不是「rev 比 N 舊」這個措辭：
+          # 措辭跟著 N 一起被改掉是真實情境，盯措辭的版本只會喊「抓不到」而放過數字錯誤
           cur_rev=$(grep -oE 'dd-loop-rev: [0-9]+' commands/dd-init.md | head -1 | awk '{print $2}')
-          gates=$(grep -hoE 'rev 比 [0-9]+ 舊' commands/dd-init.md UPGRADING.md || true)
-          if [ -z "$gates" ]; then
-            echo "❌ 抓不到「rev 比 N 舊」判定線（措辭改了的話，這裡的 regex 要跟著改）"; fail=1
-          else
-            n_gate=$(printf '%s\n' "$gates" | wc -l | tr -d ' ')
-            [ "$n_gate" -eq 2 ] || { echo "❌「rev 比 N 舊」判定線抓到 ${n_gate} 處，應為 2（dd-init.md 與 UPGRADING.md 各一）"; fail=1; }
-            bad=$(printf '%s\n' "$gates" | awk -v cur="$cur_rev" '$3 != cur' | tr '\n' ' ' | sed 's/ *$//')
-            [ -z "$bad" ] || { echo "❌ 判定線寫的是「${bad}」，現行 rev 是 ${cur_rev} — 不符會讓前一版的 rev 落在判定縫隙"; fail=1; }
-          fi
-          [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記與 dd-loop-rev（含「rev 比 N 舊」判定線）都對得上"
+          rev_on_line() {  # $1=檔案 $2=分支標籤 regex：取該行 rev 之後的第一個數字
+            grep -E "$2" "$1" | head -1 | awk '{ if (match($0,/rev[^0-9]*[0-9]+/)) { s=substr($0,RSTART,RLENGTH); gsub(/[^0-9]/,"",s); print s } }'
+          }
+          for spec in "commands/dd-init.md:舊版/手寫版" "UPGRADING.md:判定為舊版"; do
+            f="${spec%%:*}"; label="${spec##*:}"
+            if ! grep -qE "$label" "$f"; then
+              echo "❌ ${f} 抓不到「${label}」那行（分支標籤改了的話，這裡的 regex 要跟著改）"; fail=1; continue
+            fi
+            got=$(rev_on_line "$f" "$label")
+            if [ -z "$got" ]; then
+              echo "❌ ${f} 的「${label}」那行沒寫 rev 號碼 — 判定線少了版本界線，所有已蓋章專案都會被判成舊版"; fail=1
+            else
+              [ "$got" = "$cur_rev" ] || { echo "❌ ${f} 的判定線寫 rev ${got}，現行 rev 是 ${cur_rev} — 不符會讓 rev ${cur_rev} 之前那一版落在判定縫隙"; fail=1; }
+            fi
+          done
+          [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記與 dd-loop-rev（含舊版判定線的 rev）都對得上"
           exit $fail
 
       - name: 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要）
