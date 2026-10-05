@@ -79,7 +79,7 @@ CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「未發布」）。
 1. 先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。舊版 gate 不認得 `--start-segment`：
    沒有 staged 時什麼都不印；有 staged 程式碼時會照常檢查、印出「commit 已擋下」—— 那不是真的要你補檔，
    不要照著做，先更新 gate
-2. 到專案跑 `/dd-init` — 區塊標記是 `8step` 但 rev 比 6 舊的，會被判定為舊版並詢問是否升級。
+2. 到專案跑 `/dd-init` — 區塊標記是 `8step` 但 rev 比 7 舊的，會被判定為舊版並詢問是否升級。
    **這一步不能省**：專案 CLAUDE.md 的優先序高於全域 CLAUDE.md，舊區塊「只看最後一個 commit」的寫法
    會蓋過全域模板的新寫法
 3. **第一個功能段落開始前，自己跑一次 `~/.claude/scripts/check-claude-md.sh --start-segment`。**
