@@ -281,6 +281,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   寫進了已發布的 `## 1.2.0`；`git diff` 只看得到「CHANGELOG 多了幾行」，當時所有檢查都綠。
   **拿腳本改 Markdown 區塊時改用「錨在標題字串」而不是行號／索引**（`L.index('### Changed')` 會抓到
   第一個，整份檔案有好幾個同名小節時要先切出目標版本區塊再找）
+- **ci.yml 的 `run: |` 是 YAML block scalar，裡面不能用 heredoc**：`EOF` 寫在第 0 欄會提早結束 scalar、
+  整份 YAML 壞掉（縮排到 block 內才算內容）。要把多行餵給 `while` 就先寫檔再 `done < 檔案`，順便避開
+  `grep ... | while` 的 subshell 把 `fail=1` 丟掉（那種壞法是靜默變綠）。改完先驗 YAML：本機沒有 pyyaml，
+  用 `ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'`（macOS 內建 ruby 有；
+  `python3 -c "import yaml"` 會 ModuleNotFoundError），不然要等 push 才知道
 - **新增 `.github/workflows/ci.yml` 的檢查 step 必做負面測試**：故意把被檢查的來源改壞一行，
   確認該 step 真的紅燈，再還原確認回綠。`scripts/CLAUDE.md` 只對 gate 訂了這條規矩、
   ci.yml 其他 step 沒有 — 而 2026-09-12 新增的兩道護欄，修的正是「抓 0 筆卻印綠燈」。
