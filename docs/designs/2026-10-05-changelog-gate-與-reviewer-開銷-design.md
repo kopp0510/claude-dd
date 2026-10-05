@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|
 | S1 | CHANGELOG 已發布區塊防線 | DONE | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678..effb51a |
 | S2 | 查清 code-reviewer 慢在哪 | DONE | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | 788b6cb..5130cfe |
-| S3 | CI 列檔案補 quotePath | IN_PROGRESS | — | 建一個中文檔名的 .md、裡面故意寫錯步數 → 第五方檢查要紅燈（現在是靜默跳過、exit 0） | 03e27b3.. |
+| S3 | CI 列檔案補 quotePath | DONE | — | 建一個中文檔名的 .md、裡面故意寫錯步數 → 第五方檢查要紅燈（現在是靜默跳過、exit 0） | 03e27b3..685064b |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
