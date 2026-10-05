@@ -2,6 +2,8 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
+進度以 docs/designs/2026-10-05-changelog-gate-與-reviewer-開銷-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
+
 ## 安裝 / 更新
 
 ```bash
@@ -42,6 +44,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
   （改來源再重出，勿手改 GIF）。
   三層架構圖於 2026-08-31 移除 — 它畫的是目錄清單而非架構，資訊都在
   `DD_PIPELINE_ARCHITECTURE.md` 的文字版裡，還多一份圖要維護
+- `docs/` — `designs/` 放 task-planner 的段落進度表、`measurements/` 放實測原始數字；**不部署**
 - `tests/` — CI 在 ubuntu 與 macOS（bash 3.2）都跑的測試：gate 情境 `test-gate.sh`、安裝端到端 `test-install.sh`；**不部署**，也不在 `scripts/*.sh` 那個 glob 內
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
 
