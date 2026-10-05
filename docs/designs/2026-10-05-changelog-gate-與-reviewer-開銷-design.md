@@ -77,7 +77,8 @@ checkout 改成 `fetch-depth: 0`，否則這個檢查在 CI 永遠走到「抓�
     記 wall、`duration_api_ms`、非模型開銷、工具呼叫數、cost
   - 驗證：jsonl 原始數字貼進文件，數字自己重算一次（不抄 agent 自述）
   - commit：`docs: 量測 reviewer 的派送開銷（S2-1）`
-- **S2-2 依結論更新規則**
+- **S2-2 依結論更新規則**（另含 S1 留下的待辦：`commands/dd-init.md` 蓋章版仍寫「並行派時 wall 約等於較慢那一發（未實測的推論）」，
+  模板已改成實測值，這句要一起改掉，跟 S2 的 rev 跳號併成一次）
   - 檔案：`templates/global/CLAUDE.md` §3.9 步驟 4；**若動到 `/dd-init` 蓋章區塊就要跳 `dd-loop-rev` 7**，
     連動 Phase 1 判定式、蓋章標記、「rev 比 N 舊」判定線、差異清單、`UPGRADING.md`、CHANGELOG 未發布
   - 驗證：重跑「迴圈步數四方一致」（含 rev）與「第五方」
