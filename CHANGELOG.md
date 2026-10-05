@@ -18,6 +18,16 @@
 
 ## 未發布
 
+
+### Changed
+
+- **步驟 4 加一條「想讓它快就界定探索預算」（`dd-loop-rev` 6 → 7）**：使用者問「code-reviewer 還會卡很久嗎」，
+  這輪把派送方式真的量了。同一份 prompt、同一個 model、同一份素材，Task 派出的 subagent 要 223/257s，
+  同一個 agent 當 headless session 跑只要 115/125s，而**派送管線本身只佔 ~25s**（整體 wall 減掉 subagent 自己的 duration）。
+  真正決定時間的是它跑幾次工具：3–5 次 = 2–4 分鐘；同一天 S1 段落那兩發 21/26 次 = 13–17 分鐘，而且 diff 還更小 ——
+  差別在問題開放到什麼程度（問「在真實 CI 環境會不會失效」，它就去抓上游原始碼、開 docker 用 mawk 重跑）。
+  原始數字與限制在 `docs/measurements/2026-10-05-reviewer-overhead.md`（subagent 為什麼慢一倍沒查出來，jsonl 沒給它的 api 時間）。
+  同批把「並行派時 wall 約等於較慢那一發」從「未實測的推論」改成實測值（781s 與 1007s，整體 ~1007s）
 ### Added
 
 - **CI 新增「CHANGELOG 已發布區塊不可改動」**：新條目被寫進已發布的版本區塊時，`git diff` 看起來正常、
