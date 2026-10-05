@@ -106,6 +106,14 @@ awk 開不了檔，**而該 step 照樣 exit 0** —— 任何中文檔名的 .m
   - 驗證：重跑「數字宣稱一致性」與「CHANGELOG 已發布區塊不可改動」
   - commit：`docs: 記下 ci.yml 列檔案也要 quotePath（S3-2）`
 
+### S3 跳過步驟 3、4 的理由
+
+功能改動只有一行（`git ls-files` 前面加 `-c core.quotePath=false`）加兩行註解，正確性由負面測試機械證明：
+修前 exit 0 且 awk 2 個檔開不了 → 修後 exit 1 並指名 `docs/測試-步數-temp.md:2` 且 0 個開不了 → 刪掉測試檔回綠。
+reviewer 會問的「還有沒有別的列檔指令漏掉」自己查過：`ci.yml` 只剩 `ls commands/dd-*.md`（shell glob，不經 git，
+沒有這個問題），`scripts/*.sh` 與 `tests/*.sh` 的列檔指令都已經走 `gitq`。
+步驟 5 重測：7 個 CI step 全綠、`tests/test-gate.sh` 61 個情境全過、YAML 解析正常。
+
 ### S2 跳過步驟 3、4 的理由
 
 S2 的 diff 全是文件：新增 `docs/measurements/2026-10-05-reviewer-overhead.md`、規則文案（模板 §3.9 步驟 4、
