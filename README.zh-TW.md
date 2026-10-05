@@ -29,6 +29,7 @@ cd claude-dd && ./install-dd-pipeline.sh
 - **8 步開發迴圈** — 每個功能段落必走：實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit → 沉澱本輪所學 → 評分&修正
 - **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
 - **零幻覺政策** — 涉及 API 簽名、版本號、專案事實時必須標註來源；「應該是」「大概」等模糊詞列為禁用
+- **少停下來問** — 能復原的步驟直接做（含本機 commit、跑既有測試），只在破壞性操作、改變範圍、缺你才能給的資訊時才停；push 一律留給你
 - **Skill 觸發顯性化** — 該觸發卻不觸發時必須寫出一行具體理由，讓「跳過」從黑箱變成可稽核紀錄
 - **使用率盤點制** — 只保留有實證使用紀錄的元件並全數預設部署，避免閒置 skill 吃 context
 - **全域 CLAUDE.md 模板** — 上述守則的單一來源，互動式比對部署到 `~/.claude/CLAUDE.md`（`--force` 則直接覆蓋，舊版自動備份）
