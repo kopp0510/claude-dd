@@ -379,7 +379,9 @@ jobs:
             found=1; where="${hit%%|*}"; got="${hit##*|}"
             if [ "$got" = "$n" ]; then echo "✅ 箭頭摘要 ${where}：$got 段"
             else echo "❌ ${where} 的箭頭摘要是 $got 段，應為 $n 段"; fail=1; fi
-          done < <(git ls-files '*.md' '*.sh' | grep -vE '^(CHANGELOG|UPGRADING)\.md$' \
+          # -c core.quotePath=false：git 預設把非 ASCII 路徑轉成 "\350\210\207" 這種跳脫字串，
+          # awk 開不了那個檔名、而這個 step 照樣 exit 0 —— 中文檔名的 .md 會被整個靜默跳過（2026-10-05 踩過）
+          done < <(git -c core.quotePath=false ls-files '*.md' '*.sh' | grep -vE '^(CHANGELOG|UPGRADING)\.md$' \
             | while IFS= read -r f; do
                 awk -v F="$f" '
                   function flush(  c) {

@@ -9,6 +9,7 @@
 |---|---|---|---|---|---|
 | S1 | CHANGELOG 已發布區塊防線 | DONE | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678..effb51a |
 | S2 | 查清 code-reviewer 慢在哪 | DONE | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | 788b6cb..5130cfe |
+| S3 | CI 列檔案補 quotePath | IN_PROGRESS | — | 建一個中文檔名的 .md、裡面故意寫錯步數 → 第五方檢查要紅燈（現在是靜默跳過、exit 0） | 03e27b3.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -87,6 +88,23 @@ checkout 改成 `fetch-depth: 0`，否則這個檢查在 CI 永遠走到「抓�
 ### 測試清單（使用者批准）
 
 不新增測試檔。S1 的「測試」就是 ci.yml 那個新 step 本身，加上上面六個負面變異的手動驗證；S2 是量測，無測試。
+
+### S3 CI 列檔案補 `core.quotePath=false`
+
+S2 的步驟 8 實跑時撞到：`.github/workflows/ci.yml` 的「迴圈步數第五方」用 `git ls-files '*.md' '*.sh'` 列檔案，
+沒有 `-c core.quotePath=false`，含非 ASCII 的檔名回來是八進位跳脫字串（`"docs/…-\350\210\207-…"`），
+awk 開不了檔，**而該 step 照樣 exit 0** —— 任何中文檔名的 .md／.sh 都被那道檢查靜默跳過。
+`ci.yml` 裡只有這一處列檔案（`grep -n "git ls-files|git diff --name-only"` 僅 1 筆）。
+
+- **S3-1 修 ci.yml 並加負面測試**
+  - 檔案：`.github/workflows/ci.yml`（第五方那個 step 的 `git ls-files` 加 `-c core.quotePath=false`）
+  - 驗證：①修前：建一個中文檔名的 .md，裡面放一行步數寫錯的箭頭摘要 → 該 step **exit 0**（複現靜默跳過）
+    ②修後：同一個檔 → **exit 1 並指名該檔** ③刪掉測試檔後 → 回綠 ④確認 awk 不再印 can't open file
+  - commit：`fix: CI 列檔案補 core.quotePath=false，中文檔名原本被靜默跳過（S3-1）`
+- **S3-2 文件同步**
+  - 檔案：`CLAUDE.md`（quotePath 這個坑現在也適用於 ci.yml 的列檔指令）、`CHANGELOG.md` 未發布
+  - 驗證：重跑「數字宣稱一致性」與「CHANGELOG 已發布區塊不可改動」
+  - commit：`docs: 記下 ci.yml 列檔案也要 quotePath（S3-2）`
 
 ### S2 跳過步驟 3、4 的理由
 
