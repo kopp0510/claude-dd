@@ -88,6 +88,19 @@ checkout 改成 `fetch-depth: 0`，否則這個檢查在 CI 永遠走到「抓�
 
 不新增測試檔。S1 的「測試」就是 ci.yml 那個新 step 本身，加上上面六個負面變異的手動驗證；S2 是量測，無測試。
 
+### S2 跳過步驟 3、4 的理由
+
+S2 的 diff 全是文件：新增 `docs/measurements/2026-10-05-reviewer-overhead.md`、規則文案（模板 §3.9 步驟 4、
+`/dd-init` 蓋章版）、`dd-loop-rev` 6 → 7 的四處連動、`UPGRADING.md`、`CHANGELOG.md`、`CLAUDE.md` 一行。
+沒有任何人工寫的程式碼，照步驟 4 的「這一段沒有人工寫的程式碼就不要派 agent」改成自己核對並附證據：
+
+- rev 跳號的四處連動：CI 的「迴圈步數四方一致（含 dd-loop-rev 與舊版判定線的 rev）」exit 0
+- 文件數字宣稱：「數字宣稱一致性」exit 0；步數文案：「迴圈步數第五方」exit 0
+- CHANGELOG 條目位置：這段自己新加的那道「CHANGELOG 已發布區塊不可改動」exit 0
+- 行為驗證（步驟 5）：部署後在沙盒用 rev 6 的蓋章區塊跑 `/dd-init` → 正確判為舊版、列出步驟 4 的兩處差異、
+  停在升級確認（sonnet，US$0.22，0 denials）
+- 量測文件裡的每個數字都從 jsonl 重算過，不抄 agent 自述
+
 ### S1 的實測紀錄（供 S2 參考，不是 S2 的結論）
 
 步驟 3、4 這次是用 Task 派 subagent 跑的，harness 回報的數字：
