@@ -11,7 +11,11 @@ jobs:
     name: 安裝腳本檢查
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 —— 「CHANGELOG 已發布區塊」那個 step 要 git show <tag>:，
+      # shallow clone 連一個 tag 都沒有（2026-10-05 實測 `git clone --depth 1` 後 `git tag` 為空）
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Bash 語法檢查
         run: bash -n install-dd-pipeline.sh
@@ -158,6 +162,40 @@ jobs:
             "$(grep -oE "[0-9]+ 支腳本" DD_PIPELINE_ARCHITECTURE.md | grep -oE "^[0-9]+")" \
             "$(awk '/shellcheck -S warning/,/^$/' .github/workflows/ci.yml \
                | grep -cE '(\.sh|pre-commit)( \\)?$')"
+          exit $fail
+
+      - name: CHANGELOG 已發布區塊不可改動（防條目插進舊版本）
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "❌ 抓不到任何 tag —— checkout 要設 fetch-depth: 0，shallow clone 沒有 tag，這個檢查會整個失效"
+            exit 1
+          fi
+          git show "$tag:CHANGELOG.md" > /tmp/changelog-tagged.md
+          # 已發布區塊 = 標題為 `## <x.y.z>`；`## 未發布` 不受限制
+          # 先確認抓到東西非空、再往下用（零命中時 grep 回 1，看起來會像「檢查跑完沒事」）
+          grep -E '^## [0-9]+\.[0-9]+\.[0-9]+' /tmp/changelog-tagged.md > /tmp/changelog-headings.txt || true
+          if [ ! -s /tmp/changelog-headings.txt ]; then
+            echo "❌ $tag 的 CHANGELOG 找不到任何版本標題 —— 檢查自己壞了，不是被檢查的檔案乾淨"
+            exit 1
+          fi
+          block() { awk -v h="$2" 'index($0,h)==1{f=1;print;next} f&&/^## /{exit} f' "$1"; }
+          fail=0
+          while IFS= read -r h; do
+            if ! grep -qF "$h" CHANGELOG.md; then
+              echo "❌ 已發布區塊消失：$h"
+              fail=1
+              continue
+            fi
+            if diff <(block /tmp/changelog-tagged.md "$h") <(block CHANGELOG.md "$h") > /tmp/changelog-diff.txt; then
+              echo "✅ $h 與 $tag 一致"
+            else
+              echo "❌ 已發布區塊被改動：$h"
+              echo "   新條目要寫進『## 未發布』；已發布的版本區塊不可再動（要改就發新版）"
+              sed 's/^/   /' /tmp/changelog-diff.txt | head -12
+              fail=1
+            fi
+          done < /tmp/changelog-headings.txt
           exit $fail
 
       - name: 安裝 flag 三方對照（README ↔ --help ↔ 腳本 case 分支）

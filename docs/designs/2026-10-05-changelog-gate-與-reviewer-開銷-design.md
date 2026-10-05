@@ -7,7 +7,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | CHANGELOG 已發布區塊防線 | TODO | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | |
+| S1 | CHANGELOG 已發布區塊防線 | IN_PROGRESS | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678.. |
 | S2 | 查清 code-reviewer 慢在哪 | TODO | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -50,7 +50,9 @@
 
 ### S1 CHANGELOG 已發布區塊防線
 
-**開工前提**：確認 `git describe --tags --abbrev=0` 在 CI 的 clone 條件下拿得到 `v1.3.0`（shallow clone 沒有 tag）。
+**開工前提（已查，2026-10-05）**：實測 `git clone --depth 1 file://<repo>` 之後 `git tag` 為 0 筆、
+`git describe --tags --abbrev=0` 直接 `fatal: No names found`。所以 S1-1 必須同批把第一個 job 的
+checkout 改成 `fetch-depth: 0`，否則這個檢查在 CI 永遠走到「抓不到 tag」那條。
 
 - **S1-1 新增 ci.yml 檢查 step**
   - 檔案：`.github/workflows/ci.yml`（新 step + 第一個 job 的 checkout 加 `fetch-depth: 0`）
