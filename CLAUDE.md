@@ -2,8 +2,6 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
-進度以 docs/designs/2026-10-05-changelog-gate-與-reviewer-開銷-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
-
 ## 安裝 / 更新
 
 ```bash
