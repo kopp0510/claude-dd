@@ -8,7 +8,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | CHANGELOG 已發布區塊防線 | DONE | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678..effb51a |
-| S2 | 查清 code-reviewer 慢在哪 | TODO | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | |
+| S2 | 查清 code-reviewer 慢在哪 | IN_PROGRESS | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | 788b6cb.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
