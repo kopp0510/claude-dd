@@ -117,6 +117,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 | gate-guard hook 行為測試（`test-guard-no-verify.sh`） | 該擋的 `git commit --no-verify`／`-n`／`core.hooksPath` 沒擋（零輸出 exit 0，跟「沒人繞過」長得一樣），或誤擋 `git config core.hooksPath`、`git log -n`、訊息內文的 `-n`；jq 與 python3 兩條分支都跑 |
 | 陣列 ↔ 目錄一致性（`ALL_*` 四組 + `DD_SCRIPTS ↔ scripts/*.sh`） | 陣列漏列 / 目錄改名未同步 / 新腳本沒進部署清單 |
 | 數字宣稱 ↔ 陣列（README 英/繁中兩份 + 根目錄 CLAUDE.md + **本文件**） | 文件數字過期。本文件涵蓋元件數、安裝編號步驟數、shellcheck 腳本數 |
+| CHANGELOG 已發布區塊不可改動（逐 `## <x.y.z>` 區塊比對最近 tag） | 新條目被寫進已發布的版本區塊 —— `git diff` 看起來正常、其他檢查全綠，發版時會被算進錯的版本（2026-10-05 踩過：插入腳本索引差一位，兩條本輪變更進了 `## 1.2.0`）。需要 `fetch-depth: 0`，shallow clone 一個 tag 都沒有，抓不到 tag 時這個 step 直接失敗、不靜默放過 |
 | 安裝 flag 三方對照（case 分支 ↔ `--help` ↔ 兩份 README） | flag 名稱三方漂移（只驗名稱，語意描述仍手動維護） |
 | §7.2 觸發目標部署驗證（含抓不到與漏反引號兩道護欄） | 全域模板指向未部署元件；章節重編號或某列漏反引號讓這道檢查靜默失效 |
 | 迴圈步數四方一致（模板 §3.9 ↔ 蓋章版 ↔ 兩份 README ↔ 版本標記） | 編號清單的步數漂移；另驗 `dd-loop-rev` 的標記格式、檔內唯一性，以及舊版判定線（dd-init.md 與 UPGRADING.md 各一處）寫的 rev 等於現行 rev —— 那兩行不含 `dd-loop-rev` 字串，唯一性檢查看不到。錨在分支標籤而非措辭，改寫句子不會讓它失效 |
