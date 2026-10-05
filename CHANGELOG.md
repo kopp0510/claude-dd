@@ -21,6 +21,10 @@
 
 ### Changed
 
+- **CI 的「迴圈步數第五方」列檔案補 `core.quotePath=false`**：git 預設把非 ASCII 路徑轉成八進位跳脫字串，
+  `awk` 開不了那個檔名、而該 step 照樣 exit 0 —— 中文檔名的 `.md`／`.sh` 被整道檢查靜默跳過。
+  2026-10-05 新增一份中文檔名的設計文件後撞到：裡面放一行步數寫錯的箭頭摘要，修前 exit 0（2 個檔開不了），
+  修後 exit 1 並指名該檔。gate 腳本早有這條規矩，當時沒推廣到 ci.yml
 - **步驟 4 加一條「想讓它快就界定探索預算」（`dd-loop-rev` 6 → 7）**：使用者問「code-reviewer 還會卡很久嗎」，
   這輪把派送方式真的量了。同一份 prompt、同一個 model、同一份素材，Task 派出的 subagent 要 223/257s，
   同一個 agent 當 headless session 跑只要 115/125s，而**派送管線本身只佔 ~25s**（整體 wall 減掉 subagent 自己的 duration）。

@@ -296,6 +296,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `grep ... | while` 的 subshell 把 `fail=1` 丟掉（那種壞法是靜默變綠）。改完先驗 YAML：本機沒有 pyyaml，
   用 `ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'`（macOS 內建 ruby 有；
   `python3 -c "import yaml"` 會 ModuleNotFoundError），不然要等 push 才知道
+- **ci.yml 裡任何「列出檔案再逐檔處理」的指令都要 `git -c core.quotePath=false`**：git 預設把非 ASCII 路徑
+  轉成 `"docs/…-\350\210\207-…"` 這種跳脫字串，`awk`／`grep` 拿它當檔名開不了，**而 step 照樣 exit 0** ——
+  那個檔就被整道檢查靜默跳過。2026-10-05 踩過：「迴圈步數第五方」的 `git ls-files '*.md' '*.sh'` 少了它，
+  新增一份中文檔名的設計文件後，裡面步數寫錯也不會被擋（實測修前 exit 0、修後 exit 1 並指名該檔）。
+  gate 腳本早就有這條規矩（`scripts/CLAUDE.md`），但當時沒有推廣到 ci.yml
 - **新增 `.github/workflows/ci.yml` 的檢查 step 必做負面測試**：故意把被檢查的來源改壞一行，
   確認該 step 真的紅燈，再還原確認回綠。`scripts/CLAUDE.md` 只對 gate 訂了這條規矩、
   ci.yml 其他 step 沒有 — 而 2026-09-12 新增的兩道護欄，修的正是「抓 0 筆卻印綠燈」。
