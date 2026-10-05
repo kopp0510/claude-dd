@@ -44,7 +44,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
   （改來源再重出，勿手改 GIF）。
   三層架構圖於 2026-08-31 移除 — 它畫的是目錄清單而非架構，資訊都在
   `DD_PIPELINE_ARCHITECTURE.md` 的文字版裡，還多一份圖要維護
-- `docs/` — `designs/` 放 task-planner 的段落進度表、`measurements/` 放實測原始數字；**不部署**
+- `docs/` — `designs/` 放 task-planner 的段落進度表（`measurements/` 放實測原始數字，由該段落建立時才出現）；**不部署**
 - `tests/` — CI 在 ubuntu 與 macOS（bash 3.2）都跑的測試：gate 情境 `test-gate.sh`、安裝端到端 `test-install.sh`；**不部署**，也不在 `scripts/*.sh` 那個 glob 內
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
 
@@ -276,7 +276,9 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   UPGRADING.md 那份 CI 根本不看。2026-09-12 踩過：同一輪前面已有一個 commit 動過蓋章區塊沒跳號，
   靠 code-review 才抓到
 - **CHANGELOG 條目一律寫進 `## 未發布`，已發布的版本區塊不可再動**（連錯字也不行，要改就發新版）——
-  CI 的「CHANGELOG 已發布區塊不可改動」會逐 `## <x.y.z>` 區塊比對最近 tag 並擋下。
+  CI 的「CHANGELOG 已發布區塊不可改動」以最新的 `v*` tag 為基準三道擋下：逐 `## <x.y.z>` 區塊比對、
+  從 tag 裡最新的版本標題到檔尾逐字相同（這道才擋得住「新標題插進區塊之間」與「區塊順序對調」）、
+  以及「與 tag 有差異卻既沒有 `## 未發布` 也沒有新版本區塊」。
   2026-10-05 踩過：用腳本插條目時索引差一位（`n>=36` 跳過 0-based 35 的 `### Changed`），兩條本輪變更
   寫進了已發布的 `## 1.2.0`；`git diff` 只看得到「CHANGELOG 多了幾行」，當時所有檢查都綠。
   **拿腳本改 Markdown 區塊時改用「錨在標題字串」而不是行號／索引**（`L.index('### Changed')` 會抓到

@@ -7,7 +7,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | CHANGELOG 已發布區塊防線 | IN_PROGRESS | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678.. |
+| S1 | CHANGELOG 已發布區塊防線 | DONE | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678..effb51a |
 | S2 | 查清 code-reviewer 慢在哪 | TODO | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -87,3 +87,17 @@ checkout 改成 `fetch-depth: 0`，否則這個檢查在 CI 永遠走到「抓�
 ### 測試清單（使用者批准）
 
 不新增測試檔。S1 的「測試」就是 ci.yml 那個新 step 本身，加上上面六個負面變異的手動驗證；S2 是量測，無測試。
+
+### S1 的實測紀錄（供 S2 參考，不是 S2 的結論）
+
+步驟 3、4 這次是用 Task 派 subagent 跑的，harness 回報的數字：
+
+| 派出的 agent | duration | tool_uses | tokens |
+|---|---|---|---|
+| code-simplifier | 493s | 13 | 91k |
+| code-reviewer 第一發 | 781s | 21 | 107k |
+| code-reviewer 第二發 | 1007s | 26 | 119k |
+
+兩個 reviewer 同一則訊息派出，整體 wall ≈ 1007s（較慢那一發），證實了「並行派 wall 約等於較慢那發」。
+對照上個 session 的 headless `claude -p --agent`：審 231 行 diff 只要 93–258s、`duration_api_ms` 58–84s。
+S1 的 diff 只有 49 行卻花了 8–17 分 —— S2 要測的就是這個落差。
