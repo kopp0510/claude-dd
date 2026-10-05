@@ -166,9 +166,15 @@ jobs:
 
       - name: CHANGELOG 已發布區塊不可改動（防條目插進舊版本）
         run: |
-          tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          # 用 --sort=-v:refname 取最新的版本 tag：`git describe --abbrev=0` 取的是「最近」，
+          # repo 還留著 pre-prune-* 這類非版本 tag，解到它身上就沒有 CHANGELOG.md 可比
+          tag=$(git tag --list 'v*' --sort=-v:refname | head -1)
           if [ -z "$tag" ]; then
-            echo "❌ 抓不到任何 tag —— checkout 要設 fetch-depth: 0，shallow clone 沒有 tag，這個檢查會整個失效"
+            echo "❌ 找不到任何 v* tag —— 可能是 checkout 沒設 fetch-depth: 0（shallow clone 不帶 tag），或 tag 還沒推上來"
+            exit 1
+          fi
+          if ! git cat-file -e "$tag:CHANGELOG.md" 2>/dev/null; then
+            echo "❌ $tag 裡沒有 CHANGELOG.md —— 這個檢查沒有基準可比（否則 git show 會以 exit 128 的原始 fatal 中止）"
             exit 1
           fi
           git show "$tag:CHANGELOG.md" > /tmp/changelog-tagged.md
@@ -181,6 +187,8 @@ jobs:
           fi
           block() { awk -v h="$2" 'index($0,h)==1{f=1;print;next} f&&/^## /{exit} f' "$1"; }
           fail=0
+          # 用重新導向餵 while，不要改成 grep ... | while：管線會起 subshell，
+          # fail=1 傳不出來，區塊被改動了這個 step 還是綠的
           while IFS= read -r h; do
             if ! grep -qF "$h" CHANGELOG.md; then
               echo "❌ 已發布區塊消失：$h"
@@ -196,6 +204,30 @@ jobs:
               fail=1
             fi
           done < /tmp/changelog-headings.txt
+          # 逐區塊比對看不到「區塊之間被插進新標題」與「區塊順序被對調」—— 終止行自己不在比對範圍裡。
+          # 所以再釘尾段：從 tag 裡最新的版本標題到檔尾必須逐字相同（新版本與未發布都排在它之上，不受限）
+          newest=$(head -1 /tmp/changelog-headings.txt)
+          tail_from() { awk -v h="$2" 'index($0,h)==1{f=1} f' "$1"; }
+          tail_from /tmp/changelog-tagged.md "$newest" > /tmp/cl-tail-old.txt
+          tail_from CHANGELOG.md "$newest" > /tmp/cl-tail-new.txt
+          if diff /tmp/cl-tail-old.txt /tmp/cl-tail-new.txt > /tmp/changelog-diff.txt; then
+            echo "✅ $newest 以下到檔尾與 $tag 逐字相同（順序與區塊邊界都沒被插東西）"
+          else
+            echo "❌ $newest 以下被改動 —— 可能是新標題插進版本區塊之間、區塊順序被動，或檔尾被追加"
+            sed 's/^/   /' /tmp/changelog-diff.txt | head -12
+            fail=1
+          fi
+          # 剛發完版時沒有『## 未發布』（發版步驟要求不留空區塊），插入腳本少了那個錨點，
+          # 條目很容易落在前言或最新版本標題正上方 —— 那兩處都在上面兩道比對的範圍之外
+          grep -E '^## [0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md > /tmp/cl-headings-new.txt || true
+          new_versions=$(grep -vxFf /tmp/changelog-headings.txt /tmp/cl-headings-new.txt || true)
+          if ! diff -q /tmp/changelog-tagged.md CHANGELOG.md > /dev/null; then
+            if [ -z "$new_versions" ] && ! grep -q '^## 未發布' CHANGELOG.md; then
+              echo "❌ CHANGELOG 與 $tag 有差異，卻既沒有『## 未發布』區塊、也沒有新的版本區塊"
+              echo "   新條目要放在『## 未發布』底下（發版時才把它改成版本標題）"
+              fail=1
+            fi
+          fi
           exit $fail
 
       - name: 安裝 flag 三方對照（README ↔ --help ↔ 腳本 case 分支）
