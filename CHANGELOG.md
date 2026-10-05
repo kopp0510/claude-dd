@@ -16,22 +16,9 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
-## 未發布
+## 1.4.0 — 2026-10-05
 
 
-### Changed
-
-- **CI 的「迴圈步數第五方」列檔案補 `core.quotePath=false`**：git 預設把非 ASCII 路徑轉成八進位跳脫字串，
-  `awk` 開不了那個檔名、而該 step 照樣 exit 0 —— 中文檔名的 `.md`／`.sh` 被整道檢查靜默跳過。
-  2026-10-05 新增一份中文檔名的設計文件後撞到：裡面放一行步數寫錯的箭頭摘要，修前 exit 0（2 個檔開不了），
-  修後 exit 1 並指名該檔。gate 腳本早有這條規矩，當時沒推廣到 ci.yml
-- **步驟 4 加一條「想讓它快就界定探索預算」（`dd-loop-rev` 6 → 7）**：使用者問「code-reviewer 還會卡很久嗎」，
-  這輪把派送方式真的量了。同一份 prompt、同一個 model、同一份素材，Task 派出的 subagent 要 223/257s，
-  同一個 agent 當 headless session 跑只要 115/125s，而**派送管線本身只佔 ~25s**（整體 wall 減掉 subagent 自己的 duration）。
-  真正決定時間的是它跑幾次工具：3–5 次 = 2–4 分鐘；同一天 S1 段落那兩發 21/26 次 = 13–17 分鐘，而且 diff 還更小 ——
-  差別在問題開放到什麼程度（問「在真實 CI 環境會不會失效」，它就去抓上游原始碼、開 docker 用 mawk 重跑）。
-  原始數字與限制在 `docs/measurements/2026-10-05-reviewer-overhead.md`（subagent 為什麼慢一倍沒查出來，jsonl 沒給它的 api 時間）。
-  同批把「並行派時 wall 約等於較慢那一發」從「未實測的推論」改成實測值（781s 與 1007s，整體 ~1007s）
 ### Added
 
 - **CI 新增「CHANGELOG 已發布區塊不可改動」**：新條目被寫進已發布的版本區塊時，`git diff` 看起來正常、
@@ -46,6 +33,19 @@
   需要 checkout 設 `fetch-depth: 0`（實測 `git clone --depth 1` 之後 `git tag` 是 0 筆）；
   抓不到 tag 或 tag 裡沒有 CHANGELOG.md 都明確失敗、不靜默放過。負面測試 11 個變異逐一確認
 
+### Changed
+
+- **CI 的「迴圈步數第五方」列檔案補 `core.quotePath=false`**：git 預設把非 ASCII 路徑轉成八進位跳脫字串，
+  `awk` 開不了那個檔名、而該 step 照樣 exit 0 —— 中文檔名的 `.md`／`.sh` 被整道檢查靜默跳過。
+  2026-10-05 新增一份中文檔名的設計文件後撞到：裡面放一行步數寫錯的箭頭摘要，修前 exit 0（2 個檔開不了），
+  修後 exit 1 並指名該檔。gate 腳本早有這條規矩，當時沒推廣到 ci.yml
+- **步驟 4 加一條「想讓它快就界定探索預算」（`dd-loop-rev` 6 → 7）**：使用者問「code-reviewer 還會卡很久嗎」，
+  這輪把派送方式真的量了。同一份 prompt、同一個 model、同一份素材，Task 派出的 subagent 要 223/257s，
+  同一個 agent 當 headless session 跑只要 115/125s，而**派送管線本身只佔 ~25s**（整體 wall 減掉 subagent 自己的 duration）。
+  真正決定時間的是它跑幾次工具：3–5 次 = 2–4 分鐘；同一天 S1 段落那兩發 21/26 次 = 13–17 分鐘，而且 diff 還更小 ——
+  差別在問題開放到什麼程度（問「在真實 CI 環境會不會失效」，它就去抓上游原始碼、開 docker 用 mawk 重跑）。
+  原始數字與限制在 `docs/measurements/2026-10-05-reviewer-overhead.md`（subagent 為什麼慢一倍沒查出來，jsonl 沒給它的 api 時間）。
+  同批把「並行派時 wall 約等於較慢那一發」從「未實測的推論」改成實測值（781s 與 1007s，整體 ~1007s）
 ## 1.3.0 — 2026-10-05
 
 ### Added
