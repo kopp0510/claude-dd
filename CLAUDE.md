@@ -95,7 +95,15 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
    「後續 commit 已認定真錯誤」的舊 diff（ground truth 現成）。先用 haiku 問一句確認兩個 arm 真的載入不同
    prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**：2026-10-02 五發實測 api 58–84s、
    非模型開銷 35–170s，用 wall 做 n=1 比較會得到相反結論。**命中數也要 n≥2**：單發 reviewer 命中的是隨機
-   子集，五發各中 3 項中的 2 項、子集還不同
+   子集，五發各中 3 項中的 2 項、子集還不同。
+   **量 Task 派出的 subagent 時**：它跑的是 agent 定義裡的 `model`，父 session 的 `--model` 不影響它
+   （實測 haiku 父 session 派 code-reviewer，subagent 的 `message.model` 是 `claude-opus-5-5`）——
+   父層可以用 haiku 省錢，但別誤以為那樣是在測 haiku 的 reviewer。數字的位置：subagent 自己的
+   `duration_ms`／`tool_uses`／`total_tokens` 在「帶 `output_file` 的 task 記錄」的 `usage`
+   （`jq -c 'select(.output_file!=null)|.usage'`），`result.subagent_stats` 只有 spawned/completed 計數、
+   沒有時間；subagent 的訊息靠 `parent_tool_use_id != null` 認（每則有 `timestamp`）；**父 session 會有兩筆
+   `result`**（`result_index` 0 與 1 —— subagent 在背景跑，父層先結束一輪、它完成後再被喚起），
+   只取第一筆會少算整體時間；要讓 subagent 的文字進 jsonl 加 `--forward-subagent-text`
 
 ## 新增 Command 步驟
 
