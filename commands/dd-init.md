@@ -36,8 +36,8 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 - **補充模式**（CLAUDE.md 已存在）：
   - 無 `## 開發流程` 區塊 → 用 **Edit** 在末尾加入
   - 已含區塊 → **版本檢查**：
-    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 7` → 已是現行版，跳過並告知
-    - 含 `6step` / `7step` 標記、有 `8step` 但 rev 比 7 舊（沒有 rev 標記，或 rev 是更早的號碼），或無標記、或缺 code-review 步驟 → 舊版/手寫版：
+    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 8` → 已是現行版，跳過並告知
+    - 含 `6step` / `7step` 標記、有 `8step` 但 rev 比 8 舊（沒有 rev 標記，或 rev 是更早的號碼），或無標記、或缺 code-review 步驟 → 舊版/手寫版：
       列出與現行版的差異（6step 缺步驟 7、8；7step 缺步驟 8；8step 沒有 rev 缺「段落起點」，
       步驟 3、4、8 只看最後一個 commit；rev 1–2 的步驟 8 算範圍用 `status --porcelain` 加 `awk '{print $NF}'`，
       含空白的目錄名會被切斷、少列一份卻照樣 exit 0，而且「忘了記起點只會多審」那句沒有但書；
@@ -51,9 +51,13 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 
 ```markdown
 ## 開發流程（每個功能段落依序走）
-<!-- dd-loop-version: 8step；dd-loop-rev: 7；供 /dd-init 判斷是否提議升級，勿刪 -->
+<!-- dd-loop-version: 8step；dd-loop-rev: 8；供 /dd-init 判斷是否提議升級，勿刪 -->
 
 段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好。
+⚠️ **這個指令有兩個擋點**：①起點以來有 `SKIP_DOC_CHECK=1` 欠下、還沒補的 CLAUDE.md
+②**專案有 `docs/reviews/` 目錄時**（= 採用了 review 留痕慣例），上一段的 commit 範圍內
+沒有新增 `docs/reviews/S*.md`。兩者都會 `exit 1` 並印出該怎麼做 —— 照它印的做，不要繞過。
+剛採用第二個慣例時第一次一定會被擋（上一段本來就沒報告），補一份 `S<N>-SKIP.md` 即可。
 沒印出這行就是沒記好；若是舊版 gate（grep 不到 `--start-segment`），它會照常檢查 staged，印出「commit 已擋下」也不要照著補檔或 commit，
 先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。
 一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出

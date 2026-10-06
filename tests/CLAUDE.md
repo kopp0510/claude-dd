@@ -8,7 +8,7 @@
 | 檔案 | 用途 |
 |---|---|
 | `test-install.sh` | 安裝腳本的端到端測試：拋棄式 HOME 裡非互動安裝，驗部署內容等於部署清單、重跑冪等、`--force` 內容相同不重寫、`--update`、`--commands-only`、`--uninstall` 非互動預設取消、`--check` 不寫入、`--help` 可執行。跑完清掉暫存目錄 |
-| `test-gate.sh` | CLAUDE.md gate（`scripts/check-claude-md.sh`）的情境測試：段落起點、SKIP 欠帳、merge、改寫過的歷史、中文與含空白的路徑。在拋棄式 repo 裡掛上 gate 實際 commit，逐案印 ✅／❌，有 ❌ 就 exit 1。第一個參數可以換成別的 gate 路徑，做「改壞一行、確認會出現 ❌」的變異測試 |
+| `test-gate.sh` | CLAUDE.md gate（`scripts/check-claude-md.sh`）的情境測試：段落起點、SKIP 欠帳、merge、改寫過的歷史、中文與含空白的路徑。在拋棄式 repo 裡掛上 gate 實際 commit，逐案印 ✅／❌，有 ❌ 就 exit 1。第一個參數可以換成別的 gate 路徑，做「改壞一行、確認會出現 ❌」的變異測試。**2026-10-07（S6）新增 review 報告強制的六個情境**（導入路徑被擋 / SKIP 申報放行 / 沒報告擋下 / 兩份報告放行 / `CLAUDE.md` 不算 / 刪目錄退出），61 → 73 項 |
 
 ## 此層約束
 
@@ -23,6 +23,11 @@
 - 兩支都在暫存目錄裡跑、`trap` 跑完清掉（本機會拿來重跑與做變異測試）
 - 腳本開頭是 `set -e`（2026-10-01 從 ci.yml 內嵌 step 搬出來時照 GitHub Actions 預設的 `bash -e` 保留）：
   預期會被擋的 commit 一律包在 `expect` 的 `if` 裡，新增情境時別讓會回非 0 的指令裸跑
+- ⚠️ **新增的 review 強制情境刻意跑在「有 `docs/reviews/` 目錄」的 repo 裡，而前 61 項沒有**
+  —— 那正是 opt-in 的證明：**加了新功能，既有 61 項一項都不用改**。
+  寫新情境時不要把 `mkdir docs/reviews` 往上搬，會把前面 61 項的前提改掉。
+- ⚠️ **「剛採用慣例時第一次 `--start-segment` 被擋」是情境 ①，不是待修的邊角** ——
+  上一段本來就沒報告，那是真實的導入路徑；我第一版把它寫成 `pass`，跑出來才發現寫錯了。
 - 本機跑：`/bin/bash tests/test-gate.sh`（repo 根目錄或任何地方都可以，gate 路徑以腳本位置推算）
 - 要通過 `shellcheck -S warning`（CI 的 ShellCheck 清單逐檔寫死，這支已列入）
 
