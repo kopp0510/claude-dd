@@ -9,6 +9,9 @@
 #   commit 會連「起點以來跳過檢查、到現在還沒補 CLAUDE.md」的目錄一起查
 #   --start-segment  段落開始前記起點（還有欠帳時拒絕：起點往後移會把欠帳洗掉）
 #   --segment-base   印出起點，給迴圈步驟 3、4、8 算整段範圍（沒記過或已失效就失敗，不印空字串）
+# review 報告：專案有 docs/reviews/ 目錄時（= 採用了這個慣例），--start-segment 會要求
+#   「上一段的 commit 範圍內有新增 docs/reviews/S*.md」。沒有那個目錄的專案完全不受影響。
+#   目的不是讓說謊變不可能（報告內容真偽驗不出來），是把「靜默省略步驟 4」這個選項拿掉
 
 top=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "❌ check-claude-md.sh：不在 git repo 內"; exit 1; }
 cd "$top" || exit 1
@@ -116,6 +119,45 @@ owed_dirs() {
         done
 }
 
+# 上一段有沒有附 review 報告(8 步迴圈的步驟 4)。
+# **只在專案採用了 docs/reviews/ 慣例時才管** —— 目錄存在 = opt-in,
+# 沒有這個目錄的專案(含 gate 自己的測試用拋棄式 repo)完全不受影響。
+# 回 0 = 缺報告(該擋),回非 0 = 不該擋。
+reviews_missing() {
+    local head_sha range fork
+    [ -d docs/reviews ] || return 1
+    read_base || return 1                                    # 沒記過起點 = 還沒有「上一段」
+    [ "$base" = "$EMPTY_TREE" ] && return 1                  # 上一段從空樹開始，視為第一段
+    head_sha=$(git rev-parse --verify -q HEAD) || return 1   # 還沒有任何 commit
+    [ "$base" = "$head_sha" ] && return 1                    # 起點就是 HEAD = 上一段沒有 commit
+
+    # ⚠️ **退化規則要跟 `owed_dirs` 一致**（2026-10-07 的 review 抓到）：
+    #   第一版在「起點不是祖先」時直接 `return 1` 放行 —— 於是
+    #   **記好起點 → `git commit --amend` 掉起點那個 commit → 整段零報告 → 照樣放行**，
+    #   而且兩個訊號都看不出 review 檢查被跳過了。amend 未 push 的 commit 是日常操作。
+    if git merge-base --is-ancestor "$base" "$head_sha" 2>/dev/null; then
+        range_base="$base"
+    elif fork=$(git merge-base "$base" "$head_sha" 2>/dev/null); then
+        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡（換過分支或改寫過歷史？），review 檢查改從共同祖先 $fork 算起" >&2
+        range_base="$fork"
+    else
+        # 連共同祖先都沒有：照 `owed_dirs` 的做法放行，但**要講出來** ——
+        # 第一版在這裡靜默通過，等於多一條繞過路徑。
+        echo "⚠️ 段落起點 $base 找不到共同祖先，**這次跳過 review 報告檢查**" >&2
+        echo "   （上一段的 docs/reviews/S*.md 沒有被驗到；要重新開始追蹤：rm ${BASE_FILE}）" >&2
+        return 1
+    fi
+
+    # ⚠️ **`--diff-filter=A` 不是 `ACMR`**（同一輪 review 抓到）：gate 自己的訊息與四份文件
+    #   都寫「有沒有**新增**」，而 `ACMR` 之下**改一個字到既有報告就過關** ——
+    #   上一段的 `S1-a.md` 修個錯字，這一段零報告也能開下一段。程式碼要跟文件一致。
+    # ⚠️ **`S[0-9]` 不是 `S[^/]*`**：後者讓 `SUMMARY.md` / `SPEC.md` 這種也算報告。
+    #   報告檔名形如 `S1-a.md` / `S7.5-b.md` / `S10-SKIP.md`，一律 S 後面接數字。
+    gitq diff --name-only --diff-filter=A "$range_base" "$head_sha" -- docs/reviews \
+        | grep -qE '(^|/)S[0-9][^/]*\.md$' && return 1
+    return 0
+}
+
 case "$1" in
     --start-segment)
         owed=""
@@ -124,6 +166,21 @@ case "$1" in
             echo "❌ 還有 commit 跳過檢查、到現在還沒補的 CLAUDE.md，先補完再記新起點："
             printf '%s\n' "$owed" | while IFS= read -r d; do echo "  $(md_of "$d")"; done
             echo "（起點往後移會把這筆欠帳洗掉。確定要放棄追蹤：rm ${BASE_FILE}）"
+            echo "  ⚠️ 那也會一併清掉「上一段要附 review 報告」的要求，而且 git 裡零痕跡" >&2
+            exit 1
+        fi
+        if reviews_missing; then
+            echo "❌ 上一段沒有附 review 報告（8 步迴圈的步驟 4），先補完再記新起點："
+            echo "   範圍 ${base}..HEAD 裡沒有新增任何 docs/reviews/S*.md"
+            echo ""
+            echo "   兩條路，選一條："
+            echo "   1. 跑步驟 4（兩個 reviewer 同一份 prompt，報告取聯集），"
+            echo "      報告存 docs/reviews/S<段落>-a.md 與 -b.md，三節：派工 / 發現 / 處置"
+            echo "   2. 這一段真的不需要（diff 全是資料／設定，或已被機械檢查完全覆蓋）："
+            echo "      建 docs/reviews/S<段落>-SKIP.md 寫明理由，並在 commit 訊息加"
+            echo "      SKIP-REVIEW: <段落> <理由> 這行 trailer"
+            echo ""
+            echo "   （不想採用這個慣例：刪掉 docs/reviews/ 目錄，本檢查就完全不啟用）"
             exit 1
         fi
         head_or_empty > "$BASE_FILE"

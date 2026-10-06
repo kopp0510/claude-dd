@@ -219,5 +219,80 @@ expect "補上根目錄放行" pass commit t8
 echo 1 > "my dir/b.js" && echo more2 >> "my dir/CLAUDE.md"
 expect "含空白目錄的程式碼和它的 CLAUDE.md 同批：放行" pass commit t9
 
+# ---- review 報告的強制(2026-10-07,S6)----
+# 規則:專案有 docs/reviews/ 目錄時(= 採用了這個慣例),--start-segment 要求
+# 「上一段的 commit 範圍內有新增 docs/reviews/S*.md」。
+# ⚠️ **上面 61 項全部跑在沒有 docs/reviews/ 的拋棄式 repo 裡** —— 那正是 opt-in 的證明:
+#    沒有這個目錄的專案完全不受影響,所以舊測試一項都不用改。
+mkdir -p docs/reviews
+echo '# 報告格式' > docs/reviews/CLAUDE.md
+echo 1 > r.js && echo doc >> CLAUDE.md
+expect "建立 docs/reviews/ 的那個 commit" pass commit r0
+
+# ① 剛採用慣例時,上一段本來就沒報告 → 擋。這是真實的導入路徑,不是邊角情況
+BEFORE_BASE=$(cat "$BASE_FILE" 2>/dev/null)   # 要在跑 gate 之前讀,之後讀就變成拿它自己比它自己
+expect "剛採用慣例:上一段沒報告,照擋" block "$GATE" --start-segment
+said "上一段沒有附 review 報告"
+said "docs/reviews/S<段落>-SKIP.md"
+base_is "$BEFORE_BASE"   # 被擋下時起點不可以被搬動
+
+# ② 文件寫的出路:補一份 SKIP 申報 → 放行
+echo '# S0 跳過 review:採用本慣例之前的段落' > docs/reviews/S0-SKIP.md
+expect "補上 SKIP 申報的 commit" pass commit r1
+expect "有 S<N>-SKIP.md:放行" pass "$GATE" --start-segment
+base_is "$(git rev-parse HEAD)"
+
+# ③ 下一段只改程式碼、沒附報告 → 拒絕
+echo 2 > r.js && echo doc2 >> CLAUDE.md
+expect "段落內的 commit" pass commit r2
+expect "上一段沒附 review 報告:拒絕記新起點" block "$GATE" --start-segment
+base_is "$(git rev-parse 'HEAD~1')"
+
+# ④ 補上 S<N>-a.md / -b.md → 放行
+echo '# S1 審查 — a' > docs/reviews/S1-a.md
+echo '# S1 審查 — b' > docs/reviews/S1-b.md
+expect "補上兩份報告的 commit" pass commit r3
+expect "有 S<N>-a.md:放行" pass "$GATE" --start-segment
+base_is "$(git rev-parse HEAD)"
+
+# ⑤ 只改 docs/reviews/CLAUDE.md 不算報告(它不是 S 開頭)
+echo 3 > r.js && echo doc3 >> CLAUDE.md
+echo '改了格式說明' >> docs/reviews/CLAUDE.md
+expect "只改報告格式說明的 commit" pass commit r4
+expect "docs/reviews/CLAUDE.md 不算報告:照擋" block "$GATE" --start-segment
+
+# ⑥ **只「修改」既有報告不算** —— gate 的訊息與五份文件都寫「有沒有**新增**」,
+#    所以用 `--diff-filter=A`。第一版用 `ACMR`,於是上一段的 S1-a.md 改個錯字,
+#    這一段零報告也能開下一段(reviewer 實測抓到)。
+echo 4 > r.js && echo doc4 >> CLAUDE.md
+echo '補一句處置' >> docs/reviews/S1-a.md
+expect "只改既有報告的 commit" pass commit r4a
+expect "只『修改』既有報告不算新增:照擋" block "$GATE" --start-segment
+said "沒有新增任何 docs/reviews/S*.md"
+
+# ⑦ **起點 commit 被改寫(amend / rebase)之後,檢查不可以靜默消失** ——
+#    第一版在「起點不是祖先」時直接放行,於是 `git commit --amend` 掉起點那個 commit
+#    就能讓整段的 review 要求蒸發(reviewer 實跑抓到)。現在退到共同祖先繼續算,
+#    與同檔 `owed_dirs` 的退化規則一致。
+echo '# S2 審查 — a' > docs/reviews/S2-a.md
+expect "補報告放行" pass commit r4b
+expect "重記起點" pass "$GATE" --start-segment
+echo 5 > r.js && echo doc5 >> CLAUDE.md
+expect "段落內的 commit" pass commit r4c
+git commit -q --amend -m 'r4c amended'    # 改寫 HEAD(起點之後),起點本身仍在
+expect "amend 段落內的 commit:仍然照擋(零報告)" block "$GATE" --start-segment
+said "沒有新增任何 docs/reviews/S*.md"
+
+# ⑧ `docs/reviews/SUMMARY.md` 這種不是報告(pattern 是 S 後面接數字)
+echo 6 > r.js && echo doc6 >> CLAUDE.md
+echo '# 總覽' > docs/reviews/SUMMARY.md
+expect "新增 SUMMARY.md 的 commit" pass commit r4d
+expect "SUMMARY.md 不算報告:照擋" block "$GATE" --start-segment
+
+# ⑨ 退出慣例的路要走得通:刪掉目錄就完全不啟用
+rm -rf docs/reviews
+expect "刪掉 docs/reviews/ 的 commit" pass commit r5
+expect "沒有 docs/reviews/ 目錄:本檢查不啟用" pass "$GATE" --start-segment
+
 exit $fail
 
