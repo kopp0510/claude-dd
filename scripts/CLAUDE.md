@@ -80,10 +80,7 @@
     | `resolve_fork_base` 的 fork-point 整支拿掉 | 情境 7 的三則(`owed_dirs`)**與** ⑩ 的三則(`reviews_missing`)**各自獨立** —— 這才是「共用函式對兩個呼叫端都承重」的證據(3 + 3,不是「總共 N 紅」) |
     | 只拿掉 `resolve_fork_base` 共用那句警告 | 情境 7 與 ⑩ 的 `said` 各一則 ⚠️ **它只證明共用那句被釘住,不證明各呼叫端自己那句被釘住** |
     | 只打 `reviews_missing` 的「沒有共同祖先」那一支(改成擋 / 拿掉它的警告) | ⑪ 的兩則。⚠️ **修正前這兩個變異各 0 紅** —— ⑪ 把 `docs/reviews` 連目錄刪了,opt-in 判準不成立、那一支根本沒執行到;而 `said "找不到共同祖先"` 是被 `owed_dirs` 的訊息頂掉的 |
-    ⚠️ 另外兩個**只打 `reviews_missing` 的「連共同祖先都沒有」那一支**的變異
-    (改成擋 / 拿掉它的警告)原本**各 0 紅** —— `tests/test-gate.sh` 的 ⑪ 把 `docs/reviews`
-    連目錄刪了,opt-in 判準不成立、那一支根本沒執行到。⑪ 補上重建目錄、並把 `said`
-    換成「只有一處會印」的字串之後,兩個變異各 1 紅(詳見 `tests/CLAUDE.md` 的三個空洞斷言陷阱)。
+    ⚠️ 修法與三個空洞斷言陷阱見 `tests/CLAUDE.md`。
   - `--segment-base` 印出起點給迴圈步驟 3、4、8，起點失效就失敗
   - ⚠️ **`shellcheck -S warning` clean 不代表變數有局部化**(2026-10-07 S4 的 review 指出):
     重構前 `reviews_missing` 宣告了**死的** `local range`,而真正用的 `range_base`
