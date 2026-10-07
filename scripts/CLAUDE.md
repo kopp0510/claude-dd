@@ -85,6 +85,10 @@
     連目錄刪了,opt-in 判準不成立、那一支根本沒執行到。⑪ 補上重建目錄、並把 `said`
     換成「只有一處會印」的字串之後,兩個變異各 1 紅(詳見 `tests/CLAUDE.md` 的三個空洞斷言陷阱)。
   - `--segment-base` 印出起點給迴圈步驟 3、4、8，起點失效就失敗
+  - ⚠️ **`shellcheck -S warning` clean 不代表變數有局部化**(2026-10-07 S4 的 review 指出):
+    重構前 `reviews_missing` 宣告了**死的** `local range`,而真正用的 `range_base`
+    是**漏宣告的全域** —— shellcheck 乾淨,一個字都沒說。
+    要查局部化只能自己對 `local` 清單與函式內實際用到的變數名。
   - 列檔案的 git 指令都經過 `gitq`（`core.quotePath=false`）：git 預設把非 ASCII 路徑加引號跳脫，
     副檔名比對不到，中文目錄等於完全不檢查（原始版本就有這個洞）
   - 行為的回歸測試是 `tests/test-gate.sh`（CI 在 ubuntu 與 macOS `/bin/bash` 3.2 各跑一次）。本機跑：
