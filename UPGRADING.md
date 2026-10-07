@@ -74,7 +74,7 @@ rm -rf ~/.claude/templates/dd    # 1.0.0 起不再部署文件模板；--prune �
 ## 已是 8 步迴圈的專案：補上「段落起點」
 
 2026-09-11 起，步驟 3、4、8 改從段落起點算整段，gate 也會追查 SKIP 跳過、之後沒補的
-CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「未發布」）。
+CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「1.2.0」）。
 
 1. 先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。舊版 gate 不認得 `--start-segment`：
    沒有 staged 時什麼都不印；有 staged 程式碼時會照常檢查、印出「commit 已擋下」—— 那不是真的要你補檔，
