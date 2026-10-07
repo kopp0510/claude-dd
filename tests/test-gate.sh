@@ -120,7 +120,10 @@ echo "$side" > "$BASE_FILE"
 expect "起點失效時 --segment-base 要失敗" block "$GATE" --segment-base
 echo q >> README.md
 expect "起點失效：從共同祖先算，照樣擋 r 欠的帳" block commit w1
-said "不在目前分支的歷史裡"
+# ⚠️ **這句子字串兩條路都會中**(2026-10-07 S4 的 review 抓到):退化放行的 fallback 訊息
+#    「…不在目前分支的歷史裡,**也**找不到共同祖先…」含同一段字,所以把 fork-point 整支拿掉時
+#    **這一則不會變紅**。要分辨得用後半句。
+said "改從共同祖先 "    # 後面那個空格:fallback 訊息是「也找不到共同祖先,」,不含這個形狀
 said "r/CLAUDE.md"
 expect "起點失效也不准重記起點把欠帳洗掉" block "$GATE" --start-segment
 echo rdoc > r/CLAUDE.md
@@ -282,7 +285,10 @@ expect "段落內的 commit" pass commit r4c
 git commit -q --amend -m 'r4c amended'    # 改寫 HEAD(起點之後),起點本身仍在
 # ⚠️ **這一則 amend 的是「段落內的 HEAD」,起點本身仍是祖先** —— 走的是 `range_base="$base"`
 #    那一支,**沒有**跑到 fork-point 退化。上面那句註解原本寫「起點 commit 被改寫」,
-#    名稱與實際不符(2026-10-07 S4 修正);真正把起點改寫掉的情境在最後面 ⑩。
+#    名稱與實際不符(2026-10-07 S4 修正)。
+#    ⚠️ **fork-point 退化本來就有測** —— 既有的情境 7 就是(對 `owed_dirs`);
+#    ⑩ 補的是**對 `reviews_missing`** 的那一半,而且 ⑩ 也不是「改寫起點 commit」,
+#    是從 `base^` 開新線讓起點不再是祖先(效果相同、寫法不同)。
 expect "amend 段落內的 commit(起點仍是祖先):仍然照擋(零報告)" block "$GATE" --start-segment
 said "沒有新增任何 docs/reviews/S*.md"
 
@@ -329,15 +335,35 @@ expect "起點不是祖先:--segment-base 必須硬失敗" block "$GATE" --segme
 said "沒有可用的段落起點"
 
 expect "起點不是祖先:reviews_missing 退到共同祖先,照樣擋" block "$GATE" --start-segment
-said "改從共同祖先"
+# ⚠️ 斷言**帶 prefix 的那句**。`owed_dirs` 與 `reviews_missing` 共用 `resolve_fork_base`,
+#    兩處的警告都含「改從共同祖先」—— 只斷言那五個字的話,`owed_dirs` 印了就過關,
+#    分辨不出 `reviews_missing` 有沒有真的走到退化那一支。prefix 參數就是為此存在。
+said "review 檢查改從共同祖先"
 said "沒有新增任何 docs/reviews/S*.md"
 
 # ⑪ 連共同祖先都沒有:兩處都要**放行但講出來**。
-# ⚠️ 這是唯一允許的「放行」,所以必須斷言那句警告真的印出來 ——
+# ⚠️ 這是唯一允許的「放行」,所以必須斷言那**兩句**警告真的印出來 ——
 #    第一版 `reviews_missing` 在這裡靜默通過,等於多一條繞過路徑(S6 的 review 抓到)。
+# ⚠️⚠️ **兩句 said 都要挑「只有一處會印」的字串**:兩處的警告都含「找不到共同祖先」,
+#    只斷言那五個字的話,`owed_dirs` 印了就過關。2026-10-07 實測這個洞:把
+#    `reviews_missing` 的這一支改成 `return 0`(擋)、或整個拿掉它的警告,**90 項全綠**
+#    —— 等於那一支完全沒測到。所以改斷言 `只檢查 staged`(只有 `owed_dirs` 印)
+#    與 `跳過 review 報告檢查`(只有 `reviews_missing` 印)。
 git checkout -q --orphan unrelated
 git rm -rq --cached . >/dev/null 2>&1 || true
-rm -rf r.js README.md src docs 'api server' 2>/dev/null || true
+# ⚠️ **用 `git clean` 而不是列檔名**(2026-10-07 S4 的 review 抓到):原本那串 `rm -rf` 列的是
+#    `r.js README.md src docs 'api server'` —— 而 **`api server` 在這個測試 repo 裡從來不存在**
+#    (那是全域 CLAUDE.md 的範例名,我從範例抄而不是從實際的測試抄;真正建過的是 `my dir`),
+#    同時漏掉 `p/ r/ w/ keep/ mv/ feat/ feat2/ 功能/ 模組/ 'my dir'/ top.js/ side.txt` 十幾個。
+#    `commit()` 是 `git add -A`,所以那些目錄會被一起 commit 進 r7 —— 今天能過只因為它們此時
+#    各自都已經有 CLAUDE.md。**之後若在 ⑪ 之前插一個「留下沒有 CLAUDE.md 的程式碼目錄」的情境,
+#    r7 會變成 block、紅在 ⑪ 而病因在新情境。** 改成與內容無關的寫法就不會再有這個耦合。
+git clean -xdfq 2>/dev/null || true
+# ⚠️ **`docs/reviews/` 刪掉後要重建** —— 同 ⑩ 的理由:這個檢查是 opt-in,判準是**工作目錄裡
+#    有沒有那個目錄**(`[ -d docs/reviews ] || return 1`)。上面那行 `rm -rf` 把 docs 一起刪了,
+#    不重建的話 `reviews_missing` 第一行就 return,下面那句斷言永遠測不到(修正前就是這樣)。
+#    放 `CLAUDE.md` 而**不是** `S*.md`:目錄要存在,但範圍內不可以有新增的報告。
+mkdir -p docs/reviews && echo '格式說明' > docs/reviews/CLAUDE.md
 mkdir -p lone && echo x > lone/x.js && echo doc > lone/CLAUDE.md && echo root > CLAUDE.md
 expect "無關歷史上的第一個 commit" pass commit r7
 # ⚠️ 起點檔到這裡還是 `BASE_BEFORE`,**因為 ⑩ 的 `--start-segment` 是被擋下的(擋下不寫入)**。
@@ -346,7 +372,11 @@ base_is "$BASE_BEFORE"
 
 expect "沒有共同祖先:--segment-base 照樣硬失敗" block "$GATE" --segment-base
 expect "沒有共同祖先:放行,但要講出來(不可靜默)" pass "$GATE" --start-segment
-said "找不到共同祖先"
+said "只檢查 staged"             # owed_dirs 那一處
+said "跳過 review 報告檢查"       # reviews_missing 那一處
 
+# ⚠️⚠️ **⑩⑪ 之後不要再接情境** —— 它們收尾在 orphan branch `unrelated` 上,
+#    工作目錄被 `git clean -xdfq` 清空過(只留下這一段自己建的 `lone/` 與 `CLAUDE.md`),起點檔也被最後那個
+#    `--start-segment` 覆蓋過。要加新情境請加在 ⑨ 之前,或自己重建需要的狀態。
 exit $fail
 
