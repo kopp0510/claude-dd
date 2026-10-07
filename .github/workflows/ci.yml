@@ -372,7 +372,8 @@ jobs:
           [ "$found" = 1 ] || { echo "❌ 腳本裡找不到任何「N 步開發迴圈」輸出，抓取 regex 已失效"; fail=1; }
 
           # ② 一行式箭頭摘要：合併續行後，箭頭≥3 且同時含 commit 與 review 才認定為迴圈摘要
-          #    CHANGELOG / UPGRADING 是歷史敘述，排除
+          #    CHANGELOG / UPGRADING 是歷史敘述，排除；docs/reviews/ 是 review 報告（引述當時的發現與流程，
+          #    同樣是歷史敘述 —— 2026-10-07 S6-a.md 表格裡一段「→」敘述被當成迴圈摘要而讓 CI 轉紅）
           found=0
           while IFS= read -r hit; do
             [ -z "$hit" ] && continue
@@ -381,7 +382,7 @@ jobs:
             else echo "❌ ${where} 的箭頭摘要是 $got 段，應為 $n 段"; fail=1; fi
           # -c core.quotePath=false：git 預設把非 ASCII 路徑轉成 "\350\210\207" 這種跳脫字串，
           # awk 開不了那個檔名、而這個 step 照樣 exit 0 —— 中文檔名的 .md 會被整個靜默跳過（2026-10-05 踩過）
-          done < <(git -c core.quotePath=false ls-files '*.md' '*.sh' | grep -vE '^(CHANGELOG|UPGRADING)\.md$' \
+          done < <(git -c core.quotePath=false ls-files '*.md' '*.sh' | grep -vE '^(CHANGELOG|UPGRADING)\.md$|^docs/reviews/' \
             | while IFS= read -r f; do
                 awk -v F="$f" '
                   function flush(  c) {
