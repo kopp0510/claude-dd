@@ -38,9 +38,29 @@
     （`--start-segment` 記下；忘了記時第一個 SKIP commit 自動記）。之後的正常 commit
     沿著 commit 的祖先關係結算起點以來的欠帳：改程式碼記帳，要由看得到那段程式碼的後代
     commit（含 merge commit 自己）更新該目錄 CLAUDE.md 才銷帳。所以舊起點不會讓 gate 變寬鬆，
-    平行分支上的 CLAUDE.md 更新也抵不掉。起點被改寫（不在目前歷史）時改從共同祖先算；
-    目錄在 index 裡已經沒有程式碼就不追討；還有欠帳時 `--start-segment` 拒絕重記；
-    `--segment-base` 印出起點給迴圈步驟 3、4、8，起點失效就失敗
+    平行分支上的 CLAUDE.md 更新也抵不掉。
+    目錄在 index 裡已經沒有程式碼就不追討；還有欠帳時 `--start-segment` 拒絕重記
+  - ⚠️⚠️ **「記下的起點 → 這次實際要用的起點」有三處在解析，而退化政策刻意不同**
+    （2026-10-07，S4 把機制抽成 `resolve_fork_base`）：
+
+    | 處 | 產出 | 起點不是祖先 | 連共同祖先都沒有 |
+    |---|---|---|---|
+    | `owed_dirs` | range（`A..B`，空樹時是裸 `head`） | 退到共同祖先 | **放行，但印警告**（只檢查 staged） |
+    | `reviews_missing` | base sha | 退到共同祖先 | **放行，但印警告**（跳過 review 檢查） |
+    | `--segment-base` | base sha | **硬失敗** | **硬失敗** |
+
+    **前兩處「往寬退」是刻意的** —— 退窄會把欠帳 / review 要求洗掉，而那正是這兩個檢查要擋的事。
+    **`--segment-base` 必須硬失敗**：它的輸出要餵 `git diff`，印空字串或錯的 base 是文件點名的地雷。
+    ⚠️ **所以 `resolve_fork_base` 只抽「機制」不抽「政策」** —— 共用的是
+    `merge-base --is-ancestor` + fork-point + 那句警告（**S6 的 review 抓到這兩處已經漂移**：
+    一處退到共同祖先、另一處直接放行）；「連共同祖先都沒有」的後續處置留在呼叫端，
+    因為兩處的後果不同。`--segment-base` **刻意不用這支**：硬套進來就得加一個關掉 fallback 的
+    mode 參數，那只是把同一個決策搬進函式裡（S6 的 reviewer 預言過，S4 實作時確認了）。
+    ⚠️ **改這三處任何一處,先跑變異測試**:`bash tests/test-gate.sh <改壞的 gate>`。
+    2026-10-07 實測三個變異各自的紅:`--segment-base` 改成軟退化 → **3 紅**;
+    `resolve_fork_base` 的 fork-point 整支拿掉 → **7 紅**(同時打破兩個呼叫端,
+    證明共用函式真的承重);退化時不印警告 → **2 紅**(落在 `said` 斷言上)。
+  - `--segment-base` 印出起點給迴圈步驟 3、4、8，起點失效就失敗
   - 列檔案的 git 指令都經過 `gitq`（`core.quotePath=false`）：git 預設把非 ASCII 路徑加引號跳脫，
     副檔名比對不到，中文目錄等於完全不檢查（原始版本就有這個洞）
   - 行為的回歸測試是 `tests/test-gate.sh`（CI 在 ubuntu 與 macOS `/bin/bash` 3.2 各跑一次）。本機跑：

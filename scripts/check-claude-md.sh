@@ -67,20 +67,43 @@ still_has_code() {
         END { exit !found }'
 }
 
+# 「記下的起點 → 這次實際要用的起點」—— `owed_dirs` 與 `reviews_missing` 共用。
+# stdout = 有效起點;exit 1 = 連共同祖先都沒有(**由呼叫端決定那時要怎麼辦**)。
+# $1 = 警告句中間那一小段(兩處措辭不同),$2 = head sha
+#
+# ⚠️ **只抽「機制」不抽「政策」**(2026-10-07,S4)。三處解析起點的地方退化規則**刻意不同**:
+#   ・`owed_dirs` / `reviews_missing` —— 退到共同祖先(**往寬退**,才不會把欠帳 / report 要求洗掉)
+#   ・`--segment-base` —— **必須硬失敗**,它的輸出要餵 `git diff`,印空字串或錯的 base 正是地雷
+#   所以 `--segment-base` **刻意不用這支**:硬套進來就得加一個關掉 fallback 的 mode 參數,
+#   那只是把同一個決策搬進函式裡(S6 的 reviewer 預言過這件事)。
+# ⚠️ 真正值得抽的是**會漂移的那幾行**:`merge-base --is-ancestor`、fork-point、以及那句警告 ——
+#   S6 的 review 就是抓到這兩處**已經漂移**(一處退到共同祖先、另一處直接放行)。
+#   「連共同祖先都沒有」的後續處置留在呼叫端,因為兩處的後果不同(一個只檢查 staged、一個跳過 review 檢查)。
+resolve_fork_base() {
+    local prefix=$1 head=$2 fork
+    if git merge-base --is-ancestor "$base" "$head" 2>/dev/null; then
+        echo "$base"
+        return 0
+    fi
+    if fork=$(git merge-base "$base" "$head" 2>/dev/null); then
+        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡（換過分支或改寫過歷史？），${prefix}改從共同祖先 $fork 算起" >&2
+        echo "$fork"
+        return 0
+    fi
+    return 1
+}
+
 # 起點以來、到 HEAD 為止還沒補 CLAUDE.md 的目錄。
 # 沿著 commit 的祖先關係結算：改程式碼記帳，要由看得到那段程式碼的後代 commit 更新該目錄的
 # CLAUDE.md 才算補上，merge 時把各條線的欠帳合起來。所以起點再舊也不會變寬鬆，
 # 平行分支上看不到那段程式碼的 CLAUDE.md 更新也抵不掉
 owed_dirs() {
-    local head range fork
+    local head range eff
     head=$(git rev-parse --verify -q HEAD) || return 0
     if [ "$base" = "$EMPTY_TREE" ]; then
         range=$head
-    elif git merge-base --is-ancestor "$base" "$head" 2>/dev/null; then
-        range="$base..$head"
-    elif fork=$(git merge-base "$base" "$head" 2>/dev/null); then
-        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡（換過分支或改寫過歷史？），改從共同祖先 $fork 算起" >&2
-        range="$fork..$head"
+    elif eff=$(resolve_fork_base "" "$head"); then
+        range="$eff..$head"
     else
         echo "⚠️ 段落起點 $base 不在目前分支的歷史裡，也找不到共同祖先，這次只檢查 staged" >&2
         echo "   段落開始前重記起點：$0 --start-segment" >&2
@@ -124,7 +147,7 @@ owed_dirs() {
 # 沒有這個目錄的專案(含 gate 自己的測試用拋棄式 repo)完全不受影響。
 # 回 0 = 缺報告(該擋),回非 0 = 不該擋。
 reviews_missing() {
-    local head_sha range fork
+    local head_sha range_base
     [ -d docs/reviews ] || return 1
     read_base || return 1                                    # 沒記過起點 = 還沒有「上一段」
     [ "$base" = "$EMPTY_TREE" ] && return 1                  # 上一段從空樹開始，視為第一段
@@ -135,12 +158,8 @@ reviews_missing() {
     #   第一版在「起點不是祖先」時直接 `return 1` 放行 —— 於是
     #   **記好起點 → `git commit --amend` 掉起點那個 commit → 整段零報告 → 照樣放行**，
     #   而且兩個訊號都看不出 review 檢查被跳過了。amend 未 push 的 commit 是日常操作。
-    if git merge-base --is-ancestor "$base" "$head_sha" 2>/dev/null; then
-        range_base="$base"
-    elif fork=$(git merge-base "$base" "$head_sha" 2>/dev/null); then
-        echo "⚠️ 段落起點 $base 不在目前分支的歷史裡（換過分支或改寫過歷史？），review 檢查改從共同祖先 $fork 算起" >&2
-        range_base="$fork"
-    else
+    #   2026-10-07（S4）起兩處共用 `resolve_fork_base`，這個一致性由結構保證、不再靠兩份各寫一次。
+    if ! range_base=$(resolve_fork_base "review 檢查" "$head_sha"); then
         # 連共同祖先都沒有：照 `owed_dirs` 的做法放行，但**要講出來** ——
         # 第一版在這裡靜默通過，等於多一條繞過路徑。
         echo "⚠️ 段落起點 $base 找不到共同祖先，**這次跳過 review 報告檢查**" >&2

@@ -280,7 +280,10 @@ expect "重記起點" pass "$GATE" --start-segment
 echo 5 > r.js && echo doc5 >> CLAUDE.md
 expect "段落內的 commit" pass commit r4c
 git commit -q --amend -m 'r4c amended'    # 改寫 HEAD(起點之後),起點本身仍在
-expect "amend 段落內的 commit:仍然照擋(零報告)" block "$GATE" --start-segment
+# ⚠️ **這一則 amend 的是「段落內的 HEAD」,起點本身仍是祖先** —— 走的是 `range_base="$base"`
+#    那一支,**沒有**跑到 fork-point 退化。上面那句註解原本寫「起點 commit 被改寫」,
+#    名稱與實際不符(2026-10-07 S4 修正);真正把起點改寫掉的情境在最後面 ⑩。
+expect "amend 段落內的 commit(起點仍是祖先):仍然照擋(零報告)" block "$GATE" --start-segment
 said "沒有新增任何 docs/reviews/S*.md"
 
 # ⑧ `docs/reviews/SUMMARY.md` 這種不是報告(pattern 是 S 後面接數字)
@@ -293,6 +296,57 @@ expect "SUMMARY.md 不算報告:照擋" block "$GATE" --start-segment
 rm -rf docs/reviews
 expect "刪掉 docs/reviews/ 的 commit" pass commit r5
 expect "沒有 docs/reviews/ 目錄:本檢查不啟用" pass "$GATE" --start-segment
+
+# ⑩⑪ **三處「起點 → 有效範圍」的退化政策各自的行為**(2026-10-07 S4)。
+# ⚠️ 這一段的存在理由:`check-claude-md.sh` 有**三處**在解析起點,而政策**刻意不同** ——
+#    `owed_dirs` 與 `reviews_missing` 退到共同祖先(往寬退,才不會把欠帳 / report 要求洗掉),
+#    `--segment-base` **必須硬失敗**(它的輸出要餵 `git diff`,印空字串或錯的 base 正是地雷)。
+#    沒有這一段的話,把 `--segment-base` 也改成「退到共同祖先」的變異**不會有任何測試變紅**。
+# ⚠️ 放在最後面是因為情境 ⑨ 把 docs/reviews 刪了,這裡要自己重建。
+# ⚠️ 另外:**這幾則必須在「沒有 CLAUDE.md 欠帳」的狀態下跑** —— 否則 `--start-segment` 會
+#    擋在欠帳那一關,`said` 斷言的 review 訊息根本不會出現(第一版就是這樣「為了錯的理由而通過」)。
+mkdir -p docs/reviews && echo '# S9 審查 — a' > docs/reviews/S9-a.md
+echo 7 > r.js && echo doc7 >> CLAUDE.md
+expect "重建 docs/reviews 並補報告" pass commit r6a
+expect "重記起點(起點 = r6a)" pass "$GATE" --start-segment
+BASE_BEFORE=$(cat "$BASE_FILE")
+echo 8 > r.js && echo doc8 >> CLAUDE.md
+expect "段落內再一個 commit(零報告)" pass commit r6b
+
+# 切到「起點的父」開新線:起點 r6a 不再是 HEAD 的祖先,而共同祖先 r6a^ 存在。
+# 用正常 commit(同批更新 CLAUDE.md)才不會留下 SKIP 欠帳。
+git checkout -q -b sideline "${BASE_BEFORE}^"
+# ⚠️ **`docs/reviews/` 要在新線上重建** —— 這個檢查是 opt-in,判準是**工作目錄裡有沒有那個目錄**
+#    (`[ -d docs/reviews ] || return 1`)。而 `r6a` 才是建目錄的那個 commit,它不在這條線上,
+#    所以不重建的話整個檢查不啟用、測試會「為了錯的理由而通過」(第一版就是這樣)。
+#    放的是 `CLAUDE.md` 而**不是** `S*.md`:目錄要存在,但範圍內不可以有新增的報告。
+mkdir -p docs/reviews && echo '格式說明' > docs/reviews/CLAUDE.md
+echo 9 > r.js && echo doc9 >> CLAUDE.md
+expect "新線上的正常 commit(有 docs/reviews 目錄但零報告)" pass commit r6c
+base_is "$BASE_BEFORE"      # 起點檔是 worktree 自己的,切 branch 不會動它
+
+expect "起點不是祖先:--segment-base 必須硬失敗" block "$GATE" --segment-base
+said "沒有可用的段落起點"
+
+expect "起點不是祖先:reviews_missing 退到共同祖先,照樣擋" block "$GATE" --start-segment
+said "改從共同祖先"
+said "沒有新增任何 docs/reviews/S*.md"
+
+# ⑪ 連共同祖先都沒有:兩處都要**放行但講出來**。
+# ⚠️ 這是唯一允許的「放行」,所以必須斷言那句警告真的印出來 ——
+#    第一版 `reviews_missing` 在這裡靜默通過,等於多一條繞過路徑(S6 的 review 抓到)。
+git checkout -q --orphan unrelated
+git rm -rq --cached . >/dev/null 2>&1 || true
+rm -rf r.js README.md src docs 'api server' 2>/dev/null || true
+mkdir -p lone && echo x > lone/x.js && echo doc > lone/CLAUDE.md && echo root > CLAUDE.md
+expect "無關歷史上的第一個 commit" pass commit r7
+# ⚠️ 起點檔到這裡還是 `BASE_BEFORE`,**因為 ⑩ 的 `--start-segment` 是被擋下的(擋下不寫入)**。
+#    下面那個 `--start-segment` 會通過並覆蓋它,所以這個斷言只能放在這裡。
+base_is "$BASE_BEFORE"
+
+expect "沒有共同祖先:--segment-base 照樣硬失敗" block "$GATE" --segment-base
+expect "沒有共同祖先:放行,但要講出來(不可靜默)" pass "$GATE" --start-segment
+said "找不到共同祖先"
 
 exit $fail
 
