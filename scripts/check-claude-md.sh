@@ -68,14 +68,24 @@ still_has_code() {
 }
 
 # 「記下的起點 → 這次實際要用的起點」—— `owed_dirs` 與 `reviews_missing` 共用。
-# stdout = 有效起點;exit 1 = 連共同祖先都沒有(**由呼叫端決定那時要怎麼辦**)。
-# $1 = 警告句中間那一小段(兩處措辭不同),$2 = head sha
+# 輸入:**全域 `$base`**(記下的起點,由 `read_base` 設 —— 全檔都這樣用,不改成參數);
+#       $1 = 警告句中間那一小段;$2 = head sha
+# 輸出:stdout = 有效起點;exit 1 = 連共同祖先都沒有(**由呼叫端決定那時要怎麼辦**)。
+# ⚠️ `$1` 不只是措辭:`--start-segment` 在「起點不是祖先」時**兩處都會印這句警告**,
+#   沒有它使用者會看到兩行一模一樣的字,測試也分辨不出是哪一處印的
+#   (tests/test-gate.sh ⑩ 的 `said "review 檢查改從共同祖先"` 就靠它)。
 #
 # ⚠️ **只抽「機制」不抽「政策」**(2026-10-07,S4)。三處解析起點的地方退化規則**刻意不同**:
 #   ・`owed_dirs` / `reviews_missing` —— 退到共同祖先(**往寬退**,才不會把欠帳 / report 要求洗掉)
 #   ・`--segment-base` —— **必須硬失敗**,它的輸出要餵 `git diff`,印空字串或錯的 base 正是地雷
 #   所以 `--segment-base` **刻意不用這支**:硬套進來就得加一個關掉 fallback 的 mode 參數,
-#   那只是把同一個決策搬進函式裡(S6 的 reviewer 預言過這件事)。
+#   那只是把同一個決策搬進函式裡。
+#   ⚠️ **這個預判的出處是「我與 S6 的 simplifier 在 S4 規劃時的判斷」,不是 S6 的 reviewer**
+#   (2026-10-07 S4 的 review 查證:grep 過 `docs/reviews/S6-{a,b}.md`,**裡面沒有**任何
+#   關於抽共用函式或 mode 參數的段落)。原本寫「S6 的 reviewer 預言過」—— 錯的歸屬,
+#   而源頭在 lawdesk-ai 的設計文件 `2026-10-07-review-followups-design.md`,已一併更正。
+#   ⚠️ S6 的 review **真的**抓到的是另一件事:**這兩處的退化規則已經漂移**
+#   (一處退到共同祖先、另一處直接放行)—— 那一句有據(S6-a 的 A2 / S6-b 的 B2 逐字對得上),不要一起砍。
 # ⚠️ 真正值得抽的是**會漂移的那幾行**:`merge-base --is-ancestor`、fork-point、以及那句警告 ——
 #   S6 的 review 就是抓到這兩處**已經漂移**(一處退到共同祖先、另一處直接放行)。
 #   「連共同祖先都沒有」的後續處置留在呼叫端,因為兩處的後果不同(一個只檢查 staged、一個跳過 review 檢查)。
@@ -98,12 +108,12 @@ resolve_fork_base() {
 # CLAUDE.md 才算補上，merge 時把各條線的欠帳合起來。所以起點再舊也不會變寬鬆，
 # 平行分支上看不到那段程式碼的 CLAUDE.md 更新也抵不掉
 owed_dirs() {
-    local head range eff
+    local head range range_base
     head=$(git rev-parse --verify -q HEAD) || return 0
     if [ "$base" = "$EMPTY_TREE" ]; then
         range=$head
-    elif eff=$(resolve_fork_base "" "$head"); then
-        range="$eff..$head"
+    elif range_base=$(resolve_fork_base "" "$head"); then
+        range="$range_base..$head"
     else
         echo "⚠️ 段落起點 $base 不在目前分支的歷史裡，也找不到共同祖先，這次只檢查 staged" >&2
         echo "   段落開始前重記起點：$0 --start-segment" >&2
