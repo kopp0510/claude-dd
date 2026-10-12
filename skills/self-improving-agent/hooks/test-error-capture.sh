@@ -32,6 +32,12 @@ fi
 pass=0
 fail=0
 TOOL_PATH="$PATH"   # 跑第二輪時換成「看不到 jq」的 PATH，逼 hook 走 python3 後備
+# 每個案例的時限（秒）。hook 掛在每一次 Bash 工具呼叫後面，慢就是壞：2026-10-13 macOS bash 3.2
+# 的 ${OUTPUT//[[:space:]]/} 在 ~10KB 輸出要 57 秒。用 perl 的 alarm 砍（macOS 沒有 timeout），
+# 被砍時 exit 142。沒有 perl 就不限時，大輸出案例只剩語意檢查。
+LIMIT=5
+HAS_PERL=no
+command -v perl >/dev/null 2>&1 && HAS_PERL=yes
 
 json_ok() {
     if command -v jq >/dev/null 2>&1; then
@@ -62,12 +68,18 @@ check() {
 
     # out=$(...) 與 rc=$? 要分開兩行：併成 local out=$(...) 的話 rc 抓到的是 local 的
     # 結束狀態（永遠 0），下面的 exit code 檢查會靜靜失效
-    out=$(printf '%s' "$json" | env PATH="$TOOL_PATH" "$HOOK")
+    if [ "$HAS_PERL" = yes ]; then
+        out=$(printf '%s' "$json" | perl -e 'alarm shift; exec @ARGV or exit 127' "$LIMIT" env PATH="$TOOL_PATH" "$HOOK")
+    else
+        out=$(printf '%s' "$json" | env PATH="$TOOL_PATH" "$HOOK")
+    fi
     rc=$?
     got=silent
     [ -n "$out" ] && got=fire
 
-    if [ "$rc" -ne 0 ]; then
+    if [ "$rc" -eq 142 ] && [ "$HAS_PERL" = yes ]; then
+        err="超過 ${LIMIT} 秒被砍掉（hook 對大輸出變慢？）"
+    elif [ "$rc" -ne 0 ]; then
         err="hook exit=${rc}（不論有沒有命中都應為 0）"
     elif [ "$got" != "$expect" ]; then
         err="期望 ${expect}，實際 ${got}"
@@ -118,7 +130,24 @@ run_suite() {
     check '只有空白與換行' silent err '   \n  \n   '
     check '排除字與錯誤字在同一行' silent err 'logger.error( failed to parse )'
     check 'stdout 也套用同一組 exclusion' silent out 'console.error(failed)'
+
+    echo
+    echo "大輸出要在 ${LIMIT} 秒內結束"
+    echo "----------------------------------------------------------"
+    # 2026-10-13 回歸測試。⚠️ 只有 bash 3.2（CI 的 bash32 job、macOS 本機）會因舊寫法變慢；
+    # bash 5 跑舊版也會過（docker bash:5.3 實測）—— 那是正常的，不要因為「ubuntu job 改回舊版不會紅」就改這兩條。
+    # 約 16KB：舊版在 C locale 下 10KB 就要 6 秒，再大一點才不會因 runner 的 locale 而時紅時綠。
+    # 第二條守「為了變快而提早退出、把大輸出裡的真錯誤漏掉」那種修法。
+    check '大輸出、沒有錯誤' silent out "$BIG"
+    check '大輸出、最後一行才是錯誤' fire out "${BIG}npm ERR! late failure" 'late failure'
 }
+
+BIG=""
+i=0
+while [ "$i" -lt 800 ]; do
+    BIG="${BIG}normal build output line ok\\n"
+    i=$((i + 1))
+done
 
 echo "=== 第 1 輪：預設 PATH（有 jq 就走 jq）==="
 run_suite
