@@ -741,6 +741,20 @@ C) 先停下討論
 - `Read` 大檔先用 offset/limit 分段
 - 指令輸出過長時截斷,說明截斷位置
 - 不把整份 log 貼進回答,抽關鍵錯誤即可
+- ⚠️⚠️ **別用 `cmd | head -N` / `| tail -N` 截可能不會結束的指令的輸出** ——
+  `head -N` 湊不到 N 行就一直等,`tail` 要等 EOF,而**不結束的 `cmd` 永遠不給 EOF**
+  ⇒ 整條管線無聲掛住,畫面上看起來只是「還沒印完」。
+  **做法:輸出先導進檔案(`cmd > /tmp/x 2>&1`)、再從檔案抽**,而且**對 `cmd` 本身設硬逾時**。
+  macOS 沒有 `timeout` / `gtimeout`,用 `perl -e 'alarm 60; exec @ARGV or exit 127' cmd …`
+  (被砍掉時 exit 142 —— 那個碼本身就是「它真的會掛住」的證據)。
+  ⚠️ **判準不是「輸出會不會很長」,是「這個指令保證會自己結束嗎」** ——
+  跑測試、跑 server、`docker compose exec`、任何會開 socket 或 worker 的東西都不保證。
+  ⚠️ **而掛住會跨 session 活下去**:2026-10-10 一次清點抓到三支殘留,最久的
+  `node --test … | tail -20` 已經卡 **16 小時**(0% CPU、沒有任何錯誤訊息)。
+  ⇒ **收工前跑一次 `ps` 找自己留下的程序**(探針、測試、背景 shell),砍掉再走。
+- ⚠️ **自己寫的探針一定要有出口** —— 開了 server / worker / timer 就要
+  `srv.close()` + **`process.exit()`**;open handle 會讓 node 行程永遠不結束
+  (上面那類跨 session 的殘留就是這樣來的)。
 
 ---
 
