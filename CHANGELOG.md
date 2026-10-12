@@ -24,8 +24,8 @@
   用的 `${OUTPUT//[[:space:]]/}` 在 `/bin/bash` 3.2 是超線性的，~10KB 輸出在 `zh_TW.UTF-8` 下要 57 秒。
   改成 `[[ "$OUTPUT" =~ [^[:space:]] ]]`，同一份輸出 0.08 秒。`test-error-capture.sh` 補兩個大輸出情境
   （沒錯誤要靜默、最後一行有錯要觸發），每個案例用 perl `alarm` 限時 5 秒。由 lawdesk session 回報並先改了已安裝副本。
-- **self-improving-agent 的 `hooks.json` 加 `"timeout": 30`**：使用者要求所有 hook 都有逾時；
-  原本只改在已安裝副本，`--force` 會蓋回去。
+- **兩份 `hooks.json`（self-improving-agent、gate-guard）都加 `"timeout": 30`**：使用者要求所有 hook 都有逾時；
+  self-improving-agent 那份原本只改在已安裝副本，`--force` 會蓋回去。
 
 ## 1.6.2 — 2026-10-10
 
