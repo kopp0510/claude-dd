@@ -113,7 +113,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 | `--help` smoke test | 腳本連起碼的執行都掛掉 |
 | Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
-| error-capture hook 行為測試（`test-error-capture.sh`） | 逐行比對的語意迴歸（exclusion 一票否決、只讀 stderr、回報最後一行、Context 空白或截斷、jq/python3 單分支）—— 這類失效都是零輸出 exit 0，shellcheck 驗不出來。pattern／exclusion 清單只有情境用到的那幾項受保護，非系統性涵蓋 |
+| error-capture hook 行為測試（`test-error-capture.sh`） | 逐行比對的語意迴歸（exclusion 一票否決、只讀 stderr、回報最後一行、Context 空白或截斷、jq/python3 單分支）—— 這類失效都是零輸出 exit 0，shellcheck 驗不出來。另守大輸出效能：每個案例限時 5 秒，bash 3.2 的超線性字串替換會被砍掉（只在 `bash32` job 有牙）。pattern／exclusion 清單只有情境用到的那幾項受保護，非系統性涵蓋 |
 | gate-guard hook 行為測試（`test-guard-no-verify.sh`） | 該擋的 `git commit --no-verify`／`-n`／`core.hooksPath` 沒擋（零輸出 exit 0，跟「沒人繞過」長得一樣），或誤擋 `git config core.hooksPath`、`git log -n`、訊息內文的 `-n`；jq 與 python3 兩條分支都跑 |
 | 陣列 ↔ 目錄一致性（`ALL_*` 四組 + `DD_SCRIPTS ↔ scripts/*.sh`） | 陣列漏列 / 目錄改名未同步 / 新腳本沒進部署清單 |
 | 數字宣稱 ↔ 陣列（README 英/繁中兩份 + 根目錄 CLAUDE.md + **本文件**） | 文件數字過期。本文件涵蓋元件數、安裝編號步驟數、shellcheck 腳本數 |

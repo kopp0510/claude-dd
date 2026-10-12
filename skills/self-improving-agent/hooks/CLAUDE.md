@@ -10,7 +10,7 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
 |---|---|
 | `error-capture.sh` | hook 本體。stdin 收 Claude Code 的 JSON，取 `tool_response` 的 stdout+stderr，逐行比對 `EXCLUSIONS` 與 `ERROR_PATTERNS`，命中則用 `hookSpecificOutput.additionalContext` 回提醒。JSON 讀寫 jq 優先、python3 後備，兩者都沒有就靜靜 exit 0 |
 | `test-error-capture.sh` | 上者的行為測試（CI 會跑）。整套跑兩輪：一輪預設 PATH、一輪把 jq 藏起來逼它走 python3 後備，否則另一條分支零覆蓋。payload 手寫進 JSON，含雙引號或反斜線會生出壞 JSON 讓 hook 靜默 exit 0、案例假通過 —— 所以每個 payload 送出前都先驗 JSON 合法性，不合法就判該案例失敗 |
-| `hooks.json` | 註冊用設定。`command` 必須是 `$HOME/...` 絕對路徑 —— hook 以當下工作目錄為基準執行，寫 `./hooks/xxx.sh` 換個專案就找不到（根目錄 CLAUDE.md「Skill hook 路徑規範」，`validate_skill_hooks()` 會在部署前擋下相對路徑） |
+| `hooks.json` | 註冊用設定。帶 `"timeout": 30`（秒）—— 使用者要求所有 hook 都有逾時，hook 卡住時最多拖住 30 秒。`command` 必須是 `$HOME/...` 絕對路徑 —— hook 以當下工作目錄為基準執行，寫 `./hooks/xxx.sh` 換個專案就找不到（根目錄 CLAUDE.md「Skill hook 路徑規範」，`validate_skill_hooks()` 會在部署前擋下相對路徑） |
 
 ## 此層約束
 
@@ -28,6 +28,13 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   對整份輸出比，變成一票否決：輸出裡任何一處出現 `console.error` 或 `no error`，
   同一份輸出裡真正的失敗全部被吞掉，而且是完全靜默（零輸出、exit 0，跟「這次沒錯」長得一模一樣）。
   2026-09-12 修掉，兩個實測會踩到的真實案例已寫成註解留在檔內
+- **不可用 `${OUTPUT//[[:space:]]/}` 這類對整份輸出的 `${var//pattern/}` 替換**。macOS 的
+  `/bin/bash` 3.2 做這個替換是超線性的：2026-10-13 實測 ~10KB 輸出在 `zh_TW.UTF-8` 要 57 秒、
+  `C` 要 6 秒，而這支 hook 掛在**每一次** Bash 工具呼叫後面 —— 使用者看到的是
+  「running PostToolUse hooks…」卡一兩分鐘。改成 `[[ "$OUTPUT" =~ [^[:space:]] ]]` 後 0.08 秒、
+  ~300KB 1.5 秒。測試的「大輸出」兩個情境守這件事（每個案例用 perl `alarm` 限時，被砍就報
+  「超過 N 秒被砍掉」）；**只在 bash 3.2 有牙**：bash 5 跑舊寫法也會過（docker `bash:5` 映像、5.3 實測），
+  所以抓得到它的是 CI 的 `bash32` job，不是 ubuntu job
 - **改這支腳本後必須跑 `./test-error-capture.sh`**（同目錄，CI 也會跑）。情境數不寫在這裡
   （會過期）—— 跑一次就會逐案印出來。**新增行為時同批補一個情境進去**：這支 hook 的失效是
   零輸出 exit 0，跟「真的沒錯誤」長得一樣，沒有情境守著就等於沒寫。

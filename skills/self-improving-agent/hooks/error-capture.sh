@@ -58,8 +58,11 @@ print(resp)
 ' 2>/dev/null) || exit 0
 fi
 
-# Exit silently if the response is empty or whitespace-only
-[ -z "${OUTPUT//[[:space:]]/}" ] && exit 0
+# Exit silently if the response is empty or whitespace-only.
+# Do NOT write this as `[ -z "${OUTPUT//[[:space:]]/}" ]`: on macOS /bin/bash 3.2 that
+# substitution is superlinear — a ~10KB output took 57s under zh_TW.UTF-8 and 6s under C
+# (measured 2026-10-13), stalling every Bash tool call behind this hook. The regex test is 0.08s.
+[[ "$OUTPUT" =~ [^[:space:]] ]] || exit 0
 
 # Error patterns. Order only picks WHICH pattern name gets reported when one line matches
 # several — the first matching LINE wins regardless of which pattern it hit.
