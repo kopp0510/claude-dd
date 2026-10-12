@@ -84,7 +84,8 @@ To enable:
       "matcher": "Bash",
       "hooks": [{
         "type": "command",
-        "command": "$HOME/.claude/skills/self-improving-agent/hooks/error-capture.sh"
+        "command": "$HOME/.claude/skills/self-improving-agent/hooks/error-capture.sh",
+        "timeout": 30
       }]
     }]
   }

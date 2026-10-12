@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/skills/gate-guard/hooks/guard-no-verify.sh"
+            "command": "$HOME/.claude/skills/gate-guard/hooks/guard-no-verify.sh",
+            "timeout": 30
           }
         ]
       }

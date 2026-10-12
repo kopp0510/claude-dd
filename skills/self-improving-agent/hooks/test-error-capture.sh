@@ -38,6 +38,8 @@ TOOL_PATH="$PATH"   # 跑第二輪時換成「看不到 jq」的 PATH，逼 hook
 LIMIT=5
 HAS_PERL=no
 command -v perl >/dev/null 2>&1 && HAS_PERL=yes
+# 沒限時的「全部通過」跟有限時的長得一樣，所以要講出來
+[ "$HAS_PERL" = no ] && echo "⚠️  找不到 perl：本次不限時，大輸出情境只驗語意、驗不到效能"
 
 json_ok() {
     if command -v jq >/dev/null 2>&1; then
@@ -136,7 +138,7 @@ run_suite() {
     echo "----------------------------------------------------------"
     # 2026-10-13 回歸測試。⚠️ 只有 bash 3.2（CI 的 bash32 job、macOS 本機）會因舊寫法變慢；
     # bash 5 跑舊版也會過（docker bash:5.3 實測）—— 那是正常的，不要因為「ubuntu job 改回舊版不會紅」就改這兩條。
-    # 約 16KB：舊版在 C locale 下 10KB 就要 6 秒，再大一點才不會因 runner 的 locale 而時紅時綠。
+    # 約 22KB（800 行）：舊版在 C locale 下 10KB 就要 6 秒，再大一點才不會因 runner 的 locale 而時紅時綠。
     # 第二條守「為了變快而提早退出、把大輸出裡的真錯誤漏掉」那種修法。
     check '大輸出、沒有錯誤' silent out "$BIG"
     check '大輸出、最後一行才是錯誤' fire out "${BIG}npm ERR! late failure" 'late failure'

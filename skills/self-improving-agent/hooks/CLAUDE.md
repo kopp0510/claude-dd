@@ -33,7 +33,7 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   `C` 要 6 秒，而這支 hook 掛在**每一次** Bash 工具呼叫後面 —— 使用者看到的是
   「running PostToolUse hooks…」卡一兩分鐘。改成 `[[ "$OUTPUT" =~ [^[:space:]] ]]` 後 0.08 秒、
   ~300KB 1.5 秒。測試的「大輸出」兩個情境守這件事（每個案例用 perl `alarm` 限時，被砍就報
-  「超過 N 秒被砍掉」）；**只在 bash 3.2 有牙**：bash 5 跑舊寫法也會過（docker `bash:5` 映像、5.3 實測），
+  「超過 N 秒被砍掉」；找不到 perl 時不限時，開頭印一行 ⚠️ 講明）；**只在 bash 3.2 有牙**：bash 5 跑舊寫法也會過（docker `bash:5` 映像、5.3 實測），
   所以抓得到它的是 CI 的 `bash32` job，不是 ubuntu job
 - **改這支腳本後必須跑 `./test-error-capture.sh`**（同目錄，CI 也會跑）。情境數不寫在這裡
   （會過期）—— 跑一次就會逐案印出來。**新增行為時同批補一個情境進去**：這支 hook 的失效是
