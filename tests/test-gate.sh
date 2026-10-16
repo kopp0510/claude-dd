@@ -378,5 +378,62 @@ said "跳過 review 報告檢查"       # reviews_missing 那一處
 # ⚠️⚠️ **⑩⑪ 之後不要再接情境** —— 它們收尾在 orphan branch `unrelated` 上,
 #    工作目錄被 `git clean -xdfq` 清空過(只留下這一段自己建的 `lone/` 與 `CLAUDE.md`),起點檔也被最後那個
 #    `--start-segment` 覆蓋過。要加新情境請加在 ⑨ 之前,或自己重建需要的狀態。
+
+# ⑫ **記憶檔名可設**(`git config dd.docfile`,2026-10-16)。
+# ⚠️ 自己開一個乾淨的 repo:上面 ⑩⑪ 收尾在 orphan branch、工作目錄被 `git clean` 清過、
+#    起點檔也被覆蓋過,所以這一段不碰那個 repo 的狀態(照檔尾那條警告的精神)。
+# ⚠️ 這幾則要**同時**釘住三條路徑,因為檔名在三處各自出現:
+#    `md_of()`(路徑組出來對不對)、訊息字串、以及 `owed_dirs` 的 awk 樣式(銷帳認不認)。
+#    只測前兩者的話,把 awk 那行留成寫死的 `CLAUDE\.md` **不會有任何一則變紅**。
+mkdir "$WORK/docfile" && cd "$WORK/docfile" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+git config dd.docfile GEMINI.md
+
+# ①記憶檔是 GEMINI.md:同批 staged 就過關(`md_of()` 認得)
+mkdir -p a && echo 1 > a/x.sh && echo doc > a/GEMINI.md && echo root > GEMINI.md
+expect "dd.docfile=GEMINI.md:只有 GEMINI.md 也過關" pass commit g1
+
+# ②CLAUDE.md 不算:設了 dd.docfile 之後它只是普通檔案
+mkdir -p b && echo 1 > b/y.sh && echo doc > b/CLAUDE.md
+expect "dd.docfile=GEMINI.md:只有 CLAUDE.md 要擋" block commit g2
+said "缺少 GEMINI.md 的目錄"
+said "b/GEMINI.md"
+echo doc > b/GEMINI.md
+expect "補上 b/GEMINI.md 後過關" pass commit g2b
+
+# ③欠帳也要認 GEMINI.md(`owed_dirs` 的 awk 樣式)。
+#    ⚠️ 關鍵的一則是最後那個「補 GEMINI.md 就銷帳」—— awk 那行若寫死 CLAUDE.md,
+#    它會判定欠帳沒清掉而繼續擋,這一則就會變紅。
+expect "記段落起點" pass "$GATE" --start-segment
+mkdir -p c && echo 1 > c/z.sh
+expect "SKIP 建了沒有記憶檔的目錄" pass skip_commit g3
+echo other > GEMINI.md
+expect "欠帳未補:下一個正常 commit 照樣擋" block commit g4
+said "c/GEMINI.md"
+echo doc > c/GEMINI.md
+expect "補上 c/GEMINI.md:同批 staged 放行" pass commit g4b
+# ⚠️⚠️ **這一則才是釘住 awk 樣式的那個** —— 再一個**完全不碰 c** 的 commit:
+#    c 的欠帳要由上一個 commit 更新 `c/GEMINI.md` 來銷(走 `owed_dirs` 的 `DOC_RE`),
+#    而不是靠「這次一起 staged」那條路。
+#    ⚠️ 2026-10-16 實測:上面那則**單獨不夠** —— awk 那行改回寫死 `CLAUDE\.md` 時它照樣綠
+#    (放行的理由是同批 staged,不是銷帳),整個變異 0 紅。
+mkdir -p d && echo 1 > d/w.sh && echo doc > d/GEMINI.md
+expect "c 的欠帳已銷:只動 d 的 commit 放行" pass commit g4c
+
+# ④非法值要擋,而且要講得出原因(路徑、空白、regex 特殊字元都在同一個字元集規則裡)
+git config dd.docfile ../evil.md
+expect "dd.docfile 帶路徑:拒絕執行" block "$GATE" --segment-base
+said "必須是單純檔名"
+git config dd.docfile 'GE MINI.md'
+expect "dd.docfile 含空白:拒絕執行" block "$GATE" --segment-base
+git config --unset dd.docfile
+expect "沒設 dd.docfile:回到預設(有 CLAUDE.md 欠帳要擋)" block commit g5
+said "CLAUDE.md"
+
 exit $fail
 
