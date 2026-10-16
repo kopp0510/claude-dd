@@ -21,16 +21,19 @@ cd "$top" || exit 1
 
 # 記憶檔名（預設 CLAUDE.md，見檔頭）。字元集限制同時擋掉路徑與 regex 特殊字元，
 # 所以下面組 awk 樣式時只需要跳脫 `.`
-DOC_FILE=$(git config --get dd.docfile 2>/dev/null)
+# ⚠️ **刻意只讀 `--local`**（`.git/config`）：設成 global 的話，一次設定就會把這台機器上
+# **所有** repo 的 gate 改認那個檔名，而個人 repo 的 CLAUDE.md 全部變成不算（2026-10-16 的
+# review 實測過這個情境：只給 GIT_CONFIG_GLOBAL，gate 就去要 GEMINI.md）。一個 repo 一個決定
+DOC_FILE=$(git config --local --get dd.docfile 2>/dev/null)
 [ -z "$DOC_FILE" ] && DOC_FILE="CLAUDE.md"
 case "$DOC_FILE" in
-    *[!A-Za-z0-9._-]*|.|..)
-        echo "❌ check-claude-md.sh：git config dd.docfile 必須是單純檔名，目前是「${DOC_FILE}」"
+    *[!A-Za-z0-9._-]*|.|..|-*)
+        echo "❌ check-claude-md.sh：git config dd.docfile 必須是單純檔名、不以 - 開頭，目前是「${DOC_FILE}」"
         exit 1
         ;;
 esac
 # 記憶檔的 awk 樣式：`(^|/)<檔名>$`，給 owed_dirs 的 ENVIRON 用（同 CODE_RE 的做法）
-export DOC_RE="(^|/)$(printf '%s' "$DOC_FILE" | sed 's/\./\\./g')\$"
+export DOC_RE="(^|/)${DOC_FILE//./\\.}\$"
 
 # 視為「程式碼」的副檔名（改動這些才要求文件同步；純文件/設定/資產不觸發）
 CODE_EXT='js|jsx|ts|tsx|mjs|cjs|py|go|rs|java|kt|rb|php|sh|bash|c|h|cpp|hpp|cs|swift|sql|vue|svelte'
