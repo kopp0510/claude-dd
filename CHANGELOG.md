@@ -27,7 +27,8 @@
   （`[A-Za-z0-9._-]`，不是 `.`／`..`、不以 `-` 開頭 —— bash 內建 `echo` 會把 `-n` 當選項吃掉，
   根目錄的記憶檔路徑會變成空字串），否則 `exit 1`。檔名在三處各自出現
   （`md_of()`、訊息字串、`owed_dirs` 的 awk 樣式）。`tests/test-gate.sh` 新增情境 ⑫
-  自己開乾淨 repo 驗這些，變異對照記在 `tests/CLAUDE.md`。
+  自己開乾淨 repo 驗這些，「哪個變異 → 哪幾則紅」的對照表記在 `scripts/CLAUDE.md`
+  （`tests/CLAUDE.md` 記的是 ⑫ 那組情境本身的陷阱）。
   兩份 review 報告在 `docs/reviews/2026-10-16-gate-docfile/`
 
 ### Changed

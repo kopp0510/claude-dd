@@ -153,7 +153,8 @@ git pull && ./install-dd-pipeline.sh --force
   只讀 `--local`（寫在 `.git/config`、不進版控）：設成 global 會讓這台機器上**所有** repo 的
   `CLAUDE.md` 都不算，`-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 同樣不生效，一個 repo 一個決定。
   只接受單純檔名（`[A-Za-z0-9._-]`，不是 `.`／`..`、也不以 `-` 開頭），否則 `exit 1`；
-  `--start-segment`／`--segment-base` 與 SKIP 欠帳機制一併改認它
+  `--start-segment` 與 SKIP 欠帳機制一併改認它（`--segment-base` 只印起點、不碰檔名，
+  但非法值一樣會先被擋下 —— 驗證在分派子命令之前）
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 - `git commit --no-verify`／`-n` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到。Claude 這樣下指令時，`gate-guard` 的 PreToolUse hook 會直接擋下，並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude —— 你自己在終端機打 `--no-verify` 擋不到。它是全域安裝，所以在每個專案都會擋，包括沒裝 gate 的專案；真的要跳過 hook 時請自己在終端機執行
