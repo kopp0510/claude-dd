@@ -39,11 +39,12 @@
       這條「同批 staged 就過關」的短路把結果蓋掉**(2026-10-16 的 review 更正:原本寫
       「awk 根本沒執行到」是把機制講錯了)。要測銷帳必須**再加一個完全不碰該目錄的 commit**,
       詳見 `tests/CLAUDE.md`
-    - **範圍決定:上游文件刻意不同步**（2026-10-16）：`dd.docfile` 只活在本機的 `company`
-      branch，所以兩份 README、`DD_PIPELINE_ARCHITECTURE.md`、`commands/dd-init.md` 的 gate 段落
-      **刻意不提它**（專案 CLAUDE.md 把那幾處列為「動到 gate 行為要手動巡一遍」—— 這裡是巡過之後
-      決定不動）。要把這個功能推上游時，那幾處連同 CHANGELOG 的 `## 未發布` 一起補。
-      `/dd-init` 的 Phase 3 本身不受影響：它寫進 hook 的那一行只是轉呼叫 gate、不判檔名
+    - **上游文件已同步**（2026-10-16 同日推上游）：專案 CLAUDE.md 把「動到 gate 行為」列為
+      要手動巡一遍的觸發時機，巡完動到的是**兩份 README 的「CLAUDE.md 維護規則」**、
+      **`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段**、**CHANGELOG 的 `## 未發布`**。
+      `commands/dd-init.md` **刻意不動**：它寫進 hook 的那一行只是轉呼叫 gate、不判檔名，
+      而蓋章區塊一改就得跳 `dd-loop-rev`（那會讓所有已蓋章的專案被判為舊版）。
+      要設這個選項的人看得到的是 README 與本節，不是 `/dd-init` 的輸出
   - **擋不到 `git commit --no-verify`／`-n`**：git 直接跳過 pre-commit，gate 整個不跑，
     SKIP 那種「沒起點就自動記」也不會發生。已經記過段落起點時，之後的正常 commit 會在欠帳裡補抓到；
     沒記起點、或繞過的就是最後一個 commit，就完全漏查。被擋時的訊息結尾會提醒別這樣繞；

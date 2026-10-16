@@ -18,6 +18,18 @@
 
 ## 未發布
 
+### Added
+
+- **gate 的記憶檔名可設**（`git config --local dd.docfile <檔名>`，預設仍是 `CLAUDE.md`）：
+  用途是只准放某個固定檔名的 repo —— 檔名寫死在 `md_of()` 就等於那些 repo 完全用不到 gate。
+  **只讀 `--local`**（`-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 都不生效）：設成 global 的話
+  一次設定會讓這台機器上所有 repo 的 `CLAUDE.md` 都不算。只接受單純檔名
+  （`[A-Za-z0-9._-]`，不是 `.`／`..`、不以 `-` 開頭 —— bash 內建 `echo` 會把 `-n` 當選項吃掉，
+  根目錄的記憶檔路徑會變成空字串），否則 `exit 1`。檔名在三處各自出現
+  （`md_of()`、訊息字串、`owed_dirs` 的 awk 樣式）。`tests/test-gate.sh` 新增情境 ⑫
+  自己開乾淨 repo 驗這些，變異對照記在 `tests/CLAUDE.md`。
+  兩份 review 報告在 `docs/reviews/2026-10-16-gate-docfile/`
+
 ### Changed
 
 - **全域 CLAUDE.md 補兩條先前只存在本機、沒進版控的規則**：部署版 `~/.claude/CLAUDE.md`
