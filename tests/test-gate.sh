@@ -431,9 +431,30 @@ expect "dd.docfile 帶路徑:拒絕執行" block "$GATE" --segment-base
 said "必須是單純檔名"
 git config dd.docfile 'GE MINI.md'
 expect "dd.docfile 含空白:拒絕執行" block "$GATE" --segment-base
+# ⚠️ **`-` 開頭要單獨擋**(2026-10-16 的 review 抓到):字元集本身放行 `-`,而
+#    `md_of "."` 是 `echo "$DOC_FILE"` —— bash 內建 echo 把 `-n` / `-e` 當選項吃掉,
+#    根目錄的記憶檔路徑就變成**空字串**(`[ -f "" ]` 恆假、訊息也印不出檔名)。
+git config dd.docfile -n
+expect "dd.docfile 以 - 開頭:拒絕執行" block "$GATE" --segment-base
+said "不以 - 開頭"
 git config --unset dd.docfile
-expect "沒設 dd.docfile:回到預設(有 CLAUDE.md 欠帳要擋)" block commit g5
-said "CLAUDE.md"
+# ⚠️ **先讓工作樹有東西可 commit** —— 2026-10-16 的 review 抓到:這一則原本緊接在 g4c 之後,
+#    那時 index 是空的,`git add -A && git commit` **本身就會回非 0**(nothing to commit),
+#    於是「block」有兩個原因同時成立、斷言恆真。`said` 也要挑只有欠帳清單才會印的字串:
+#    標頭「❌ CLAUDE.md gate」在恆真的情況下照樣會出現。
+echo note > README.md
+expect "沒設 dd.docfile:回到預設(c/d 的欠帳改認 CLAUDE.md)" block commit g5
+said "c/CLAUDE.md"
+
+# ⑤ **global / system scope 不可以漏進來**(2026-10-16 的 review 實測出這個情境)。
+# 一次 `git config --global dd.docfile GEMINI.md` 就會把這台機器上所有 repo 的 gate 改名,
+# 個人 repo 的 CLAUDE.md 全部變成不算 —— 所以 gate 只讀 `--local`。
+# ⚠️ 這一則有牙:`--local` 改回 `--get` 時,c 與 d 的 GEMINI.md 會把欠帳銷掉而放行。
+printf '[dd]\n\tdocfile = GEMINI.md\n' > "$WORK/fakeglobal"
+export GIT_CONFIG_GLOBAL="$WORK/fakeglobal"
+expect "dd.docfile 設在 global:gate 不理它,照用 CLAUDE.md" block "$GATE"
+said "c/CLAUDE.md"
+unset GIT_CONFIG_GLOBAL
 
 exit $fail
 

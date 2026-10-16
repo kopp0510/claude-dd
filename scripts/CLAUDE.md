@@ -12,21 +12,38 @@
   - **記憶檔名可設**（2026-10-16）：預設 `CLAUDE.md`，`git config dd.docfile GEMINI.md`
     改成別的（寫在 `.git/config`，不進版控）。用途是只准放 `GEMINI.md` 的公司 repo
     （`~/.claude/rules/company.md` §2）—— 檔名寫死就等於那些 repo 完全用不到 gate。
-    - **只接受單純檔名**（`[A-Za-z0-9._-]`，且不是 `.` / `..`）：帶路徑或空白一律 `exit 1`。
+    - **只讀 `--local`**（2026-10-16 的 review 要求）：設成 global 的話，一次設定會把這台機器上
+      **所有** repo 的 gate 改認那個檔名，個人 repo 的 CLAUDE.md 全部變成不算。一個 repo 一個決定。
+      ⚠️ **連 `-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 也不生效**（那是 command 層、不是 local）——
+      想在別的 repo 乾跑就真的 `git config --local dd.docfile <檔名>`，驗完 `--unset`
+    - **只接受單純檔名**（`[A-Za-z0-9._-]`，不是 `.` / `..`，**也不以 `-` 開頭**）：帶路徑或空白一律 `exit 1`。
       這個字元集同時擋掉 regex 特殊字元，所以組 awk 樣式時只需要跳脫 `.`（`DOC_RE`）
+    - ⚠️ **`-` 開頭要另外擋**：字元集本身放行 `-`，而 `md_of "."` 是 `echo "$DOC_FILE"` ——
+      bash 內建 echo 把 `-n` / `-e` 當選項吃掉，根目錄的記憶檔路徑會變成**空字串**
+      （`[ -f "" ]` 恆假、訊息也印不出檔名）。兩份 review 對這一項的結論不同（一份列為發現、
+      一份放進 Not reported 說「沒有合理觸發情境」）—— 用 `od -c` 讀輸出判定：`echo "-n"` 真的是零位元組
     - **檔名在三處各自出現**，改動時三處都要顧：`md_of()`（組路徑）、訊息字串（`${DOC_FILE}`）、
       `owed_dirs` 的 awk 樣式（`ENVIRON["DOC_RE"]`，決定欠帳**銷不銷**）
     - 變異測試（2026-10-16 實跑，記「哪個變異 → 哪幾則紅」）：
 
       | 變異 | 應該變紅的情境 |
       |---|---|
-      | `md_of()` 改回寫死 `CLAUDE.md` | ⑫ 的 ①②③ 全部（路徑組錯，GEMINI.md 那條路整組失效） |
+      | `md_of()` 改回寫死 `CLAUDE.md` | ⑫ 的這六則：①「只有 GEMINI.md 也過關」／②「補上 b/GEMINI.md 後過關」與它的 `said b/GEMINI.md`／③「補上 c/GEMINI.md:同批 staged 放行」「c 的欠帳已銷」與 `said c/GEMINI.md`。⚠️ **不是「①②③ 全部」**（2026-10-16 兩份 review 都指出）：②的「只有 CLAUDE.md 要擋」在變異版照樣 block（擋下的理由變成別的目錄），它的 `said "缺少 GEMINI.md 的目錄"` 也照樣綠（**訊息字串走 `${DOC_FILE}`、不經 `md_of()`**）—— 綠燈不代表那兩則釘住了這個功能 |
       | awk 樣式改回寫死 `/(^\|\/)CLAUDE\.md$/` | **只有**⑫③ 的「c 的欠帳已銷：只動 d 的 commit 放行」一則 |
-      | 把 `case "$DOC_FILE" in …` 整段驗證拿掉 | ⑫④ 的三則（非法值變成放行） |
+      | 把 `case "$DOC_FILE" in …` 整段驗證拿掉 | ⑫④ 的「帶路徑」「含空白」兩則 expect + `said "必須是單純檔名"` |
+      | `--local` 改回 `--get`（吃得到 global） | ⑫⑤ 的 expect 與 `said "c/CLAUDE.md"` |
+      | 驗證的 `case` 拿掉 `-*` 那一條 | ⑫④ 的「以 - 開頭」expect 與 `said "不以 - 開頭"` |
 
-      ⚠️ **第二個變異第一版是 0 紅** —— 當時 ③ 的最後一則是「補上 `c/GEMINI.md` 後放行」，
-      而它放行的理由是**同批 staged**（`[ -f "$md" ] && grep -qxF`），根本沒走到銷帳那條路。
-      要測銷帳必須**再加一個完全不碰該目錄的 commit**，詳見 `tests/CLAUDE.md`
+      ⚠️ **第二個變異第一版是 0 紅** —— 當時 ③ 的最後一則是「補上 `c/GEMINI.md` 後放行」。
+      `owed_dirs` 其實跑了、也確實把 `c` 算成欠帳,**是 `[ -f "$md" ] && grep -qxF "$md" && continue`
+      這條「同批 staged 就過關」的短路把結果蓋掉**(2026-10-16 的 review 更正:原本寫
+      「awk 根本沒執行到」是把機制講錯了)。要測銷帳必須**再加一個完全不碰該目錄的 commit**,
+      詳見 `tests/CLAUDE.md`
+    - **範圍決定:上游文件刻意不同步**（2026-10-16）：`dd.docfile` 只活在本機的 `company`
+      branch，所以兩份 README、`DD_PIPELINE_ARCHITECTURE.md`、`commands/dd-init.md` 的 gate 段落
+      **刻意不提它**（專案 CLAUDE.md 把那幾處列為「動到 gate 行為要手動巡一遍」—— 這裡是巡過之後
+      決定不動）。要把這個功能推上游時，那幾處連同 CHANGELOG 的 `## 未發布` 一起補。
+      `/dd-init` 的 Phase 3 本身不受影響：它寫進 hook 的那一行只是轉呼叫 gate、不判檔名
   - **擋不到 `git commit --no-verify`／`-n`**：git 直接跳過 pre-commit，gate 整個不跑，
     SKIP 那種「沒起點就自動記」也不會發生。已經記過段落起點時，之後的正常 commit 會在欠帳裡補抓到；
     沒記起點、或繞過的就是最後一個 commit，就完全漏查。被擋時的訊息結尾會提醒別這樣繞；
