@@ -10,8 +10,9 @@
   同批 staged；逃生口 `SKIP_DOC_CHECK=1`（僅供迴圈檢查點 commit）。由
   `/dd-init` 掛進各專案的 `.git/hooks/pre-commit`。
   - **記憶檔名可設**（2026-10-16）：預設 `CLAUDE.md`，`git config dd.docfile GEMINI.md`
-    改成別的（寫在 `.git/config`，不進版控）。用途是只准放 `GEMINI.md` 的公司 repo
-    （`~/.claude/rules/company.md` §2）—— 檔名寫死就等於那些 repo 完全用不到 gate。
+    改成別的（寫在 `.git/config`，不進版控）。用途是**只准放某個固定檔名的 repo**
+    （例如規定記憶檔一律叫 `GEMINI.md`、不得出現 `CLAUDE.md` 的團隊）—— 檔名寫死
+    就等於那些 repo 完全用不到 gate。
     - **只讀 `--local`**（2026-10-16 的 review 要求）：設成 global 的話，一次設定會把這台機器上
       **所有** repo 的 gate 改認那個檔名，個人 repo 的 CLAUDE.md 全部變成不算。一個 repo 一個決定。
       ⚠️ **連 `-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 也不生效**（那是 command 層、不是 local）——
@@ -42,9 +43,19 @@
     - **上游文件已同步**（2026-10-16 同日推上游）：專案 CLAUDE.md 把「動到 gate 行為」列為
       要手動巡一遍的觸發時機，巡完動到的是**兩份 README 的「CLAUDE.md 維護規則」**、
       **`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段**、**CHANGELOG 的 `## 未發布`**。
-      `commands/dd-init.md` **刻意不動**：它寫進 hook 的那一行只是轉呼叫 gate、不判檔名，
-      而蓋章區塊一改就得跳 `dd-loop-rev`（那會讓所有已蓋章的專案被判為舊版）。
-      要設這個選項的人看得到的是 README 與本節，不是 `/dd-init` 的輸出
+      `commands/dd-init.md` **刻意不動**，理由分兩半（2026-10-16 兩份 review 指出原本只講了後半、
+      而且掛在錯的範圍上）：
+      - **區塊外**（Phase 3，`grep -n '^### Phase 3' commands/dd-init.md`）：它寫進 hook 的那一行
+        只是轉呼叫 gate、**不判檔名**，所以行為正確。改它**不需要**跳 rev（蓋章區塊是
+        ``grep -n '^```' commands/dd-init.md | head -2`` 夾出來的那段，Phase 3 在它之後）
+      - **區塊內**：步驟 8 的範圍指令寫死 `grep 'CLAUDE\.md$'`，要跟著檔名走就得改蓋章區塊 ⇒
+        得跳 `dd-loop-rev`，而那會讓所有已蓋章的專案被判為舊版
+      ⚠️ **已知限制(不是「使用者看不到」)**：Phase 3 產生的訊息字串寫死 `CLAUDE.md`
+      （hook 的註解、gate 不在時的 fallback 警告、pre-commit／lefthook 的設定名 ——
+      `grep -n 'CLAUDE.md gate' commands/dd-init.md`）。設了 `dd.docfile` 的 repo 裡，
+      協作者打開 `.git/hooks/pre-commit` 看到的仍是「需有 CLAUDE.md」，**而 gate 實際認的是
+      `dd.docfile`**。要修就改 Phase 3 的措辭（不必跳 rev），但依專案 CLAUDE.md 動 commands
+      要另外在沙盒 repo 乾跑一遍，所以沒跟這批一起做
   - **擋不到 `git commit --no-verify`／`-n`**：git 直接跳過 pre-commit，gate 整個不跑，
     SKIP 那種「沒起點就自動記」也不會發生。已經記過段落起點時，之後的正常 commit 會在欠帳裡補抓到；
     沒記起點、或繞過的就是最後一個 commit，就完全漏查。被擋時的訊息結尾會提醒別這樣繞；

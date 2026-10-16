@@ -3,7 +3,7 @@
 # check-claude-md.sh — git pre-commit gate（block 版）
 # 規則：每個含程式碼的資料夾都要有記憶檔，且該資料夾改了程式碼時記憶檔需同批更新
 # 記憶檔名：預設 CLAUDE.md；`git config dd.docfile GEMINI.md` 可改（.git/config，不進版控）。
-#   用途是只准放 GEMINI.md 的 repo（見 ~/.claude/rules/company.md §2）—— 檔名寫死就等於
+#   用途是只准放某個固定檔名的 repo（例如記憶檔一律叫 GEMINI.md）—— 檔名寫死就等於
 #   那些 repo 完全用不到 gate。只接受單純檔名（[A-Za-z0-9._-]），不接受路徑
 # 部署：claude-dd/scripts/ → ~/.claude/scripts/（source of truth 在 claude-dd repo）
 # 掛載：由 /dd-init 寫入專案 .git/hooks/pre-commit 呼叫本腳本
