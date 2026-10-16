@@ -9,6 +9,24 @@
   變更含程式碼檔（副檔名見腳本內 `CODE_EXT`）的目錄，必須存在 CLAUDE.md 且
   同批 staged；逃生口 `SKIP_DOC_CHECK=1`（僅供迴圈檢查點 commit）。由
   `/dd-init` 掛進各專案的 `.git/hooks/pre-commit`。
+  - **記憶檔名可設**（2026-10-16）：預設 `CLAUDE.md`，`git config dd.docfile GEMINI.md`
+    改成別的（寫在 `.git/config`，不進版控）。用途是只准放 `GEMINI.md` 的公司 repo
+    （`~/.claude/rules/company.md` §2）—— 檔名寫死就等於那些 repo 完全用不到 gate。
+    - **只接受單純檔名**（`[A-Za-z0-9._-]`，且不是 `.` / `..`）：帶路徑或空白一律 `exit 1`。
+      這個字元集同時擋掉 regex 特殊字元，所以組 awk 樣式時只需要跳脫 `.`（`DOC_RE`）
+    - **檔名在三處各自出現**，改動時三處都要顧：`md_of()`（組路徑）、訊息字串（`${DOC_FILE}`）、
+      `owed_dirs` 的 awk 樣式（`ENVIRON["DOC_RE"]`，決定欠帳**銷不銷**）
+    - 變異測試（2026-10-16 實跑，記「哪個變異 → 哪幾則紅」）：
+
+      | 變異 | 應該變紅的情境 |
+      |---|---|
+      | `md_of()` 改回寫死 `CLAUDE.md` | ⑫ 的 ①②③ 全部（路徑組錯，GEMINI.md 那條路整組失效） |
+      | awk 樣式改回寫死 `/(^\|\/)CLAUDE\.md$/` | **只有**⑫③ 的「c 的欠帳已銷：只動 d 的 commit 放行」一則 |
+      | 把 `case "$DOC_FILE" in …` 整段驗證拿掉 | ⑫④ 的三則（非法值變成放行） |
+
+      ⚠️ **第二個變異第一版是 0 紅** —— 當時 ③ 的最後一則是「補上 `c/GEMINI.md` 後放行」，
+      而它放行的理由是**同批 staged**（`[ -f "$md" ] && grep -qxF`），根本沒走到銷帳那條路。
+      要測銷帳必須**再加一個完全不碰該目錄的 commit**，詳見 `tests/CLAUDE.md`
   - **擋不到 `git commit --no-verify`／`-n`**：git 直接跳過 pre-commit，gate 整個不跑，
     SKIP 那種「沒起點就自動記」也不會發生。已經記過段落起點時，之後的正常 commit 會在欠帳裡補抓到；
     沒記起點、或繞過的就是最後一個 commit，就完全漏查。被擋時的訊息結尾會提醒別這樣繞；
