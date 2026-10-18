@@ -285,8 +285,8 @@ expect "段落內的 commit" pass commit r4c
 # 改寫 HEAD(起點之後),起點本身仍在。包進 expect:裸跑的話,變異版 gate 擋下它時 set -e 會中止整支,
 # 後面的情境一則都沒跑到、總數對不上(2026-10-19 拿「pre-commit 也查報告」的變異實測:停在這行,繞過①根本沒跑)
 expect "改寫段落內的 HEAD(git commit --amend)放行" pass git commit -q --amend -m 'r4c amended'
-# ⚠️ **這一則 amend 的是「段落內的 HEAD」,起點本身仍是祖先** —— 走的是 `range_base="$base"`
-#    那一支,**沒有**跑到 fork-point 退化。上面那句註解原本寫「起點 commit 被改寫」,
+# ⚠️ **這一則 amend 的是「段落內的 HEAD」,起點本身仍是祖先** —— 走的是 `resolve_fork_base` 的第一支
+#    (起點是祖先就直接用它),**沒有**跑到 fork-point 退化。上面那句註解原本寫「起點 commit 被改寫」,
 #    名稱與實際不符(2026-10-07 S4 修正)。
 #    ⚠️ **fork-point 退化本來就有測** —— 既有的情境 7 就是(對 `owed_dirs`);
 #    ⑩ 補的是**對 `reviews_missing`** 的那一半,而且 ⑩ 也不是「改寫起點 commit」,
@@ -302,32 +302,44 @@ expect "SUMMARY.md 不算報告:照擋" block "$GATE" --start-segment
 
 # ---- 已知的三條繞過路徑(2026-10-19)----
 # `scripts/CLAUDE.md` 寫明 review 報告的強制「不是閉環」,列了三條繞過路徑。這一段把那三句話
-# 跟 gate 的實際行為綁在一起 —— 不是要堵它們,是哪天 gate 改了(例如 pre-commit 也開始查報告),
-# 這裡會變紅,提醒先去改那份文件。釘住繞過行為的那幾則,說明以「繞過①」「繞過②」「繞過③」開頭,
-# 編號跟 scripts/CLAUDE.md 一致(⚠️ 跟上面的情境 ①–⑧ 是兩套編號)。
-# 每一則都配一則對照:同一個狀態、只差那個繞過動作,結果相反 —— 放行才是因為繞過、不是別的原因。
-# 變異實測(哪個變異 → 哪幾則變紅)記在 scripts/CLAUDE.md「已知的三條繞過路徑」那條底下。
-# 先結清 ⑧ 留下的那一段(它到現在還是零報告),從乾淨的起點開始。
+# 跟 gate 的實際行為綁在一起:哪天 gate 改了(例如 pre-commit 也開始查報告),這裡會變紅。
+# 釘住繞過行為的那幾則,說明以「繞過①」「繞過②」「繞過③」開頭,編號跟 scripts/CLAUDE.md 一致
+# (⚠️ 跟上面的情境 ①–⑧ 是兩套編號)。每一則都配一則對照:同一個狀態、只差那個繞過動作,結果相反
+# —— 放行才是因為繞過、不是別的原因。變異實測(哪個變異 → 哪幾則變紅)記在 scripts/CLAUDE.md 那條底下。
+#
+# 先結清 ⑧ 留下的那一段(它到現在還是零報告),順便走一次**正常流程**:報告 commit 之後還有
+# 步驟 6 的 commit,所以報告不在 HEAD 那個 commit。
+# ⚠️ 這個形狀跟下面的繞過②在 gate 眼裡一模一樣(gate 只看起點..HEAD 有沒有新增報告,沒有「段落」的概念),
+#    所以想堵②的改法會讓這一則一起紅 —— 那是把正常流程擋了,是回歸,不是堵到了
+#    (docs/reviews/2026-10-18-pstack-gaps/S1-a.md 的 A1)。
 echo '# S3 審查 — a' > docs/reviews/S3-a.md
-expect "補報告,結清 ⑧ 那一段" pass commit by0
-expect "重記起點(起點 = by0)" pass "$GATE" --start-segment
+expect "結清 ⑧ 那一段:步驟 4 的報告 commit" pass commit by0r
+echo 10 > r.js && echo doc10 >> CLAUDE.md
+expect "結清 ⑧ 那一段:報告之後還有步驟 6 的 commit" pass commit by0
+expect "正常流程:報告不在 HEAD 那個 commit,開下一段照樣放行(起點 = by0)" pass "$GATE" --start-segment
 BY0=$(git rev-parse HEAD)
 base_is "$BY0"
 
 # 繞過① 跑完這一段但永遠不開下一段:pre-commit 不查報告(它收到 0 個參數、拿不到 commit 訊息),
-#   擋點只在「開下一段」那個時點。所以段落內零報告的正常 commit 照樣過。
-echo 10 > r.js && echo doc10 >> CLAUDE.md
-expect "繞過①:段落內零報告的正常 commit 放行(pre-commit 不查報告)" pass commit by1
-expect "對照:同一個狀態下開下一段就擋" block "$GATE" --start-segment
+#   擋點只在「開下一段」那個時點。
+#   ⚠️ 放行那則不能用起點之後的**第一個** commit:那時 HEAD 就是起點、範圍是空的,就算 pre-commit 也查報告
+#   (`reviews_missing` 的 `[ "$base" = "$head_sha" ] && return 1`)照樣放行,什麼都釘不住
+#   (同目錄 S1-b.md 的 B1,實測)。所以先做一個 commit,對照與放行都在 HEAD=by1、起點=by0。
+echo 11 > r.js && echo doc11 >> CLAUDE.md
+expect "段落內第一個零報告 commit(替對照準備狀態)" pass commit by1
+expect "對照:HEAD=by1、起點=by0,開下一段就擋" block "$GATE" --start-segment
 said "上一段沒有附 review 報告"
+echo 12 > r.js && echo doc12 >> CLAUDE.md
+expect "繞過①:同一個狀態下的正常 commit 照樣放行(pre-commit 不查報告)" pass commit by1b
 
 # 繞過② 漏跑一次 --start-segment:起點沒搬動,起點..HEAD 橫跨兩段,上一段的報告把這一段的要求頂掉。
-#   ⚠️ 這條沒有「gate 端的修法」可以拿來做變異(範圍本來就是 起點..HEAD),靠的是下面這組對照:
-#   HEAD 與檔案完全相同、只差起點檔 —— 起點對(by2)就擋、起點舊(by0)就放行。
+#   對照:HEAD 與檔案完全相同、只差起點檔 —— 起點對(by2)就擋、起點舊(by0)就放行。
+#   ⚠️ gate 現在分不出它跟上面的「正常流程」,所以堵不掉:拿「只算 HEAD 那個 commit 新增的報告」試著堵它,
+#   正常流程那則會一起紅(變異實測記在 scripts/CLAUDE.md)。
 echo '# S4 審查 — a' > docs/reviews/S4-a.md
 expect "這一段補上報告(這時本該重記起點,但漏了)" pass commit by2
 BY2=$(git rev-parse HEAD)
-echo 11 > r.js && echo doc11 >> CLAUDE.md
+echo 13 > r.js && echo doc13 >> CLAUDE.md
 expect "下一段零報告的 commit" pass commit by3
 base_is "$BY0"      # 繞過① 的對照被擋下,擋下不寫入,所以起點還在 by0
 echo "$BY2" > "$BASE_FILE"
@@ -340,7 +352,7 @@ base_is "$(git rev-parse HEAD)"
 # 繞過③ rm 掉起點檔:欠帳那一關與報告那一關都靠起點檔算範圍,檔案不在就一起關掉,
 #   新起點直接記成 HEAD,之前的欠帳跟著洗掉。
 #   「git 裡零痕跡」那半句不另外斷言:起點檔在 .git/ 底下,git status 本來就看不到它,
-#   斷言了也是恆真的(tests/CLAUDE.md 的「恆真斷言」那條)。
+#   斷言了也是恆真的(tests/CLAUDE.md 講「恆真」斷言的那條)。
 #   ⚠️ 對照的 said 挑「還有 commit 跳過檢查」:「先補完再記新起點」兩個擋點的訊息都有,誰擋都會中。
 mkdir by && echo 1 > by/a.js
 expect "SKIP 建 by/a.js(沒有 CLAUDE.md,這一段也沒附報告)" pass skip_commit by4

@@ -10,6 +10,8 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 > subagent `isolation: worktree` 已涵蓋建立、會話遷移與自動清理 — **先用原生**。
 > 本 skill 只處理原生不覆蓋的場景：自訂位置慣例、依賴安裝與基線測試、舊版 Claude Code。
 
+收尾第 1 步借鑑 michael-denyer/pstack-claude 的 worktree-cleanup playbook（被 ignore 的 `.env` 算「刪了就沒了」）。
+
 ## 建立流程
 
 1. **前置檢查**：確認在 git repo 內、`git status --porcelain` 乾淨（有未提交變更先提示處理）、
@@ -33,8 +35,10 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
      **不要直接加 `--force`** —— 它會把這些連同下一種一起刪掉
    - `!!`（被 gitignore 的）：remove **不會**拒絕，會跟著整個目錄**直接刪掉、不提示**。
      `node_modules/` 這種裝得回來的不用管；要留意的是只有這裡才有的檔，例如步驟 4 複製出來、之後又改過的 `.env`
-     （跟 `.env.example` 不一樣，就是改過）
-   - 上面兩種裡要留的、拿不準的：**列出來用 AskUserQuestion 一次問完**（commit、搬到哪、還是刪掉），不要自己選。
+     （用 `cmp -s <path>/.env <path>/.env.example` 比，只看結束碼：0 是一樣、1 是改過、2 是比不了（例如 `.env.example` 不在），
+     1 和 2 都列進去問。`-s` 什麼都不印。**不要用 `diff`** —— 它會把填進去的金鑰印出來。macOS 與 busybox 的 `cmp` 實測，2026-10-19）
+   - 上面兩種裡要留的、拿不準的：**列出來用 AskUserQuestion 一次問完**，不要自己選。` M`、`??` 可選 commit、搬到哪、刪掉；
+     `!!` 只給搬到哪、刪掉 —— 被 ignore 的檔多半本來就不該進 git（例如 `.env`）。
      步驟 6 寫的 `WORKTREE_INFO.md` 每次都會出現在 `??`；它只記這個 worktree 的分支、路徑與基線結果，問的時候可以建議刪掉
 2. 回主 repo `git worktree remove <path>` → `git worktree prune`
 
