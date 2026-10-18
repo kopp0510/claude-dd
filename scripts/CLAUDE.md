@@ -37,15 +37,19 @@
       (gate 的欠帳訊息本來就在教這招,所以那行後面補了警告)。
       ⇒ 它買到的是「**要繼續往前走就得先結清上一段**」,不是閉環。
       **三條都有特性測試**(2026-10-19):`tests/test-gate.sh` 裡說明以「繞過①」「繞過②」「繞過③」開頭的那幾則,
-      各配一則對照(同一個狀態、只差那個繞過動作,結果相反)。gate 改了讓它們變紅時,**先改上面這三句,再改測試**。
+      各配一則對照(同一個狀態、只差那個繞過動作,結果相反)。**變紅時先分清是哪一種**:
+      繞過①③變紅 = gate 堵上了那條路,是刻意的就先改上面那句、再照新行為改測試。
+      ⚠️ **繞過②以 gate 現在看得到的東西堵不掉**:它跟「報告 commit 之後還有步驟 6、7、8 的 commit」這個正常流程,在 gate 眼裡是同一個形狀
+      (gate 只看起點..HEAD 有沒有新增報告,沒有「段落」的概念)。所以②變紅時先看區塊開頭的「正常流程」那則 ——
+      它也紅了就是回歸,改回 gate,不要改文件(`docs/reviews/2026-10-18-pstack-gaps/S1-a.md` 的 A1)。
       變異實測(哪個變異 → 哪幾則變紅,刻意不記紅數):
 
       | 變異(改了哪一行) | 應該變紅的情境 |
       |---|---|
-      | pre-commit 也查報告:`staged=` 那行下面加 `reviews_missing && exit 1` | 繞過①。⚠️ 另外從「建立 docs/reviews/ 的那個 commit」起一路連鎖變紅 —— review 區塊裡段落內的正常 commit 本來就都在釘「pre-commit 不查報告」,繞過①是具名的那一則 |
+      | pre-commit 也查報告:`staged=` 那行下面加 `reviews_missing && exit 1` | 繞過①;另外從「建立 docs/reviews/ 的那個 commit」起一路連鎖變紅(前面被擋、後面的狀態跟著跑掉)。⚠️ 要確認繞過①那則自己有牙,得**只在它那個 commit 打開這個變異**(gate 副本改成 `[ -f "$(git rev-parse --git-path m1-on)" ] && reviews_missing && exit 1`,測試副本只在那一則前後 `touch` / `rm` 那個檔):只有它變紅。改在起點之後的**第一個** commit 打開則 0 紅 —— 那時 HEAD 就是起點、範圍是空的,`reviews_missing` 本來就回「不缺」(`S1-b.md` 的 B1) |
+      | 試著堵繞過②:只算 HEAD 那個 commit 新增的報告(`reviews_missing` 裡 `"$range_base" "$head_sha"` 改成 `"$head_sha^" "$head_sha"`) | 繞過②**與**「正常流程」那則一起紅(外加它們後面的 `base_is`)—— 這就是「堵不掉」的證據 |
       | `--start-segment` 有 `docs/reviews/` 而沒有起點檔就拒絕:它那一支的 `head_or_empty > "$BASE_FILE"` 上面加 `[ -d docs/reviews ] && ! read_base && exit 1` | 只有繞過③的「rm 掉起點檔,開下一段放行」 |
       | `--start-segment` 沒有起點檔時從空樹記起:它那一支的 `head_or_empty > "$BASE_FILE"` 改成 `if read_base; then head_or_empty > "$BASE_FILE"; else echo "$EMPTY_TREE" > "$BASE_FILE"; fi` | 只有繞過③的「by/ 的欠帳被洗掉」 |
-      | 繞過② | 沒有 gate 端的修法可以變異(範圍本來就是 起點..HEAD)。靠對照:同一個 HEAD、只差起點檔,起點在 by2 就擋、在 by0 就放行 |
     - ⚠️ **`[ -d docs/reviews ] || return 1` 這行是 opt-in 的全部** —— 動它會讓
       **所有**沒採用這個慣例的專案（含 `test-gate.sh` 前 61 項用的拋棄式 repo）一起被擋。
     **變異測試的三組數字**(2026-10-07 實跑;⚠️ **第一版只寫了一組,而且量錯對象** ——
