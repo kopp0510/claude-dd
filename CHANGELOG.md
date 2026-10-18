@@ -34,6 +34,7 @@
   各配一則對照；gate 哪天改了，這裡會變紅。區塊開頭另有一則「正常流程」（報告 commit 之後還有步驟 6 的 commit）：
   它跟繞過②在 gate 眼裡是同一個形狀，所以 gate 現在堵不掉②，②變紅多半是回歸。同批把 ⑦ 那行裸跑的 `git commit --amend`
   包進 `expect`：變異版 gate 擋下它時 `set -e` 會中止整支，後面的情境全沒跑。
+  想法借鑑上游 pstack（cursor/plugins/pstack，經 pstack-claude 轉載）`correct` 的規則表：每條規則配上執行它的東西。
 - **`worktree-manager` 收尾先跑 `git -C <path> status --porcelain --ignored`**：`git worktree remove` 遇到沒 commit 的
   變更與沒追蹤的檔（例如 skill 自己寫的 `WORKTREE_INFO.md`）會拒絕，被 gitignore 的檔（例如 skill 自己複製出來的
   `.env`）卻會跟著目錄直接刪掉、不提示；被拒絕後順手加 `--force` 則全部一起刪。git 2.42.0 與 2.54.0 實測。
