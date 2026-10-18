@@ -34,7 +34,8 @@
   變異版 gate 擋下它時 `set -e` 會中止整支，後面的情境全沒跑。
 - **`worktree-manager` 收尾先跑 `git -C <path> status --porcelain --ignored`**：`git worktree remove` 遇到沒 commit 的
   變更與沒追蹤的檔（例如 skill 自己寫的 `WORKTREE_INFO.md`）會拒絕，被 gitignore 的檔（例如 skill 自己複製出來的
-  `.env`）卻會跟著目錄直接刪掉、不提示；被拒絕後順手加 `--force` 則全部一起刪。git 2.42.0 實測。
+  `.env`）卻會跟著目錄直接刪掉、不提示；被拒絕後順手加 `--force` 則全部一起刪。git 2.42.0 與 2.54.0 實測。
+  要留的、拿不準的檔列出來用 AskUserQuestion 問使用者（乾跑時 agent 卡在「搬去哪」「選哪一種」）。
   借鑑 pstack-claude 的 worktree-cleanup playbook（它把 `.env` 這類被 ignore 的檔算成「刪了就沒了」、先停下來確認）。
 
 ## 1.6.4 — 2026-10-13
