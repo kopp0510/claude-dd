@@ -24,8 +24,18 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 ## 收尾
 
-開發完成後：確認 worktree 內變更已全部 commit → 回主 repo `git worktree remove <path>` →
-`git worktree prune`。merge 與分支刪除由使用者決定，本 skill 不代決。
+開發完成後：
+
+1. **先看 worktree 裡還剩什麼**：`git -C <path> status --porcelain --ignored`，有輸出就逐行處理完再往下
+   （git 2.42.0 實測，2026-10-19）：
+   - ` M`、`A ` 這類（還沒 commit 的變更）與 `??`（沒追蹤的檔，例如步驟 6 寫的 `WORKTREE_INFO.md`）：
+     `git worktree remove` 會拒絕（「包含修改或未追蹤的檔案，使用 --force 刪除」）。先 commit、搬走或刪掉，
+     **不要直接加 `--force`** —— 它會把這些連同下一種一起刪掉
+   - `!!`（被 gitignore 的，例如步驟 4 複製出來的 `.env`）：remove **不會**拒絕，會跟著整個目錄**直接刪掉、不提示**。
+     `node_modules/` 這種裝得回來的不用管；`.env` 這種只有這裡才有的（裡面放了真的金鑰或本機資料），先複製出來
+2. 回主 repo `git worktree remove <path>` → `git worktree prune`
+
+merge 與分支刪除由使用者決定，本 skill 不代決。
 
 ## 限制備忘
 

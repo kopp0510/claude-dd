@@ -32,6 +32,10 @@
   不是閉環（跑完不開下一段、漏跑一次 `--start-segment`、`rm` 掉起點檔），這次把三句話跟實際行為綁住，
   各配一則對照；gate 哪天改了，這裡會變紅、提醒先改文件。同批把 ⑦ 那行裸跑的 `git commit --amend` 包進 `expect`：
   變異版 gate 擋下它時 `set -e` 會中止整支，後面的情境全沒跑。
+- **`worktree-manager` 收尾先跑 `git -C <path> status --porcelain --ignored`**：`git worktree remove` 遇到沒 commit 的
+  變更與沒追蹤的檔（例如 skill 自己寫的 `WORKTREE_INFO.md`）會拒絕，被 gitignore 的檔（例如 skill 自己複製出來的
+  `.env`）卻會跟著目錄直接刪掉、不提示；被拒絕後順手加 `--force` 則全部一起刪。git 2.42.0 實測。
+  借鑑 pstack-claude 的 worktree-cleanup playbook（它把 `.env` 這類被 ignore 的檔算成「刪了就沒了」、先停下來確認）。
 
 ## 1.6.4 — 2026-10-13
 
