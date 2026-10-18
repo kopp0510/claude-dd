@@ -355,6 +355,14 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 > 「產出前檢查清單」掛到對方名下 — 實際只有四項 remove-test 是借的，其餘來自本 skill 與
 > fireworks-tech-graph，同時構成**過度歸屬**（掛了不是人家的）與**不足歸屬**（漏掉真的借的硬閘門 1）。
 > 判準：能逐條指出「哪一段來自誰」才算寫對；寫不出來就是範圍還沒想清楚。commit b28c22c 已修。
+>
+> **對方是 port／fork 時，掛名要逐句掛給寫那句的人**：NOTICE 只分到檔案、不分到句子 —— pstack-claude 的 NOTICE.md
+> 把 `tdd`、worktree-cleanup 記成上游，借的那兩句卻是 port 後來加的。最快的判法是拿原句去比上游原檔
+> （NOTICE 記了上游的 commit），**整個 skill 目錄都要查**（`reflect` 那句在 `references/`，只查 `SKILL.md` 得 0）。
+> 要知道 port 哪個 commit 加的，用 `git log -S '<原句>'` 看 commit 訊息；作者欄看不出來（上游的句子也是 port 的維護者 commit 進來的）。
+> ⚠️ **shallow clone 先 `git fetch --unshallow`**：邊界之前就有的句子，`git log -S` 會算在邊界那個不相干的 commit 頭上，
+> exit 0、看起來有答案；邊界之後加的才查得對（2026-10-19 depth 1 與 depth 50 實測）。
+> CHANGELOG 第一版就把上游的 `reflect`、babysit 兩句掛給了 port（`docs/reviews/2026-10-18-pstack-gaps/S1-a.md` 的 A3）。
 
 ## 殘留清理（手動）
 

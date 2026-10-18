@@ -52,6 +52,10 @@
 - ⚠️ **「剛採用慣例時第一次 `--start-segment` 被擋」是情境 ①，不是待修的邊角** ——
   上一段本來就沒報告，那是真實的導入路徑；我第一版把它寫成 `pass`，跑出來才發現寫錯了。
 - 本機跑：`/bin/bash tests/test-gate.sh`（repo 根目錄或任何地方都可以，gate 路徑以腳本位置推算）
+  - bash 5（CI 的 ubuntu 那份）要在 **repo 根目錄**跑（`"$PWD"` 掛成 `/repo`）：`docker run --rm -v "$PWD":/repo:ro bash:5 sh -c 'apk add --no-cache git >/tmp/apk.log 2>&1 || exit 3; ln -sf /usr/local/bin/bash /bin/bash; cd /tmp && bash /repo/tests/test-gate.sh'`
+    —— 映像沒有 git，也沒有 `/bin/bash`（bash 在 `/usr/local/bin/bash`，gate 的 shebang 寫 `#!/bin/bash`），兩步都不能省。
+    2026-10-19 實測（bash 5.3.20、git 2.54.0）：少裝 git，一則情境都沒跑就 `git: command not found`；少了 `ln`，gate 跑不起來 ——
+    直接叫印 `/bin/bash: bad interpreter`，從 hook 叫印的卻是 `…/check-claude-md.sh: not found`（檔案明明在，缺的是直譯器；`apk add git` 也不會順便帶來 `/bin/bash`）
 - 要通過 `shellcheck -S warning`（CI 的 ShellCheck 清單逐檔寫死，這支已列入）
 
 ## 與上層的關係
