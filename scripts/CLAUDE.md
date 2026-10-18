@@ -36,6 +36,16 @@
       ③**`rm` 掉起點檔** —— 兩個擋點一起關掉,而且 git 裡零痕跡
       (gate 的欠帳訊息本來就在教這招,所以那行後面補了警告)。
       ⇒ 它買到的是「**要繼續往前走就得先結清上一段**」,不是閉環。
+      **三條都有特性測試**(2026-10-19):`tests/test-gate.sh` 裡說明以「繞過①」「繞過②」「繞過③」開頭的那幾則,
+      各配一則對照(同一個狀態、只差那個繞過動作,結果相反)。gate 改了讓它們變紅時,**先改上面這三句,再改測試**。
+      變異實測(哪個變異 → 哪幾則變紅,刻意不記紅數):
+
+      | 變異(改了哪一行) | 應該變紅的情境 |
+      |---|---|
+      | pre-commit 也查報告:`staged=` 那行下面加 `reviews_missing && exit 1` | 繞過①。⚠️ 另外從「建立 docs/reviews/ 的那個 commit」起一路連鎖變紅 —— review 區塊裡段落內的正常 commit 本來就都在釘「pre-commit 不查報告」,繞過①是具名的那一則 |
+      | `--start-segment` 有 `docs/reviews/` 而沒有起點檔就拒絕:它那一支的 `head_or_empty > "$BASE_FILE"` 上面加 `[ -d docs/reviews ] && ! read_base && exit 1` | 只有繞過③的「rm 掉起點檔,開下一段放行」 |
+      | `--start-segment` 沒有起點檔時從空樹記起:它那一支的 `head_or_empty > "$BASE_FILE"` 改成 `if read_base; then head_or_empty > "$BASE_FILE"; else echo "$EMPTY_TREE" > "$BASE_FILE"; fi` | 只有繞過③的「by/ 的欠帳被洗掉」 |
+      | 繞過② | 沒有 gate 端的修法可以變異(範圍本來就是 起點..HEAD)。靠對照:同一個 HEAD、只差起點檔,起點在 by2 就擋、在 by0 就放行 |
     - ⚠️ **`[ -d docs/reviews ] || return 1` 這行是 opt-in 的全部** —— 動它會讓
       **所有**沒採用這個慣例的專案（含 `test-gate.sh` 前 61 項用的拋棄式 repo）一起被擋。
     **變異測試的三組數字**(2026-10-07 實跑;⚠️ **第一版只寫了一組,而且量錯對象** ——
