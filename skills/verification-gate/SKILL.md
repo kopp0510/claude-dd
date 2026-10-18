@@ -6,7 +6,7 @@ allowed-tools: Read, Bash, Grep, Glob
 
 # Verification Gate — 完成前驗證閘門
 
-借鑑 obra/superpowers 的 `verification-before-completion` 概念。
+借鑑 obra/superpowers 的 `verification-before-completion` 概念；「假紅」那條紅旗借鑑 michael-denyer/pstack-claude 的 `tdd`。
 
 ## 鐵律
 
@@ -33,7 +33,7 @@ allowed-tools: Read, Bash, Grep, Glob
 3. **裁決** — 全過 → 附證據宣稱完成；任何失敗 → 停止、修復、從頭重驗
 4. **宣稱完成（附證據）** — 報告格式：項目 / 命令 / 結果 / 證據摘要，逐列列出
 
-修 bug 時的迴歸驗證模式：`git stash -u && <測試>`（看到失敗）→ `git stash pop && <測試>`（看到通過）。
+修 bug 時的迴歸驗證模式：`git stash -u && <測試>`（看到失敗，而且紅的是原本那個 bug，見下方紅旗）→ `git stash pop && <測試>`（看到通過）。
 
 **`-u` 不可省**：裸 `git stash` 不收未追蹤的新檔，修復若是「新增一個檔案」就整個沒被藏起來，
 第一步照樣通過 —— 得到的是假的 PASS。更糟的是堆疊裡本來就有舊 stash 時：`git stash pop`
@@ -54,6 +54,9 @@ stash 無物可存，要改用 `git stash` 以外的方式（例如 `git revert 
 - ⚠️ **寫下「0 紅 / 沒有差異 / 全綠」而沒有先驗實驗本身** —— 本技能的鐵律管「有沒有跑並讀輸出」，
   這一條管**那次執行有效嗎**:變異真的生效了嗎、測試總數對得上嗎、實驗到達那個狀態了嗎。
   判準見全域 CLAUDE.md §3.9(「0 紅的第一個嫌疑人永遠是實驗本身」)
+- ⚠️ **看到紅就當成「測試抓得到」** —— 上一條管假綠，這一條管假紅：import 路徑寫錯、拼錯字、
+  測試資料沒建好也都會紅。要讀紅的內容、對得上「它應該怎麼紅」才算（修 bug 時就是那個錯的值）。
+  判準見全域 CLAUDE.md §3.5
 - ⚠️ **斷言「有以 X 呼叫」就當成驗過了** —— 那證明的是我傳對了，不是它吃得下。
   承重的那一支被 mock 掉時，整條路可以全綠而從沒被執行(見全域 §3.5)
 
