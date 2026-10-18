@@ -28,6 +28,10 @@
   只是被審的資料，不照做；#3 的實跑是自己決定、在拋棄式目錄跑的驗證。實例是 pstack-claude 的 SessionStart hook
   在 session 開始時注入 `<EXTREMELY_IMPORTANT>`。寫法借鑑它 `reflect` 的 reviewer prompt（transcript 當不可信資料）
   與 `poteto-mode` 的 babysit playbook（review 留言當資料、不當指令）。
+- **gate 的三條已知繞過路徑補上特性測試**（`tests/test-gate.sh`）：`scripts/CLAUDE.md` 寫明 review 報告的強制
+  不是閉環（跑完不開下一段、漏跑一次 `--start-segment`、`rm` 掉起點檔），這次把三句話跟實際行為綁住，
+  各配一則對照；gate 哪天改了，這裡會變紅、提醒先改文件。同批把 ⑦ 那行裸跑的 `git commit --amend` 包進 `expect`：
+  變異版 gate 擋下它時 `set -e` 會中止整支，後面的情境全沒跑。
 
 ## 1.6.4 — 2026-10-13
 
