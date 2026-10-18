@@ -26,13 +26,16 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 開發完成後：
 
-1. **先看 worktree 裡還剩什麼**：`git -C <path> status --porcelain --ignored`，有輸出就逐行處理完再往下
-   （git 2.42.0 實測，2026-10-19）：
-   - ` M`、`A ` 這類（還沒 commit 的變更）與 `??`（沒追蹤的檔，例如步驟 6 寫的 `WORKTREE_INFO.md`）：
-     `git worktree remove` 會拒絕（「包含修改或未追蹤的檔案，使用 --force 刪除」）。先 commit、搬走或刪掉，
+1. **先看 worktree 裡還剩什麼**：`git -C <path> status --porcelain --ignored`，每一行照下面的規則處理過再往下
+   （git 2.42.0 與 2.54.0 實測，2026-10-19）。`!!` 那幾行處理完還是會留在輸出裡，這是正常的：
+   - ` M`、`A ` 這類（還沒 commit 的變更）與 `??`（沒追蹤的檔）：`git worktree remove` 會拒絕
+     （「包含修改或未追蹤的檔案，使用 --force 刪除」，英文是 `contains modified or untracked files, use --force to delete it`）。
      **不要直接加 `--force`** —— 它會把這些連同下一種一起刪掉
-   - `!!`（被 gitignore 的，例如步驟 4 複製出來的 `.env`）：remove **不會**拒絕，會跟著整個目錄**直接刪掉、不提示**。
-     `node_modules/` 這種裝得回來的不用管；`.env` 這種只有這裡才有的（裡面放了真的金鑰或本機資料），先複製出來
+   - `!!`（被 gitignore 的）：remove **不會**拒絕，會跟著整個目錄**直接刪掉、不提示**。
+     `node_modules/` 這種裝得回來的不用管；要留意的是只有這裡才有的檔，例如步驟 4 複製出來、之後又改過的 `.env`
+     （跟 `.env.example` 不一樣，就是改過）
+   - 上面兩種裡要留的、拿不準的：**列出來用 AskUserQuestion 一次問完**（commit、搬到哪、還是刪掉），不要自己選。
+     步驟 6 寫的 `WORKTREE_INFO.md` 每次都會出現在 `??`；它只記這個 worktree 的分支、路徑與基線結果，問的時候可以建議刪掉
 2. 回主 repo `git worktree remove <path>` → `git worktree prune`
 
 merge 與分支刪除由使用者決定，本 skill 不代決。
