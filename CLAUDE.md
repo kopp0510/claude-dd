@@ -183,6 +183,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `~/.claude/` 的部署版，不是 repo 這份。2026-10-02 踩過：dd-init 的 rev 跳 5 → 6 後直接去沙盒跑
   `/dd-init`，它回「含 `dd-loop-rev: 5` → 已是現行版，跳過」—— 那是**舊版的正確行為**，看起來卻像
   新版判定壞了。部署後重跑才判為舊版並列出 rev 5 缺的兩條
+- **cherry-pick 上來的 commit 要重核「它指向的檔在這裡存不存在」**：在原本的環境（本機設定、
+  沒進版控的檔）成立的路徑，到了公開 repo 就是點不到的死指標 —— 2026-10-16 推 `dd.docfile` 時，
+  `scripts/check-claude-md.sh` 檔頭與 `scripts/CLAUDE.md` 都寫「用途見 `~/.claude/rules/<某個本機檔>`」。
+  `git grep -n '~/\.claude/' -- scripts/ tests/ commands/` 掃一次；兩個 review agent 都把它
+  判成「範圍外」而沒攔，所以這格要自己顧
 - 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項

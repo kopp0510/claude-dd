@@ -148,6 +148,13 @@ git pull && ./install-dd-pipeline.sh --force
   但若專案設了 `git config core.hooksPath`，git 會完全忽略 `.git/hooks/`，此時改掛到該目錄下（本 repo 自己就是這種情況）。
   專案用 pre-commit 套件或 lefthook 管理 hook 時，`/dd-init` 不把 gate 加進它們產生的 hook 檔（重裝時會被整個重寫，只刪掉舊版留下的死碼），改給你一段設定加進 `.pre-commit-config.yaml`／`lefthook.yml`；husky v9 則加在 `.husky/pre-commit`。gate 腳本不在時（沒裝 claude-dd 的協作者、或已解除安裝）只印警告說明這次沒檢查什麼，不擋 commit。
   錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
+- **記憶檔名可設**（2026-10-16）：預設 `CLAUDE.md`，`git config --local dd.docfile GEMINI.md`
+  讓 gate 改認那個檔名 —— 用在只准放特定檔名的 repo（檔名寫死就等於那些 repo 完全用不到 gate）。
+  只讀 `--local`（寫在 `.git/config`、不進版控）：設成 global 會讓這台機器上**所有** repo 的
+  `CLAUDE.md` 都不算，`-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 同樣不生效，一個 repo 一個決定。
+  只接受單純檔名（`[A-Za-z0-9._-]`，不是 `.`／`..`、也不以 `-` 開頭），否則 `exit 1`；
+  `--start-segment` 與 SKIP 欠帳機制一併改認它（`--segment-base` 只印起點、不碰檔名，
+  但非法值一樣會先被擋下 —— 驗證在分派子命令之前）
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 - `git commit --no-verify`／`-n` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到。Claude 這樣下指令時，`gate-guard` 的 PreToolUse hook 會直接擋下，並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude —— 你自己在終端機打 `--no-verify` 擋不到。它是全域安裝，所以在每個專案都會擋，包括沒裝 gate 的專案；真的要跳過 hook 時請自己在終端機執行

@@ -1,12 +1,15 @@
 #!/bin/bash
 
 # check-claude-md.sh — git pre-commit gate（block 版）
-# 規則：每個含程式碼的資料夾都要有 CLAUDE.md，且該資料夾改了程式碼時 CLAUDE.md 需同批更新
+# 規則：每個含程式碼的資料夾都要有記憶檔，且該資料夾改了程式碼時記憶檔需同批更新
+# 記憶檔名：預設 CLAUDE.md；`git config dd.docfile GEMINI.md` 可改（.git/config，不進版控）。
+#   用途是只准放某個固定檔名的 repo（例如記憶檔一律叫 GEMINI.md）—— 檔名寫死就等於
+#   那些 repo 完全用不到 gate。只接受單純檔名（[A-Za-z0-9._-]），不接受路徑
 # 部署：claude-dd/scripts/ → ~/.claude/scripts/（source of truth 在 claude-dd repo）
 # 掛載：由 /dd-init 寫入專案 .git/hooks/pre-commit 呼叫本腳本
 # 逃生口：SKIP_DOC_CHECK=1 git commit（僅供迴圈步驟 2 的檢查點 commit；最終 commit 必須全過）
 # 段落起點：SKIP 不是豁免。起點記在 .git/dd-segment-base（worktree 各自一份），之後的正常
-#   commit 會連「起點以來跳過檢查、到現在還沒補 CLAUDE.md」的目錄一起查
+#   commit 會連「起點以來跳過檢查、到現在還沒補記憶檔」的目錄一起查
 #   --start-segment  段落開始前記起點（還有欠帳時拒絕：起點往後移會把欠帳洗掉）
 #   --segment-base   印出起點，給迴圈步驟 3、4、8 算整段範圍（沒記過或已失效就失敗，不印空字串）
 # review 報告：專案有 docs/reviews/ 目錄時（= 採用了這個慣例），--start-segment 會要求
@@ -15,6 +18,22 @@
 
 top=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "❌ check-claude-md.sh：不在 git repo 內"; exit 1; }
 cd "$top" || exit 1
+
+# 記憶檔名（預設 CLAUDE.md，見檔頭）。字元集限制同時擋掉路徑與 regex 特殊字元，
+# 所以下面組 awk 樣式時只需要跳脫 `.`
+# ⚠️ **刻意只讀 `--local`**（`.git/config`）：設成 global 的話，一次設定就會把這台機器上
+# **所有** repo 的 gate 改認那個檔名，而個人 repo 的 CLAUDE.md 全部變成不算（2026-10-16 的
+# review 實測過這個情境：只給 GIT_CONFIG_GLOBAL，gate 就去要 GEMINI.md）。一個 repo 一個決定
+DOC_FILE=$(git config --local --get dd.docfile 2>/dev/null)
+[ -z "$DOC_FILE" ] && DOC_FILE="CLAUDE.md"
+case "$DOC_FILE" in
+    *[!A-Za-z0-9._-]*|.|..|-*)
+        echo "❌ check-claude-md.sh：git config dd.docfile 必須是單純檔名、不以 - 開頭，目前是「${DOC_FILE}」"
+        exit 1
+        ;;
+esac
+# 記憶檔的 awk 樣式：`(^|/)<檔名>$`，給 owed_dirs 的 ENVIRON 用（同 CODE_RE 的做法）
+export DOC_RE="(^|/)${DOC_FILE//./\\.}\$"
 
 # 視為「程式碼」的副檔名（改動這些才要求文件同步；純文件/設定/資產不觸發）
 CODE_EXT='js|jsx|ts|tsx|mjs|cjs|py|go|rs|java|kt|rb|php|sh|bash|c|h|cpp|hpp|cs|swift|sql|vue|svelte'
@@ -41,7 +60,7 @@ code_dirs_of() {
 }
 
 md_of() {
-    if [ "$1" = "." ]; then echo "CLAUDE.md"; else echo "$1/CLAUDE.md"; fi
+    if [ "$1" = "." ]; then echo "$DOC_FILE"; else echo "$1/$DOC_FILE"; fi
 }
 
 head_or_empty() {
@@ -103,10 +122,10 @@ resolve_fork_base() {
     return 1
 }
 
-# 起點以來、到 HEAD 為止還沒補 CLAUDE.md 的目錄。
+# 起點以來、到 HEAD 為止還沒補記憶檔（$DOC_FILE）的目錄。
 # 沿著 commit 的祖先關係結算：改程式碼記帳，要由看得到那段程式碼的後代 commit 更新該目錄的
-# CLAUDE.md 才算補上，merge 時把各條線的欠帳合起來。所以起點再舊也不會變寬鬆，
-# 平行分支上看不到那段程式碼的 CLAUDE.md 更新也抵不掉
+# 記憶檔才算補上，merge 時把各條線的欠帳合起來。所以起點再舊也不會變寬鬆，
+# 平行分支上看不到那段程式碼的記憶檔更新也抵不掉
 owed_dirs() {
     local head range range_base
     head=$(git rev-parse --verify -q HEAD) || return 0
@@ -136,7 +155,7 @@ owed_dirs() {
             }
             n = split(files[$1], f, "\n")
             for (j = 1; j <= n; j++) if (f[j] ~ ENVIRON["CODE_RE"] && f[j] !~ ENVIRON["EXCLUDE_RE"]) cur[dir(f[j])] = 1
-            for (j = 1; j <= n; j++) if (f[j] ~ /(^|\/)CLAUDE\.md$/) delete cur[dir(f[j])]
+            for (j = 1; j <= n; j++) if (f[j] ~ ENVIRON["DOC_RE"]) delete cur[dir(f[j])]
             s = ""
             for (k in cur) s = s "\n" k
             owed[$1] = s
@@ -192,7 +211,7 @@ case "$1" in
         owed=""
         read_base && owed=$(owed_dirs)
         if [ -n "$owed" ]; then
-            echo "❌ 還有 commit 跳過檢查、到現在還沒補的 CLAUDE.md，先補完再記新起點："
+            echo "❌ 還有 commit 跳過檢查、到現在還沒補的 ${DOC_FILE}，先補完再記新起點："
             printf '%s\n' "$owed" | while IFS= read -r d; do echo "  $(md_of "$d")"; done
             echo "（起點往後移會把這筆欠帳洗掉。確定要放棄追蹤：rm ${BASE_FILE}）"
             echo "  ⚠️ 那也會一併清掉「上一段要附 review 報告」的要求，而且 git 裡零痕跡" >&2
@@ -230,7 +249,7 @@ if [ "$SKIP_DOC_CHECK" = "1" ]; then
     # 忘了記起點也追得到：第一個跳過檢查的 commit 自動記下（已有起點就不動，舊起點不會變寬鬆）
     if ! read_base; then
         head_or_empty > "$BASE_FILE"
-        echo "CLAUDE.md gate 已跳過；記下段落起點 $(cat "$BASE_FILE")，之後的正常 commit 會補查這段跳過的目錄"
+        echo "${DOC_FILE} gate 已跳過；記下段落起點 $(cat "$BASE_FILE")，之後的正常 commit 會補查這段跳過的目錄"
     fi
     exit 0
 fi
@@ -248,13 +267,13 @@ owed_hit=0
 while IFS= read -r d; do
     [ -z "$d" ] && continue
     md=$(md_of "$d")
-    # CLAUDE.md 存在且這次一起 staged：這個目錄過關
+    # 記憶檔存在且這次一起 staged：這個目錄過關
     [ -f "$md" ] && printf '%s\n' "$staged" | grep -qxF "$md" && continue
 
     if printf '%s\n' "$staged_dirs" | grep -qxF "$d"; then
-        reason="該目錄有程式碼變更，但 CLAUDE.md 未一起 staged"
+        reason="該目錄有程式碼變更，但 ${DOC_FILE} 未一起 staged"
     else
-        reason="段落起點之後有 commit 跳過檢查改了這裡的程式碼，CLAUDE.md 到現在還沒補"
+        reason="段落起點之後有 commit 跳過檢查改了這裡的程式碼，${DOC_FILE} 到現在還沒補"
         owed_hit=1
     fi
 
@@ -271,13 +290,13 @@ EOF
 
 [ -z "$missing" ] && [ -z "$stale" ] && exit 0
 
-echo "❌ CLAUDE.md gate：commit 已擋下"
+echo "❌ ${DOC_FILE} gate：commit 已擋下"
 if [ -n "$missing" ]; then
     echo ""
-    echo "缺少 CLAUDE.md 的目錄：$missing"
+    echo "缺少 ${DOC_FILE} 的目錄：$missing"
     echo ""
     echo "→ AI agent 執行時：不要問使用者、不要建空殼。讀取該目錄全部檔案後，"
-    echo "  自行產生 CLAUDE.md（內容：該層職責一句話、關鍵檔案與用途、此層慣例/約束、"
+    echo "  自行產生 ${DOC_FILE}（內容：該層職責一句話、關鍵檔案與用途、此層慣例/約束、"
     echo "  與上層模組的關係），git add 後重新 commit。"
 fi
 if [ -n "$stale" ]; then
@@ -285,8 +304,8 @@ if [ -n "$stale" ]; then
     echo "未同步更新：$stale"
     echo ""
     echo "→ AI agent 執行時：比對本次 staged 的程式碼變更，把受影響的段落更新進該"
-    echo "  CLAUDE.md（新增的檔案/端點/元件要列入；行為改變要改描述），並逐層檢查"
-    echo "  上層 CLAUDE.md 是否也需堆疊更新，git add 後重新 commit。"
+    echo "  ${DOC_FILE}（新增的檔案/端點/元件要列入；行為改變要改描述），並逐層檢查"
+    echo "  上層 ${DOC_FILE} 是否也需堆疊更新，git add 後重新 commit。"
 fi
 if [ "$owed_hit" = 1 ]; then
     echo ""
