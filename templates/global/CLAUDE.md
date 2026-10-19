@@ -785,9 +785,12 @@ C) 先停下討論
 - 不假設 OS,從使用者路徑格式判斷(`C:\` vs `/home/`)
 - Bash 指令避開 bash-specific 語法(如 `<<<`),除非確認環境
 - 跨平台指令給兩版或註明前提
-- **腳本暫存變數不要用 shell 保留名**:zsh 的 `UID`、`PATH`、`HOME`、`PWD`、`STATUS`
-  是唯讀的,`UID=$(...)` 會噴 `bad math expression: operator expected at ...`,
-  訊息完全看不出是變數名的問題。改成 `OWNER`、`DB_PATH` 這種一看就知道是自己的名字
+- **先看環境資訊的 `Shell:` 欄**(Bash 工具跑的是使用者的 shell,macOS 預設 zsh;
+  沒有這欄就 `ps -p $$ -o comm=`),不用另外偵測。zsh 有兩個 bash 沒有的坑,錯誤訊息都看不出原因:
+  ①暫存變數撞保留名:`UID`、`PATH`、`HOME`、`PWD`、`STATUS` 是唯讀的,`UID=$(...)` 噴
+  `bad math expression: operator expected at ...` → 改成 `OWNER`、`DB_PATH` 這種自己的名字
+  ②**以 `=` 開頭的字會被當成程式路徑展開**:`echo =====` 噴 `==== not found`,
+  **而且同一行後面的指令全部不執行**(輸出看起來只是少了一段)→ 分隔線用 `echo ---` 或加引號
 
 ### 6.7 大檔案 / 長輸出
 
