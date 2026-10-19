@@ -33,6 +33,8 @@
 
 ### Changed
 
+- **全域 CLAUDE.md §6.6 補 zsh 的 `=` 展開**：`echo =====` 會噴 `==== not found` 並讓同一行後面的指令全部不執行。
+  同時與既有的「zsh 保留變數名」合成一條，並寫明 shell 先看環境資訊的 `Shell:` 欄、不必另外偵測。
 - **全域 CLAUDE.md 補兩條先前只存在本機、沒進版控的規則**：部署版 `~/.claude/CLAUDE.md`
   領先 `templates/global/CLAUDE.md`，而這兩個區塊 `git log --all -S` 全歷史零命中
   （不是上游刻意移除，是步驟 8 漏同步；repo 是 source of truth，部署版跑在前面時
