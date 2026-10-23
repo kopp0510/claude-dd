@@ -1,0 +1,15 @@
+### G2
+範圍：快照的 `git diff HEAD~1 HEAD`（4 檔：scripts/CLAUDE.md、scripts/check-claude-md.sh、tests/CLAUDE.md、tests/test-gate.sh）。
+已跑過的驗證（已確認，不要重跑；「已確認」只代表跑過，預期值寫在後面）：
+- `bash tests/test-gate.sh`（macOS bash 3.2）：90 ✅ / 0 ❌；改動前的基準是 81 ✅。預期：全綠，且比基準多
+- `bash tests/test-install.sh`：8 ✅ / 0 ❌。預期：全綠
+- `bash -n scripts/check-claude-md.sh` 通過；`shellcheck -S warning scripts/check-claude-md.sh` 沒有輸出。預期：兩個都乾淨
+### G3
+範圍：快照的 `git diff HEAD~1 HEAD`（8 檔：CHANGELOG.md、CLAUDE.md、scripts/CLAUDE.md、skills/verification-gate/SKILL.md、skills/worktree-manager/SKILL.md、templates/global/CLAUDE.md、tests/CLAUDE.md、tests/test-gate.sh）。
+已跑過的驗證（已確認，不要重跑；「已確認」只代表跑過，預期值寫在後面）：
+- `bash tests/test-gate.sh`：macOS bash 3.2.57 與 docker 裡的 bash 5.3.20 各 105 ✅ / 0 ❌；加新區塊之前是 90 ✅。預期：兩種 bash 都全綠，且比之前多
+- `shellcheck -S warning` 對 scripts/ 與 tests/ 的 .sh 沒有輸出。預期：乾淨
+- 本機照 .github/workflows/ci.yml 的 lint job 逐一跑 16 個 step，全部 exit 0。預期：全部 exit 0
+### G4
+範圍：快照的 `git diff HEAD~1 HEAD`（3 檔：.github/workflows/ci.yml、CHANGELOG.md、scripts/check-claude-md.sh）。
+已跑過的驗證：這次沒有附驗證輸出。
