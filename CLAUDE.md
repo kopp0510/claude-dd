@@ -67,7 +67,9 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
    < /dev/null > out.jsonl`，正反各一個（該叫的大需求、不該叫的小改動），解析 jsonl 看有沒有 `Launching skill:`，
    並確認 `permission_denials` 是空的 —— dontAsk 沒加 `--allowedTools Skill` 會把 Skill 擋掉，只證明它「想叫」。
    prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不了「不含關鍵字」這種說法；每次約 US$0.4–1.6。
-   這種 session 沒有寫檔工具也沒有 AskUserQuestion，只測得到「叫不叫、出不出得了草稿」，批准之後的步驟要另外在沙盒實跑。
+   這種 session 沒有寫檔工具也沒有 AskUserQuestion（題目會印成文字），只測得到「叫不叫、出不出得了草稿」，寫檔與 commit 的步驟要另外在沙盒實跑。
+   測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`、`--disallowedTools` 拿掉 `Agent`、加 `--forward-subagent-text`、`--max-budget-usd` 調高 ——
+   不然派不出裁決者，「沒問批准題」會因為審查根本沒跑而自動成立（2026-10-24 plan-review 第 2 輪審查抓到）。
    2026-09-11 task-planner：三個功能的需求叫起了，一行字的改動沒叫，已有進度表、說「照設計文件繼續做」也沒叫
 6. 只有 hook、沒有 skill 的元件也放 `skills/<名字>/`（`.claude-plugin/plugin.json` + `hooks/hooks.json`，不放 SKILL.md），
    會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
