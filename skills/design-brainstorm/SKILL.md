@@ -1,7 +1,7 @@
 ---
 name: design-brainstorm
 description: 蘇格拉底式設計對話，透過逐步提問把模糊想法精煉為可實作的設計。當提到「腦力激盪」「brainstorm」「我有個想法」「幫我想想」「設計討論」「這方向可行嗎」時自動啟用。
-allowed-tools: Read, Grep, Glob, Bash, Write
+allowed-tools: Read, Grep, Glob, Bash, Write, Agent, AskUserQuestion
 ---
 
 # Design Brainstorm — 蘇格拉底式設計對話
@@ -10,10 +10,15 @@ allowed-tools: Read, Grep, Glob, Bash, Write
 
 ## 硬閘門
 
-**設計未批准前，不寫任何程式碼** — 不呼叫實作技能、不建專案骨架，直到設計呈現且使用者批准。
-啟動時調用 `EnterPlanMode`。**`ExitPlanMode` 的時機錨在第 5 步逐段確認之後、第 6 步寫設計文件之前** ——
+**設計審查通過前，不寫任何程式碼** — 不呼叫實作技能、不建專案骨架，直到設計呈現並經 `plan-review` 審過。
+啟動時調用 `EnterPlanMode`。順序：**第 5 步逐段確認 → `plan-review` 審整份設計 → `ExitPlanMode` → 第 6 步寫設計文件** ——
 plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步的 `Write`，那次寫檔會被擋下來。
-第 8 步的「使用者審查」審的是已經落盤的設計文件，不是 plan 本身。
+`ExitPlanMode` 是 harness 的批准，拿不掉，使用者按一次。
+
+- plan mode 裡照樣派 `general-purpose` 的裁決者：plan mode 的系統提示會說規劃階段只用 Explore subagent，
+  那是文字指示、不擋（2026-10-24 用 `claude -p --permission-mode plan` 實測巢狀派工成功），而 Explore 不能再派審查者
+- `ExitPlanMode` 被拒 → 留在 plan mode 照回饋改；改到設計內容就接續原本的輪次回 `plan-review` 再送一輪；
+  已經是第 3 輪就不再送，把「因為你的回饋改了哪裡」列給使用者後再送 `ExitPlanMode`。只改措辭就直接再送 `ExitPlanMode`
 
 ## 工作流程
 
@@ -51,6 +56,11 @@ plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步�
 
 若涉及 UI/架構圖，以獨立訊息提議產出視覺輔助（Mermaid 圖 / UI mockup），同意後再做。
 
+逐段確認完，先把整份設計照第 6 步的結構組好（含設計決策理由、範圍排除、開放問題、預估 N 個功能段落），
+**一字不改**交 `plan-review`（順序見硬閘門）；第 6 步寫進檔的就是審過的這份。
+這裡的「同意嗎」是設計對話裡的決策題，不是最終批准，保留；但使用者只回「同意」的段落不標成「使用者決定」，
+只有使用者自己選的選項或自己提的修改才標 —— 不然整份設計都會被當成使用者決定而免審。
+
 ### 6. 寫設計文件
 
 寫入 `docs/designs/YYYY-MM-DD-<topic>-design.md`，結構：問題描述、設計決策（含理由）、
@@ -61,10 +71,12 @@ plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步�
 檢查：無佔位符或 TODO、無內部矛盾、無模糊描述、技術選擇皆有理由、範圍排除清楚、
 無 YAGNI 功能。
 
-### 8. 使用者審查 → 下一步
+### 8. 下一步
 
-依回饋修改至批准。批准後的下一步：要跨好幾輪迴圈才做得完的，交 `task-planner` 拆成功能段落
-（進度表寫回這份設計文件）；一輪做得完的，直接進 8 步開發迴圈實作。**批准前後都不跳過迴圈的測試與 review 步驟。**
+設計已經在 `plan-review` 與 `ExitPlanMode` 過了關，寫好、自我審查完就接下一步，不再等使用者批准。
+第 7 步只修形式（佔位、措辭）；查到要改設計內容時，照實告訴使用者改了哪裡，接續輪次回 `plan-review` 再送一輪。
+要跨好幾輪迴圈才做得完的，交 `task-planner` 拆成功能段落（進度表寫回這份設計文件；它會對段落草稿再跑一次 `plan-review`，輪次從頭算）；
+一輪做得完的，直接進 8 步開發迴圈實作，審過的設計就是計畫，不再另審。**都不跳過迴圈的測試與 review 步驟。**
 
 ## 常見錯誤
 
