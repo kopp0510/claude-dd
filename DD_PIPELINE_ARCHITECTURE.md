@@ -76,7 +76,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部 `PROMOTED_*` 陣列：11 個 promoted Skills、4 個 promoted Agents、dd-init、workflow-review；
+（清單 = 腳本頂部 `PROMOTED_*` 陣列：12 個 promoted Skills、4 個 promoted Agents、dd-init、workflow-review；
 2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif，2026-09-30 新增只有 hook 的 gate-guard ——
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。

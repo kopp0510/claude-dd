@@ -39,6 +39,7 @@ PROMOTED_SKILLS=(
     "design-brainstorm"
     "frontend-design"
     "gate-guard"             # 只有 hook 的 plugin：擋 Claude 用 --no-verify 繞過 CLAUDE.md gate
+    "plan-review"
     "review"
     "self-improving-agent"
     "task-planner"

@@ -24,7 +24,8 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 repo 只保留**有實證使用紀錄**的元件（2026-08-04 盤點留存 9 skills、4 agents、
 dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來源為當次
 對話的完整管線驗證；2026-09-30 新增只有 hook 的 gate-guard —— 它是 gate 的防護、不是「用過才收」的
-元件，是這條規則唯一的例外），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
+元件，是這條規則唯一的例外；2026-10-23 新增自製 plan-review，實證來源為
+`docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
 `PROMOTED_*` 陣列。
 
 - 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /
@@ -34,7 +35,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 
 ## 目錄結構
 
-- `skills/` — 11 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
+- `skills/` — 12 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）

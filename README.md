@@ -59,7 +59,7 @@ cd claude-dd
 The installer reports its progress as 7 steps (`1/7` … `7/7`):
 
 1. Check the environment (the hard requirements above; missing any one aborts the install)
-2. Install 11 promoted Skills into `~/.claude/skills/`
+2. Install 12 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
 5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). Prints `Plugin 檔案不存在` and moves on if a plugin isn't already on disk, and `…都取不到版本字串，跳過` (plus a hint naming the `claude plugin install` command to run) if a version string can be read from neither `plugin.json` nor `installed_plugins.json`
@@ -181,7 +181,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | `/dd-init` | Initialise a project: stamp the 8-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/` (only when the project has a frontend — pure backend/CLI skips it), verify plugin dependencies |
 | `/workflow-review:review` | Combined code review — security, performance, configuration. It's a namespaced command, so the colon form is the callable name |
 
-## Promoted Skills (11, deployed by default)
+## Promoted Skills (12, deployed by default)
 
 > "Promoted" means the component has an evidenced usage record and therefore ships by default. Components without one were removed rather than kept around — the git history holds them. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
 
@@ -191,6 +191,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | design-brainstorm | Socratic design dialogue — look facts up yourself, only ask the human about decisions |
 | frontend-design | Frontend visual design |
 | gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `-c core.hooksPath=` (turning hooks off beforehand with `git config core.hooksPath` is not caught) |
+| plan-review | Adversarial plan review — an adjudicator (Opus) sends 3+ reviewers (haiku) to attack the plan, then keeps only the criticism that checks out |
 | review | Combined-review wrapper |
 | self-improving-agent | Memory auditing and knowledge distillation |
 | task-planner | Feature-increment planning, with the progress table written into the design doc |
