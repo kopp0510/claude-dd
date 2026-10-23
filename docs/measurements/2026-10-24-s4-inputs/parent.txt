@@ -1,0 +1,8 @@
+### new
+你只負責派工，自己不審、不讀任何檔。用 Agent 工具派一個 agent：subagent_type "general-purpose"、model "opus"、description "{RUN}-judge"，
+prompt 只寫這一句：「先用 Read 讀完 {SELF}，它就是你的完整任務說明，照裡面做（你是裁決者）。要整份讀完再開始。」
+等它回來後，把它的報告原樣印出來。
+### old
+你只負責派工，自己不審、不讀任何檔。在同一則訊息裡用 Agent 工具平行派兩個 agent：subagent_type "code-reviewer"，description 分別是 "{RUN}-a"、"{RUN}-b"，
+prompt 都只寫這一句：「先用 Read 讀完 {SELF}，它就是你的完整任務說明，照裡面做。要整份讀完再開始。」
+等兩個都回來後，把兩份報告原樣印出來。

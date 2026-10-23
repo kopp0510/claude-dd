@@ -1,0 +1,17 @@
+審查這個 repo 最近一次改動（8 步開發迴圈步驟 4 的 code-review）。
+
+## 只准讀這些路徑
+
+- 被審的 repo（快照）：{SNAP}
+其他路徑一律不讀（含 `~/.claude/projects/`、`/Users/` 底下任何路徑、{S4} 底下別的東西）。git 指令一律 `git -C {SNAP}`。
+
+## 派工
+
+- 範圍：`git -C {SNAP} diff HEAD~1 HEAD`。並行派送 → 一律用 `git -C {SNAP} show HEAD:<路徑>` 取檔，不要讀工作目錄
+- 探索預算：最多做一次重現實驗；需要外部查證的列出來交回
+- 專案規則在快照裡的 CLAUDE.md（根目錄與各層）
+- 不准改任何檔、不 commit
+
+## 範圍與已跑過的驗證
+
+{BRIEF}
