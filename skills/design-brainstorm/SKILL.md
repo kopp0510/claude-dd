@@ -11,6 +11,8 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Agent, AskUserQuestion
 ## 硬閘門
 
 **設計審查通過前，不寫任何程式碼** — 不呼叫實作技能、不建專案骨架，直到設計呈現並經 `plan-review` 審過。
+`plan-review` 第 3 輪仍不通過、使用者選照現稿繼續，或沒跑成、使用者選「不審直接交」，也算過了這一關 —— 接著一樣送 `ExitPlanMode`，
+第 6 步在設計文件的開放問題寫明剩下的重大缺失或「沒經過 plan-review」。之後 `ExitPlanMode` 被拒、改到內容時，選過「不審直接交」就不再送審。
 啟動時調用 `EnterPlanMode`。順序：**第 5 步逐段確認 → `plan-review` 審整份設計 → `ExitPlanMode` → 第 6 步寫設計文件** ——
 plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步的 `Write`，那次寫檔會被擋下來。
 `ExitPlanMode` 是 harness 的批准，拿不掉，使用者按一次。
@@ -64,7 +66,7 @@ plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步�
 ### 6. 寫設計文件
 
 寫入 `docs/designs/YYYY-MM-DD-<topic>-design.md`，結構：問題描述、設計決策（含理由）、
-技術設計（資料模型 / API / 核心邏輯）、**範圍排除**（明確不做的事）、開放問題。
+技術設計（資料模型 / API / 核心邏輯）、**範圍排除**（明確不做的事）、開放問題、預估 N 個功能段落。
 
 ### 7. 自我審查
 
@@ -74,9 +76,11 @@ plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步�
 ### 8. 下一步
 
 設計已經在 `plan-review` 與 `ExitPlanMode` 過了關，寫好、自我審查完就接下一步，不再等使用者批准。
-第 7 步只修形式（佔位、措辭）；查到要改設計內容時，照實告訴使用者改了哪裡，接續輪次回 `plan-review` 再送一輪。
+第 7 步只修形式（佔位、措辭）；查到要改設計內容時，照實告訴使用者改了哪裡，接續輪次回 `plan-review` 再送一輪，照採納的意見改檔；
+已經是第 3 輪、或先前使用者選了「不審直接交」，就不再送，改了哪裡照實列給使用者。這時已經離開 plan mode，
+這一輪沒通過或沒跑成就照 plan-review 第 3、5 步問使用者，不再送 `ExitPlanMode`。
 要跨好幾輪迴圈才做得完的，交 `task-planner` 拆成功能段落（進度表寫回這份設計文件；它會對段落草稿再跑一次 `plan-review`，輪次從頭算）；
-一輪做得完的，直接進 8 步開發迴圈實作，審過的設計就是計畫，不再另審。**都不跳過迴圈的測試與 review 步驟。**
+一輪做得完的，直接進 8 步開發迴圈實作，走過 `plan-review` 的設計（含使用者選「不審直接交」）就是計畫，不再另審。**都不跳過迴圈的測試與 review 步驟。**
 
 ## 常見錯誤
 
