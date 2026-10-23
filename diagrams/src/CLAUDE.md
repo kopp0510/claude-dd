@@ -11,7 +11,7 @@
 |---|---|
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（8 步迴圈在框 ⑤；大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
 | `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務） |
-| `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
+| `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿、plan-review 審過 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
 
