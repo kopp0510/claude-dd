@@ -23,6 +23,10 @@
 - **plan-review 第 3 輪不通過後加「確認輪」**：第 3 輪不通過時重大與小事一樣改進計畫，回報每條重大寫明「已改進計畫（未經審查）」或「沒改（原因）」，不再只寫「剩 N 條」；
   接著由使用者選跑一次確認輪（只審第 3 輪的改法、範圍外新發現算小事）、照改好的計畫繼續、或停下。自動輪數仍是 3。task-planner 與 design-brainstorm 的對應選項同步
 
+### Fixed
+
+- **步驟 4 跳過審查時要建 `docs/reviews/S<段落>-SKIP.md`**：全域規則與 `/dd-init` 蓋章版原本只寫「commit 加 `SKIP-REVIEW` trailer」，而 gate 的 `--start-segment` 認的是這個檔 —— 照規則做的人開下一段時會被擋。蓋章版 `dd-loop-rev` 11 → 12
+
 ## 1.6.6 — 2026-10-24
 
 ### Added
