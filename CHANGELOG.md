@@ -16,7 +16,7 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
-## 未發布
+## 1.6.7 — 2026-10-25
 
 ### Changed
 
@@ -25,7 +25,7 @@
 
 ### Fixed
 
-- **步驟 4 跳過審查時要建 `docs/reviews/S<段落>-SKIP.md`**：全域規則與 `/dd-init` 蓋章版原本只寫「commit 加 `SKIP-REVIEW` trailer」，而 gate 的 `--start-segment` 認的是這個檔 —— 照規則做的人開下一段時會被擋。蓋章版 `dd-loop-rev` 11 → 12
+- **步驟 4 跳過審查時要建 `docs/reviews/S<段落>-SKIP.md`**：全域規則與 `/dd-init` 蓋章版原本只寫「commit 加 `SKIP-REVIEW` trailer」（「沒有人工寫的程式碼就不派 agent」那條也只寫「理由寫進設計文件」），而有 `docs/reviews/` 時 gate 的 `--start-segment` 要範圍裡新增一份 `S<數字>…md` —— 照規則做的人開下一段時會被擋。蓋章版 `dd-loop-rev` 11 → 12
 
 ## 1.6.6 — 2026-10-24
 
