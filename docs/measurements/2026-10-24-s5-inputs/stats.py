@@ -75,7 +75,7 @@ def run_stats(s4, run, dump):
         if not a["models"] or not all(want in x for x in a["models"]): errs.append(f"審查者模型 {short(a['models'])}，要 {want}")
     pm = set().union(*[scan(s)["models"] for s in glob.glob(os.path.join(pdir, "*.jsonl"))] or [set()])
     if not pm or not all("opus" in x for x in pm): errs.append(f"父 session 模型 {short(pm)}，要 opus")
-    judge, revs = None, d1
+    revs = d1
     # 洩題：所有層的工具輸入
     sess = glob.glob(os.path.join(pdir, "*.jsonl"))
     allin = [i for a in agents for i in a["inputs"]] + [i for s in sess for i in scan(s)["inputs"]]
