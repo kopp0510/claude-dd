@@ -1,0 +1,8 @@
+{"run": "G2-dir-1", "whole_s": 235, "pre_s": 27, "post_s": 52, "api_s": 446, "cost": 3.95, "n_result": 4, "n_rev": 3, "rev_max_s": 142, "rev_tools": [6, 5, 5], "rev_s": [130, 109, 142], "errors": []}
+{"run": "G3-dir-1", "whole_s": 293, "pre_s": 28, "post_s": 49, "api_s": 707, "cost": 6.89, "n_result": 3, "n_rev": 4, "rev_max_s": 171, "rev_tools": [8, 9, 10, 9], "rev_s": [115, 168, 171, 158], "errors": []}
+{"run": "G2-dir-2", "whole_s": 221, "pre_s": 23, "post_s": 43, "api_s": 397, "cost": 3.89, "n_result": 1, "n_rev": 3, "rev_max_s": 139, "rev_tools": [5, 5, 6], "rev_s": [139, 101, 127], "errors": []}
+{"run": "G3-dir-2", "whole_s": 327, "pre_s": 34, "post_s": 38, "api_s": 712, "cost": 5.78, "n_result": 2, "n_rev": 3, "rev_max_s": 226, "rev_tools": [14, 9, 14], "rev_s": [179, 186, 226], "errors": []}
+{"run": "G2-dhk-1", "whole_s": 503, "pre_s": 24, "post_s": 177, "api_s": 794, "cost": 4.11, "n_result": 1, "n_rev": 3, "rev_max_s": 289, "rev_tools": [4, 8, 8], "rev_s": [67, 249, 289], "errors": []}
+{"run": "G3-dhk-1", "whole_s": 529, "pre_s": 26, "post_s": 304, "api_s": 915, "cost": 6.49, "n_result": 1, "n_rev": 4, "rev_max_s": 198, "rev_tools": [6, 13, 13, 13], "rev_s": [60, 104, 198, 122], "errors": []}
+{"run": "G2-dhk-2", "whole_s": 318, "pre_s": 29, "post_s": 62, "api_s": 446, "cost": 1.97, "n_result": 2, "n_rev": 3, "rev_max_s": 200, "rev_tools": [6, 6, 6], "rev_s": [200, 83, 63], "errors": ["洩題檢查命中 1 筆：['{\"command\": \"SNAP=<s5>/G2-dhk-2\\\\necho \\\\\"== grep']"]}
+{"run": "G3-dhk-2", "whole_s": 359, "pre_s": 29, "post_s": 43, "api_s": 677, "cost": 3.53, "n_result": 2, "n_rev": 4, "rev_max_s": 111, "rev_tools": [11, 9, 11, 8], "rev_s": [86, 96, 111, 68], "errors": []}
