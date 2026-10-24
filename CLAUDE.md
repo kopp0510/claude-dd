@@ -106,7 +106,10 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
    （`jq -c 'select(.output_file!=null)|.usage'`），`result.subagent_stats` 只有 spawned/completed 計數、
    沒有時間；subagent 的訊息靠 `parent_tool_use_id != null` 認（每則有 `timestamp`）；**父 session 會有兩筆
    `result`**（`result_index` 0 與 1 —— subagent 在背景跑，父層先結束一輪、它完成後再被喚起），
-   只取第一筆會少算整體時間；要讓 subagent 的文字進 jsonl 加 `--forward-subagent-text`
+   只取第一筆會少算整體時間；要讓 subagent 的文字進 jsonl 加 `--forward-subagent-text`。
+   **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型；2026-10-24 S5 是 `claude-fable-5-1`），
+   assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發（S5 B 組兩發因此各多了 2.1 與 2.9 美元、88 與 202 秒）。
+   `--disallowedTools advisor` 擋不掉，要加 `--settings '{"advisorModel":""}'`（同日 scratchpad 實測：前者照樣叫、`modelUsage` 有 fable；後者回「沒有這個工具」、只有 opus）；跑完再讀 `modelUsage` 的鍵核一次
 
 ## 新增 Command 步驟
 

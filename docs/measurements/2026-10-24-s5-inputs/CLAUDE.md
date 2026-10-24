@@ -8,6 +8,7 @@
 - `direct.txt` —— 父 session 的完整任務說明：先派 ≥3 個審查者、派完才讀 diff 檔、等全部回來後逐條查證；Read 每次 300 行讀到最後一行；`{REVIEWER}` 決定審查者帶不帶 `model: "haiku"`
 - `prepare.py` —— 從 S4 那份改來：快照與 diff 檔做法不變，brief 直接讀 `../2026-10-24-s4-inputs/briefs.txt`（跟 S4 逐字共用），prompt 換成 `direct.txt`
 - `run.sh` —— 從 S4 那份改來：父 session 用 `--model opus`（它要查證），`--max-budget-usd 20`
+- `run-noadvisor.sh` —— 同 `run.sh`，只多 `--settings '{"advisorModel":""}'` 關掉 advisor；B 組第 3、4 發（`G2-dhk-3` 這種）用它重跑，因為第 1、2 發有兩發的父 session 叫了 advisor（使用者 2026-10-24 選擋掉重跑）
 - `stats.py` —— 從 S4 那份改來：沒有裁決者那一層（審查者是 `spawnDepth` 1），斷言父 session 是 opus；另記 `pre_s`（派工前）與 `post_s`（審查者都回來之後）
 - `checks.py` —— 跑之前就寫好的補充檢查：每個讀者讀 diff 檔回傳的行號聯集缺幾行、父報告晚於審查者結束、工具結果裡的 `/Users/` 路徑、跨發存取；`--dump` 存父 session 的最後報告
 
