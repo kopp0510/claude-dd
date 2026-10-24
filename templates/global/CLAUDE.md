@@ -325,7 +325,8 @@
        第三節是唯一只有自己寫得出來、也唯一看得出「發現有沒有變成修正」的部分。
        **多張進度表時放子目錄**(段落 ID 會跨表重複);**寫之前先 `ls`**,
        因為覆蓋掉別人的報告時 `git status` 顯示的是 `M` 而不是 `??`,沒有任何警告。
-     - 跳過時 commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`(放在 `Co-Authored-By` 之前),
+     - 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由(gate 的 `--start-segment` 認的是這個檔,只加 trailer
+       開下一段時照樣被擋),commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`(放在 `Co-Authored-By` 之前),
        同時寫進設計文件該段底下。查的時候用
        `git log --format='%h %(trailers:key=SKIP-REVIEW,valueonly)'`,**不要用 `--grep`**
        (描述這條規則的 commit 自己就會命中)。
