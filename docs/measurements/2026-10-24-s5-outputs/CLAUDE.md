@@ -8,6 +8,7 @@
 - `checks.out` —— `../2026-10-24-s5-inputs/checks.py` 的輸出（每個讀者讀 diff 檔全檔缺幾行、父報告晚於審查者、工具結果裡的 `/Users/`、跨發存取）
 - `sec1.py` —— 跑完才補的檢查：每個讀者對 diff 檔「第一段」（`git diff` 本體）缺幾行。`checks.py` 算的是全檔；`direct.txt` 要求讀完全檔，實際多數讀者沒讀完第二段（整檔內容），所以另外用第一段當比較基準。S4 那 12 發也一起算
 - `sec1.out` —— 它對 S5 8 發與 S4 12 發的輸出（`P` 是父 session，`r` 是審查者；S4 的裁決者是 general-purpose，不列）
+- `stats-noadvisor.jsonl`、`checks-noadvisor.out`、`modelusage-noadvisor.out` —— B 組關掉 advisor 重跑的 4 發（`G2-dhk-3` 這種）：同兩支腳本的輸出，加上每發 result 的 `modelUsage` 鍵（確認沒有 advisor 的模型）；`sec1.out` 尾端也接上這 4 發
 - `reports/` —— 每個審查者的最後一則文字（`d1`）與父 session 的最後報告（`d0.parent`），檔名 `<發代號>.d<層>.<agent id 前 6 碼>.<description>.md`
 
 ## 約束
