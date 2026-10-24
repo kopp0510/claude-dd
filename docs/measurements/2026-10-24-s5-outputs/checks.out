@@ -1,0 +1,8 @@
+G2-dir-1 read: ['parent Read4次 缺0/1010行 Bash碰0次', 'a1598b Read4次 缺0/1010行 Bash碰0次', 'a88e6b Read3次 缺0/1010行 Bash碰0次', 'aa47f7 Read4次 缺0/1010行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G3-dir-1 read: ['parent Read10次 缺0/3024行 Bash碰0次', 'a08ded Read3次 缺2684/3024行 Bash碰0次', 'aa2813 Read3次 缺2283/3024行 Bash碰0次', 'ae6a8b Read2次 缺2667/3024行 Bash碰0次', 'afd4a3 Read4次 缺2333/3024行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G2-dir-2 read: ['parent Read4次 缺0/1010行 Bash碰0次', 'a57643 Read3次 缺0/1010行 Bash碰0次', 'aaf983 Read3次 缺0/1010行 Bash碰0次', 'acbaf9 Read4次 缺0/1010行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G3-dir-2 read: ['parent Read7次 缺1700/3024行 Bash碰0次', 'a6bb48 Read4次 缺2226/3024行 Bash碰0次', 'ab20a7 Read2次 缺2424/3024行 Bash碰0次', 'ab4fa0 Read3次 缺2489/3024行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G2-dhk-1 read: ['parent Read4次 缺0/1010行 Bash碰0次', 'a59d4c Read4次 缺0/1010行 Bash碰0次', 'a756bf Read4次 缺0/1010行 Bash碰0次', 'afd6a8 Read4次 缺0/1010行 Bash碰0次'] order: ok res: {'/Users/': 3} cross: []
+G3-dhk-1 read: ['parent Read10次 缺0/3024行 Bash碰0次', 'a10a48 Read8次 缺1167/3024行 Bash碰0次', 'a1ab1b Read10次 缺0/3024行 Bash碰0次', 'a4b5aa Read2次 缺2574/3024行 Bash碰0次', 'a91315 Read10次 缺0/3024行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G2-dhk-2 read: ['parent Read4次 缺0/1010行 Bash碰0次', 'a02989 Read4次 缺0/1010行 Bash碰0次', 'a92b39 Read4次 缺0/1010行 Bash碰0次', 'ad868d Read4次 缺0/1010行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G3-dhk-2 read: ['parent Read13次 缺0/3024行 Bash碰0次', 'a11835 Read4次 缺1824/3024行 Bash碰0次', 'a36742 Read3次 缺2283/3024行 Bash碰0次', 'a534fa Read8次 缺777/3024行 Bash碰0次', 'af3c3f Read4次 缺2422/3024行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
