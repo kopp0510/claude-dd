@@ -41,7 +41,13 @@
   裁決者（Opus）平行派最少 3 個 `code-reviewer`，逐條讀程式碼查證後分採納／駁回／需使用者決定；報告改成每個審查者一份加 `S<段落>-judge.md`。
   取代「派兩個 reviewer 取聯集」與「並行時用 `git show` 取檔」；刪掉「最多做一次重現實驗」這個工具上限選項。
   gate 擋下時印的報告檔名改成 `-a/-b/-c…` 加 `-judge.md`（判定樣式沒變）；兩份 README「核心工作法」的步驟 4 說明同步改寫。
-  全域 CLAUDE.md 與 gate 要 `./install-dd-pipeline.sh --force` 才會更新；已蓋章的專案跑 `/dd-init` 會被判為舊版並詢問升級
+  全域 CLAUDE.md 與 gate 要 `./install-dd-pipeline.sh --force` 才會更新；已蓋章的專案跑 `/dd-init` 會被判為舊版並詢問升級。
+  （同一版內已由下一條 rev 11 取代裁決者那一層；diff 檔、最少 3 個審查者、三類查證、報告檔名都留著）
+- **步驟 4 拿掉裁決者，改由主對話直接平行派審查者**（`dd-loop-rev` 10 → 11）：主對話在同一則訊息派最少 3 個 `code-reviewer`、
+  先派工再自己分段讀 diff 檔、全部回來後自己逐條查證；diff 檔一律用 Read 每次 300 行讀到最後一行（一次讀太多會靜靜截斷）。
+  依據：2026-10-24 實測（G2、G3 各 2 發）直接派平均 269s、US$5.13、命中 4/6，裁決結構 350s、US$3.83、命中 3/6；
+  同時改了三件事、n 小，只是方向（`docs/measurements/2026-10-23-reviewer-real-sessions.md`「拿掉裁決者的對照」）。
+  `-judge.md` 檔名沿用，內容改成主對話的查證；gate 擋下時的提示、`docs/reviews/CLAUDE.md`、兩份 README 同步。`plan-review` 的裁決者不變
 
 ## 1.6.5 — 2026-10-19
 
