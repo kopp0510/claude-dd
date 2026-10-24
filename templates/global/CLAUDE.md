@@ -267,7 +267,8 @@
      不會自己擴張範圍(這條寫在 agent 定義的 Scope Discipline)
    - **這一段沒有「人工寫的程式碼」就不要派 agent**:diff 全是資料、設定、註解或文件,
      或改動已被專案的機械檢查完全覆蓋(渲染等價比對、round-trip 檢查這類)時,改成自己逐條核對、
-     在回報附證據(可用 `verification-gate` skill),並在設計文件「段落與小任務」該段底下寫明跳過的理由(沒有設計文件就寫在回報裡)。
+     在回報附證據(可用 `verification-gate` skill),並在設計文件「段落與小任務」該段底下寫明跳過的理由(沒有設計文件就寫在回報裡);
+     有 `docs/reviews/` 時另建 `docs/reviews/S<段落>-SKIP.md`(見下方「報告一律落地」那條)。
      判準是**「這段有沒有正確性還沒被機械檢查證明的人工判斷」,不是 diff 多長** ——
      實測一段純機械刪除(有比對腳本逐行保證)的 diff 派了 agent,25 分鐘換到 Critical 0、Important 0;
      同一個專案裡有新寫腳本的那段,agent 抓到「為了讓檢查轉綠而去改資料、該修的其實是工具」這種自己看不出來的問題
@@ -325,8 +326,8 @@
        第三節是唯一只有自己寫得出來、也唯一看得出「發現有沒有變成修正」的部分。
        **多張進度表時放子目錄**(段落 ID 會跨表重複);**寫之前先 `ls`**,
        因為覆蓋掉別人的報告時 `git status` 顯示的是 `M` 而不是 `??`,沒有任何警告。
-     - 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由(gate 的 `--start-segment` 認的是這個檔,只加 trailer
-       開下一段時照樣被擋),commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`(放在 `Co-Authored-By` 之前),
+     - 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由(有 `docs/reviews/` 時 gate 的 `--start-segment` 要範圍裡新增一份
+       `S<數字>…md`,只加 trailer 開下一段時會被擋),commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`(放在 `Co-Authored-By` 之前),
        同時寫進設計文件該段底下。查的時候用
        `git log --format='%h %(trailers:key=SKIP-REVIEW,valueonly)'`,**不要用 `--grep`**
        (描述這條規則的 commit 自己就會命中)。
