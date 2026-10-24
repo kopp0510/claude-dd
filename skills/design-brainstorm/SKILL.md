@@ -12,7 +12,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Agent, AskUserQuestion
 
 **設計審查通過前，不寫任何程式碼** — 不呼叫實作技能、不建專案骨架，直到設計呈現並經 `plan-review` 審過。
 `plan-review` 第 3 輪（或確認輪）仍不通過、使用者選照改好的稿繼續，或沒跑成、使用者選「不審直接交」，也算過了這一關 —— 接著一樣送 `ExitPlanMode`，
-第 6 步在設計文件的開放問題寫明第 3 輪的重大缺失與改法（未經審查）或「沒經過 plan-review」。之後 `ExitPlanMode` 被拒、改到內容時，選過「不審直接交」就不再送審。
+第 6 步在設計文件的開放問題寫明第 3 輪與確認輪（有跑的話）採納的重大缺失與改法（未經審查）或「沒經過 plan-review」。之後 `ExitPlanMode` 被拒、改到內容時，選過「不審直接交」或已到第 3 輪（含確認輪）就不再送審（見下方被拒那條）。
 啟動時調用 `EnterPlanMode`。順序：**第 5 步逐段確認 → `plan-review` 審整份設計 → `ExitPlanMode` → 第 6 步寫設計文件** ——
 plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步的 `Write`，那次寫檔會被擋下來。
 `ExitPlanMode` 是 harness 的批准，拿不掉，使用者按一次。
