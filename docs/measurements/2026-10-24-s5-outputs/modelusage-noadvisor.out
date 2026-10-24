@@ -1,0 +1,4 @@
+G2-dhk-3 modelUsage: ['claude-haiku-5-5', 'claude-opus-5-5']
+G3-dhk-3 modelUsage: ['claude-haiku-5-5', 'claude-opus-5-5']
+G2-dhk-4 modelUsage: ['claude-haiku-5-5', 'claude-opus-5-5']
+G3-dhk-4 modelUsage: ['claude-haiku-5-5', 'claude-opus-5-5']

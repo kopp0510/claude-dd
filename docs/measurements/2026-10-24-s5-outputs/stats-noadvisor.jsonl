@@ -1,0 +1,4 @@
+{"run": "G2-dhk-3", "whole_s": 242, "pre_s": 29, "post_s": 60, "api_s": 461, "cost": 1.77, "n_result": 1, "n_rev": 3, "rev_max_s": 143, "rev_tools": [7, 8, 7], "rev_s": [143, 139, 86], "errors": []}
+{"run": "G3-dhk-3", "whole_s": 237, "pre_s": 33, "post_s": 67, "api_s": 532, "cost": 3.08, "n_result": 2, "n_rev": 4, "rev_max_s": 136, "rev_tools": [8, 11, 12, 9], "rev_s": [76, 68, 84, 136], "errors": []}
+{"run": "G2-dhk-4", "whole_s": 199, "pre_s": 23, "post_s": 48, "api_s": 443, "cost": 1.83, "n_result": 1, "n_rev": 3, "rev_max_s": 116, "rev_tools": [5, 6, 7], "rev_s": [116, 83, 94], "errors": []}
+{"run": "G3-dhk-4", "whole_s": 341, "pre_s": 28, "post_s": 52, "api_s": 687, "cost": 3.37, "n_result": 2, "n_rev": 3, "rev_max_s": 234, "rev_tools": [12, 7, 16], "rev_s": [123, 78, 234], "errors": []}

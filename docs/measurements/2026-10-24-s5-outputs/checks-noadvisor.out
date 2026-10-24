@@ -1,0 +1,4 @@
+G2-dhk-3 read: ['parent Read3次 缺0/1010行 Bash碰0次', 'a36b48 Read4次 缺0/1010行 Bash碰0次', 'aa6d92 Read4次 缺0/1010行 Bash碰0次', 'ab58e6 Read4次 缺0/1010行 Bash碰0次'] order: ok res: {'/Users/': 3} cross: []
+G3-dhk-3 read: ['parent Read11次 缺0/3024行 Bash碰0次', 'a06d86 Read7次 缺1338/3024行 Bash碰0次', 'a148fb Read5次 缺1524/3024行 Bash碰0次', 'a38c12 Read2次 缺2667/3024行 Bash碰0次', 'a3a718 Read3次 缺2283/3024行 Bash碰0次'] order: ok res: {'/Users/': 1} cross: []
+G2-dhk-4 read: ['parent Read4次 缺0/1010行 Bash碰0次', 'a2340e Read4次 缺0/1010行 Bash碰0次', 'a46e46 Read4次 缺0/1010行 Bash碰0次', 'a91368 Read4次 缺0/1010行 Bash碰0次'] order: ok res: {'/Users/': 2} cross: []
+G3-dhk-4 read: ['parent Read10次 缺0/3024行 Bash碰0次', 'a1fdd0 Read10次 缺0/3024行 Bash碰0次', 'a93912 Read5次 缺1683/3024行 Bash碰0次', 'ae3335 Read10次 缺1/3024行 Bash碰0次'] order: ok res: {'/Users/': 3} cross: []
