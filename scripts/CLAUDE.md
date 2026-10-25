@@ -113,7 +113,7 @@
       下一段才寫得出來,那次補寫不算這一段的證據 —— 本專案的流程是在步驟 4 當場寫完,所以不衝突。
     - ⚠️ 比對用 `(^|/)S[0-9][^/]*\.md$`(見上方「樣式是…」那條),所以 `docs/reviews/CLAUDE.md` 自然不算報告。
     - ⚠️ 它**不是閉環**：擋得住的只有「開下一段」這個時點，
-      「跑完但永遠不開下一段」仍然繞得過。`templates/global/CLAUDE.md` 寫明了這點。
+      「跑完但永遠不開下一段」仍然繞得過。`commands/dd-init.md` 的蓋章版寫明了這點。
   - **SKIP 不是豁免**：段落起點記在 `git rev-parse --git-path dd-segment-base`
     （`--start-segment` 記下；忘了記時第一個 SKIP commit 自動記）。之後的正常 commit
     沿著 commit 的祖先關係結算起點以來的欠帳：改程式碼記帳，要由看得到那段程式碼的後代
