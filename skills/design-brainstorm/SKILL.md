@@ -12,8 +12,8 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Agent, AskUserQuestion
 
 **設計審查通過前，不寫任何程式碼** — 不呼叫實作技能、不建專案骨架，直到設計呈現並經 `plan-review` 審過。
 `plan-review` 第 3 輪或確認輪仍不通過、或確認輪沒跑成，使用者選照改好的計畫繼續，或第 1–3 輪沒跑成、使用者選「不審直接交」，也算過了這一關 —— 接著一樣送 `ExitPlanMode`，
-第 6 步在設計文件的開放問題寫明 plan-review 第 3 步標「未經審查」的改法（第 3 輪與確認輪的重大缺失，含「需要外部查證」裡重大的；小事；因使用者答案改的地方）、之後因 `ExitPlanMode` 被拒的回饋改的地方，與每條重大的現況（未經審查；確認輪跑了但沒跑成也寫明），或「沒經過 plan-review」。之後 `ExitPlanMode` 被拒、改到內容時，選過「不審直接交」或已到第 3 輪（含確認輪）就不再送審（見下方被拒那條）。
-使用者在 plan-review 選停下：不送 `ExitPlanMode`、不寫設計文件，留在 plan mode，把改好的設計與每條重大的現況交給使用者，結束本 skill。
+第 6 步在設計文件的開放問題寫明 plan-review 第 3 步標「未經審查」的改法（第 3 輪與確認輪的重大缺失，含「需要外部查證」裡重大的；小事；因使用者答案改的地方）、之後因 `ExitPlanMode` 被拒的回饋改的地方，與每條重大的現況（照 plan-review 回報的原樣，含確認輪的註記；寫進前照 plan-review 那條重判，之後改過的拿掉註記；確認輪跑了但沒跑成也寫明），或「沒經過 plan-review」。之後 `ExitPlanMode` 被拒、改到內容時，選過「不審直接交」或已到第 3 輪（含確認輪）就不再送審（見下方被拒那條）。
+還沒送 `ExitPlanMode` 時使用者在 plan-review 選停下：不送 `ExitPlanMode`、不寫設計文件，留在 plan mode，把改好的設計與每條重大的現況交給使用者，結束本 skill。
 啟動時調用 `EnterPlanMode`。順序：**第 5 步逐段確認 → `plan-review` 審整份設計 → `ExitPlanMode` → 第 6 步寫設計文件** ——
 plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步的 `Write`，那次寫檔會被擋下來。
 `ExitPlanMode` 是 harness 的批准，拿不掉，使用者按一次。
@@ -68,6 +68,7 @@ plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步�
 
 寫入 `docs/designs/YYYY-MM-DD-<topic>-design.md`，結構：問題描述、設計決策（含理由）、
 技術設計（資料模型 / API / 核心邏輯）、**範圍排除**（明確不做的事）、開放問題、預估 N 個功能段落。
+plan-review 通過那條路上，最終計畫標了未經審查的改法或「沒改」的重大時，一樣寫進開放問題。
 
 ### 7. 自我審查
 
@@ -79,7 +80,8 @@ plan mode 由 harness 擋住所有寫入，還在 plan mode 裡就跑第 6 步�
 設計已經在 `plan-review` 與 `ExitPlanMode` 過了關，寫好、自我審查完就接下一步，不再等使用者批准。
 第 7 步只修形式（佔位、措辭）；查到要改設計內容時，照實告訴使用者改了哪裡，接續輪次回 `plan-review` 再送一輪，照採納的意見改檔；
 已經是第 3 輪（含確認輪）、或先前使用者選了「不審直接交」，就不再送，改了哪裡照實列給使用者，也補進開放問題的未經審查清單。這時已經離開 plan mode，
-這一輪沒通過或沒跑成就照 plan-review 第 3、5 步問使用者，不再送 `ExitPlanMode`。
+這一輪沒通過或沒跑成就照 plan-review 第 3、5 步問使用者，不再送 `ExitPlanMode`；這時選停下，就把這一輪改的地方與每條重大的現況（照 plan-review 回報的原樣）補進開放問題的未經審查清單、列給使用者，
+結束本 skill（不交 `task-planner`、不開工）。
 要跨好幾輪迴圈才做得完的，交 `task-planner` 拆成功能段落（進度表寫回這份設計文件；它會對段落草稿再跑一次 `plan-review`，輪次從頭算）；
 一輪做得完的，直接進 8 步開發迴圈實作，走過 `plan-review` 的設計（含使用者選「不審直接交」）就是計畫，不再另審。**都不跳過迴圈的測試與 review 步驟。**
 
