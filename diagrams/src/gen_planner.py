@@ -15,9 +15,9 @@ ZH = dict(
     groups=["動手前 · 先估段落數", "出草稿、審過 · 進度表寫進 docs/designs/", "每一段 · 照表由上往下做"],
     nodes=dict(
         count=("估段落數", ["預估 N 個功能段落"]),
-        loop=("照一般 8 步迴圈", ["一圈做得完，不用拆"]),
+        loop=("照一般 8 步迴圈", ["一圈做得完，不用拆", "計畫仍先過 plan-review"]),
         plan=("task-planner 出草稿", ["段落、小任務、要加的測試", "還沒寫檔"]),
-        review=("plan-review 審草稿", ["裁決者派 ≥3 個審查者猛攻", "通過才寫檔，只問你決策題"]),
+        review=("plan-review 審草稿", ["裁決者派 ≥3 個審查者猛攻", "通過才寫檔"]),
         table=("進度表", ["跨 session 留著，也進 git", "S1、S2… 由上往下做"]),
         resume=("換 session 或 /compact", ["先讀進度表", "從做到的地方接著做"]),
         tasks=("小任務 S2-1、S2-2…", ["一個一個做：實作、驗證、commit", "只走迴圈的步驟 1、2"]),
@@ -31,7 +31,7 @@ ZH = dict(
                                          "所以小任務全部做完，整段才跑 3–8"])],
     legend=[("主流程", GOLD, False), ("下一段：回到小任務", GOLD_DIM, True),
             ("換 session：讀進度表接手", MINT, False)],
-    foot="Style 8 · Dark Luxury · claude-dd 大工作怎麼跑 · 依全域 CLAUDE.md §4.1、§3.9 與 task-planner 繪製",
+    foot="Style 8 · Dark Luxury · claude-dd 大工作怎麼跑 · 依全域 CLAUDE.md §4.1、§3.9、task-planner 與 plan-review 繪製",
 )
 
 EN = dict(
@@ -40,7 +40,7 @@ EN = dict(
     groups=["Before starting · count increments", "Draft, review · table in docs/designs/", "Each increment · follow the table"],
     nodes=dict(
         count=("Count increments", ["estimate N"]),
-        loop=("Normal 8-step loop", ["fits in one loop, no split"]),
+        loop=("Normal 8-step loop", ["fits in one loop, no split", "the plan still goes to plan-review"]),
         plan=("task-planner drafts", ["increments, small tasks, tests", "nothing written yet"]),
         review=("plan-review checks it", ["adjudicator sends 3+ reviewers", "written only after it passes"]),
         table=("Progress table", ["survives sessions, lives in git", "S1, S2… top to bottom"]),
@@ -57,7 +57,7 @@ EN = dict(
                                                                "so 3–8 run once, after every small task"])],
     legend=[("main flow", GOLD, False), ("next increment: back to small tasks", GOLD_DIM, True),
             ("new session: resume from the table", MINT, False)],
-    foot="Style 8 · Dark Luxury · claude-dd: how big work runs · drawn from global CLAUDE.md §4.1, §3.9 and task-planner",
+    foot="Style 8 · Dark Luxury · claude-dd: how big work runs · drawn from global CLAUDE.md §4.1, §3.9, task-planner and plan-review",
 )
 
 # ── 版面座標 ──

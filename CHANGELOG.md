@@ -20,6 +20,7 @@
 
 ### Added
 
+- **plan-review 在流程圖上有自己的框**：「使用流程」在 8 步迴圈前加 ⑤ plan-review（簡單、中等任務跳過，design-brainstorm 的設計例外），「大工作怎麼跑」把原本一行小字拆成獨立一框、1 段那條路也註明計畫仍先過 plan-review。中英四張 GIF 重出；大工作圖為了守住 9 個框的上限，拿掉起點的「交代工作」
 - **ADHD 回覆風格（Output Style）**：新增 `output-styles/adhd.md`，安裝時部署到 `~/.claude/output-styles/`。
   重開 Claude Code 後打 `/output-style ADHD` 開、`/output-style default` 關；安裝不改任何 `outputStyle` 設定。
   內容是：第一句是動作、步驟編號、每輪講進度、具體時間估計、清單一組最多 5 項（只管呈現，該全列照樣全列）、
