@@ -12,29 +12,19 @@
 2. **A global `CLAUDE.md`** that tells Claude to cite a source for API signatures, version numbers, and project facts, and bans hedges like "should be" / "probably".
 3. **An 8-step loop** stamped into each project's `CLAUDE.md` so every feature increment goes through simplify → review → re-verify before the final commit.
 
-Be clear about the difference: only #1 is enforcement. Claude Code loads `CLAUDE.md` as context, not as configuration — [the docs say so plainly](https://code.claude.com/docs/en/memory) ("Claude treats them as context, not enforced configuration"). #2 and #3 raise the floor and leave a record you can audit; they do not guarantee compliance. Anything that must happen every time belongs in a hook, which is exactly why the gate exists.
+**Only #1 is enforcement.** Claude Code loads `CLAUDE.md` as context, not configuration ([docs](https://code.claude.com/docs/en/memory): "Claude treats them as context, not enforced configuration"), so #2 and #3 only raise the floor and leave an auditable record. Anything that must happen every time belongs in a hook.
 
-**Who it's for**: you already use Claude Code daily, you keep re-typing the same corrections, and you want that to survive a machine change. Roughly: one developer (or a small team that agrees on conventions) who would rather have a commit blocked than discover three weeks later that a directory's docs stopped matching its code.
+**Who it's for**: people (or small teams) who use Claude Code daily, keep re-typing the same corrections, want them to survive a machine change, and would rather have a commit blocked than docs that no longer match the code.
 
-**Who it's not for**: if you want a lightweight setup, this is the wrong end of the trade — the gate will block you, and on a bad day you'll be writing a `CLAUDE.md` for a directory you only meant to touch once. If your team doesn't already agree that stale docs are a real problem, this will read as bureaucracy, because that's what an unwanted gate is. And the rule text is all Traditional Chinese (see the language note below).
-
-```bash
-git clone https://github.com/kopp0510/claude-dd.git
-cd claude-dd && ./install-dd-pipeline.sh
-```
-
-> **Language note**: the rules themselves — the global `CLAUDE.md` template, the skill definitions, and the installer's console output — are written in Traditional Chinese, because that is the language the author works in. The mechanisms (the pre-commit gate, the CI checks, the loop) are language-independent and work as-is; the prose is not. Translating the global template is the one change to make if you want to adopt this in another language.
+**Who it's not for**: anyone after a lightweight setup (the gate will block you, sometimes for a one-off change), or a team that doesn't yet agree stale docs are a real problem. The rule text, skill definitions and installer output are in Traditional Chinese; the mechanisms are language-independent, and translating the global template is the one change needed to adopt it in another language.
 
 ## Highlights
 
-- **8-step development cycle** — every feature increment runs the same loop: implement + test → commit → code-simplifier → code-review → re-verify against a real environment (curl / playwright) → commit → capture learnings → score & fix CLAUDE.md
-- **CLAUDE.md pre-commit gate** — a commit is blocked when a directory containing code has no `CLAUDE.md`, or has one that wasn't updated in the same batch. The rejection message doubles as instructions the AI agent can act on to fix it itself
-- **Zero-hallucination policy** — API signatures, version numbers, and project facts must carry a source annotation; hedges like "should be" or "probably" are banned outright rather than tolerated
 - **Fewer stops to ask** — reversible steps just happen (including local commits and running existing tests); it only stops for destructive actions, scope changes, or information only you can give. Pushing is always left to you
-- **Criteria for writing docs and comments** — §3.10 of the global CLAUDE.md is a section of its own, independent of the 8-step cycle, so it applies even to projects that don't run the loop: enumerate instead of writing counts, print the cited line when checking a line-number reference, and when fixing "the same claim stated in N places", search by the criterion rather than by the first sentence you found
-- **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason must be written out, turning "I skipped it" from a black box into an auditable line
-- **Usage-inventory model** — only components with an evidenced usage record are kept, and all of them ship by default, so idle skills don't eat context
-- **Global CLAUDE.md template** — the single source for all of the above, deployed to `~/.claude/CLAUDE.md` through an interactive diff (`--force` overwrites it directly instead, backing the old one up)
+- **Criteria for writing docs and comments** — §3.10 of the global CLAUDE.md, which applies even to projects that don't run the loop: enumerate instead of writing counts, print the cited line when checking a line-number reference, and when fixing "the same claim stated in N places", search by the criterion rather than by the first sentence you found
+- **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason is written out, so skipping leaves an auditable line
+- **Usage-inventory model** — only components with an evidenced usage record are kept, all shipped by default
+- **Global CLAUDE.md template** — the single source for all of the above, deployed to `~/.claude/CLAUDE.md` after an interactive diff
 
 ## Installation
 
@@ -42,9 +32,9 @@ cd claude-dd && ./install-dd-pipeline.sh
 
 - [Claude Code CLI](https://claude.com/claude-code), Node.js, Git, Bash — all four are hard requirements; the installer exits if one is missing
 - Required MCP: `playwright` — the installer checks for it but will not install it, so set up [playwright MCP](https://github.com/microsoft/playwright-mcp) first
-- **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, reporting "疑似已設定…範圍未知" instead of a real scope. The install still succeeds, so it's easy to miss that you got less than advertised
-- Optional: `ffmpeg` — used by tech-diagram-gif for GIF export. Without it that skill degrades to delivering SVG instead of failing. On macOS: `brew install ffmpeg`
-- The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. `skill-creator` additionally has to have been **installed at least once** (`claude plugin install skill-creator@claude-plugins-official`): its `plugin.json` carries no `version` field, so the installer falls back to the version Claude Code recorded in `installed_plugins.json`, and before the first install there is nothing to fall back to
+- **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, yet the install still succeeds
+- Optional: `ffmpeg` — GIF export in tech-diagram-gif; without it that skill delivers SVG. On macOS: `brew install ffmpeg`
+- The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. Install `skill-creator` yourself once first: `claude plugin install skill-creator@claude-plugins-official`
 
 ### First-time install
 
@@ -62,11 +52,11 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 2. Install 12 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
-5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). Prints `Plugin 檔案不存在` and moves on if a plugin isn't already on disk, and `…都取不到版本字串，跳過` (plus a hint naming the `claude plugin install` command to run) if a version string can be read from neither `plugin.json` nor `installed_plugins.json`
+5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). A plugin that isn't on disk or has no readable version is skipped, with the `claude plugin install` command to run
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
-Plus three unnumbered steps: a pre-flight check before step 2 that validates every skill's `hooks.json` command paths (a relative path aborts the install before anything is deployed), and two between steps 6 and 7 that deploy, in order, `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
+Plus unnumbered steps: before step 2, every skill's `hooks.json` command paths are checked (a relative path aborts); between steps 6 and 7, `check-claude-md.sh` (the gate itself) goes into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
 
 ### Install options
 
@@ -80,18 +70,6 @@ Plus three unnumbered steps: a pre-flight check before step 2 that validates eve
 ./install-dd-pipeline.sh --uninstall --yes   # uninstall without confirmation (for automation; in non-interactive environments every prompt takes its default)
 ```
 
-### Sharing with others
-
-There is exactly one installation path, and it carries the complete working method — global rules, the 8-step cycle, the pre-commit gate, and the curated components:
-
-```bash
-git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
-```
-
-The global CLAUDE.md goes through an interactive diff, so someone who already has their own global rules can inspect the difference before deciding. Someone with no global CLAUDE.md at all gets a yes/no install prompt instead, defaulting to No — so nobody's `~/.claude/CLAUDE.md` is created or replaced without an explicit yes (or `--force`).
-
-> A plugin-marketplace distribution route was evaluated and removed on 2026-08-04 after it was proven to work. The plugin mechanism cannot deploy a global CLAUDE.md or a pre-commit gate — it can only ship a subset of components, which contradicts the "complete working method" framing. Removed to keep a single path. The implementation is in the git history.
-
 ## Upgrading
 
 Routine update:
@@ -102,7 +80,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 > **`--force` overwrites your global `CLAUDE.md` without asking.** The interactive diff described above only runs *without* `--force`. The previous version is backed up to `~/.claude/backups/pre-install-<timestamp>/` and the path is printed in the completion message, so it is recoverable — but if you have local edits you want to keep, run the installer without `--force` first and choose `k` (keep local).
 
-For upgrades from older layouts (the everything-deployed and bucketed eras) and for moving an existing project onto the 8-step cycle, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
+For upgrades from older layouts and for moving an existing project onto the 8-step cycle, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
 Structural changes over time are in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)*.
 
 ## The core loop: 8-step development cycle
@@ -120,11 +98,11 @@ Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the pr
 8. Score & fix the CLAUDE.md files this round touched — compute the scope first, then `claude-md-improver` audits only those files
 ```
 
-Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 would immediately drop new content into the files it just cleaned up. Skipping 7 does not skip 8: at steps 2 and 6 the gate forces updates to the CLAUDE.md of any directory whose code changed, and those edits need auditing too — the gate only confirms something was written, not that it was written correctly. Step 8 computes its scope first, because `claude-md-improver` defaults to finding every CLAUDE.md in the repo (one project here has 87 of them). Steps 3, 4 and 8 all measure the increment from its recorded start — set with `~/.claude/scripts/check-claude-md.sh --start-segment` before step 1, read back with `--segment-base` — because an increment usually spans several commits and the last commit alone misses most of them. One exception: when the project has a `task-planner` progress table, the start recorded in that table's row wins over `--segment-base`. Returning to an increment that was `BLOCKED`, `--segment-base` has already moved past the work you did before the block, and using it would silently narrow the range.
+Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 would immediately drop new content into the files it just cleaned up. Skipping 7 does not skip 8: the CLAUDE.md edits the gate forces need auditing too — the gate only confirms something was written, not that it was written correctly. Steps 3, 4 and 8 all measure the increment from its recorded start (set with `~/.claude/scripts/check-claude-md.sh --start-segment` before step 1, read back with `--segment-base`; with a `task-planner` progress table, the start in the table wins), because the last commit alone misses most of it.
 
-Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (plus a 12-item Fowler code-smell baseline, carried only when the change adds or restructures code), and real-environment verification owns behaviour. Step 4 has one exception: when the increment's diff is all data, configuration, comments or documentation, or the change is already fully covered by the project's mechanical checks, no agent is dispatched — you check it yourself and attach the evidence. When one is dispatched, the verification output you already ran goes into the diff file with its expected values, and the prompt marks it as confirmed, not to be re-run; it hands over facts (line numbers, figures, measured output), not "I think the culprit is X" — a wrong diagnosis in the prompt gets adopted by the reviewer — and the whole diff plus the changed files' contents go into one file. The main session **dispatches the reviewers itself**, in parallel from a single message, then reads that file in chunks while they work (one oversized read gets silently truncated). One run only finds part of it — measured on one increment's diff, five runs each caught 2 of 3 known defects and each a different pair (two runs union to 2.3/3 on average, against 1.8/3 for one) — so there is a floor of **at least three**, and the main session decides the actual number. Once all of them are back it verifies each finding against the code and sorts it into adopted, rejected, or yours to decide; where reviewers disagree it reads the lines rather than taking a vote. There is no separate adjudicator in between: measured, dispatching directly was faster than going through one and caught no fewer defects, though it cost more; that run changed three things at once on few samples, so treat it as a direction (see `docs/measurements/2026-10-23-reviewer-real-sessions.md`).
+Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (plus a 12-item Fowler code-smell baseline, carried only when the change adds or restructures code), and real-environment verification owns behaviour. Step 4 has one exception: when the increment's diff is all data, configuration, comments or documentation, or the change is already fully covered by the project's mechanical checks, no agent is dispatched — you check it yourself and attach the evidence. Otherwise the main session **dispatches at least three reviewers itself, in parallel from a single message** (one run only finds part of it; the five-run experiment is in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)* — search for 「兩發聯集平均」), then verifies each finding against the code; there is no separate adjudicator in between (comparison in `docs/measurements/2026-10-23-reviewer-real-sessions.md`). What goes into the dispatch and how reports are filed: `templates/global/CLAUDE.md` §3.9, step 4.
 
-**Work that spans several increments** goes to `task-planner` first: it splits the work into increments run in order (`S1`, `S2`, …), lists small tasks inside each one (`S2-1`, `S2-2`, …), and writes the progress table into the design doc under `docs/designs/`. A small task runs only steps 1 and 2 (implement, verify, commit, with its ID at the end of the subject line); once every small task in an increment is committed, the increment runs steps 3–8 once, and only then is it marked `DONE`. The draft goes through `plan-review` before anything is written, and you are asked only the decision questions, which tests to add, and anything the review says only you can decide, not whether to approve the whole plan; a new session or `/compact` picks up from the table; a blocked increment or newly discovered work stops for a question. You don't have to ask for it: the global CLAUDE.md tells Claude to write down how many increments it expects before starting complex work, and to call `task-planner` itself at two or more.
+**Work that spans several increments** goes to `task-planner` first: it splits the work into ordered increments with small tasks inside each, and writes the progress table into a design doc under `docs/designs/`. A small task runs only steps 1 and 2; once every small task in an increment is committed, the increment runs steps 3–8. The draft goes through `plan-review` before anything is written, and a new session or `/compact` picks up from the table. You don't have to ask: before complex work Claude estimates how many increments it needs and calls `task-planner` itself at two or more (rules in `templates/global/CLAUDE.md` §4.1 and `skills/task-planner/SKILL.md`).
 
 ![claude-dd: how big work runs](diagrams/claude-dd-task-planner.gif)
 
@@ -139,11 +117,11 @@ The full path from zero to daily use (install once, stamp each project once, put
 ### CLAUDE.md maintenance rules (enforced by pre-commit gate)
 
 - Every folder containing code needs a `CLAUDE.md`, updated in the same batch as the code. The cascade upward through the parent layers is a §3.9 rule, **not** something the gate checks — it only looks at the directory whose code changed, so a stale parent produces no signal at all
-- The gate is `~/.claude/scripts/check-claude-md.sh`, hooked in by `/dd-init`. It goes into `.git/hooks/pre-commit`, unless `git config core.hooksPath` is set — git ignores `.git/hooks/` entirely in that case, so the hook goes into that directory instead. (This repo is itself in the second case.) If the project manages hooks with the pre-commit framework or lefthook, `/dd-init` does not add the gate to their generated hook file (reinstalling rewrites it; it only removes a dead line left by older versions) and hands you a snippet for `.pre-commit-config.yaml` / `lefthook.yml` instead; with husky v9 it goes into `.husky/pre-commit`. When the gate script is missing (a collaborator without claude-dd, or after uninstalling), the hook only prints a warning saying what was not checked, and the commit goes through. Its error message tells the AI agent directly to read the directory, generate or update the file itself, and retry
-- **The memory filename is configurable** (2026-10-16): it defaults to `CLAUDE.md`, and `git config --local dd.docfile GEMINI.md` makes the gate look for that name instead — for repos that are only allowed to carry one specific filename (a hard-coded name means the gate is simply unusable there). Only `--local` is read (it lives in `.git/config`, never committed): setting it globally would make **every** repo on the machine stop counting its `CLAUDE.md`, and `-c dd.docfile=…` / `GIT_CONFIG_PARAMETERS` do not take effect either — one decision per repo. Only a bare filename is accepted (`[A-Za-z0-9._-]`, not `.` or `..`, and not starting with `-`), otherwise it exits 1. `--start-segment` and the SKIP-debt tracking follow the same name (`--segment-base` only prints the recorded start and never touches the filename — but an invalid value still stops it, because validation runs before the subcommand dispatch)
+- The gate is `~/.claude/scripts/check-claude-md.sh`, hooked by `/dd-init` into `.git/hooks/pre-commit`, or into the `core.hooksPath` directory when one is set (this repo is). For projects that manage hooks with the pre-commit framework or lefthook, `/dd-init` does not add the gate automatically — it hands you a snippet to add to `.pre-commit-config.yaml` / `lefthook.yml` yourself (husky v9: `.husky/pre-commit`). When the gate script is missing (a collaborator without claude-dd), it only warns and the commit goes through; when it blocks, the message tells the AI how to fix it
+- **The memory filename is configurable**: it defaults to `CLAUDE.md`, and `git config --local dd.docfile GEMINI.md` makes the gate look for that name instead, for repos allowed only one specific filename. Only `--local` is read: a global setting, `-c dd.docfile=…` and `GIT_CONFIG_PARAMETERS` do not take effect — one decision per repo
 - It only fires on code extensions (`js|ts|py|go|rs|sh|…`) and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends. A markdown- or config-only change does not trigger it *by itself* — but see the next point: SKIP debt blocks it anyway
 - Escape hatch for checkpoint commits (step 2): `SKIP_DOC_CHECK=1 git commit`. The final commit (step 6) must pass cleanly. Skipping is not a pardon: the gate tracks every directory skipped since the increment's start, and the next normal commit — even one with no code in it — is blocked until those directories' `CLAUDE.md` files are updated
-- `git commit --no-verify` / `-n` skips the pre-commit hook entirely, so the gate never sees that commit. When Claude tries it, the `gate-guard` PreToolUse hook denies the command and points to `SKIP_DOC_CHECK=1` instead. It only guards Claude — a human typing `--no-verify` in a terminal is not stopped. It is installed globally, so it applies in every project, including ones without the gate; when you really want to skip hooks, run the command yourself
+- `git commit --no-verify` / `-n` skips the gate entirely. When Claude tries it, `gate-guard` denies the command and points to `SKIP_DOC_CHECK=1`. It only guards Claude — a human typing `--no-verify` in a terminal is not stopped; it is installed globally, so it applies even in projects without the gate
 
 ## Why nested CLAUDE.md files
 
@@ -160,17 +138,17 @@ The gate demands one `CLAUDE.md` per code-bearing directory rather than one big 
 **What it costs, what's already mitigated, and what's left**
 
 - **Documentation theatre.** The gate verifies a file exists and was staged. It cannot verify the content is true.
-  *Mitigation*: when the gate fires, its own message dictates the repair format — read every file in the directory, then write "one line on this layer's job, key files and their purpose, conventions and constraints here, relationship to the parent module", no empty shell; §3.9 of the global template adds: write what you actually read, no placeholder text.
-  *Residual*: that rule is context, not enforcement. A determined shortcut still passes. The gate raises the cost of faking it; it doesn't make faking impossible.
+  *Mitigation*: the gate's message dictates the repair format (read the directory, then write its job, key files, conventions and relationship to the parent), and §3.9 of the global template requires writing what you actually read.
+  *Residual*: that is context, not enforcement — a determined shortcut still passes; the gate only raises the cost of faking it.
 - **Friction on small changes.** Adding a `CLAUDE.md` for a directory you only meant to touch once is real overhead.
-  *Mitigation*: the gate only fires on code extensions and skips `node_modules`, `dist`, `.screenshots`, `migrations` and friends, so a markdown, config or asset change does not trigger it by itself; `SKIP_DOC_CHECK=1` covers checkpoint commits — as a deferral, not a pardon: the next normal commit still asks for the file, and until then even a markdown-only commit is blocked.
-  *Residual*: the first commit that puts code into a genuinely new directory does cost you a file. That's the deal, and the escape hatch is only as strong as your willingness not to reach for it.
+  *Mitigation*: it only fires on code extensions; `SKIP_DOC_CHECK=1` covers checkpoint commits, but only defers — the next normal commit still asks for the file.
+  *Residual*: the first commit that puts code into a new directory costs you a file.
 - **More files, more contradictions.** "If two rules contradict each other, Claude may pick one arbitrarily."
-  *Mitigation*: `claude-md-improver` (from the claude-md-management plugin) is the tool for this cleanup — it audits existing files against a quality baseline. (`/revise-claude-md` is a different job: folding this session's learnings in at loop close-out.) §3.9 also asks for a cascade check up the parent layers after each change.
-  *Residual*: nothing *detects* a contradiction. Those are tools you have to decide to run; the docs put the periodic review on you.
+  *Mitigation*: step 8 of the loop runs `claude-md-improver` on the files the round touched, and §3.9 asks for a check up the parent layers.
+  *Residual*: nothing *detects* a contradiction; periodic review is still on you.
 - **Nested files don't survive `/compact`.** Per the docs, root `CLAUDE.md` is re-injected after compaction but nested files "are not re-injected automatically; they reload the next time Claude reads a file in that subdirectory".
-  *Mitigation*: in practice, editing code in that directory means reading a file there first, which reloads it.
-  *Residual*: a narrow one — changing a directory's code from memory after a compaction without reading anything in it. That's already a bad habit; this just adds a reason not to.
+  *Mitigation*: editing code in that directory means reading a file there first, which reloads it.
+  *Residual*: only changing code from memory after a compaction without reading anything there.
 
 If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 8-step loop works without it.
 
@@ -184,7 +162,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 
 ## Promoted Skills (12, deployed by default)
 
-> "Promoted" means the component has an evidenced usage record and therefore ships by default. Components without one were removed rather than kept around — the git history holds them. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
+> "Promoted" means the component has an evidenced usage record and therefore ships by default. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
 
 | Skill | Description |
 |-------|-------------|
@@ -214,7 +192,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 |--------|---------|---------|
 | [claude-mem](https://github.com/thedotmack/claude-mem) | Cross-conversation memory (records sessions via lifecycle hooks, with bundled search tools) | `npx claude-mem install` |
 
-> claude-mem installs as a **plugin**, not an MCP server — it never registers under `mcpServers` in `~/.claude.json`, so the installer's MCP check cannot see it and does not try to.
+> claude-mem is a plugin, not an MCP server, so the installer's MCP check does not see it.
 
 ## MCP
 
@@ -228,7 +206,7 @@ Degraded states are reported distinctly, so "I can't tell" never turns into a co
 | Neither `jq` nor `python3`, name found by string match | 疑似已設定…範圍未知 — probably configured, scope unknown |
 | Neither `jq` nor `python3`, name not found | 未安裝 — not installed (a required MCP also gets a ❌) |
 
-That last row is the honest caveat: without `jq` or `python3` the check falls back to string matching, and a server whose name doesn't literally appear in the file is reported as missing even though the check can't actually prove it.
+That last row is the honest caveat: a string-match miss is reported as not installed, though it can't actually prove that.
 
 > **Limitation**: the third official scope (`project` — a `.mcp.json` in the project root) does not live in `~/.claude.json`, so this check cannot see it and will under-report in that case. For the complete picture use `claude mcp list`, which lists all three scopes.
 
@@ -272,7 +250,7 @@ Vendored content, each shipping its own upstream licence file:
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors (style rules only; see the file for exactly which parts) |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) (rules only; see the file for where each section went) |
-| `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15` (2026-03-24). No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |
+| `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15`. No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |
 
 Intake rules: [CLAUDE.md, "第三方 Skill / Agent 收編檢查清單"](CLAUDE.md) *(Traditional Chinese)*.
 
