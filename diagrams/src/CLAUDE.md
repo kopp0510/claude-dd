@@ -114,3 +114,7 @@
 `../` 只放成品 GIF（兩份 README 直接嵌）。圖上的文字宣稱（元件數量、迴圈步數、
 目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README`、
 `templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審；`gen_review.py` 的每個框、每條線與註解都來自它，第 1–5 步與裁決者範本任何一句改了都要回頭對）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
+
+**改圖上的字（尤其是為了塞進框而縮短）時，把原文那句和新句並排，逐條對條件**：「至少」「最多一次」「除了…」「或…」最容易掉。
+`gen_review.py` 犯過兩次（`docs/reviews/2026-10-29-plan-review-gif/S1-judge.md`、`S2-judge.md`）：第二次掉的「你的規則要批准時照樣問」，正是第一次收 review 才補回的那句。
+對照表只證明「這句有出處」，證明不了「出處那句的條件都還在」。
