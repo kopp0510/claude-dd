@@ -358,9 +358,12 @@ jobs:
         run: |
           # 2026-10-16 cherry-pick 上來的 commit 在 scripts/ 留了「用途見 ~/.claude/rules/<某個本機檔>」：
           # 作者機器上有那個檔，別人 clone 下來是死指標，兩個 review agent 都判成範圍外沒攔。
-          # 判定：~/.claude/ 底下第一層要嘛是本 repo 會部署的目錄（對應的 repo 檔要存在），
-          # 要嘛是 Claude Code 自己的東西（不驗內容）；其他一律紅燈。含 <>*{} 或 ... 的是佔位寫法，只驗第一層
-          git -c core.quotePath=false grep -noE '(~|\$HOME|\$\{HOME\})/\.claude/[A-Za-z0-9_./<>*{}-]*' \
+          # 判定：~/.claude/ 底下第一層要嘛是本 repo 會部署的目錄（部署後要真的有那個檔），
+          # 要嘛是 Claude Code 自己的東西（settings.json、projects/、plugins/…，內容因機器而異，不驗）；其他一律紅燈。
+          # 含 < * { $ 或 ... 的是佔位寫法，只驗第一層
+          # 路徑字元用「不是空白、引號、括號、逗號分號」而不是列舉 ASCII：列舉的話中文檔名會在第一個中文字截斷，
+          # 剩下 skills/ 這種目錄本身，-e 必過（2026-10-30 review 實測）；截完再在下面的 sed 切掉緊接的中文標點
+          git -c core.quotePath=false grep -noE '(~|\$HOME|\$\{HOME\}|"\$HOME")/\.claude/[^][:space:]"'"'"'`()|,;[]*' \
             -- scripts/ tests/ commands/ skills/ agents/ output-styles/ templates/ > /tmp/claude-paths.txt || true
           # 先確認抓到東西非空：零命中時看起來會像「全部指得到」
           if [ ! -s /tmp/claude-paths.txt ]; then
@@ -371,22 +374,31 @@ jobs:
           # 用重新導向餵 while：管線會起 subshell，fail=1 傳不出來
           while IFS= read -r line; do
             n=$((n+1))
-            loc="${line%%:\~*}"; loc="${loc%%:\$*}"
-            rel=$(printf '%s' "$line" | sed -E 's#^.*(~|\$HOME|\$\{HOME\})/\.claude/##; s#</.*$##; s#\.+$##')
-            # ↑ s#</.*$## 去掉緊接的 XML 結尾標籤（SVG 裡的 <text>~/.claude/</text>），不然 </text> 會被當成路徑
+            loc="${line%%:\~*}"; loc="${loc%%:\$*}"; loc="${loc%%:\"*}"
+            rel=$(printf '%s' "$line" | sed -E 's#^.*(~|\$HOME|\$\{HOME\}|"\$HOME")/\.claude/##; s#</.*$##; s#[（）「」『』，。、：；！？].*$##; s#[.:]+$##')
+            # ↑ 依序去掉：緊接的 XML 結尾標籤（SVG 裡的 <text>~/.claude/</text>）、緊接的中文標點、句尾的句點冒號
             top="${rel%%/*}"
             case "$top" in
               ''|CLAUDE.md|settings.json|settings.local.json|projects|plugins) continue ;;
               scripts|skills|agents|commands|output-styles) ;;
               *) echo "❌ ${loc}：~/.claude/${rel} —— 本 repo 不部署 ${top}/，別人機器上沒有這個東西"; fail=1; continue ;;
             esac
-            case "$rel" in *'<'*|*'*'*|*'{'*|*'...'*) continue ;; esac
-            # scripts/ 只部署 DD_SCRIPTS（scripts/ 第一層的 .sh）；scripts/githooks/、scripts/CLAUDE.md 在 repo 裡有、部署後沒有
+            case "$rel" in *'<'*|*'*'*|*'{'*|*'$'*|*'...'*) continue ;; esac
+            # repo 裡有、部署後沒有的那幾類（安裝腳本照陣列逐檔複製，不是整包；skills/ 才是整個目錄 cp -r）：
+            # scripts/ 只部署第一層的 .sh（DD_SCRIPTS）；output-styles/ 只部署第一層的 .md（DD_OUTPUT_STYLES，LICENSE.txt 不部署）；
+            # commands/ 第一層只部署 dd-*.md，命名空間目錄複製完會刪掉 README.md。各陣列與目錄一致由「陣列與目錄一致性」那個 step 管
+            bad=''
             case "$rel" in
-              scripts|scripts/) ;;
-              scripts/*/*|scripts/*[!h]|scripts/*[!s]h|scripts/*[!.]sh)
-                echo "❌ ${loc}：~/.claude/${rel} —— scripts/ 只部署第一層的 .sh，這個部署後不存在"; fail=1; continue ;;
+              scripts/*/*|scripts/*[!h]|scripts/*[!s]h|scripts/*[!.]sh) bad='scripts/ 只部署第一層的 .sh' ;;
+              output-styles/*/*|output-styles/*[!d]|output-styles/*[!m]d|output-styles/*[!.]md) bad='output-styles/ 只部署第一層的 .md' ;;
+              commands/*/README.md) bad='命名空間 command 目錄的 README.md 部署時會被刪掉' ;;
+              commands/*/*) ;;
+              commands/dd-*.md) ;;
+              commands/?*) bad='commands/ 第一層只部署 dd-*.md' ;;
             esac
+            if [ -n "$bad" ]; then
+              echo "❌ ${loc}：~/.claude/${rel} —— ${bad}，這個部署後不存在"; fail=1; continue
+            fi
             if [ ! -e "$rel" ]; then
               echo "❌ ${loc}：~/.claude/${rel} —— repo 裡沒有 ${rel}，部署後也不會有"; fail=1
             fi
