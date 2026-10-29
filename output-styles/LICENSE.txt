@@ -18,10 +18,13 @@ adhd.md 的部分內容改寫自 i-have-adhd（https://github.com/ayghri/i-have-
   也不可因此限制分析、搜尋與保留的資訊
 - Rules 10 No preamble, no recap, no closing pleasantries —— 改寫（規則 10）：加註 CLAUDE.md 規定的任務結束回報不算回顧
 - When to break the rules 1–4 —— 照借（「什麼時候可以不照」1–4）
-- When to break the rules 5–6（rule fights the task / the harness）—— 改寫，併入「誰優先」：使用者指示與 CLAUDE.md 優先
+- When to break the rules 5（a rule fights the task）—— 改寫，併入「說話方式」第二點的「真的超過兩個選項時照實說」（那句同時也來自 ELI5），
+  以及「誰優先」的「只管長什麼樣子，不改要寫什麼」（上游的 the shape stays）
+- When to break the rules 6（a rule fights the harness）—— 改寫，併入「誰優先」：CLAUDE.md 優先（上游的 system prompt outranks），
+  第二段的「決定好的下一步就直接做、不要問要我繼續嗎」（上游的 do the work instead of asking "want me to"）與「時間估計估的是實際動手的人」
 - Pre-send check —— 不借
 
-「說話方式」一節不是來自上游，來自本機的 ELI5 output style（使用者自己寫的）。
+「說話方式」一節除了上面標明的那句，不是來自上游，來自本機的 ELI5 output style（使用者自己寫的）。
 
 ---
 

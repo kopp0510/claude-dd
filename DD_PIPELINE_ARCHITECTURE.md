@@ -51,7 +51,7 @@ git 會忽略 `.git/hooks/`，`/dd-init` 改掛到該目錄下的 `pre-commit`�
 pre-commit 套件、lefthook 管理 hook 的專案不改它們產生的檔，改給設定片段；husky v9 掛 `.husky/pre-commit`。
 
 修改一律改 repo 再重新部署；直接改 `~/.claude/` 的 skills / agents / commands /
-scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/backups/`）。
+scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/backups/`）。
 **全域 CLAUDE.md 是例外**：不帶 `--force` 時互動選單預設 `k)` 保留本地版本，
 本地改動不會被覆蓋；帶 `--force` 才直接覆蓋（同樣先備份）。
 
