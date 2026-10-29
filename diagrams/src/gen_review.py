@@ -17,19 +17,20 @@ ZH = dict(
     nodes=dict(
         plan=("計畫寫好", ["附查到的事實", "推測要標明是推測"]),
         send=("派 ≥3 個審查者", ["haiku，同一則訊息平行派", "可分工，也可都做全面"]),
-        check=("讀檔檢查", ["每人抽一處它引用的行來讀", "對不上就重派"]),
+        check=("讀檔檢查", ["每人至少抽一處它引用的行來讀", "對不上就重派，最多一次"]),
         verify=("逐條查證", ["預設「這條批評可能是錯的」", "採納／駁回／需使用者決定"]),
-        ok=("通過 → 開工", ["只問「需使用者決定」的題", "不再問「計畫可以嗎」"]),
+        ok=("通過 → 開工", ["只問「需使用者決定」的題", "你的規則要批准時照樣問"]),
         fail=("不通過 → 改計畫", ["照採納的重大缺失逐條改", "改好的全文再送一輪"]),
         stop=("第 3 輪還不過 → 停下", ["改好計畫後停下回報", "你選確認輪／繼續／停下"]),
         none=("無法判定／沒跑成", ["照實告訴你", "問要重跑還是不審直接交"]),
     ),
-    retry="重派", short="有效審查者不足 3 個", again="再送一輪（最多 3 輪）", third="已是第 3 輪",
+    retry="重派", short="補派後仍不足 3 個", again="再送一輪（最多 3 輪）", third="已是第 3 輪",
     notes=[("什麼時候跑", ["複雜任務的計畫交出去之前", "task-planner 的草稿出好之後",
                          "design-brainstorm 的設計（不論大小）", "簡單、中等任務不跑"]),
-           ("什麼算重大", ["三個條件都符合才算：", "常走的路、照做會錯、", "後面的關卡也抓不到"])],
+           ("什麼算重大", ["三個條件都符合才算：", "常走的路（金額、權限、刪資料一律算）、",
+                         "照做會錯或跳過你的決定、", "後面的關卡也抓不到"])],
     legend=[("主流程", GOLD, False), ("再送一輪：改好的計畫回到開頭", GOLD_DIM, True),
-            ("重派：讀檔檢查沒過的審查者", GRAY, True)],
+            ("重派：讀檔檢查沒過或回錯誤的審查者", GRAY, True)],
     foot="Style 8 · Dark Luxury · claude-dd 計畫怎麼審 · 依 skills/plan-review/SKILL.md 繪製",
 )
 
@@ -40,20 +41,20 @@ EN = dict(
     nodes=dict(
         plan=("Plan written", ["with the facts found", "guesses marked as guesses"]),
         send=("Send 3+ reviewers", ["haiku, all in one message", "split angles or all-round"]),
-        check=("Read-the-file check", ["one cited line per reviewer", "mismatch: send again"]),
+        check=("Read-the-file check", ["at least one cited line each", "mismatch: resend, once at most"]),
         verify=("Check each criticism", ["assume it may be wrong", "adopt / reject / ask the user"]),
-        ok=("Pass → start work", ["asks only user-decision items", "never \"is this plan OK?\""]),
+        ok=("Pass → start work", ["asks only user-decision items", "approval only if your rules ask"]),
         fail=("Fail → revise the plan", ["fix each adopted major issue", "send the full plan again"]),
         stop=("Round 3 fails → stop", ["revise, then stop and report", "you pick: confirm / go on / stop"]),
         none=("Undecided / didn't run", ["you are told plainly", "rerun, or hand over unreviewed"]),
     ),
-    retry="again", short="under 3 valid reviewers", again="next round (max 3)", third="already round 3",
+    retry="again", short="still under 3 after backfill", again="next round (max 3)", third="already round 3",
     notes=[("When it runs", ["a complex task's plan, before it goes out", "a task-planner draft, once it's ready",
                              "a design-brainstorm design (any size)", "not for simple or medium tasks"]),
-           ("What counts as major", ["all three must hold:", "a common path, doing it goes wrong,",
-                                     "and later gates won't catch it"])],
+           ("What counts as major", ["all three must hold:", "a common path (money, access, deletes: always),",
+                                     "doing it goes wrong or skips your decision,", "and later gates won't catch it"])],
     legend=[("main flow", GOLD, False), ("next round: the revised plan starts over", GOLD_DIM, True),
-            ("send again: a reviewer failed the check", GRAY, True)],
+            ("send again: a reviewer failed the check or errored", GRAY, True)],
     foot="Style 8 · Dark Luxury · claude-dd: how a plan gets reviewed · drawn from skills/plan-review/SKILL.md",
 )
 
@@ -156,7 +157,7 @@ def build(L):
 
     # 連線從來源框邊出發、停在目標框前 12px 留給箭頭；畫在 <defs> 外並標 data-role="edge"，
     # 小球的 <mpath> 直接指向它（放進 defs 用 <use> 引用的話，幾何檢查數到的連線是 0）
-    c0, c1, c2, c3 = [y + BH // 2 for y in YS]
+    c0, c1, c2 = [y + BH // 2 for y in YS[:3]]
     mid = [x + BW // 2 for x in XS]
     paths = {
         "start":  poly((mid[0], YS[0]+BH), (mid[0], YS[1]-12)),
@@ -193,23 +194,25 @@ def build(L):
     o.append(label(mid[3]+14, YS[3]-22, L["third"], "start"))
     o.append(label((XS[1]+XS[2]) // 2, c0-12, L["again"], "middle"))
 
-    # dur 大致與路徑長成正比（68px→1.44、88px→1.8、128px→2.4），全部整除 7.2；
-    # 兩條長路徑用 7.2，最長的那條放兩顆、錯開半週期；begin 避開 dur 的整數倍
+    # dur 與路徑長成正比（68px→1.44、88px→1.8、128px→2.4、383px→7.2），全部整除 7.2；
+    # 「再送一輪」約 1518px，dur 最長只能到總循環 7.2，所以這條的球比別條快約 4 倍，放兩顆、錯開半週期；
+    # 球色跟所在的線同色（legend 只講線色）；begin 避開 dur 的整數倍
     o.append(ball("start", GOLD, 1.8, -0.6))
     o.append(ball("send", GOLD, 1.44, -1.0))
     o.append(ball("retry", GRAY, 1.44, -0.5))
     o.append(ball("verify", GOLD, 1.44, -0.9))
-    o.append(ball("short", GRAY, 2.4, -1.3))
+    o.append(ball("short", GOLD, 2.4, -1.3))
     o.append(ball("ok", GOLD, 2.4, -0.7))
     o.append(ball("fail", GOLD, 7.2, -2.5))
-    o.append(ball("third", GOLD, 1.2, -0.4))
+    o.append(ball("third", GOLD, 1.44, -0.4))
     o.append(ball("again", GOLD_DIM, 7.2, -0.3))
     o.append(ball("again", GOLD_DIM, 7.2, -3.9))
 
+    marker_for = {GOLD: "url(#ag)", GOLD_DIM: "url(#ad)", GRAY: "url(#ay)"}
     lx = 100
     for text, col, dash in L["legend"]:
         da = ' stroke-dasharray="6,4"' if dash else ''
-        mk = 'url(#ay)' if col == GRAY else ('url(#ad)' if col == GOLD_DIM else 'url(#ag)')
+        mk = marker_for[col]
         o.append(f'<line x1="{lx}" y1="946" x2="{lx+56}" y2="946" stroke="{col}" stroke-width="2"{da} '
                  f'marker-end="{mk}"/>\n')
         o.append(f'<text x="{lx+70}" y="950" class="lg">{esc(text)}</text>\n')

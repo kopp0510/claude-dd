@@ -32,3 +32,5 @@
 ### S1 plan-review 流程圖
 
 - S1-1 新增 `diagrams/src/gen_review.py`、兩張 GIF、兩份 README 嵌入、`diagrams/src/CLAUDE.md` 與根 `CLAUDE.md` 同步、CHANGELOG（一個 commit）
+  - 驗證：verify-geometry 兩版 0 項不過、0 警告；playwright 截圖看過；GIF 幀數、接點 PSNR、零 script grep；`ci.yml` 讀文件的 step 在本機跑過
+  - commit 訊息：`feat: plan-review 有自己的流程圖（中英 GIF）（S1-1）`
