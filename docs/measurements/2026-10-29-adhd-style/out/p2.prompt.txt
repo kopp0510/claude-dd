@@ -1,0 +1,1 @@
+把 greet.txt 裡的 hello 改成 hi。不要執行 shell 指令。做完照你的規則回報。
