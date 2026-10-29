@@ -1,0 +1,1 @@
+S1 的小任務都 commit 了，步驟 3 code-simplifier 也跑完了。現在接著做步驟 4 code-review。

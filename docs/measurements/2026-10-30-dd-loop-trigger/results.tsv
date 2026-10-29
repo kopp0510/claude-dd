@@ -1,0 +1,9 @@
+n1-typo-1	skills=	dd-loop=false	denied_skill=0	inject_chars=0	cost=0.3527048
+p1-start-1	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.42750940000000004
+p1-start-2	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.4450796
+p2-handover-1	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.42266119999999996
+p2-handover-2	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.45252099999999995
+p3-step4-1	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.44147919999999996
+p3-step4-2	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.4126318
+p4-step8-1	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.45463480000000006
+p4-step8-2	skills=dd-loop	dd-loop=true	denied_skill=0	inject_chars=24	cost=0.44529699999999994
