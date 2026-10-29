@@ -132,7 +132,7 @@ Three quality mechanisms, one axis each: the simplifier owns readability, code-r
 
 Step 1 proves the thing you built is right; step 5 proves that simplifying it and applying review findings didn't break it. Different purposes — neither substitutes for the other.
 
-The full path from zero to daily use (install once, stamp each project once, split big work into increments, then every feature increment runs the same loop):
+The full path from zero to daily use (install once, stamp each project once, put the plan for complex work through `plan-review`, then every feature increment runs the same loop):
 
 ![claude-dd usage flow](diagrams/claude-dd-usage-flow.gif)
 

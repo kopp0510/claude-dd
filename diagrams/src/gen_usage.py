@@ -13,7 +13,7 @@ MINT = "#6ee7b7"
 
 ZH = dict(
     title="claude-dd 使用流程",
-    sub="從零到日常 · 裝一次、每個專案蓋章一次、大工作先拆段落、每個功能段落走同一個迴圈",
+    sub="從零到日常 · 裝一次、每個專案蓋章一次、複雜工作先審計畫、每個功能段落走同一個迴圈",
     steps=["STEP 1 · 首次安裝（一次性）",
            "STEP 2 · 專案初始化（每個專案一次）",
            "STEP 3 · 日常開發（每個功能段落）"],
@@ -24,19 +24,22 @@ ZH = dict(
         ("③ cd 你的專案", "任何 git 專案，新舊皆可", "現有專案會先派 agent 分析技術棧", BLUE),
         ("④ /dd-init", "蓋章 8 步迴圈到專案 CLAUDE.md",
          "掛 pre-commit gate · 建 .screenshots/ · 檢查 plugin 依賴", VIOLET),
-        ("⑤ 8 步開發迴圈", "實作+測試 → commit → 簡化 → 審查",
+        ("⑤ plan-review（複雜工作）", "計畫先交審查，通過才動手",
+         "裁決者派 ≥3 個審查者猛攻、逐條查證", GOLD),
+        ("⑥ 8 步開發迴圈", "實作+測試 → commit → 簡化 → 審查",
          "→ 再測（curl/playwright）→ commit → 沉澱 → 評分", GREEN),
-        ("⑥ pre-commit gate", "改碼目錄 CLAUDE.md 未同批更新",
+        ("⑦ pre-commit gate", "改碼目錄 CLAUDE.md 未同批更新",
          "→ 擋下 commit，訊息內含 AI 自主修復指令", ROSE),
-        ("⑦ 換機器 / 新電腦", "clone + 一支腳本，整套工作法回來",
+        ("⑧ 換機器 / 新電腦", "clone + 一支腳本，整套工作法回來",
          "這就是「可攜」的意思 — 回到 ①", GOLD_DIM),
     ],
     notes=[
         ("全域 CLAUDE.md 走互動比對", ["已有自己的規則時可先看 diff", "再決定要不要覆蓋"]),
         ("已有 ## 開發流程 區塊時", ["列出與現行版差異並詢問", "是否升級，保留在地內容"]),
-        ("大工作先用 task-planner 拆段落", ["進度表寫進 docs/designs/ 設計文件",
-                                       "小任務只走步驟 1–2，各自 commit",
-                                       "全部做完，整段才跑步驟 3–8"]),
+        ("複雜工作先審計畫", ["簡單、中等任務跳過 ⑤，直接進 ⑥",
+                             "兩段以上先由 task-planner 拆段落、出草稿",
+                             "進度表寫進 docs/designs/ 設計文件",
+                             "小任務只走步驟 1–2，整段才跑 3–8"]),
         ("gate 的逃生口", ["檢查點 commit（步驟 2）：", "SKIP_DOC_CHECK=1 git commit",
                           "欠的 CLAUDE.md 之後照樣要補", "最終 commit（步驟 6）必須全過"]),
     ],
@@ -47,7 +50,7 @@ ZH = dict(
 
 EN = dict(
     title="claude-dd usage flow",
-    sub="From zero to daily use · install once, stamp each project once, split big work into increments, then every increment runs the same loop",
+    sub="From zero to daily use · install once, stamp each project once, review the plan of complex work, then every increment runs the same loop",
     steps=["STEP 1 · First-time install (once)",
            "STEP 2 · Project setup (once per project)",
            "STEP 3 · Daily development (every increment)"],
@@ -59,11 +62,13 @@ EN = dict(
          "existing ones get an agent to analyse the stack", BLUE),
         ("④ /dd-init", "stamps the 8-step loop into CLAUDE.md",
          "hooks the gate · creates .screenshots/ · checks plugins", VIOLET),
-        ("⑤ 8-step development loop", "implement + test → commit → simplify → review",
+        ("⑤ plan-review (complex work)", "the plan is reviewed before any code",
+         "an adjudicator sends 3+ reviewers, then verifies", GOLD),
+        ("⑥ 8-step development loop", "implement + test → commit → simplify → review",
          "→ re-verify (curl/playwright) → commit → capture → score", GREEN),
-        ("⑥ pre-commit gate", "code dir CLAUDE.md not updated in same batch",
+        ("⑦ pre-commit gate", "code dir CLAUDE.md not updated in same batch",
          "→ commit blocked; message tells the AI how to fix it", ROSE),
-        ("⑦ New machine", "clone + one script, the whole method is back",
+        ("⑧ New machine", "clone + one script, the whole method is back",
          'that is what "portable" means — back to ①', GOLD_DIM),
     ],
     notes=[
@@ -71,9 +76,10 @@ EN = dict(
                                                 "then decide whether to overwrite"]),
         ("if a workflow section already exists", ["differences are listed and you are asked",
                                                   "local content is preserved"]),
-        ("big work: task-planner splits it first", ["progress table goes in docs/designs/",
-                                                    "small tasks run steps 1–2, one commit each",
-                                                    "all done, then the increment runs 3–8"]),
+        ("complex work: review the plan first", ["simple / medium tasks skip ⑤, straight to ⑥",
+                                                 "2+ increments: task-planner drafts it first",
+                                                 "progress table goes in docs/designs/",
+                                                 "small tasks run 1–2; the increment runs 3–8"]),
         ("gate escape hatch", ["checkpoint commit (step 2):", "SKIP_DOC_CHECK=1 git commit",
                                "skipped CLAUDE.md must still be paid back",
                                "final commit (step 6) must pass cleanly"]),
@@ -86,11 +92,12 @@ EN = dict(
 # ── 版面座標 ──
 BW, BH = 340, 78
 COL_L, COL_R = 208, 628
-GRP = [(180, 168, 860, 162), (180, 378, 860, 162), (180, 588, 860, 186)]
+GRP = [(180, 168, 860, 162), (180, 378, 860, 162), (180, 588, 860, 294)]
 ROWS = [204, 414, 624]           # ①③⑤ 與 ②④⑥ 的 y
-Y7 = 822                          # ⑦
+Y7 = 782                          # ⑦：⑥ 正下方，間距 80（verify-geometry.py 的下限）
+Y8 = 900                          # ⑧：左欄、容器外
 NOTE_X = 1080
-NOTE_Y = [227, 437, 612, 720]
+NOTE_Y = [227, 437, 612, 760]
 
 
 def esc(s):
@@ -176,22 +183,23 @@ def build(L):
         "p34": poly((COL_L+BW, y2), (COL_R-12, y2)),
         "p45": poly((COL_R+BW/2, ROWS[1]+BH), (COL_R+BW/2, 562), (COL_L+BW/2, 562), (COL_L+BW/2, ROWS[2]-12)),
         "p56": poly((COL_L+BW, y3), (COL_R-12, y3)),
-        "p65": poly((COL_R+BW/2, ROWS[2]+BH), (COL_R+BW/2, 790), (COL_L+BW/2, 790), (COL_L+BW/2, ROWS[2]+BH+12)),
-        "p71": poly((COL_R, Y7+BH/2), (140, Y7+BH/2), (140, y1), (COL_L-12, y1)),
+        "p67": poly((COL_R+BW/2, ROWS[2]+BH), (COL_R+BW/2, Y7-12)),
+        # gate 擋下 → 回 ⑥：走右側繞上去，左側是 ⑤→⑥ 那條線
+        "p76": poly((COL_R+BW, Y7+BH/2), (COL_R+BW+32, Y7+BH/2), (COL_R+BW+32, y3), (COL_R+BW+12, y3)),
+        "p81": poly((COL_L, Y8+BH/2), (140, Y8+BH/2), (140, y1), (COL_L-12, y1)),
     }
     def edge(k, style):
         return f'  <path id="{k}" data-role="edge" d="{paths[k]}" fill="none" {style}/>\n'
-    for k in ("p12", "p23", "p34", "p45", "p56"):
+    for k in ("p12", "p23", "p34", "p45", "p56", "p67"):
         o.append(edge(k, f'stroke="{GOLD}" stroke-width="1.6" opacity="0.32" marker-end="url(#ag)"'))
-    o.append(edge("p65", f'stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.32" marker-end="url(#ar)"'))
-    o.append(edge("p71", f'stroke="{MINT}" stroke-width="1.6" opacity="0.34" marker-end="url(#am)"'))
+    o.append(edge("p76", f'stroke="{ROSE}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.32" marker-end="url(#ar)"'))
+    o.append(edge("p81", f'stroke="{MINT}" stroke-width="1.6" opacity="0.34" marker-end="url(#am)"'))
 
-    # 節點
-    for i, (n, a, b, c) in enumerate(L["boxes"][:6]):
-        x = COL_L if i % 2 == 0 else COL_R
-        o.append(box(x, ROWS[i // 2], n, a, b, c))
-    n, a, b, c = L["boxes"][6]
-    o.append(box(COL_R, Y7, n, a, b, c))
+    # 節點：①–⑥ 兩欄交錯，⑦ 在 ⑥ 正下方，⑧ 在左欄、容器外
+    pos = [(COL_L, ROWS[0]), (COL_R, ROWS[0]), (COL_L, ROWS[1]), (COL_R, ROWS[1]),
+           (COL_L, ROWS[2]), (COL_R, ROWS[2]), (COL_R, Y7), (COL_L, Y8)]
+    for (x, y), (n, a, b, c) in zip(pos, L["boxes"]):
+        o.append(box(x, y, n, a, b, c))
 
     # 右側註解
     for (head, lines), ny in zip(L["notes"], NOTE_Y):
@@ -203,10 +211,11 @@ def build(L):
     o.append(ball("p12", GOLD, 3.6, -0.6))  # 避開 dur 整數倍，否則跳躍落在循環接點
     o.append(ball("p34", GOLD, 3.6, -1.2))
     o.append(ball("p56", GOLD, 3.6, -2.4))
+    o.append(ball("p67", GOLD, 3.6, -0.9))
     o.append(ball("p23", GOLD, 7.2, -0.6))
     o.append(ball("p45", GOLD, 7.2, -3.0))
-    o.append(ball("p65", ROSE, 3.6, -1.8))
-    o.append(ball("p71", MINT, 7.2, -4.2))
+    o.append(ball("p76", ROSE, 3.6, -1.8))
+    o.append(ball("p81", MINT, 7.2, -4.2))
 
     # legend
     lx = 180
@@ -214,11 +223,11 @@ def build(L):
         da = ' stroke-dasharray="6,4"' if dash else ''
         mk = 'url(#ax)' if col == T3 else ('url(#ar)' if col == ROSE else
                                            ('url(#am)' if col == MINT else 'url(#ag)'))
-        o.append(f'<line x1="{lx}" y1="980" x2="{lx+56}" y2="980" stroke="{col}" '
+        o.append(f'<line x1="{lx}" y1="1004" x2="{lx+56}" y2="1004" stroke="{col}" '
                  f'stroke-width="2"{da} marker-end="{mk}"/>\n')
-        o.append(f'<text x="{lx+70}" y="984" class="lg">{esc(text)}</text>\n')
+        o.append(f'<text x="{lx+70}" y="1008" class="lg">{esc(text)}</text>\n')
         lx += 380
-    o.append(f'<text x="180" y="1026" class="ft">{esc(L["foot"])}</text>\n')
+    o.append(f'<text x="180" y="1046" class="ft">{esc(L["foot"])}</text>\n')
     o.append('</svg>\n')
     return "".join(o)
 

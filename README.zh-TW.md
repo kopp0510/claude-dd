@@ -137,7 +137,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 步驟 1 的測試證明「做出來是對的」，步驟 5 證明「簡化與修 review 沒把對的改壞」—— 目的不同，缺一不可。
 
-從零到日常的完整路徑（裝一次、每個專案蓋章一次、大工作先拆段落、每個功能段落走同一個迴圈）：
+從零到日常的完整路徑（裝一次、每個專案蓋章一次、複雜工作的計畫先過 `plan-review`、每個功能段落走同一個迴圈）：
 
 ![claude-dd 使用流程](diagrams/claude-dd-usage-flow.zh-TW.gif)
 
