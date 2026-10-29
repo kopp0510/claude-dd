@@ -7,7 +7,7 @@
 - `run.sh` —— 建拋棄式 repo（有一張 S1 `IN_PROGRESS` 的進度表）並跑 `claude -p`，四個正例各 2 次、一個反例 1 次。
   旗標照根 CLAUDE.md「新增 Skill 步驟 5」，另加 `--settings '{"advisorModel":""}'`；只放行 `Skill Read Glob Grep`，只測叫不叫
 - `check.sh` —— 從 jsonl 只抽判定欄位，欄位定義寫在它的檔頭。skill 本文不在 Skill 的 tool_result 裡（那裡只有 `Launching skill: dd-loop`），在下一則以 `Base directory for this skill:` 開頭的 user 訊息
-- `results.tsv` —— `check.sh` 的輸出，被 `README.md` 與設計文件引用的證據；**不要在原處重跑蓋掉**，要重測就開新的日期目錄
+- `results.tsv` —— `check.sh` 的輸出，被 `README.md` 與設計文件引用的證據；**不要在原處重跑 `claude -p` 蓋掉**，要重測就開新的日期目錄（S1 審查後用修正版 `check.sh` 對同一批 jsonl 重抽過一次，`README.md` 有記）
 - `*.prompt.txt` —— 五個情境的 prompt 原文
 - `README.md` —— 結果表、限制、context 量
 
