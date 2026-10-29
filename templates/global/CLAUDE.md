@@ -236,7 +236,7 @@
 每完成一個**功能段落**(非每行改動),依序走:
 
 **段落開始前先記起點**:`~/.claude/scripts/check-claude-md.sh --start-segment`,印出「段落起點：…」才算記好。
-沒印出這行就是沒記好。一段常有好幾個 commit,
+一段常有好幾個 commit,
 步驟 3、4、8 都要看「起點到現在」的整段,下文的 `<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base`
 的輸出(exit 非 0 或輸出是空的 = 範圍沒算出來,不是範圍為空)。只看最後一個 commit 會漏(實測)。
 忘了記下一段的起點時,範圍會連上一段一起算 —— **SKIP 欠下、還沒補的 CLAUDE.md 只會多審,不會漏;
@@ -382,7 +382,7 @@
   測到的是假綠(實測)。做法:用真的 `git rebase` / `git merge` 製造衝突。
 - **鑑別力測試(改回舊版確認會紅)的判定式要比對「固定版的完整輸出」,不要斷言某個預期的壞結果**:
   實測 —— 變異版掉進**第三種**狀態(我預期它停在 A、實際變成 C),判定式於是回報
-  「變異沒被抓到」,而**測試其實有鑑別力**。差點據此認定自己的測試沒用、回頭去改一個正常的測試。
+  「變異沒被抓到」,而**測試其實有鑑別力**。
   寫法:先記下固定版的輸出字串,變異版只要「不等於它」就算紅。
   ⚠️ 但「不等於」要來自被測的東西給了錯的結果:變異讓檔案載入不了、import 壞掉、測試資料建不起來也會「不等於」,那不算(§3.5)。
   ⚠️ 而「有牙」只證明**我的碼與舊碼在這一格不同**:不證明新的那一邊**該**發生
@@ -439,7 +439,7 @@
   ⚠️ 真的要寫行號時**最後填**,填完 `for n in <清單>; do sed -n "${n}p" <檔>; done` 逐行核一遍再 commit。
 - ⚠️⚠️ **要在 Markdown 表格裡補說明,放到表格「之後」,不要插進列與列之間。**
   插進中間時前面那個空行會**終止表格**,它後面的每一列都變成字面的管線符號純文字,
-  而**沒有任何機械檢查會抓到**(實測:最後一列脫離表格,code-simplifier 與兩個 reviewer 各自獨立抓到,我自己改完完全沒感覺)。
+  而**沒有任何機械檢查會抓到**(實測:最後一列脫離表格,改的人自己完全沒發現)。
   **驗收:補完把表格範圍逐行印出來確認每一行都是 `|` 開頭** ——
   `awk 'NR>=<起> && NR<=<迄> {printf "%d%s\n", NR, (substr($0,1,1)=="|"?"":" ←非表格")}' <檔>`。
   ⚠️ 同族,但觸發點不同:**不要用一句話概括一組同類項目的性質**(「這些 placeholder 都是 fail-closed」)——
@@ -469,7 +469,6 @@
   ⚠️ 修完**拿判準而不是措辭去全庫掃同型**:掃措辭只找得到你已經想到的寫法。
   ⚠️ **最貴的實例是「問題嚴重性」本身就是假的**:曾寫下「沒有警告、事後也看不出來」,實際上被包的那支腳本
   覆蓋前就會備份整份內容並印出路徑,**而那句話正是整個新機制的唯一正當性來源**。
-  (「先 grep 既有的痕跡有沒有更強的」那條在 §3.9,不在這裡重複。)
 - ⚠️ **引用「前例」之前把那個 commit 調出來讀一遍,引用時附 hash**;記不起是哪個 = 還沒查證。
   ⚠️ 更難查的變形:**把自己的判斷掛到別人頭上**(「某某 reviewer 指出過…」而那份報告裡沒這段)。
   被引的報告真的存在、主題也相關,所以它過了「有沒有這份東西」那一關。**傷害是權威性的** ——
@@ -780,12 +779,10 @@ C) 先停下討論
   (被砍掉時 exit 142 —— 那個碼本身就是「它真的會掛住」的證據)。
   ⚠️ **判準不是「輸出會不會很長」,是「這個指令保證會自己結束嗎」** ——
   跑測試、跑 server、`docker compose exec`、任何會開 socket 或 worker 的東西都不保證。
-  ⚠️ **而掛住會跨 session 活下去**:一次清點抓到三支殘留,最久的
-  `node --test … | tail -20` 已經卡 **16 小時**(0% CPU、沒有任何錯誤訊息)。
+  ⚠️ **而掛住會跨 session 活下去**:實測抓過一支 `node --test … | tail -20` 卡了 **16 小時**(0% CPU、沒有任何錯誤訊息)。
   ⇒ **收工前跑一次 `ps` 找自己留下的程序**(探針、測試、背景 shell),砍掉再走。
 - ⚠️ **自己寫的探針一定要有出口** —— 開了 server / worker / timer 就要
-  `srv.close()` + **`process.exit()`**;open handle 會讓 node 行程永遠不結束
-  (上面那類跨 session 的殘留就是這樣來的)。
+  `srv.close()` + **`process.exit()`**;open handle 會讓 node 行程永遠不結束。
 
 ---
 
@@ -809,11 +806,11 @@ C) 先停下討論
 | `fix` / `修` / `改` / `改善` / `audit` / `審查` **+ 任何 `.md` 檔** | `claude-md-management:claude-md-improver` |
 | `把學到的寫進 CLAUDE.md` / `這輪學到的記進文件` / `收工更新 CLAUDE.md` | `claude-md-management:revise-claude-md` |
 | `簡化` / `降複雜度` / `清冗餘` / `refactor 簡化` + (code/檔案) | `code-simplifier` |
-| `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer`(agent,派 Task) |
+| `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer`(agent,用 Agent 工具派) |
 | `整理 memory` / `沉澱規則` / `把學到的寫成 skill` / `優化 skill` | `self-improving-agent` |
 | `拆任務` / `微任務` / `task breakdown` / `工作分解` | `task-planner` |
 | `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design` |
-| `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops`(agent,派 Task) |
+| `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops`(agent,用 Agent 工具派) |
 | `Claude API` / `Anthropic SDK` / `Agent SDK` / `prompt caching` | `claude-api`(Claude Code 內建 skill,非本 repo 部署) |
 
 ### 7.3 不該觸發的場景

@@ -9,11 +9,11 @@
   變更含程式碼檔（副檔名見腳本內 `CODE_EXT`）的目錄，必須存在 CLAUDE.md 且
   同批 staged；逃生口 `SKIP_DOC_CHECK=1`（僅供迴圈檢查點 commit）。由
   `/dd-init` 掛進各專案的 `.git/hooks/pre-commit`。
-  - **記憶檔名可設**（2026-10-16）：預設 `CLAUDE.md`，`git config dd.docfile GEMINI.md`
+  - **記憶檔名可設**：預設 `CLAUDE.md`，`git config dd.docfile GEMINI.md`
     改成別的（寫在 `.git/config`，不進版控）。用途是**只准放某個固定檔名的 repo**
     （例如規定記憶檔一律叫 `GEMINI.md`、不得出現 `CLAUDE.md` 的團隊）—— 檔名寫死
     就等於那些 repo 完全用不到 gate。
-    - **只讀 `--local`**（2026-10-16 的 review 要求）：設成 global 的話，一次設定會把這台機器上
+    - **只讀 `--local`**：設成 global 的話，一次設定會把這台機器上
       **所有** repo 的 gate 改認那個檔名，個人 repo 的 CLAUDE.md 全部變成不算。一個 repo 一個決定。
       ⚠️ **連 `-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 也不生效**（那是 command 層、不是 local）——
       想在別的 repo 乾跑就真的 `git config --local dd.docfile <檔名>`，驗完 `--unset`
@@ -21,15 +21,14 @@
       這個字元集同時擋掉 regex 特殊字元，所以組 awk 樣式時只需要跳脫 `.`（`DOC_RE`）
     - ⚠️ **`-` 開頭要另外擋**：字元集本身放行 `-`，而 `md_of "."` 是 `echo "$DOC_FILE"` ——
       bash 內建 echo 把 `-n` / `-e` 當選項吃掉，根目錄的記憶檔路徑會變成**空字串**
-      （`[ -f "" ]` 恆假、訊息也印不出檔名）。兩份 review 對這一項的結論不同（一份列為發現、
-      一份放進 Not reported 說「沒有合理觸發情境」）—— 用 `od -c` 讀輸出判定：`echo "-n"` 真的是零位元組
+      （`[ -f "" ]` 恆假、訊息也印不出檔名）；用 `od -c` 驗過，`echo "-n"` 真的印零位元組
     - **檔名在三處各自出現**，改動時三處都要顧：`md_of()`（組路徑）、訊息字串（`${DOC_FILE}`）、
       `owed_dirs` 的 awk 樣式（`ENVIRON["DOC_RE"]`，決定欠帳**銷不銷**）
-    - 變異測試（2026-10-16 實跑，記「哪個變異 → 哪幾則紅」）：
+    - 變異測試（記「哪個變異 → 哪幾則紅」）：
 
       | 變異 | 應該變紅的情境 |
       |---|---|
-      | `md_of()` 改回寫死 `CLAUDE.md` | ⑫ 的這六則：①「只有 GEMINI.md 也過關」／②「補上 b/GEMINI.md 後過關」與它的 `said b/GEMINI.md`／③「補上 c/GEMINI.md:同批 staged 放行」「c 的欠帳已銷」與 `said c/GEMINI.md`。⚠️ **不是「①②③ 全部」**（2026-10-16 兩份 review 都指出）：②的「只有 CLAUDE.md 要擋」在變異版照樣 block（擋下的理由變成別的目錄），它的 `said "缺少 GEMINI.md 的目錄"` 也照樣綠（**訊息字串走 `${DOC_FILE}`、不經 `md_of()`**）—— 綠燈不代表那兩則釘住了這個功能 |
+      | `md_of()` 改回寫死 `CLAUDE.md` | ⑫ 的這六則：①「只有 GEMINI.md 也過關」／②「補上 b/GEMINI.md 後過關」與它的 `said b/GEMINI.md`／③「補上 c/GEMINI.md:同批 staged 放行」「c 的欠帳已銷」與 `said c/GEMINI.md`。⚠️ **不是「①②③ 全部」**：②的「只有 CLAUDE.md 要擋」在變異版照樣 block（擋下的理由變成別的目錄），它的 `said "缺少 GEMINI.md 的目錄"` 也照樣綠（**訊息字串走 `${DOC_FILE}`、不經 `md_of()`**）—— 綠燈不代表那兩則釘住了這個功能 |
       | awk 樣式改回寫死 `/(^\|\/)CLAUDE\.md$/` | **只有**⑫③ 的「c 的欠帳已銷：只動 d 的 commit 放行」一則 |
       | 把 `case "$DOC_FILE" in …` 整段驗證拿掉 | ⑫④ 的「帶路徑」「含空白」兩則 expect + `said "必須是單純檔名"` |
       | `--local` 改回 `--get`（吃得到 global） | ⑫⑤ 的 expect 與 `said "c/CLAUDE.md"` |
@@ -37,14 +36,12 @@
 
       ⚠️ **第二個變異第一版是 0 紅** —— 當時 ③ 的最後一則是「補上 `c/GEMINI.md` 後放行」。
       `owed_dirs` 其實跑了、也確實把 `c` 算成欠帳,**是 `[ -f "$md" ] && grep -qxF "$md" && continue`
-      這條「同批 staged 就過關」的短路把結果蓋掉**(2026-10-16 的 review 更正:原本寫
-      「awk 根本沒執行到」是把機制講錯了)。要測銷帳必須**再加一個完全不碰該目錄的 commit**,
+      這條「同批 staged 就過關」的短路把結果蓋掉**。要測銷帳必須**再加一個完全不碰該目錄的 commit**,
       詳見 `tests/CLAUDE.md`
     - **上游文件已同步**（2026-10-16 同日推上游）：專案 CLAUDE.md 把「動到 gate 行為」列為
       要手動巡一遍的觸發時機，巡完動到的是**兩份 README 的「CLAUDE.md 維護規則」**、
       **`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段**、**CHANGELOG 的 `## 未發布`**。
-      `commands/dd-init.md` **刻意不動**，理由分兩半（2026-10-16 兩份 review 指出原本只講了後半、
-      而且掛在錯的範圍上）：
+      `commands/dd-init.md` **刻意不動**，理由分兩半：
       - **區塊外**（Phase 3，`grep -n '^### Phase 3' commands/dd-init.md`）：它寫進 hook 的那一行
         只是轉呼叫 gate、**不判檔名**，所以行為正確。改它**不需要**跳 rev（蓋章區塊是
         ``grep -n '^```' commands/dd-init.md | head -2`` 夾出來的那段，Phase 3 在它之後）
@@ -73,7 +70,7 @@
       已實際踩到;當下的處置是「起點改用進度表 commits 欄的值」,
       **不要為了讓 gate 過而改檔名**(那會讓檔名與段落 ID、commit 訊息三者不一致)。
     - **`docs/reviews/CLAUDE.md` 不算報告**(不是 `S` 開頭),改它不會放行。
-    - 擋下時印的「兩條路」第 1 條是主對話直接派審查者的報告(每個審查者一份 `-a/-b/-c…`,加查證 `-judge.md`;2026-10-24 S3 從「兩個 reviewer、-a 與 -b」改成裁決式,同日 S6 拿掉裁決者、檔名不變)。**判定樣式沒變** —— `-judge.md`、`-c.md` 本來就命中 `S[0-9]`
+    - 擋下時印的「兩條路」第 1 條是主對話直接派審查者的報告(每個審查者一份 `-a/-b/-c…`,加查證 `-judge.md`)。**判定樣式沒變** —— `-judge.md`、`-c.md` 本來就命中 `S[0-9]`
     - **剛採用這個慣例時第一次 `--start-segment` 一定會被擋**(上一段本來就沒報告)——
       預期行為,照它印的出路補一份 `S<N>-SKIP.md`。
     - **要退出:刪掉 `docs/reviews/` 目錄**,本檢查就完全不啟用。
@@ -83,7 +80,7 @@
       **上一段的報告會把這一段的要求頂掉**(實跑確認);
       ③**`rm` 掉起點檔** —— 兩個擋點一起關掉,而且 git 裡零痕跡
       (gate 的欠帳訊息本來就在教這招,所以那行後面補了警告)。
-      ⇒ 它買到的是「**要繼續往前走就得先結清上一段**」,不是閉環。
+      ⇒ 它買到的是「**要繼續往前走就得先結清上一段**」,不是閉環(`commands/dd-init.md` 的蓋章版也寫明了這點)。
       **三條都有特性測試**(2026-10-19):`tests/test-gate.sh` 裡說明以「繞過①」「繞過②」「繞過③」開頭的那幾則,
       各配一則對照(同一個狀態、只差那個繞過動作,結果相反)。**變紅時先分清是哪一種**:
       繞過①③變紅 = gate 堵上了那條路,是刻意的就先改上面那句、再照新行為改測試。
@@ -100,20 +97,10 @@
       | `--start-segment` 沒有起點檔時從空樹記起:它那一支的 `head_or_empty > "$BASE_FILE"` 改成 `if read_base; then head_or_empty > "$BASE_FILE"; else echo "$EMPTY_TREE" > "$BASE_FILE"; fi` | 只有繞過③的「by/ 的欠帳被洗掉」 |
     - ⚠️ **`[ -d docs/reviews ] || return 1` 這行是 opt-in 的全部** —— 動它會讓
       **所有**沒採用這個慣例的專案（含 `test-gate.sh` 前 61 項用的拋棄式 repo）一起被擋。
-    **變異測試的三組數字**(2026-10-07 實跑;⚠️ **第一版只寫了一組,而且量錯對象** ——
-    reviewer 指出那組 7 紅全在新區塊,跟「opt-in 保護了前 61 項」這個宣稱無關):
-    | 變異 | 紅 | 它證明的是 |
-    |---|---|---|
-    | 那行改成永遠 `return 1`(功能全關) | **12** | 新區塊的九個情境真的在測這個功能 |
-    | **把那行整個拿掉**(檢查對所有 repo 生效) | **5**,其中 **4 在舊的 61 項** | ← **這組才是 opt-in 那句的佐證** |
-    | `--diff-filter=A` 改回 `ACMR` | **2** | 「只改既有報告不算新增」有被釘住 |
     - ⚠️ **`--diff-filter=A`(只算「新增」)是刻意的**:gate 自己的訊息與五份文件都寫
       「有沒有**新增**」,而第一版用 `ACMR` —— 於是**上一段的 `S1-a.md` 改個錯字,
       這一段零報告也能開下一段**(reviewer 實跑抓到)。代價:報告的「處置」節如果要等
       下一段才寫得出來,那次補寫不算這一段的證據 —— 本專案的流程是在步驟 4 當場寫完,所以不衝突。
-    - ⚠️ 比對用 `(^|/)S[0-9][^/]*\.md$`(見上方「樣式是…」那條),所以 `docs/reviews/CLAUDE.md` 自然不算報告。
-    - ⚠️ 它**不是閉環**：擋得住的只有「開下一段」這個時點，
-      「跑完但永遠不開下一段」仍然繞得過。`commands/dd-init.md` 的蓋章版寫明了這點。
   - **SKIP 不是豁免**：段落起點記在 `git rev-parse --git-path dd-segment-base`
     （`--start-segment` 記下；忘了記時第一個 SKIP commit 自動記）。之後的正常 commit
     沿著 commit 的祖先關係結算起點以來的欠帳：改程式碼記帳，要由看得到那段程式碼的後代
@@ -129,25 +116,21 @@
     | `reviews_missing` | base sha | 退到共同祖先 | **放行，但印警告**（跳過 review 檢查） |
     | `--segment-base` | base sha | **硬失敗** | **硬失敗** |
 
-    ⚠️ **`--segment-base` 有一個例外沒寫在表上**(2026-10-07 S4 的 review 抓到):
+    ⚠️ **`--segment-base` 有一個例外沒寫在表上**:
     **起點是空樹時它印出空樹 sha 並 exit 0**(`[ "$base" = "$EMPTY_TREE" ] ||` 那一段)——
     因為「段落從第一個 commit 之前開始」是合法狀態,步驟 3、4、8 拿空樹 sha 去 `git diff` 是對的。
     實跑確認:全新 repo `--start-segment` → `--segment-base` 印 `4b825dc…`、exit 0。
-    ⚠️ **而「空樹起點 + `--segment-base`」目前沒有任何測試覆蓋**(既有缺口,不是 S4 引入;
-    五處 `--segment-base` 斷言的 base 都是真 commit 或不存在)。
+    ⚠️ **而「空樹起點 + `--segment-base`」目前沒有任何測試覆蓋**(既有的 `--segment-base` 斷言,base 都是真 commit 或不存在)。
 
     **前兩處「往寬退」是刻意的** —— 退窄會把欠帳 / review 要求洗掉，而那正是這兩個檢查要擋的事。
     **`--segment-base` 必須硬失敗**：它的輸出要餵 `git diff`，印空字串或錯的 base 是文件點名的地雷。
     ⚠️ **所以 `resolve_fork_base` 只抽「機制」不抽「政策」** —— 共用的是
     `merge-base --is-ancestor` + fork-point + 那句警告（**S6 的 review 抓到這兩處已經漂移**：
-    一處退到共同祖先、另一處直接放行）；「連共同祖先都沒有」的後續處置留在呼叫端，
+    一處退到共同祖先、另一處直接放行；S6-a 的 A2 / S6-b 的 B2）；「連共同祖先都沒有」的後續處置留在呼叫端，
     因為兩處的後果不同。`--segment-base` **刻意不用這支**：硬套進來就得加一個關掉 fallback 的
-    mode 參數，那只是把同一個決策搬進函式裡（**我與 S6 的 simplifier 在 S4 規劃時就這樣預判**，
-    S4 實作時確認了）。⚠️ **原本這裡寫「S6 的 reviewer 預言過」是錯的歸屬** ——
-    S4 的 review 去 grep `docs/reviews/S6-{a,b}.md`，**裡面沒有**關於抽共用函式或 mode 參數的段落。
-    S6 的 review 真的抓到的是「**這兩處的退化規則已經漂移**」（S6-a 的 A2 / S6-b 的 B2），那一句有據。
+    mode 參數，那只是把同一個決策搬進函式裡（S4 規劃時的預判，S4 實作時確認了）。
     ⚠️ **改這三處任何一處,先跑變異測試**:`bash tests/test-gate.sh <改壞的 gate>`。
-    ⚠️⚠️ **下面記的是「哪個變異 → 哪幾個情境變紅」,刻意不記紅數**(2026-10-07 S4 的 review 要求):
+    ⚠️⚠️ **下面記的是「哪個變異 → 哪幾個情境變紅」,刻意不記紅數**:
     紅數同時綁「斷言集合」與「變異的具體寫法」兩個會變的東西,而文件通常只記得住數字 ——
     加任何一條碰到該路徑的斷言,紅數就過期。這與本 repo `tests/CLAUDE.md` 禁止寫「N 項」是同一類,
     **而且更糟:變異的定義本身沒被記下來**。實例:「`--segment-base` 改成軟退化」有兩種合理讀法
@@ -161,13 +144,11 @@
     | 只拿掉 `resolve_fork_base` 共用那句警告 | 情境 7 與 ⑩ 的 `said` 各一則 ⚠️ **它只證明共用那句被釘住,不證明各呼叫端自己那句被釘住** |
     | 只打 `reviews_missing` 的「沒有共同祖先」那一支(改成擋 / 拿掉它的警告) | ⑪ 的兩則。⚠️ **修正前這兩個變異各 0 紅** —— ⑪ 把 `docs/reviews` 連目錄刪了,opt-in 判準不成立、那一支根本沒執行到;而 `said "找不到共同祖先"` 是被 `owed_dirs` 的訊息頂掉的 |
     ⚠️ 修法與三個空洞斷言陷阱見 `tests/CLAUDE.md`。
-  - `--segment-base` 印出起點給迴圈步驟 3、4、8，起點失效就失敗
-  - ⚠️ **`shellcheck -S warning` clean 不代表變數有局部化**(2026-10-07 S4 的 review 指出):
-    重構前 `reviews_missing` 宣告了**死的** `local range`,而真正用的 `range_base`
-    是**漏宣告的全域** —— shellcheck 乾淨,一個字都沒說。
+  - ⚠️ **`shellcheck -S warning` clean 不代表變數有局部化**:
+    曾有函式宣告了**死的** `local`,真正用的變數卻是**漏宣告的全域** —— shellcheck 乾淨,一個字都沒說。
     要查局部化只能自己對 `local` 清單與函式內實際用到的變數名。
   - 列檔案的 git 指令都經過 `gitq`（`core.quotePath=false`）：git 預設把非 ASCII 路徑加引號跳脫，
-    副檔名比對不到，中文目錄等於完全不檢查（原始版本就有這個洞）
+    副檔名比對不到，中文目錄等於完全不檢查
   - 行為的回歸測試是 `tests/test-gate.sh`（CI 在 ubuntu 與 macOS `/bin/bash` 3.2 各跑一次）。本機跑：
 
     ```bash
