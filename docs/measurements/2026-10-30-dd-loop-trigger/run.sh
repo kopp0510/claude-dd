@@ -3,8 +3,7 @@
 # 用法：./run.sh <工作目錄>   產出 <工作目錄>/out/*.jsonl；判定見 check.sh（只抽判定欄位進 repo）
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
-W=${1:?工作目錄}
-mkdir -p "$W/out"
+W=$(mkdir -p "${1:?工作目錄}/out" && cd "$1" && pwd)  # 轉絕對路徑：下面 cd 進 repo 之後才導向輸出
 mkfix() {  # $1 = repo 路徑；建一個有 IN_PROGRESS 段落、小任務都已 commit 的專案
   rm -rf "$1"; mkdir -p "$1/docs/designs"; cd "$1"; git init -q
   printf '#!/bin/sh\necho "hello ${1:-world}"\n' > hello.sh; chmod +x hello.sh
@@ -25,7 +24,8 @@ run() {  # $1 = 情境名；prompt 取自 $HERE/<情境名>.prompt.txt
       --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence \
       --permission-mode dontAsk --allowedTools "Skill Read Glob Grep" \
       --disallowedTools "Edit Write NotebookEdit Bash Agent" \
-      --settings '{"advisorModel":""}' < /dev/null > "$W/out/$name-$rep.jsonl" 2>&1) || true
+      --settings '{"advisorModel":""}' < /dev/null > "$W/out/$name-$rep.jsonl" 2> "$W/out/$name-$rep.stderr") || true
+    [ -s "$W/out/$name-$rep.jsonl" ] || echo "⚠️ $name-$rep 沒有輸出" >&2
   done
 }
 for n in ${CASES:-p1-start p2-handover p3-step4 p4-step8}; do run "$n"; done

@@ -240,14 +240,14 @@
 (換 session 接手、context 被壓縮後都一樣;這不算 §7.3 的「重入」)。叫不到時(沒裝 claude-dd,或裝的是還沒有這個 skill 的舊版),細則見 claude-dd repo(https://github.com/kopp0510/claude-dd)的 `skills/dd-loop/SKILL.md`。
 
 **段落開始前先記起點**:`~/.claude/scripts/check-claude-md.sh --start-segment`,印出「段落起點：…」才算記好。
-下文的 `<起點>`:有 `task-planner` 進度表時以**表上這段 commits 欄的起點**為準;沒有進度表時是 `~/.claude/scripts/check-claude-md.sh --segment-base`
+下文的 `<起點>`:有 `task-planner` 進度表時以**表上這段 commits 欄的起點**為準(只取 `..` 前面那段:`f46d4de..` 填 `f46d4de`);沒有進度表時是 `~/.claude/scripts/check-claude-md.sh --segment-base`
 的輸出(exit 非 0 或輸出是空的 = 範圍沒算出來,不是範圍為空)。其餘情況見 `dd-loop`。
 
 1. **實作功能 + 首輪測試通過**(相關既有單元/整合測試跑綠 + 基本手動驗證;不可帶紅燈進 commit)
 2. **commit**(第一次 — 保留簡化前還原點)
 3. 跑 **code-simplifier**(官方 agent,只針對該段新增/修改的程式碼:`git diff <起點>`)
 4. 跑 **code-review**(該段 diff;每段全量跑,例外見 `dd-loop`;修掉 Critical/Important 級發現才續行)。
-   主對話平行派 `code-reviewer` **最少 3 個**;收回的完整報告少於 3 份 → 不算跑過步驟 4,照實說,不續行。
+   要派 agent 時(不派的例外見 `dd-loop`),主對話平行派 `code-reviewer` **最少 3 個**;收回的完整報告少於 3 份 → 不算跑過步驟 4,照實說,不續行。
    **報告一律落地成 committed 檔,跳過要申報**(檔名、格式、SKIP 的寫法見 `dd-loop`)
 5. **再測一次** — 確認步驟 3、4 的改動沒破壞行為(依專案類型退化):
    - 重跑步驟 1 的相關測試
