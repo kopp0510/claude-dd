@@ -20,6 +20,8 @@
 
 ### Added
 
+- **CI 擋部署內容裡指不到東西的 `~/.claude/` 路徑**：掃 `scripts/` `tests/` `commands/` `skills/` `agents/` `output-styles/` `templates/`，
+  指向本 repo 不部署的地方（例如 `~/.claude/rules/<本機檔>`）、或部署目錄裡 repo 沒有的檔，就紅燈。以前要 cherry-pick 後自己記得 grep（2026-10-16 漏過，兩個審查者都沒攔）
 - **CI 擋「改了 `/dd-init` 蓋章區塊卻沒跳 `dd-loop-rev`」**：新 step 拿最新的 `v*` tag 比，區塊內容變了而 rev 沒變（或變小）就紅燈。
   它只是下限：發版後已經跳過一次，之後再改區塊沒跳，它擋不到（規則仍是每段改了都要跳）。以前完全沒有 CI 驗：曾有一次沒跳號、CI 全綠，靠 code-review 才抓到。
   根目錄 CLAUDE.md 那段改成指向這道檢查，並分清哪幾處同步 CI 驗、哪幾處不驗

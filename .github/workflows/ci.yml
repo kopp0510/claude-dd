@@ -354,6 +354,46 @@ jobs:
           [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記與 dd-loop-rev（含舊版判定線的 rev）都對得上"
           exit $fail
 
+      - name: 部署內容裡的 ~/.claude/ 路徑要指得到東西（防本機才有的死指標）
+        run: |
+          # 2026-10-16 cherry-pick 上來的 commit 在 scripts/ 留了「用途見 ~/.claude/rules/<某個本機檔>」：
+          # 作者機器上有那個檔，別人 clone 下來是死指標，兩個 review agent 都判成範圍外沒攔。
+          # 判定：~/.claude/ 底下第一層要嘛是本 repo 會部署的目錄（對應的 repo 檔要存在），
+          # 要嘛是 Claude Code 自己的東西（不驗內容）；其他一律紅燈。含 <>*{} 或 ... 的是佔位寫法，只驗第一層
+          git -c core.quotePath=false grep -noE '(~|\$HOME|\$\{HOME\})/\.claude/[A-Za-z0-9_./<>*{}-]*' \
+            -- scripts/ tests/ commands/ skills/ agents/ output-styles/ templates/ > /tmp/claude-paths.txt || true
+          # 先確認抓到東西非空：零命中時看起來會像「全部指得到」
+          if [ ! -s /tmp/claude-paths.txt ]; then
+            echo "❌ 一筆 ~/.claude/ 路徑都沒抓到 —— 檢查自己壞了（掃描範圍或 regex），不是沒有死指標"
+            exit 1
+          fi
+          fail=0; n=0
+          # 用重新導向餵 while：管線會起 subshell，fail=1 傳不出來
+          while IFS= read -r line; do
+            n=$((n+1))
+            loc="${line%%:\~*}"; loc="${loc%%:\$*}"
+            rel=$(printf '%s' "$line" | sed -E 's#^.*(~|\$HOME|\$\{HOME\})/\.claude/##; s#</.*$##; s#\.+$##')
+            # ↑ s#</.*$## 去掉緊接的 XML 結尾標籤（SVG 裡的 <text>~/.claude/</text>），不然 </text> 會被當成路徑
+            top="${rel%%/*}"
+            case "$top" in
+              ''|CLAUDE.md|settings.json|settings.local.json|projects|plugins) continue ;;
+              scripts|skills|agents|commands|output-styles) ;;
+              *) echo "❌ ${loc}：~/.claude/${rel} —— 本 repo 不部署 ${top}/，別人機器上沒有這個東西"; fail=1; continue ;;
+            esac
+            case "$rel" in *'<'*|*'*'*|*'{'*|*'...'*) continue ;; esac
+            # scripts/ 只部署 DD_SCRIPTS（scripts/ 第一層的 .sh）；scripts/githooks/、scripts/CLAUDE.md 在 repo 裡有、部署後沒有
+            case "$rel" in
+              scripts|scripts/) ;;
+              scripts/*/*|scripts/*[!h]|scripts/*[!s]h|scripts/*[!.]sh)
+                echo "❌ ${loc}：~/.claude/${rel} —— scripts/ 只部署第一層的 .sh，這個部署後不存在"; fail=1; continue ;;
+            esac
+            if [ ! -e "$rel" ]; then
+              echo "❌ ${loc}：~/.claude/${rel} —— repo 裡沒有 ${rel}，部署後也不會有"; fail=1
+            fi
+          done < /tmp/claude-paths.txt
+          [ $fail -eq 0 ] && echo "✅ ${n} 筆 ~/.claude/ 路徑都指得到東西"
+          exit $fail
+
       - name: dd-init 蓋章區塊改了就要跳 dd-loop-rev（以最新 v* tag 為基準）
         run: |
           # 已蓋章的專案跑 /dd-init 時只比 rev：區塊內容改了、rev 沒跳，它們會被告知「已是現行版」而拿不到修正，
