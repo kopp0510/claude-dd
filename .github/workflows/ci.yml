@@ -358,7 +358,8 @@ jobs:
         run: |
           # 已蓋章的專案跑 /dd-init 時只比 rev：區塊內容改了、rev 沒跳，它們會被告知「已是現行版」而拿不到修正，
           # 而且不報錯。上一個 step 只驗 rev 前後一致，驗不到這件事。
-          # 基準取最新的 v* tag（同 CHANGELOG 那個 step）：同一次發版改好幾次區塊，只要跳一次號
+          # 基準取最新的 v* tag（同 CHANGELOG 那個 step），所以這道只是下限：發版後第一次改區塊沒跳號會擋，
+          # 已經跳過一次之後再改、沒再跳就擋不到 —— 規則仍是每段改了都要跳（見根目錄 CLAUDE.md）
           tag=$(git tag --list 'v*' --sort=-v:refname | head -1)
           if [ -z "$tag" ]; then
             echo "❌ 找不到任何 v* tag —— 可能是 checkout 沒設 fetch-depth: 0（shallow clone 不帶 tag），或 tag 還沒推上來"
@@ -379,7 +380,15 @@ jobs:
             echo "❌ 抓不到蓋章區塊（找的是第一個 \`\`\`markdown 圍欄）—— 檢查自己壞了，不是區塊沒改"
             exit 1
           fi
-          rev_of() { grep -E '^<!-- dd-loop-version: ' "$1" | head -1 | grep -oE 'dd-loop-rev: [0-9]+' | grep -oE '[0-9]+'; }
+          # 再確認抓到的是蓋章區塊本身：有人在它前面加一個 ```markdown 範例時，上面會改抓那個範例
+          for f in /tmp/stamp-old.txt /tmp/stamp-new.txt; do
+            if ! head -1 "$f" | grep -q '^## 開發流程'; then
+              echo "❌ 第一個 \`\`\`markdown 圍欄的第一行不是「## 開發流程」—— 抓到的不是蓋章區塊（${f}）"
+              exit 1
+            fi
+          done
+          rev_of() { grep -E '^<!-- dd-loop-version: ' "$1" | head -1 | grep -oE 'dd-loop-rev: [0-9]+' | grep -oE '[0-9]+' || true; }
+          # ↑ || true 有承重：零命中時 grep 回 1，set -e 會讓下面的賦值當場中止、一個字都不印
           old_rev=$(rev_of /tmp/dd-init-tagged.md)
           new_rev=$(rev_of commands/dd-init.md)
           if [ -z "$old_rev" ] || [ -z "$new_rev" ]; then
