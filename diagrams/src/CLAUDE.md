@@ -12,7 +12,7 @@
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（框 ⑤ 是複雜工作先過的 plan-review、⑥ 是 8 步迴圈、⑦ gate 在 ⑥ 正下方；簡單中等任務跳過 ⑤（design-brainstorm 的設計例外）、大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
 | `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 對齊） |
 | `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → plan-review 審草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
-| `gen_review.py` | `review-zh-TW.svg`、`review-en.svg` — 計畫怎麼審（plan-review）。一排一個角色：主對話、裁決者、審查者；計畫寫好交給裁決者 → 裁決者派 ≥3 個審查者 → 審查者附證據回報 → 裁決者查證、判通不通過 → 回主對話開工或改計畫；改好的計畫交給新的裁決者再審（最多 3 輪），第 3 輪還不過就停下問使用者。重派、無法判定這兩條例外路不畫線，寫在「例外」小字。框裡每句話對 `skills/plan-review/SKILL.md` 原文 |
+| `gen_review.py` | `review-zh-TW.svg`、`review-en.svg` — 計畫怎麼審（plan-review）。一排一個角色：主對話、裁決者、審查者；計畫寫好交給裁決者 → 裁決者派 ≥3 個審查者 → 審查者附證據回報 → 裁決者查證、判通不通過 → 回主對話開工或改計畫；改好的計畫交給新的裁決者再審（最多 3 輪；SKILL.md 沒寫「新的」，是從「回到第 1 步」再派裁決者推的），第 3 輪還不過就停下問使用者。重派、沒跑成、要使用者批准這幾條例外不畫線，寫在「例外」小字。框裡每句話對 `skills/plan-review/SKILL.md` 原文 |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
 
@@ -54,7 +54,7 @@
   節點文字的字級只寫在 `font-size` 屬性、CSS 不設（腳本會讀 `<style>`，優先序跟瀏覽器一樣是 CSS > 屬性 > 內建預設表；
   兩邊都寫仍然一致，但人容易改錯邊）；
   節點上限 9 個、全部放進容器（容器外的節點算未通過；要加框就得拿掉別的框）；邊標籤底下墊 `data-role="mask"` 的底色塊（沒有的話標籤間隙沒量到，只印警告）。
-  分組標題靠右是因為有連線從容器上緣左半邊進來 —— 文字壓線腳本量不到，只能看截圖
+  `gen_planner.py` 的分組標題靠右是因為有連線從容器上緣左半邊進來；`gen_review.py` 的裁決者、審查者兩組上緣從左到右都有線穿過，組名改放右下 —— 文字壓線腳本量不到，只能看截圖
 - **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
 - **產生器的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
   新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案
@@ -113,4 +113,4 @@
 
 `../` 只放成品 GIF（兩份 README 直接嵌）。圖上的文字宣稱（元件數量、迴圈步數、
 目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README`、
-`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審；`gen_review.py` 的每個框、每條線與註解都來自它，第 1–5 步任何一句改了都要回頭對）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
+`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審；`gen_review.py` 的每個框、每條線與註解都來自它，第 1–5 步與裁決者範本任何一句改了都要回頭對）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。

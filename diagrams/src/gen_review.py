@@ -9,51 +9,54 @@ GOLD, GOLD_DIM = "#d4a574", "#c9a96e"
 T1, T2, T3 = "#f5f0eb", "#a39787", "#6b5f53"
 GREEN, AMBER, GRAY = "#5a9e6f", "#fbbf24", "#94a3b8"
 
-# 一排是一個角色（主對話／裁決者／審查者），只畫常走的路；重派、無法判定寫在「例外」小字。
+# 一排是一個角色（主對話／裁決者／審查者），只畫通過、不通過、第 3 輪還不過這三條路；重派、沒跑成、要你批准寫在「例外」小字。
 # 每一句都對過 skills/plan-review/SKILL.md 的原文（開頭說明、第 1–5 步、裁決者範本）
 ZH = dict(
     title="claude-dd 計畫怎麼審（plan-review）",
-    sub="複雜任務的計畫交出去之前 · 腦袋全新的裁決者派人猛攻，再逐條查證，只把站得住的批評交回來",
+    sub="複雜任務的計畫、task-planner 草稿、design-brainstorm 的設計（不論大小）交出去之前 · 腦袋全新的裁決者派人猛攻，再逐條查證，只把站得住的批評交回來",
     groups=["主對話", "裁決者（Opus，腦袋全新）· 全程唯讀", "審查者（haiku，≥3 個）"],
     nodes=dict(
-        plan=("① 計畫寫好", ["附查到的事實，交給裁決者"]),
+        plan=("① 計畫寫好", ["附查到的事實，推測要標明是推測"]),
         ok=("⑥ 通過 → 開工", ["先改小事、問你要決定的題"]),
         fail=("⑤ 不通過 → 改計畫", ["照站得住的重大缺失逐條改"]),
         stop=("⑦ 停下來問你", ["你選確認輪／繼續／停下"]),
         send=("② 派 ≥3 個審查者", ["haiku，同一則訊息平行派"]),
         verify=("④ 查證每條批評", ["預設批評可能是錯的，判通不通過"]),
-        attack=("③ 各自猛攻計畫", ["只找漏洞，每條批評都附檔案行號；互相看不到對方"]),
+        attack=("③ 各自猛攻計畫", ["只找漏洞，每條批評都附證據（檔案行號或 grep 結果）；互相看不到對方"]),
     ),
     again="再審：新的裁決者（最多 3 輪）", pass_="通過", fail_="不通過", third="第 3 輪還不過", back="附證據回報",
     notes=[("什麼算重大", ["三個條件都符合才算：", "常走的路（金額、權限、刪資料一律算）、",
                          "照做會錯或跳過你的決定、", "後面的關卡也抓不到"]),
-           ("例外", ["審查者沒真的讀檔或回錯誤：重派，最多一次", "補派後還湊不到 3 個有效審查者：審查沒跑成，",
-                   "照實告訴你，問要重跑還是不審直接交"])],
-    legend=[("主流程", GOLD, False), ("再審：改好的計畫交給新的裁決者", GOLD_DIM, True)],
+           ("例外", ["審查者沒真的讀檔或回錯誤：重派，最多一次",
+                   "裁決者回錯誤、報告缺結論或自相矛盾、補派後湊不到 3 個有效審查者、你說不等了：",
+                   "審查沒跑成，照實告訴你，問要重跑還是不審直接交",
+                   "你的規則寫了要你批准：通過之後照樣先問你"])],
+    legend=[("實線：往下一步走（交出去、回報、判完之後）", GOLD, False), ("再審：改好的計畫交給新的裁決者", GOLD_DIM, True)],
     foot="Style 8 · Dark Luxury · claude-dd 計畫怎麼審 · 依 skills/plan-review/SKILL.md 繪製",
 )
 
 EN = dict(
     title="claude-dd: how a plan gets reviewed",
-    sub="before a complex plan goes out · a fresh adjudicator sends reviewers to attack it, then checks every criticism and keeps only what holds",
+    sub="before a complex plan, a task-planner draft or a design-brainstorm design (any size) goes out · a fresh adjudicator has reviewers attack it and keeps only criticism that holds",
     groups=["Main session", "Adjudicator (Opus, fresh context) · read-only", "Reviewers (haiku, 3+)"],
     nodes=dict(
-        plan=("① Plan written", ["facts attached, to the adjudicator"]),
+        plan=("① Plan written", ["facts attached, guesses marked"]),
         ok=("⑥ Pass → start work", ["fix minor items, ask your calls"]),
         fail=("⑤ Fail → revise the plan", ["fix each upheld major issue"]),
         stop=("⑦ Stop and ask you", ["you pick: confirm / go on / stop"]),
         send=("② Send 3+ reviewers", ["haiku, all in one message"]),
         verify=("④ Check each criticism", ["assume it may be wrong; pass or fail"]),
-        attack=("③ Each attacks the plan", ["holes only, every criticism cites file:line; they can't see each other"]),
+        attack=("③ Each attacks the plan", ["holes only; each criticism shows proof (file:line or grep); they can't see each other"]),
     ),
     again="review again: fresh adjudicator (max 3 rounds)", pass_="pass", fail_="fail", third="round 3 fails",
     back="report with proof",
     notes=[("What counts as major", ["all three must hold:", "a common path (money, access, deletes: always),",
                                      "doing it goes wrong or skips your decision,", "and later gates won't catch it"]),
            ("Exceptions", ["a reviewer didn't read the files or errored: resend, once at most",
-                           "still under 3 valid reviewers after backfill: the review didn't run,",
-                           "you are told plainly: rerun, or hand over unreviewed"])],
-    legend=[("main flow", GOLD, False), ("review again: the revised plan goes to a fresh adjudicator", GOLD_DIM, True)],
+                           "adjudicator errored, verdict missing or contradictory, under 3 valid",
+                           "reviewers, or you stop waiting: the review didn't run; rerun or skip it",
+                           "your rules require approval: you're still asked after a pass"])],
+    legend=[("solid: on to the next step (hand off, report back, after the verdict)", GOLD, False), ("review again: the revised plan goes to a fresh adjudicator", GOLD_DIM, True)],
     foot="Style 8 · Dark Luxury · claude-dd: how a plan gets reviewed · drawn from skills/plan-review/SKILL.md",
 )
 
@@ -147,7 +150,7 @@ def build(L):
     o.append(f'<text x="100" y="86" class="ttl">{esc(L["title"])}</text>\n')
     o.append(f'<text x="100" y="122" class="sub">{esc(L["sub"])}</text>\n')
 
-    # 主對話的組名放右上（再審那條線在左半邊）；裁決者、審查者的上下緣都有連線穿過左半邊，組名改放右下
+    # 主對話的組名放右上（右上角沒有線）；裁決者、審查者的上緣從左到右都有線穿過（fail 在 x=885、back 在 x=555），組名改放右下
     for i, ((gx, gy, gw, gh), lbl) in enumerate(zip(GROUPS, L["groups"])):
         o.append(f'<rect data-role="container" x="{gx}" y="{gy}" width="{gw}" height="{gh}" rx="8" fill="none" '
                  f'stroke="{GOLD}" stroke-width="0.5" stroke-dasharray="6,4" opacity="0.4"/>\n')
@@ -192,7 +195,7 @@ def build(L):
     # 回報的標籤放在兩個容器之間的縫：放裁決者容器裡會撞到右下的組名
     o.append(label(mid[1]+14, YS[2]-40, L["back"], "start"))
 
-    # dur 與路徑長成正比（88–92px→1.8、148px→2.4、337px→7.2），全部整除 7.2；
+    # dur 大致與路徑長成正比（88–92px→1.8、148px→2.4、337px→7.2），全部整除 7.2；
     # 「再審」約 720px，dur 最長只能到總循環 7.2，所以這條的球比別條快約一倍，放兩顆、錯開半週期；
     # 球色跟所在的線同色（legend 只講線色）；begin 避開 dur 的整數倍
     o.append(ball("start", GOLD, 1.8, -0.6))
@@ -211,7 +214,7 @@ def build(L):
         o.append(f'<line x1="{lx}" y1="946" x2="{lx+56}" y2="946" stroke="{col}" stroke-width="2"{da} '
                  f'marker-end="{mk}"/>\n')
         o.append(f'<text x="{lx+70}" y="950" class="lg">{esc(text)}</text>\n')
-        lx += 400
+        lx += 560  # 第一項的英文較長，400 會撞到第二項
     o.append(f'<text x="100" y="992" class="ft">{esc(L["foot"])}</text>\n</svg>\n')
     return "".join(o)
 

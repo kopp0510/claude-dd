@@ -22,7 +22,7 @@
 
 - **plan-review 有自己的流程圖**：新增 `diagrams/src/gen_review.py`，產出 `diagrams/claude-dd-plan-review.gif` 與 `.zh-TW.gif`，
   嵌在兩份 README「大工作怎麼跑」那張圖下面。一排一個角色（主對話、裁決者、審查者），看得出誰把事情交給誰：計畫交給裁決者 → 裁決者派 ≥3 個審查者 → 審查者附證據回報 →
-  裁決者判通不通過 → 回主對話開工或改計畫再審（最多 3 輪，第 3 輪還不過就停下問你）；重派與無法判定寫在圖下方的「例外」。框裡每句話都對過 `skills/plan-review/SKILL.md` 原文
+  裁決者判通不通過 → 回主對話開工或改計畫再審（最多 3 輪，第 3 輪還不過就停下問你）；重派、審查沒跑成、要你批准寫在圖下方的「例外」。框裡每句話都對過 `skills/plan-review/SKILL.md` 原文
 
 ### Changed
 
