@@ -5,7 +5,8 @@
 # 通過（exit 0）= 每一發 init 的 output_style 正確、permission_denials 為空
 #               + ADHD 臂每一發守門斷言全成立
 #               + 至少一組（鑑別斷言, prompt）有鑑別力：ADHD 臂 2/2 成立、default 臂至少 1/2 不成立
-# default 臂兩條鑑別斷言全成立 → 印「未證明風格生效」，不算通過
+# 沒有任何一組有鑑別力（例如 default 臂也成立、或 ADHD 臂只有 1/2）→ 印「未證明風格生效」，不算通過
+# 輸入是 run.sh 抽出的精簡 jsonl（每發一行 kind=init、一行 kind=result），不是原始 stream-json
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT="${1:-$HERE/out}"
@@ -17,7 +18,8 @@ has()        { printf '%s\n' "$1" | grep -Eq "$2"; }
 
 # 鑑別斷言：只看全域 CLAUDE.md 沒要求的特徵
 d1() { last_line "$1" | grep -Eq '^\**下一步\**[：:]'; }                     # 最後一行是「下一步：」
-d2() { local f; f=$(first_line "$1"); [ "${#f}" -le 60 ] && ! printf '%s' "$f" | grep -Eq '[：:]$|^#'; }  # 第一句短、不是「以下是…：」或標題
+d2() { local f n; f=$(first_line "$1"); n=$(jq -rn --arg s "$f" '$s | length'); [ "$n" -le 60 ] && ! printf '%s' "$f" | grep -Eq '[：:]$|^#'; }  # 第一句短（字數用 jq 算，不隨 locale 變）、不是「以下是…：」或標題
+d3() { has "$1" '(大約|約) ?[0-9一二三四五六七八九十幾半]+ ?(秒|分鐘|分|小時|天)'; }      # 有具體時間估計（規則 6）
 
 for arm in ADHD default; do
     for p in 1 2; do
@@ -25,9 +27,9 @@ for arm in ADHD default; do
             f="$OUT/$arm-p$p-r$rep.jsonl"
             name="$arm-p$p-r$rep"
             if [ ! -f "$f" ]; then echo "❌ ${name}：沒有輸出檔"; fail=1; continue; fi
-            style=$(jq -r 'select(.type=="system" and .subtype=="init") | .output_style' "$f" | head -1)
-            denials=$(jq -r 'select(.type=="result") | (.permission_denials | length)' "$f" | head -1)
-            text=$(jq -r 'select(.type=="result") | .result // ""' "$f" | head -c 20000)
+            style=$(jq -r 'select(.kind=="init") | .output_style' "$f" | head -1)
+            denials=$(jq -r 'select(.kind=="result") | .permission_denials' "$f" | head -1)
+            text=$(jq -r 'select(.kind=="result") | .result' "$f" | head -c 20000)
             line="$name style=$style denials=$denials"
             [ "$style" = "$arm" ] || { echo "❌ ${name}：init output_style=${style}，預期 ${arm}"; fail=1; }
             [ "$denials" = "0" ] || { echo "❌ ${name}：permission_denials=${denials}（先修旗標或 prompt 再整組重跑，不歸因風格）"; fail=1; }
@@ -51,7 +53,7 @@ for arm in ADHD default; do
                 line="$line 守門✓"
             fi
 
-            for d in d1 d2; do
+            for d in d1 d2 d3; do
                 key="${arm}_${d}_p$p"
                 eval "cnt_${key}=\${cnt_${key}:-0}"
                 if "$d" "$text"; then eval "cnt_${key}=\$((cnt_${key} + 1))"; line="$line ${d}✓"; else line="$line ${d}✗"; fi
@@ -63,7 +65,7 @@ done
 
 echo "---"
 disc=0
-for d in d1 d2; do
+for d in d1 d2 d3; do
     for p in 1 2; do
         a=$(eval "echo \${cnt_ADHD_${d}_p${p}:-0}")
         b=$(eval "echo \${cnt_default_${d}_p${p}:-0}")

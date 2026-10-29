@@ -277,7 +277,9 @@ show_help() {
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（claude-md-management：巢狀 CLAUDE.md 維護依賴；skill-creator：skill 建立與 eval）"
     echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：8 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
-    echo "  - ${#DD_OUTPUT_STYLES[@]} 個 Output Style（ADHD：用 /output-style 開關）"
+    local style_list
+    style_list=$(printf '%s ' "${DD_OUTPUT_STYLES[@]}")
+    echo "  - ${#DD_OUTPUT_STYLES[@]} 個 Output Style（${style_list% }；用 /output-style 開關）"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
 }
@@ -1060,7 +1062,9 @@ uninstall() {
     echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"
     echo "├── ~/.claude/agents/ 中的 ${#ALL_AGENTS[@]} 個內建 agent"
     echo "├── ~/.claude/scripts/ 中的 ${#DD_SCRIPTS[@]} 個輔助腳本（含 pre-commit gate — 移除後各專案掛著的 hook 會失效）"
-    echo "├── ~/.claude/output-styles/ 中的 ${#DD_OUTPUT_STYLES[@]} 個 output style（專案或 ~/.claude/settings.json 設為 ADHD 的，請改回 default）"
+    local style_list
+    style_list=$(printf '%s ' "${DD_OUTPUT_STYLES[@]}")
+    echo "├── ~/.claude/output-styles/ 中的 ${#DD_OUTPUT_STYLES[@]} 個 output style（${style_list% }；專案或 ~/.claude/settings.json 設為這些風格的，請改回 default）"
     # 由陣列生成，不寫死名字：寫死時漏掉 skill-creator，使用者同意移除一個、實際被取消登記兩個。
     # 用 printf 串接而非 IFS='、' —— IFS 在 C/POSIX locale 下逐「位元組」取，全形頓號 3 個
     # 位元組只會用第一個，接出亂碼（實測 bash 3.2：UTF-8 locale 下正常、LC_ALL=C 只剩 \343）。
@@ -1259,9 +1263,16 @@ show_completion() {
     done
     echo ""
     if [ "$COMMANDS_ONLY" = false ]; then
-        echo -e "${GREEN}📌 ADHD 回覆風格（Output Style）：${NC}"
-        echo "   重開 Claude Code 後打 /output-style ADHD 開啟；/output-style default 關閉"
-        echo "   只對目前專案生效；全域預設見 README"
+        # 同上：名字走訪陣列，說明用 case 補（新增風格漏寫說明只會少一句，不會整個不見）
+        echo -e "${GREEN}📌 已部署的 Output Style（${#DD_OUTPUT_STYLES[@]} 個；重開 Claude Code 後生效，只對目前專案，全域預設見 README）：${NC}"
+        for s in "${DD_OUTPUT_STYLES[@]}"; do
+            case "$s" in
+                adhd.md)
+                    echo "   ${s} — /output-style ADHD 開啟；/output-style default 關閉" ;;
+                *)
+                    echo "   ${s} — 用 /output-style <名稱> 開啟；/output-style default 關閉" ;;
+            esac
+        done
         echo ""
     fi
     echo -e "${GREEN}📌 查看說明：${NC}"

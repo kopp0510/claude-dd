@@ -140,9 +140,12 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ## 新增 Output Style 步驟
 
 1. 在 `output-styles/` 建立 `<name>.md`（frontmatter 含 `name`、`description`；要保留寫程式的行為就加 `keep-coding-instructions: true`）
-2. 加入 `install-dd-pipeline.sh` 頂層的 `DD_OUTPUT_STYLES` 陣列 —— CI 的「陣列與目錄一致性」有 `DD_OUTPUT_STYLES ↔ output-styles/*.md` 會擋
+2. 加入 `install-dd-pipeline.sh` 頂層的 `DD_OUTPUT_STYLES` 陣列 —— CI 的「陣列與目錄一致性」有 `DD_OUTPUT_STYLES ↔ output-styles/*.md` 會擋。
+   **同批**手動改這幾處（CI 不驗）：`show_completion()` 的 `case` 補一行開關說明、兩份 README「指令一覽」與安裝步驟那句（目前寫死 `adhd.md`／`/output-style ADHD`）、
+   `DD_PIPELINE_ARCHITECTURE.md` 部署清單那句、`CHANGELOG.md` 的 `## 未發布`；借了別人的內容就照收編清單處理授權（`output-styles/LICENSE.txt` 是 `adhd.md` 專用的）
 3. 執行 `./install-dd-pipeline.sh --force` 部署；Claude Code 啟動時才讀風格檔，要重開才看得到
-4. 新增或改了風格檔內文，重跑行為驗收：做法與判定寫在 `docs/measurements/2026-10-29-adhd-style/CLAUDE.md`。
+4. 新增或改了風格檔內文，要有行為驗收：開一個新的 `docs/measurements/<日期>-<風格>/`，照 `docs/measurements/2026-10-29-adhd-style/` 的 `run.sh`／`check.sh` 改出那個風格的臂與斷言
+   （那個目錄的腳本寫死 ADHD 與 default 兩臂，而且它的 `out/` 是被引用的證據，不要在原處重跑蓋掉）。
    只看 `/output-style` 清單有沒有它不算 —— 那只證明檔案被讀到，證明不了回覆真的照規則走、也證明不了沒把全域 CLAUDE.md 的規則壓掉
 
 ## 核心工作法：8 步開發迴圈

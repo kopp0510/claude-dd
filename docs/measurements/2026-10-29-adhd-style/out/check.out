@@ -1,14 +1,16 @@
-ADHD-p1-r1 style=ADHD denials=0 守門✓ d1✓ d2✗
-ADHD-p1-r2 style=ADHD denials=0 守門✓ d1✓ d2✓
-ADHD-p2-r1 style=ADHD denials=0 守門✓ d1✓ d2✗
-ADHD-p2-r2 style=ADHD denials=0 守門✓ d1✓ d2✓
-default-p1-r1 style=default denials=0 守門✓ d1✗ d2✗
-default-p1-r2 style=default denials=0 守門✓ d1✗ d2✗
-default-p2-r1 style=default denials=0 守門✓ d1✗ d2✓
-default-p2-r2 style=default denials=0 守門✓ d1✗ d2✓
+ADHD-p1-r1 style=ADHD denials=0 守門✓ d1✓ d2✓ d3✓
+ADHD-p1-r2 style=ADHD denials=0 守門✓ d1✓ d2✗ d3✓
+ADHD-p2-r1 style=ADHD denials=0 守門✓ d1✗ d2✗ d3✗
+ADHD-p2-r2 style=ADHD denials=0 守門✓ d1✗ d2✗ d3✗
+default-p1-r1 style=default denials=0 守門✓ d1✗ d2✗ d3✗
+default-p1-r2 style=default denials=0 守門✓ d1✗ d2✗ d3✗
+default-p2-r1 style=default denials=0 守門✓ d1✗ d2✓ d3✗
+default-p2-r2 style=default denials=0 守門✓ d1✗ d2✗ d3✗
 ---
 d1 p1：ADHD 2/2、default 0/2 → 有鑑別力
-d1 p2：ADHD 2/2、default 0/2 → 有鑑別力
+d1 p2：ADHD 0/2、default 0/2 → 無鑑別力
 d2 p1：ADHD 1/2、default 0/2 → 無鑑別力
-d2 p2：ADHD 1/2、default 2/2 → 無鑑別力
+d2 p2：ADHD 0/2、default 1/2 → 無鑑別力
+d3 p1：ADHD 2/2、default 0/2 → 有鑑別力
+d3 p2：ADHD 0/2、default 0/2 → 無鑑別力
 ✅ 通過
