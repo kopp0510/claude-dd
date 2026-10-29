@@ -8,7 +8,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | CI 擋「蓋章區塊改了沒跳 dd-loop-rev」並縮短根 CLAUDE.md 那段 | DONE | — | 新 step 原樣綠；改區塊不跳號、rev 退回、抓不到區塊三種變異紅；改區塊外、跳號後綠 | 848ea70..994df4f |
-| S2 | CI 擋部署內容裡指不到東西的 `~/.claude/` 路徑 | IN_PROGRESS | — | 原樣綠；`rules/`、不存在的部署檔、`scripts/githooks`、`tests/`、零命中紅；佔位與 Claude 自己的路徑綠 | 2aeeacc.. |
+| S2 | CI 擋部署內容裡指不到東西的 `~/.claude/` 路徑 | DONE | — | 原樣綠；`rules/`、不存在的部署檔、`scripts/githooks`、`tests/`、零命中紅；佔位與 Claude 自己的路徑綠 | 80236ec..2ab0fc9 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
