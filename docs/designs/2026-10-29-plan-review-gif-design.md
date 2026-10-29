@@ -9,7 +9,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | plan-review 流程圖（中英 GIF）與同步文件 | DONE | — | 幾何檢查兩版 exit 0、0 警告、連線 9；GIF 144 幀、接點 PSNR 差 ≤1.5dB；README 各嵌對語言版；計數 grep 只剩引用舊錯誤的那句 | f46b73b..beb8956 |
-| S2 | 流程圖改成「誰在做事」分三排的簡單版 | IN_PROGRESS | S1 | 幾何檢查兩版 exit 0、0 警告、連線 7；框裡每句對 SKILL.md 原文；GIF 144 幀、接點 PSNR 差 ≤1.5dB | 062a7dd.. |
+| S2 | 流程圖改成「誰在做事」分三排的簡單版 | DONE | S1 | 幾何檢查兩版 exit 0、0 警告、連線 7；框裡每句對 SKILL.md 原文；GIF 144 幀、接點 PSNR 差 ≤1.5dB | 062a7dd..c98c3ad |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
