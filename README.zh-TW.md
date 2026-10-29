@@ -13,27 +13,19 @@
 2. **一份全域 `CLAUDE.md`** — 要求涉及 API 簽名、版本號、專案事實時標註來源，並把「應該是」「大概」列為禁用詞。
 3. **一個 8 步迴圈** — 由 `/dd-init` 蓋章進各專案的 `CLAUDE.md`，每個功能段落都要走簡化 → 審查 → 再驗證才進最終 commit。
 
-差別要講清楚：**只有第 1 條是強制**。Claude Code 是把 `CLAUDE.md` 當 context 載入而非設定，[官方文件寫得很直白](https://code.claude.com/docs/en/memory)（"Claude treats them as context, not enforced configuration"）。第 2、3 條抬高下限、留下可稽核的紀錄，但不保證照做。**必須每次都發生的事得寫成 hook** — gate 就是為此存在。
+**只有第 1 條是強制**：Claude Code 把 `CLAUDE.md` 當 context 載入、不是設定（[官方文件](https://code.claude.com/docs/en/memory)："Claude treats them as context, not enforced configuration"），所以第 2、3 條只能抬高下限、留下可稽核的紀錄。必須每次都發生的事得寫成 hook。
 
-**適合誰**：你每天在用 Claude Code，發現自己一直在重打同樣的糾正，而且希望換台機器後這些還在。具體一點：一個人（或已經對慣例有共識的小團隊），寧可被擋下 commit，也不想三週後才發現某個目錄的文件早就跟程式碼對不上了。
+**適合誰**：每天用 Claude Code、一直在重打同樣的糾正、希望換台機器後這些還在，而且寧可被擋下 commit 也不要文件跟程式碼對不上的個人或小團隊。
 
-**不適合誰**：想要輕量設定的話，這是取捨的另一端 — gate 會擋你，運氣不好的那天你會為了一個只想順手改一下的目錄補寫 `CLAUDE.md`。如果你的團隊還沒有「文件過期是真問題」的共識，這套會被當成官僚流程 — 不被需要的閘門本來就是那樣。另外整套規則本文、skill 定義與安裝腳本輸出都是繁體中文，要給英語系團隊用得先翻譯（機制本身與語言無關，照跑）。
-
-```bash
-git clone https://github.com/kopp0510/claude-dd.git
-cd claude-dd && ./install-dd-pipeline.sh
-```
+**不適合誰**：想要輕量設定的人（gate 會擋你，有時得為一個小改動補寫 `CLAUDE.md`）、還沒有「文件過期是真問題」共識的團隊。另外規則本文、skill 定義與安裝腳本輸出都是繁體中文，要給英語系團隊用得先翻譯全域模板（機制本身與語言無關）。
 
 ## 特色
 
-- **8 步開發迴圈** — 每個功能段落必走：實作+測試 → commit → code-simplifier → code-review → 再測（curl/playwright 真實環境）→ commit → 沉澱本輪所學 → 評分&修正
-- **CLAUDE.md pre-commit gate** — 改碼目錄缺 CLAUDE.md 或未同批更新即擋 commit（block 版），錯誤訊息內建 AI 自主修復指令
-- **零幻覺政策** — 涉及 API 簽名、版本號、專案事實時必須標註來源；「應該是」「大概」等模糊詞列為禁用
 - **少停下來問** — 能復原的步驟直接做（含本機 commit、跑既有測試），只在破壞性操作、改變範圍、缺你才能給的資訊時才停；push 一律留給你
-- **寫文件與註解的判準** — 全域 CLAUDE.md §3.10 獨立成節、與 8 步迴圈無關，沒跑迴圈的專案也適用：能列舉就不要寫數字、引用行號要把那一行印出來比對、修「同一件事講過 N 處」要拿判準去掃而不是拿第一處的句子
-- **Skill 觸發顯性化** — 該觸發卻不觸發時必須寫出一行具體理由，讓「跳過」從黑箱變成可稽核紀錄
-- **使用率盤點制** — 只保留有實證使用紀錄的元件並全數預設部署，避免閒置 skill 吃 context
-- **全域 CLAUDE.md 模板** — 上述守則的單一來源，互動式比對部署到 `~/.claude/CLAUDE.md`（`--force` 則直接覆蓋，舊版自動備份）
+- **寫文件與註解的判準** — 全域 CLAUDE.md §3.10，沒跑迴圈的專案也適用：能列舉就不要寫數字、引用行號要把那一行印出來比對、修「同一件事講過 N 處」要拿判準去掃而不是拿第一處的句子
+- **Skill 觸發顯性化** — 該觸發卻不觸發時要寫出一行具體理由，「跳過」變成可稽核的紀錄
+- **使用率盤點制** — 只保留有實證使用紀錄的元件，全數預設部署
+- **全域 CLAUDE.md 模板** — 上述守則的單一來源，互動比對後部署到 `~/.claude/CLAUDE.md`
 
 ## 安裝
 
@@ -41,9 +33,9 @@ cd claude-dd && ./install-dd-pipeline.sh
 
 - [Claude Code CLI](https://claude.com/claude-code)、Node.js、Git、Bash — 四者皆為硬性需求，缺一安裝腳本會中止
 - 必要 MCP：`playwright`（腳本只檢查不安裝，請先[安裝 playwright MCP](https://github.com/microsoft/playwright-mcp)）
-- **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過，MCP 檢查退化成字串比對、回報「疑似已設定…範圍未知」而非真實 scope。安裝仍會成功，所以很容易沒注意到拿到的是縮水版
+- **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過、MCP 檢查退化成字串比對，而安裝照樣成功
 - 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
-- claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 另需**至少安裝過一次**（`claude plugin install skill-creator@claude-plugins-official`）：它的 `plugin.json` 沒有 `version` 欄位，安裝腳本改讀 `installed_plugins.json` 裡 Claude Code 記下的版本，首次安裝前無值可讀
+- claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 要先自己裝過一次：`claude plugin install skill-creator@claude-plugins-official`
 
 ### 首次安裝
 
@@ -61,11 +53,11 @@ cd claude-dd
 2. 安裝 12 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
-5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；`plugin.json` 與 `installed_plugins.json` 都讀不到版本字串時印「…都取不到版本字串，跳過」並附上該跑的 `claude plugin install` 指令
+5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。找不到 plugin 或讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
-另有三個不列入編號的附加步驟：**步驟 2 之前**檢查每個 skill 的 `hooks.json` 指令路徑（出現相對路徑就在部署任何檔案之前中止安裝），以及**步驟 6 與 7 之間**依序部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`（任一個失敗會連帶擋掉後面的全域 CLAUDE.md 那步）。
+另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
 
 ### 安裝選項
 
@@ -79,22 +71,6 @@ cd claude-dd
 ./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
 
-### 分享給別人
-
-安裝方式只有一種（含完整工作法：全域規則、8 步迴圈、pre-commit gate 與精選元件）：
-
-```bash
-git clone https://github.com/kopp0510/claude-dd && cd claude-dd && ./install-dd-pipeline.sh
-```
-
-全域 CLAUDE.md 走互動 diff，對方已有自己的全域規則時可先看差異再決定；
-完全沒有全域 CLAUDE.md 的人則是問要不要安裝、預設「否」— 沒有明確答 `y`（或帶 `--force`），
-任何人的 `~/.claude/CLAUDE.md` 都不會被建立或取代。
-
-> 曾評估過 plugin marketplace 分發路線（2026-08-04 實測可行後移除）：plugin 機制
-> 無法部署全域 CLAUDE.md 與 pre-commit gate，只能交付元件子集，與「完整工作法」
-> 的定位不符，為維持單一路線而不採用。實作見 git 歷史。
-
 ## 升級
 
 日常更新：
@@ -107,7 +83,7 @@ git pull && ./install-dd-pipeline.sh --force
 > 舊版會備份到 `~/.claude/backups/pre-install-<時間戳>/`，路徑印在完成訊息裡，所以救得回來 —
 > 但若你的全域規則有在地修改想保留，先不帶 `--force` 跑一次、選 `k`（保留本地）。
 
-從舊版部署（全量 / 分桶時期）升級、既有專案升級到 8 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+從舊版部署升級、既有專案升級到 8 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
 歷次結構性變更見 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 核心工作法：8 步開發迴圈
@@ -125,11 +101,11 @@ git pull && ./install-dd-pipeline.sh --force
 8. 評分 & 修正本輪動過的 `CLAUDE.md` — 先算範圍，再讓 `claude-md-improver` 只審那幾份
 ```
 
-步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 的 gate 會逼著更新改碼目錄的 `CLAUDE.md`，那些改動一樣要審 —— gate 只確認「有寫」、不確認「寫得對」。步驟 8 的第一個動作是算範圍，因為 `claude-md-improver` 預設會找出 repo 裡的每一份 `CLAUDE.md`（這裡有個專案就有 87 份）。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出）—— 一段常有好幾個 commit，只看最後一個會漏掉大半。一個例外：專案有 `task-planner` 進度表時，以表上那一列記的起點為準，不用 `--segment-base`。回頭做 `BLOCKED` 過的段落時，`--segment-base` 已經越過你在卡住之前寫的東西，用它會靜靜地把範圍縮小。
+步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：gate 逼著更新的 `CLAUDE.md` 一樣要審，gate 只確認「有寫」、不確認「寫得對」。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出；有 `task-planner` 進度表時以表上記的起點為準），只看最後一個 commit 會漏掉大半。
 
-三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據；真的派的時候，已經跑過的驗證輸出連同預期值寫進 diff 檔，prompt 標明這些已確認、不要重跑；prompt 交事實（行號、數字、實測輸出），不交「我判斷元凶是 X」—— 自己的錯誤診斷寫進去，reviewer 會跟著錯；派工前先把整段 diff 與被改到檔案的內容備成一個檔，主對話在同一則訊息裡**直接平行派審查者**，派完自己分段讀那個檔（一次讀太多會被靜靜截斷）—— 一發只挖到一部分（實測同一段 diff 跑五發，每發都只命中 3 個已知錯誤中的 2 個、子集還不同；兩發聯集平均 2.3/3，單發 1.8/3），所以設了**最少 3 個**的下限，實際數量由主對話決定；全部回來後逐條讀程式碼查證，分成採納、駁回、需要你決定，講不一樣的地方讀程式碼判定、不表決。中間不另派裁決者：實測直接派比另派一個裁決者快、命中也沒有比較少，但比較貴；那次同時改了三件事、次數少，只是方向（見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。
+三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據。要派時，主對話在同一則訊息裡**直接平行派最少 3 個審查者**（一發只挖到一部分，五發實驗見 [CHANGELOG.md](CHANGELOG.md)，搜「兩發聯集平均」），全部回來後逐條讀程式碼查證；中間不另派裁決者（比較見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。派工要附什麼、報告怎麼落地，見 `templates/global/CLAUDE.md` §3.9 步驟 4。
 
-**要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落（`S1`、`S2`…），段落裡再列小任務（`S2-1`、`S2-2`…），進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2（實作、驗證、commit，訊息第一行結尾帶編號）；小任務全部 commit 完，整段才跑一次步驟 3–8，跑完才在表上標 `DONE`。草稿先交 `plan-review` 審過才寫檔，只問你決策題、要加哪些測試、以及審查判定只有你能決定的題目，不再問整份計畫批不批准；換 session 或 `/compact` 之後照表接手；卡住或冒出新工作都會停下來問。不用你開口：全域 CLAUDE.md 要求 Claude 在複雜的工作動手前，先在計畫裡寫出「預估 N 個功能段落」，兩段以上就自己叫 `task-planner`。
+**要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落，段落裡再列小任務，進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2，全部 commit 完整段才跑步驟 3–8；草稿先交 `plan-review` 審過才寫檔，換 session 或 `/compact` 之後照表接手。不用你開口：複雜工作動手前要先估段落數，兩段以上就自己叫 `task-planner`（規則見 `templates/global/CLAUDE.md` §4.1 與 `skills/task-planner/SKILL.md`）。
 
 ![claude-dd 大工作怎麼跑](diagrams/claude-dd-task-planner.zh-TW.gif)
 
@@ -144,20 +120,14 @@ git pull && ./install-dd-pipeline.sh --force
 ### CLAUDE.md 維護規則（pre-commit gate 強制）
 
 - 每個含程式碼的資料夾都要有 CLAUDE.md；改碼時同批更新。逐層堆疊更新上層是 §3.9 的規則，**gate 不檢查** —— 它只看改到程式碼的那一層，上層過期不會有任何訊號
-- gate 本體是 `~/.claude/scripts/check-claude-md.sh`，由 `/dd-init` 掛上。掛載點為 `.git/hooks/pre-commit`，
-  但若專案設了 `git config core.hooksPath`，git 會完全忽略 `.git/hooks/`，此時改掛到該目錄下（本 repo 自己就是這種情況）。
-  專案用 pre-commit 套件或 lefthook 管理 hook 時，`/dd-init` 不把 gate 加進它們產生的 hook 檔（重裝時會被整個重寫，只刪掉舊版留下的死碼），改給你一段設定加進 `.pre-commit-config.yaml`／`lefthook.yml`；husky v9 則加在 `.husky/pre-commit`。gate 腳本不在時（沒裝 claude-dd 的協作者、或已解除安裝）只印警告說明這次沒檢查什麼，不擋 commit。
-  錯誤訊息直接指示 AI agent 讀目錄自行產生/更新後重試
-- **記憶檔名可設**（2026-10-16）：預設 `CLAUDE.md`，`git config --local dd.docfile GEMINI.md`
-  讓 gate 改認那個檔名 —— 用在只准放特定檔名的 repo（檔名寫死就等於那些 repo 完全用不到 gate）。
-  只讀 `--local`（寫在 `.git/config`、不進版控）：設成 global 會讓這台機器上**所有** repo 的
-  `CLAUDE.md` 都不算，`-c dd.docfile=…` 與 `GIT_CONFIG_PARAMETERS` 同樣不生效，一個 repo 一個決定。
-  只接受單純檔名（`[A-Za-z0-9._-]`，不是 `.`／`..`、也不以 `-` 開頭），否則 `exit 1`；
-  `--start-segment` 與 SKIP 欠帳機制一併改認它（`--segment-base` 只印起點、不碰檔名，
-  但非法值一樣會先被擋下 —— 驗證在分派子命令之前）
+- gate 本體是 `~/.claude/scripts/check-claude-md.sh`，由 `/dd-init` 掛到 `.git/hooks/pre-commit`；專案設了 `core.hooksPath` 時改掛到那個目錄（本 repo 就是）。
+  用 pre-commit 套件或 lefthook 管 hook 的專案，`/dd-init` 不會自動把 gate 加進去，而是給你一段設定，要你自己加進 `.pre-commit-config.yaml`／`lefthook.yml`（husky v9 加在 `.husky/pre-commit`）。
+  gate 腳本不在時（協作者沒裝 claude-dd）只印警告、不擋 commit；擋下時的錯誤訊息會告訴 AI 怎麼補
+- **記憶檔名可設**：預設 `CLAUDE.md`，`git config --local dd.docfile GEMINI.md` 讓 gate 改認那個檔名，給只准放特定檔名的 repo 用。
+  只讀 `--local`：設成 global、`-c dd.docfile=…`、`GIT_CONFIG_PARAMETERS` 都不生效，一個 repo 一個決定
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
-- `git commit --no-verify`／`-n` 會讓 pre-commit 整個不跑，gate 連那次 commit 都看不到。Claude 這樣下指令時，`gate-guard` 的 PreToolUse hook 會直接擋下，並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude —— 你自己在終端機打 `--no-verify` 擋不到。它是全域安裝，所以在每個專案都會擋，包括沒裝 gate 的專案；真的要跳過 hook 時請自己在終端機執行
+- `git commit --no-verify`／`-n` 會讓 gate 整個不跑。Claude 這樣下指令時，`gate-guard` 會擋下並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude，你自己在終端機打 `--no-verify` 擋不到；它是全域安裝，沒裝 gate 的專案也會擋
 
 ## 為什麼要巢狀 CLAUDE.md
 
@@ -178,24 +148,18 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 **代價、已有的對策、以及剩下的風險**
 
 - **文件形式主義。** gate 只驗檔案存在且有被 staged，**驗不到內容是否屬實**。
-  *對策*：被 gate 擋下時，它印的訊息規定了修復格式 — 讀該目錄全部檔案，再寫「該層職責一句話、
-  關鍵檔案與用途、此層慣例/約束、與上層模組的關係」，不建空殼；全域模板 §3.9 另要求寫實際讀到的內容、不放佔位文字。
-  *殘餘*：那條是 context 規則不是強制。想敷衍還是過得了。gate 提高的是造假的成本，不是讓造假變不可能。
+  *對策*：gate 擋下時印的訊息規定了修復格式（讀完該目錄再寫職責、關鍵檔案、慣例、與上層的關係），全域模板 §3.9 要求寫實際讀到的內容。
+  *殘餘*：那是 context 規則不是強制，想敷衍還是過得了；gate 提高的是造假的成本。
 - **小改動的摩擦。** 為了一個只想順手改一下的目錄補寫 `CLAUDE.md`，確實是額外成本。
-  *對策*：gate 只對程式碼副檔名觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄 —
-  改 markdown、設定檔、資產**本身**不會觸發；檢查點 commit 有 `SKIP_DOC_CHECK=1`，但只是延後：之後的正常 commit 一樣要補，
-  而且在補完之前，連只改 markdown 的 commit 都會被擋。
-  *殘餘*：真正新開一個放程式碼的目錄時，第一次 commit 就是得寫一份。這是這套機制的定價；
-  而逃生口的強度，取決於你有多不想去按它。
+  *對策*：只對程式碼副檔名觸發；檢查點 commit 有 `SKIP_DOC_CHECK=1`，但只是延後，之後的正常 commit 一樣要補。
+  *殘餘*：新開一個放程式碼的目錄，第一次 commit 就得寫一份。
 - **檔案越多，矛盾越多。** 官方原文：「兩條規則互相牴觸時，Claude 可能任選一條」。
-  *對策*：這種整理是 `claude-md-improver`（claude-md-management plugin）的工作 — 它按品質基準稽核既有檔案。
-  （`/revise-claude-md` 是另一件事：迴圈收尾時把本輪學到的沉澱進去。）
-  §3.9 也要求每次變更後逐層檢查上層是否需堆疊更新。
-  *殘餘*：沒有東西會**偵測**矛盾。那些是你得主動決定要跑的工具，官方講的定期檢視責任仍在人身上。
+  *對策*：迴圈步驟 8 用 `claude-md-improver` 稽核本輪動過的檔，§3.9 也要求逐層檢查上層。
+  *殘餘*：沒有東西會**偵測**矛盾，定期檢視仍是人的責任。
 - **巢狀檔撐不過 `/compact`。** 依官方文件，根目錄 `CLAUDE.md` 壓縮後會重新注入，巢狀檔則
   「不會自動重新注入；要等下次 Claude 讀到該子目錄的檔案時才重新載入」。
-  *對策*：實務上要改那個目錄的程式碼就得先讀檔，一讀就重新載入。
-  *殘餘*：很窄 — compact 後憑記憶改該目錄的碼、全程沒讀過裡面任何檔案。那本來就是壞習慣，這只是多一個別那樣做的理由。
+  *對策*：要改那個目錄的程式碼就得先讀檔，一讀就重新載入。
+  *殘餘*：只剩 compact 後完全沒讀檔就憑記憶改碼這種情況。
 
 如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要裝 gate。8 步迴圈沒有它一樣能跑。
 
@@ -209,7 +173,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 
 ## Promoted Skills（預設部署，12 個）
 
-> 「Promoted」指該元件有實證使用紀錄，因此預設部署。沒有使用紀錄的元件是**直接刪掉**、不是留著不部署 —— 要取回見 git 歷史。唯一的例外是 `gate-guard`：它是 gate 的防護，不是「用過才收」的 skill。
+> 「Promoted」指該元件有實證使用紀錄，因此預設部署。唯一的例外是 `gate-guard`：它是 gate 的防護，不是「用過才收」的 skill。
 
 | Skill | 說明 |
 |-------|------|
@@ -239,8 +203,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 |--------|------|----------|
 | [claude-mem](https://github.com/thedotmack/claude-mem) | 跨對話記憶（以 lifecycle hooks 自動記錄 session，內附檢索工具） | `npx claude-mem install` |
 
-> claude-mem 以 **plugin** 形式安裝，不是 MCP server — 不會註冊進 `~/.claude.json` 的
-> `mcpServers`，因此安裝腳本的 MCP 檢查看不到它，也不會嘗試檢查。
+> claude-mem 是 plugin、不是 MCP server，安裝腳本的 MCP 檢查不會看到它。
 
 ## MCP
 
@@ -256,8 +219,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | 無 jq 也無 python3，字串比對命中 | 疑似已設定…範圍未知 |
 | 無 jq 也無 python3，字串比對未命中 | 未安裝（必要 MCP 另印 ❌） |
 
-最後一列是誠實的但書：缺 jq 與 python3 時檢查退化成字串比對，名稱沒有字面出現在檔案裡的 server
-就會被報成未安裝 — 即使檢查其實無法證明這件事。
+最後一列是誠實的但書：字串比對沒命中就報未安裝，但它其實證明不了沒裝。
 
 > **限制**：官方第三種 scope（`project` — 專案根目錄的 `.mcp.json`）不在 `~/.claude.json` 內，
 > 本檢查看不到，該情況會低報。要看完整實況以 `claude mcp list` 為準（三種 scope 都會列出）。
@@ -304,7 +266,7 @@ vendored 內容，各自附上游授權檔：
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（只借規則，逐節去向見該檔） |
-| `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15`（2026-03-24）收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |
+| `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15` 收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |
 
 收編規則見 [CLAUDE.md「第三方 Skill / Agent 收編檢查清單」](CLAUDE.md)。
 

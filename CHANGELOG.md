@@ -30,6 +30,10 @@
   CI 陣列一致性加第六組 `DD_OUTPUT_STYLES ↔ output-styles/*.md`；`tests/test-install.sh` 加部署、`--commands-only` 不部署、
   `--uninstall --yes` 移除三則斷言。行為驗收見 `docs/measurements/2026-10-29-adhd-style/`
 
+### Changed
+
+- **兩份 README 清理**：刪掉跟開頭重複的特色、「分享給別人」一節、開頭的 clone 區塊、歷史敘述（日期、評估過的路線、量測過程）與只有維護者需要的實作細節；核心工作法的派工細節改指 `templates/global/CLAUDE.md` §3.9、§4.1，審查者下限的依據改指本檔的五發實驗
+
 ## 1.6.10 — 2026-10-26
 
 ### Changed

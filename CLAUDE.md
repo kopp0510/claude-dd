@@ -246,7 +246,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   少了它 `"version": null` 會讓 jq 印 `null`、python3 印 `None`，後者繞過守衛，
   正是本檔上一條「兩路徑須逐項等價」的典型破口。代價是這類 plugin 必須先手動
   `claude plugin install <name>@claude-plugins-official` 過一次，安裝腳本才登記得起來 —
-  README 兩份的「必要條件」段落須註明此限制
+  README 兩份的「前置需求／Prerequisites」段落須註明此限制
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
