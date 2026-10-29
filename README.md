@@ -106,6 +106,8 @@ Three quality mechanisms, one axis each: the simplifier owns readability, code-r
 
 ![claude-dd: how big work runs](diagrams/claude-dd-task-planner.gif)
 
+![claude-dd: how a plan gets reviewed](diagrams/claude-dd-plan-review.gif)
+
 ![claude-dd 8-step development loop](diagrams/claude-dd-dev-loop.gif)
 
 Step 1 proves the thing you built is right; step 5 proves that simplifying it and applying review findings didn't break it. Different purposes — neither substitutes for the other.
