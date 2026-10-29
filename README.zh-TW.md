@@ -53,7 +53,7 @@ cd claude-dd
 2. 安裝 12 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
-5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。找不到 plugin 或讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令
+5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
@@ -121,10 +121,10 @@ git pull && ./install-dd-pipeline.sh --force
 
 - 每個含程式碼的資料夾都要有 CLAUDE.md；改碼時同批更新。逐層堆疊更新上層是 §3.9 的規則，**gate 不檢查** —— 它只看改到程式碼的那一層，上層過期不會有任何訊號
 - gate 本體是 `~/.claude/scripts/check-claude-md.sh`，由 `/dd-init` 掛到 `.git/hooks/pre-commit`；專案設了 `core.hooksPath` 時改掛到那個目錄（本 repo 就是）。
-  用 pre-commit 套件或 lefthook 管 hook 的專案，`/dd-init` 不會自動把 gate 加進去，而是給你一段設定，要你自己加進 `.pre-commit-config.yaml`／`lefthook.yml`（husky v9 加在 `.husky/pre-commit`）。
+  用 pre-commit 套件或 lefthook 管 hook 的專案，`/dd-init` 不會自動把 gate 加進去，而是給你一段設定，要你自己加進 `.pre-commit-config.yaml`／`lefthook.yml`；husky v9 則由 `/dd-init` 直接寫進 `.husky/pre-commit`。
   gate 腳本不在時（協作者沒裝 claude-dd）只印警告、不擋 commit；擋下時的錯誤訊息會告訴 AI 怎麼補
 - **記憶檔名可設**：預設 `CLAUDE.md`，`git config --local dd.docfile GEMINI.md` 讓 gate 改認那個檔名，給只准放特定檔名的 repo 用。
-  只讀 `--local`：設成 global、`-c dd.docfile=…`、`GIT_CONFIG_PARAMETERS` 都不生效，一個 repo 一個決定
+  只讀 `--local`（存在 `.git/config`、不進版控，每個 clone 要各自設）：設成 global、`-c dd.docfile=…`、`GIT_CONFIG_PARAMETERS` 都不生效。只接受單純檔名（不能帶路徑或空白、不以 `-` 開頭），否則每次 commit 都 `exit 1`
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 - `git commit --no-verify`／`-n` 會讓 gate 整個不跑。Claude 這樣下指令時，`gate-guard` 會擋下並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude，你自己在終端機打 `--no-verify` 擋不到；它是全域安裝，沒裝 gate 的專案也會擋
