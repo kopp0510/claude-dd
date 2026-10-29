@@ -190,10 +190,15 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   沒進版控的檔）成立的路徑，到了公開 repo 就是點不到的死指標 —— 2026-10-16 推 `dd.docfile` 時，
   `scripts/check-claude-md.sh` 檔頭與 `scripts/CLAUDE.md` 都寫「用途見 `~/.claude/rules/<某個本機檔>`」。
   兩個 review agent 都把它判成「範圍外」而沒攔。現在 CI「部署內容裡的 ~/.claude/ 路徑要指得到東西」會擋：
-  掃 `scripts/ tests/ commands/ skills/ agents/ output-styles/ templates/` 裡的 `~/.claude/`、`$HOME/.claude/`，
-  第一層不是本 repo 部署的目錄、也不是 Claude Code 自己的（`settings.json`、`projects/`、`plugins/`、`CLAUDE.md`）就紅燈，
-  是部署目錄的話 repo 裡對應的檔要存在（`scripts/` 只認第一層的 `.sh`）。它管不到的：在這些目錄**以外**的路徑，
-  以及指向本機其他地方（不在 `~/.claude/` 底下）的死指標 —— 那兩種還是要自己顧
+  掃 `scripts/ tests/ commands/ skills/ agents/ output-styles/ templates/` 裡的 `~/.claude/`、`$HOME/.claude/`、`${HOME}/.claude/`、`"$HOME"/.claude/`，
+  第一層不是本 repo 部署的目錄、也不是 Claude Code 自己的（`settings.json`、`settings.local.json`、`projects/`、`plugins/`、`CLAUDE.md`）就紅燈；
+  是部署目錄的話部署後要真的有那個檔 —— repo 裡要有，而且不是「repo 有、不部署」的那幾類
+  （`scripts/` 只認第一層 `.sh`、`output-styles/` 只認第一層 `.md`、`commands/` 第一層只認 `dd-*.md`、命名空間目錄的 `README.md` 會被刪）。
+  **它管不到的**，cherry-pick 後還是要自己查：
+  ①上面那幾個目錄**以外**的檔（根目錄 CLAUDE.md、README、`docs/`）②`projects/`、`plugins/` 底下的路徑（因機器而異，只驗第一層；
+  self-improving-agent 的 `%2F` 編碼算錯就是這一類）③含 `<`、`*`、`{`、`$`、`...` 的佔位寫法，佔位之後拼錯也放過
+  ④不在 `~/.claude/` 底下的死指標（本機其他路徑、只存在別的 branch 的 repo 檔）。
+  自己查用 `git grep -nE '(~|\$HOME|/Users/[^/]+)/' -- . ':!docs/reviews'`，逐筆確認指得到
 - 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項
