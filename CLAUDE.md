@@ -2,6 +2,8 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
+進度以 docs/designs/2026-10-30-dd-loop-rev-check-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
+
 ## 安裝 / 更新
 
 ```bash
@@ -187,8 +189,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **cherry-pick 上來的 commit 要重核「它指向的檔在這裡存不存在」**：在原本的環境（本機設定、
   沒進版控的檔）成立的路徑，到了公開 repo 就是點不到的死指標 —— 2026-10-16 推 `dd.docfile` 時，
   `scripts/check-claude-md.sh` 檔頭與 `scripts/CLAUDE.md` 都寫「用途見 `~/.claude/rules/<某個本機檔>`」。
-  `git grep -n '~/\.claude/' -- scripts/ tests/ commands/` 掃一次；兩個 review agent 都把它
-  判成「範圍外」而沒攔，所以這格要自己顧
+  兩個 review agent 都把它判成「範圍外」而沒攔。現在 CI「部署內容裡的 ~/.claude/ 路徑要指得到東西」會擋：
+  掃 `scripts/ tests/ commands/ skills/ agents/ output-styles/ templates/` 裡的 `~/.claude/`、`$HOME/.claude/`，
+  第一層不是本 repo 部署的目錄、也不是 Claude Code 自己的（`settings.json`、`projects/`、`plugins/`、`CLAUDE.md`）就紅燈，
+  是部署目錄的話 repo 裡對應的檔要存在（`scripts/` 只認第一層的 `.sh`）。它管不到的：在這些目錄**以外**的路徑，
+  以及指向本機其他地方（不在 `~/.claude/` 底下）的死指標 —— 那兩種還是要自己顧
 - 架構總覽（分層、部署清單、安裝行為保證、CI 防線）見 `DD_PIPELINE_ARCHITECTURE.md`
 
 ## 注意事項

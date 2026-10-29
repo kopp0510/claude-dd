@@ -1,4 +1,4 @@
-# CI 擋 dd-loop-rev 沒跳號
+# 把 CLAUDE.md 規則改成 CI 檢查（dd-loop-rev 跳號、~/.claude/ 死指標）
 
 使用者看了 mattpocock/skills 的 `/retro`（「有固定樣子的錯做成自動檢查，再把文字規則縮短」），選了先做這一條：
 根目錄 CLAUDE.md 原本寫明「CI 不驗內容改了 rev 有沒有跳」。
@@ -8,6 +8,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | CI 擋「蓋章區塊改了沒跳 dd-loop-rev」並縮短根 CLAUDE.md 那段 | DONE | — | 新 step 原樣綠；改區塊不跳號、rev 退回、抓不到區塊三種變異紅；改區塊外、跳號後綠 | 848ea70..994df4f |
+| S2 | CI 擋部署內容裡指不到東西的 `~/.claude/` 路徑 | IN_PROGRESS | — | 原樣綠；`rules/`、不存在的部署檔、`scripts/githooks`、`tests/`、零命中紅；佔位與 Claude 自己的路徑綠 | 2aeeacc.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -33,3 +34,11 @@
 - S1-1 `.github/workflows/ci.yml` 加 step；`DD_PIPELINE_ARCHITECTURE.md` CI 防線表加一列；根 `CLAUDE.md` 那段改成指向這道檢查；CHANGELOG
   - 驗證：step 抽出來在 repo 根目錄 `bash -e` 跑，原樣與 7 種變異（改區塊中段／最後一行不跳號、改區塊＋跳號、只跳號、圍欄標記改掉、rev 退回、改區塊外）；`/bin/bash` 3.2 也跑；YAML 用 ruby 解析
   - commit 訊息：`feat: CI 擋蓋章區塊改了沒跳 dd-loop-rev（S1-1）`
+
+### S2 ~/.claude/ 死指標
+
+使用者看完 S1 後選了「其他 3 條」裡的第 2 條（根 CLAUDE.md「cherry-pick 上來的 commit 要重核」那條）。
+
+- S2-1 `.github/workflows/ci.yml` 加 step；`DD_PIPELINE_ARCHITECTURE.md` CI 防線表加一列；根 `CLAUDE.md` 那條改成指向這道檢查並寫明它管不到什麼；CHANGELOG
+  - 驗證：step 抽出來在 repo 根目錄 `/bin/bash -e` 跑，原樣與 12 種變異（附加一行到 `scripts/check-claude-md.sh` 尾端，跑完還原並 `cmp`）＋掃描範圍全錯；YAML 用 ruby 解析
+  - commit 訊息：`feat: CI 擋部署內容裡指不到東西的 ~/.claude/ 路徑（S2-1）`
