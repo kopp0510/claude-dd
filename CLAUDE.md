@@ -147,6 +147,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 4. 新增或改了風格檔內文，要有行為驗收：開一個新的 `docs/measurements/<日期>-<風格>/`，照 `docs/measurements/2026-10-29-adhd-style/` 的 `run.sh`／`check.sh` 改出那個風格的臂與斷言
    （那個目錄的腳本寫死 ADHD 與 default 兩臂，而且它的 `out/` 是被引用的證據，不要在原處重跑蓋掉）。
    只看 `/output-style` 清單有沒有它不算 —— 那只證明檔案被讀到，證明不了回覆真的照規則走、也證明不了沒把全域 CLAUDE.md 的規則壓掉
+   `claude -p` init 訊息的 `output_style` 也不算：它只回傳 `--settings` 給的值，給一個不存在的風格照樣回、不報錯（2026-10-29 實測）；證據只有回覆內容的鑑別斷言
 
 ## 核心工作法：8 步開發迴圈
 
@@ -349,6 +350,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   列進去檢查會**永遠回報未安裝**，應改列 README 的「推薦第三方 Plugin」段落
 - 可選 MCP 推薦名單比照使用率盤點制：上游 deprecated／改名（如 cipher → byterover-cli，
   2026-08-11 移除）或本機實際使用紀錄已斷即移除；後繼品未經實證使用不自動遞補
+
+- **`claude -p` 的 stream-json 要進 repo 前先去識別，而且要認得 Claude Code 自己編碼過的路徑**：init 訊息的 `memory_paths` 等欄位
+  把路徑裡的 `/` 換成 `-`（`-Users-<名字>-…`、`-private-tmp-…`），只換斜線形式、只 grep `/Users/` 都抓不到，還會回 0 筆看起來像通過。
+  init 另有連接器清單、plugin 路徑。做法：只抽判定要用的欄位（照 `docs/measurements/2026-10-29-adhd-style/run.sh`），掃描樣式加 `-Users-`、`-private-tmp-`。
+  2026-10-29 第一批輸出就這樣漏掉使用者名稱，三個審查者都抓到，推之前 amend 拿掉
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
