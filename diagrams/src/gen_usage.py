@@ -16,7 +16,7 @@ ZH = dict(
     sub="從零到日常 · 裝一次、每個專案蓋章一次、複雜工作先審計畫、每個功能段落走同一個迴圈",
     steps=["STEP 1 · 首次安裝（一次性）",
            "STEP 2 · 專案初始化（每個專案一次）",
-           "STEP 3 · 日常開發（每個功能段落）"],
+           "STEP 3 · 日常開發（計畫審一次，每個功能段落走迴圈）"],
     boxes=[
         ("① git clone", "取得 repo（source of truth）", "github.com/kopp0510/claude-dd", GREEN),
         ("② ./install-dd-pipeline.sh", "安裝 7 個步驟，部署到 ~/.claude/",
@@ -36,7 +36,7 @@ ZH = dict(
     notes=[
         ("全域 CLAUDE.md 走互動比對", ["已有自己的規則時可先看 diff", "再決定要不要覆蓋"]),
         ("已有 ## 開發流程 區塊時", ["列出與現行版差異並詢問", "是否升級，保留在地內容"]),
-        ("複雜工作先審計畫", ["簡單、中等任務跳過 ⑤，直接進 ⑥",
+        ("複雜工作先審計畫", ["簡單、中等任務跳過 ⑤（design-brainstorm 的設計例外）",
                              "兩段以上先由 task-planner 拆段落、出草稿",
                              "進度表寫進 docs/designs/ 設計文件",
                              "小任務只走步驟 1–2，整段才跑 3–8"]),
@@ -45,7 +45,7 @@ ZH = dict(
     ],
     legend=[("主流程", GOLD, False), ("gate 擋下 → 修完重試", ROSE, True),
             ("可攜：換機器重建 → 回到 ①", MINT, False)],
-    foot="Style 8 · Dark Luxury · claude-dd 使用流程 · 依 README 安裝章節、dd-init 實際 Phase 與 task-planner 繪製",
+    foot="Style 8 · Dark Luxury · claude-dd 使用流程 · 依 README 安裝章節、dd-init 實際 Phase、task-planner 與 plan-review 繪製",
 )
 
 EN = dict(
@@ -53,7 +53,7 @@ EN = dict(
     sub="From zero to daily use · install once, stamp each project once, review the plan of complex work, then every increment runs the same loop",
     steps=["STEP 1 · First-time install (once)",
            "STEP 2 · Project setup (once per project)",
-           "STEP 3 · Daily development (every increment)"],
+           "STEP 3 · Daily development (plan reviewed once, every increment loops)"],
     boxes=[
         ("① git clone", "get the repo (source of truth)", "github.com/kopp0510/claude-dd", GREEN),
         ("② ./install-dd-pipeline.sh", "7 install steps, deploys into ~/.claude/",
@@ -62,7 +62,7 @@ EN = dict(
          "existing ones get an agent to analyse the stack", BLUE),
         ("④ /dd-init", "stamps the 8-step loop into CLAUDE.md",
          "hooks the gate · creates .screenshots/ · checks plugins", VIOLET),
-        ("⑤ plan-review (complex work)", "the plan is reviewed before any code",
+        ("⑤ plan-review (complex work)", "work starts only after the plan passes",
          "an adjudicator sends 3+ reviewers, then verifies", GOLD),
         ("⑥ 8-step development loop", "implement + test → commit → simplify → review",
          "→ re-verify (curl/playwright) → commit → capture → score", GREEN),
@@ -76,7 +76,7 @@ EN = dict(
                                                 "then decide whether to overwrite"]),
         ("if a workflow section already exists", ["differences are listed and you are asked",
                                                   "local content is preserved"]),
-        ("complex work: review the plan first", ["simple / medium tasks skip ⑤, straight to ⑥",
+        ("complex work: review the plan first", ["simple / medium skip ⑤ (except design-brainstorm)",
                                                  "2+ increments: task-planner drafts it first",
                                                  "progress table goes in docs/designs/",
                                                  "small tasks run 1–2; the increment runs 3–8"]),
@@ -86,7 +86,7 @@ EN = dict(
     ],
     legend=[("main flow", GOLD, False), ("gate blocks → fix → retry", ROSE, True),
             ("portable: rebuild on a new machine → back to ①", MINT, False)],
-    foot="Style 8 · Dark Luxury · claude-dd usage flow · drawn from the README install section, dd-init's actual phases and task-planner",
+    foot="Style 8 · Dark Luxury · claude-dd usage flow · drawn from the README install section, dd-init's actual phases, task-planner and plan-review",
 )
 
 # ── 版面座標 ──
