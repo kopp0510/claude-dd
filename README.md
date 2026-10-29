@@ -49,7 +49,7 @@ cd claude-dd
 The installer reports its progress as 7 steps (`1/7` … `7/7`):
 
 1. Check the environment (the hard requirements above; missing any one aborts the install)
-2. Install 12 promoted Skills into `~/.claude/skills/`
+2. Install 13 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
 5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). A plugin that isn't on disk is skipped with `Plugin 檔案不存在`; one with no readable version is skipped with the `claude plugin install` command to run
@@ -100,7 +100,7 @@ Every **feature increment** runs this (defined in global CLAUDE.md §3.9; the pr
 
 Step 7 adds, step 8 checks — and the order matters: run 8 first and step 7 would immediately drop new content into the files it just cleaned up. Skipping 7 does not skip 8: the CLAUDE.md edits the gate forces need auditing too — the gate only confirms something was written, not that it was written correctly. Steps 3, 4 and 8 all measure the increment from its recorded start (set with `~/.claude/scripts/check-claude-md.sh --start-segment` before step 1, read back with `--segment-base`; with a `task-planner` progress table, the start in the table wins), because the last commit alone misses most of it.
 
-Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (plus a 12-item Fowler code-smell baseline, carried only when the change adds or restructures code), and real-environment verification owns behaviour. Step 4 has one exception: when the increment's diff is all data, configuration, comments or documentation, or the change is already fully covered by the project's mechanical checks, no agent is dispatched — you check it yourself and attach the evidence. Otherwise the main session **dispatches at least three reviewers itself, in parallel from a single message** (one run only finds part of it; the five-run experiment is in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)* — search for 「兩發聯集平均」), then verifies each finding against the code; there is no separate adjudicator in between (comparison in `docs/measurements/2026-10-23-reviewer-real-sessions.md`). What goes into the dispatch and how reports are filed: `templates/global/CLAUDE.md` §3.9, step 4.
+Three quality mechanisms, one axis each: the simplifier owns readability, code-review owns correctness and compliance (plus a 12-item Fowler code-smell baseline, carried only when the change adds or restructures code), and real-environment verification owns behaviour. Step 4 has one exception: when the increment's diff is all data, configuration, comments or documentation, or the change is already fully covered by the project's mechanical checks, no agent is dispatched — you check it yourself and attach the evidence. Otherwise the main session **dispatches at least three reviewers itself, in parallel from a single message** (one run only finds part of it; the five-run experiment is in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)* — search for 「兩發聯集平均」), then verifies each finding against the code; there is no separate adjudicator in between (comparison in `docs/measurements/2026-10-23-reviewer-real-sessions.md`). What goes into the dispatch and how reports are filed: `skills/dd-loop/SKILL.md` (global §3.9 keeps the step list and its gates, and calls this skill).
 
 **Work that spans several increments** goes to `task-planner` first: it splits the work into ordered increments with small tasks inside each, and writes the progress table into a design doc under `docs/designs/`. A small task runs only steps 1 and 2; once every small task in an increment is committed, the increment runs steps 3–8. The draft goes through `plan-review` before anything is written, and a new session or `/compact` picks up from the table. You don't have to ask: before complex work Claude estimates how many increments it needs and calls `task-planner` itself at two or more (rules in `templates/global/CLAUDE.md` §4.1 and `skills/task-planner/SKILL.md`).
 
@@ -162,13 +162,14 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | `/workflow-review:review` | Combined code review — security, performance, configuration. It's a namespaced command, so the colon form is the callable name |
 | `/output-style ADHD` | Turn on the ADHD response style (action first, numbered steps, progress every turn, short lists, no preamble or closers; written in Traditional Chinese); `/output-style default` turns it off. Claude Code reads style files at startup, so restart after installing. It applies to the current project only (saved to `.claude/settings.local.json`); for a default everywhere, set `"outputStyle": "ADHD"` in `~/.claude/settings.json` — a project's own `.claude/settings*.json` `outputStyle` still wins |
 
-## Promoted Skills (12, deployed by default)
+## Promoted Skills (13, deployed by default)
 
 > "Promoted" means the component has an evidenced usage record and therefore ships by default. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
 
 | Skill | Description |
 |-------|-------------|
 | code-simplifier | Code simplification (the wrapper used at step 3 of the loop) |
+| dd-loop | How each step of the 8-step loop is done (start point and range, step-4 dispatch and filed reports, step-8 range); global §3.9 calls it at the start of each increment and before steps 3, 4 and 8 |
 | design-brainstorm | Socratic design dialogue — look facts up yourself, only ask the human about decisions |
 | frontend-design | Frontend visual design |
 | gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `-c core.hooksPath=` (turning hooks off beforehand with `git config core.hooksPath` is not caught) |

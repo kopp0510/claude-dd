@@ -10,7 +10,7 @@
 | 檔案 | 產出 |
 |---|---|
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（框 ⑤ 是複雜工作先過的 plan-review、⑥ 是 8 步迴圈、⑦ gate 在 ⑥ 正下方；簡單中等任務跳過 ⑤（design-brainstorm 的設計例外）、大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
-| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 對齊） |
+| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 與 `skills/dd-loop/SKILL.md` 對齊） |
 | `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → plan-review 審草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
 | `gen_review.py` | `review-zh-TW.svg`、`review-en.svg` — 計畫怎麼審（plan-review）。一排一個角色：主對話、裁決者、審查者；計畫寫好交給裁決者 → 裁決者派 ≥3 個審查者 → 審查者附證據回報 → 裁決者查證、判通不通過 → 回主對話開工或改計畫；改好的計畫交給新的裁決者再審（最多 3 輪；SKILL.md 沒寫「新的」，是從「回到第 1 步」再派裁決者推的），第 3 輪還不過就停下問使用者。重派、沒跑成、要使用者批准這幾條例外不畫線，寫在「例外」小字。框裡每句話對 `skills/plan-review/SKILL.md` 原文 |
 
@@ -113,7 +113,7 @@
 
 `../` 只放成品 GIF（兩份 README 直接嵌）。圖上的文字宣稱（元件數量、迴圈步數、
 目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README`、
-`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審；`gen_review.py` 的每個框、每條線與註解都來自它，第 1–5 步與裁決者範本任何一句改了都要回頭對）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
+`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/dd-loop/SKILL.md`（各步做法細則）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審；`gen_review.py` 的每個框、每條線與註解都來自它，第 1–5 步與裁決者範本任何一句改了都要回頭對）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
 
 **改圖上的字（尤其是為了塞進框而縮短）時，把原文那句和新句並排，逐條對條件**：「至少」「最多一次」「除了…」「或…」最容易掉。
 `gen_review.py` 犯過兩次（`docs/reviews/2026-10-29-plan-review-gif/S1-judge.md`、`S2-judge.md`）：第二次掉的「你的規則要批准時照樣問」，正是第一次收 review 才補回的那句。

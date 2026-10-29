@@ -7,7 +7,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 新 skill dd-loop + 全域 §3.9 瘦身 | TODO | — | 全域模板行數與 bytes 下降（前後 `wc -lc`）；搬走的每一句在 `skills/dd-loop/SKILL.md` 找得到原文；`claude -p` 沙盒正例（段落開始、做到一半接手、步驟 4 前、步驟 8 前）jsonl 有 `Launching skill: dd-loop` 且 `permission_denials` 裡沒有 Skill；小改動反例不叫；§3.9 引用清單（A、B 兩組樣式）每筆都有判定；ci.yml 讀文件的 step 本機全 exit 0 | |
+| S1 | 新 skill dd-loop + 全域 §3.9 瘦身 | IN_PROGRESS | — | 全域模板行數與 bytes 下降（前後 `wc -lc`）；搬走的每一句在 `skills/dd-loop/SKILL.md` 找得到原文；`claude -p` 沙盒正例（段落開始、做到一半接手、步驟 4 前、步驟 8 前）jsonl 有 `Launching skill: dd-loop` 且 `permission_denials` 裡沒有 Skill；小改動反例不叫；§3.9 引用清單（A、B 兩組樣式）每筆都有判定；ci.yml 讀文件的 step 本機全 exit 0 | f46d4de.. |
 | S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | TODO | S1 | 待重規劃（見「段落與小任務」S2 的開工前提） | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -64,6 +64,26 @@
   - 步驟 3：S1、S2 都是純文件段落，code-simplifier 只審不改（避免改寫剛搬過去的原文）
   - 步驟 4 的派工方向：至少一個審查者專審「搬移前後條件與指向有沒有掉」（附錄 A 驗證 4）；S2 同
   - commit：`feat: 8 步迴圈的做法搬進 dd-loop skill，全域 §3.9 只留清單與關卡（S1-1）`
+- S1-1 實作紀錄（2026-10-30）
+  - 與草稿不同：「規則」裡 4 條一行規則留在全域、沒搬（步驟 1、5 跑既有測試；巢狀 CLAUDE.md 逐層更新；gate 被擋時的處置；專案 CLAUDE.md 可覆蓋）。
+    理由：它們不只在跑迴圈時用得到（任何 commit 都可能被 gate 擋、任何改碼都要逐層更新），而且 README 的 gate 對策段把它們寫成 §3.9 的規則；搬走只省 4 行
+  - 搬走的：前言起點細節、步驟 3、4 的細則、步驟 8 的範圍指令與陷阱、步驟 7 與 8 的關係（6 條）
+  - 搬移對照（基準 `git show f46d4de:templates/global/CLAUDE.md` 的 §3.9，183 個非空行）：找不到的 3 行都是刻意改寫——
+    「依序走:」→「依序走下面 8 步。」、步驟 4「例外見下」→「例外見 `dd-loop`」、步驟 8 標題行加「(指令見 `dd-loop`)」；條件與指向逐條對過沒掉。同時留在兩處的行：0
+  - A 組引用判定：`ci.yml` 317/319/322/472（數 §3.9 步數）原地成立；根 CLAUDE.md「核心工作法」第 7、8 步細則那句改指 skill；手動同步觸發條件加 `skills/dd-loop/SKILL.md`；
+    其餘根 CLAUDE.md（定義於 §3.9、§3.10 刻意放外面、四方一致、2026-09-12 踩雷史）原地成立；`DD_PIPELINE_ARCHITECTURE.md` 100、129 原地成立；
+    README.md:103／zh-TW:106「派工與報告落地見 §3.9 步驟 4」改指 skill；README 88/91（定義於 §3.9）、121/124（逐層更新是 §3.9 規則）、143/153（寫實際讀到的內容）、149/159（逐層檢查）原地成立（那幾條留在全域）；
+    `scripts/CLAUDE.md:173` 改成「§3.9 與 `skills/dd-loop/SKILL.md`，以及 task-planner」；:183 原地成立；`diagrams/src/CLAUDE.md:13`、:116 加 dd-loop（圖上文字沒變，不重出 GIF）；
+    `gen_loop.py`、`gen_planner.py` 頁尾「依全域 §3.9 繪製」原地成立；`skills/verification-gate/SKILL.md:56`（0 紅教訓）原地成立；`commands/dd-init.md` 75/83（區塊內）、323 屬 S2，區塊沒動、原地成立
+  - B 組引用判定（概念詞，75 筆）：多數講 gate 腳本、dd-init 蓋章區塊與測試，這段沒改它們，原地成立；引「全域模板」的只有根 CLAUDE.md:181（`--segment-base` 用 `~/.claude/scripts/` 那份），全域與 skill 都還是那條路徑，成立；
+    README.md:101／zh-TW:104（步驟 7、8 順序）描述的行為沒變，成立
+  - 乾跑（驗證 ⑤，2026-10-30）：
+    - 接手 agent（只讀全域模板與專案文件、dd-loop 尚未部署）抓到「有進度表時 `<起點>` 以表上為準」整條被搬走，叫不到 skill 時沒有依據在表上起點與 `--segment-base` 間選 ⇒ 這條（含 exit 非 0 = 沒算出來）放回全域 §3.9；
+      另在 §7.4 註明迴圈步驟 3、4 觸發 §7.2 那兩列時先叫 `dd-loop`、§3.9 註明每次叫不算 §7.3 的重入
+    - 照 SKILL.md 實跑 A（無進度表）、B（有進度表）兩個拋棄式 repo，到下一段 `--start-segment` 都 exit 0。採納：步驟 8 有進度表時把表上那格連 `..` 填進 `base`，`git diff` exit 129 而管線 exit 0、輸出空白 ⇒ SKILL.md 寫明只取 `..` 前面；
+      退路句補 repo 網址與「裝的是沒有這個 skill 的舊版」
+    - 沒處理、留給之後（都是搬過來之前 §3.9 原文就有的，不是這次搬移造成的）：沒有進度表時 `<段落>` 編號沒定義；「報告一律落地」與「有 `docs/reviews/` 時」講法不一；`docs/reviews/CLAUDE.md` 新專案沒有；
+      「依序跑 / 並行」怎麼選沒寫；④ 步驟 1 輸出與 simplifier 之後的版本不對應；③「被改到檔案」沒定義；步驟 3、4 改碼會讓步驟 6 再被 gate 擋；報告跟哪個 commit 送沒寫；SKIP 欠帳要在步驟 3 前補完只寫在 task-planner
 - S1-2 部署並實測 skill 會被叫起來
   - 檔案：`docs/measurements/2026-10-30-dd-loop-trigger/`（`*.prompt.txt`、去識別後的 jsonl 抽取結果、`run.sh`）
   - 驗證：`./install-dd-pipeline.sh --force` 後，拋棄式 repo 跑 `claude -p`，設定照根 `CLAUDE.md`「新增 Skill 步驟 5」整條抄（`--output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence --permission-mode dontAsk --allowedTools "Skill Read Glob Grep" --disallowedTools "Edit Write NotebookEdit Bash Agent" < /dev/null`，另加 `--settings '{"advisorModel":""}'`，prompt 存成 `<名字>.prompt.txt`）。判定：`Launching skill: dd-loop` 有沒有出現，並列出所有 Skill 呼叫的順序（「照做」交給 S1-1 驗證 ⑤）。這只證明「會被叫」，不證明是明寫呼叫還是 description 比對；之後改 memory 措辭只寫「會被叫起來」。三個情境：正例「做一段功能」、正例「進度表上 IN_PROGRESS 段落做到一半（同 ⑤ 的 fixture），接著做步驟 3」都要出現 `Launching skill: dd-loop`；另加兩個正例「小任務都 commit 完，接著做步驟 4」「接著做步驟 8」也要出現；反例「改一個 typo」不出現；順手記 jsonl 裡 Skill 呼叫次數與注入量；與附錄 A「--allowedTools 含 Skill 與寫檔工具」不同：這裡照專案規則把寫檔工具列進 disallow，因為只測「叫不叫」，判定改成「permission_denials 裡沒有 Skill」；正例各跑 2 次；Skill 注入量從 jsonl 的 Skill tool_result 內容長度取，若一段 4 次注入的總量超過全域省下的量，就在報告如實寫出、不再宣稱 context 有好處。stream-json 進 repo 前照根 CLAUDE.md 那條去識別（只抽判定欄位）
