@@ -4,7 +4,7 @@
 
 > A portable Claude Code profile — turning "did the AI actually follow the rules?" into output you can see and gates that can block you
 
-**What it is**: a Claude Code profile you can carry between machines — skills, agents, commands, and a global `CLAUDE.md`. Clone the repo, run one bash script, and your whole working style is installed into `~/.claude/`. This repo is the source of truth; `~/.claude/` is always a deployment of it.
+**What it is**: a Claude Code profile you can carry between machines — skills, agents, commands, scripts, output styles, and a global `CLAUDE.md`. Clone the repo, run one bash script, and your whole working style is installed into `~/.claude/`. This repo is the source of truth; `~/.claude/` is always a deployment of it.
 
 **What it actually does**: three things, with honestly different strengths.
 
@@ -66,7 +66,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
-Plus two unnumbered steps: a pre-flight check before step 2 that validates every skill's `hooks.json` command paths (a relative path aborts the install before anything is deployed), and one between steps 6 and 7 that deploys `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/`.
+Plus three unnumbered steps: a pre-flight check before step 2 that validates every skill's `hooks.json` command paths (a relative path aborts the install before anything is deployed), and two between steps 6 and 7 that deploy, in order, `check-claude-md.sh` (the pre-commit gate itself) into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
 
 ### Install options
 
@@ -180,6 +180,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 |---------|-------------|
 | `/dd-init` | Initialise a project: stamp the 8-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/` (only when the project has a frontend — pure backend/CLI skips it), verify plugin dependencies |
 | `/workflow-review:review` | Combined code review — security, performance, configuration. It's a namespaced command, so the colon form is the callable name |
+| `/output-style ADHD` | Turn on the ADHD response style (action first, numbered steps, progress every turn, short lists, no preamble or closers; written in Traditional Chinese); `/output-style default` turns it off. Claude Code reads style files at startup, so restart after installing. It applies to the current project only (saved to `.claude/settings.local.json`); for a default everywhere, set `"outputStyle": "ADHD"` in `~/.claude/settings.json` — a project's own `.claude/settings*.json` `outputStyle` still wins |
 
 ## Promoted Skills (12, deployed by default)
 
@@ -270,6 +271,7 @@ Vendored content, each shipping its own upstream licence file:
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | attribution/NOTICE terms apply |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors (style rules only; see the file for exactly which parts) |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) (rules only; see the file for where each section went) |
 | `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15` (2026-03-24). No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |
 
 Intake rules: [CLAUDE.md, "第三方 Skill / Agent 收編檢查清單"](CLAUDE.md) *(Traditional Chinese)*.

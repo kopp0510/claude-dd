@@ -8,7 +8,7 @@
 這個 repo 有兩個目標：
 
 1. **跨機恢復**：換電腦時 `git clone` + 一支腳本，完整重建 `~/.claude/` 的
-   skills / agents / commands / scripts / 全域 CLAUDE.md。
+   skills / agents / commands / scripts / output-styles / 全域 CLAUDE.md。
    注意：全新機器上全域 CLAUDE.md 那步是詢問制且**預設不安裝**（`[y/N]` 預設 N，
    非互動同樣採 N）— 要一次到位須帶 `--force` 或互動時答 `y`。
 2. **分享用法**：別人 clone 後跑同一支腳本，就能取得同一套工作法
@@ -27,6 +27,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
 ┌────────────────────────────────────────────────────────┐
 │  claude-dd repo（source of truth，git 版控）             │
 │  skills/  agents/  commands/  templates/  scripts/      │
+│  output-styles/                                         │
 │  diagrams/（成品 GIF）  diagrams/src/（產生器）           │
 └───────────────────────┬────────────────────────────────┘
                         │  ./install-dd-pipeline.sh
@@ -34,7 +35,7 @@ python3 擇一）、**設定與狀態分離**（repo 只放設定，執行期產
                         ▼
 ┌────────────────────────────────────────────────────────┐
 │  ~/.claude/（部署目標，可隨時由 repo 重建）               │
-│  skills/  agents/  commands/  scripts/                  │
+│  skills/  agents/  commands/  scripts/  output-styles/  │
 │  CLAUDE.md（全域，互動比對安裝）  settings.json（plugin） │
 │  backups/pre-install-*/（覆蓋前自動備份）                │
 └───────────────────────┬────────────────────────────────┘
@@ -58,12 +59,12 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 
 7 個編號步驟（`1/7`…`7/7`）：環境檢查 → Skills → Agents → MCP 檢查 →
 官方 Plugins → Commands → 全域 CLAUDE.md（互動比對；`--force` 直接覆蓋）。
-另有兩個不佔編號的步驟：hook 路徑驗證（「前置」，在 Skills 之前）與
-輔助腳本部署（「附加步驟」，在 Commands 之後）。
+另有三個不佔編號的步驟：hook 路徑驗證（「前置」，在 Skills 之前）、
+輔助腳本部署與 output style 部署（兩個「附加步驟」，依序在 Commands 之後、全域 CLAUDE.md 之前）。
 
 行為保證：
 
-- **冪等**：所有部署點（skills / agents / commands / scripts / 全域 CLAUDE.md）
+- **冪等**：所有部署點（skills / agents / commands / scripts / output-styles / 全域 CLAUDE.md）
   內容相同報「已是最新」不重寫（含 `--force`）；重跑不產生備份。
 - **非互動安全**：無 TTY（CI、`curl | bash`）時互動詢問一律採預設值，
   不會中止；破壞性操作（`--uninstall`）預設取消，自動化用 `--yes`。
@@ -76,10 +77,11 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部 `PROMOTED_*` 陣列：12 個 promoted Skills、4 個 promoted Agents、dd-init、workflow-review；
+（清單 = 腳本頂部的部署陣列：`PROMOTED_*` 的 12 個 promoted Skills、4 個 promoted Agents，加上 dd-init、workflow-review，以及 `DD_OUTPUT_STYLES` 的 `adhd.md`；
 2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif，2026-09-30 新增只有 hook 的 gate-guard ——
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞；2026-10-23 新增自製 plan-review，
-實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑）。
+實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，
+實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
@@ -118,7 +120,7 @@ scripts 會在下次安裝時被覆蓋（覆蓋前自動備份到 `~/.claude/bac
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
 | error-capture hook 行為測試（`test-error-capture.sh`） | 逐行比對的語意迴歸（exclusion 一票否決、只讀 stderr、回報最後一行、Context 空白或截斷、jq/python3 單分支）—— 這類失效都是零輸出 exit 0，shellcheck 驗不出來。另守大輸出效能：每個案例限時 5 秒，bash 3.2 的超線性字串替換會被砍掉（只在 `bash32` job 有牙）。pattern／exclusion 清單只有情境用到的那幾項受保護，非系統性涵蓋 |
 | gate-guard hook 行為測試（`test-guard-no-verify.sh`） | 該擋的 `git commit --no-verify`／`-n`／`core.hooksPath` 沒擋（零輸出 exit 0，跟「沒人繞過」長得一樣），或誤擋 `git config core.hooksPath`、`git log -n`、訊息內文的 `-n`；jq 與 python3 兩條分支都跑 |
-| 陣列 ↔ 目錄一致性（`ALL_*` 四組 + `DD_SCRIPTS ↔ scripts/*.sh`） | 陣列漏列 / 目錄改名未同步 / 新腳本沒進部署清單 |
+| 陣列 ↔ 目錄一致性（`ALL_*` 四組 + `DD_SCRIPTS ↔ scripts/*.sh` + `DD_OUTPUT_STYLES ↔ output-styles/*.md`） | 陣列漏列 / 目錄改名未同步 / 新腳本或新風格沒進部署清單 |
 | 數字宣稱 ↔ 陣列（README 英/繁中兩份 + 根目錄 CLAUDE.md + **本文件**） | 文件數字過期。本文件涵蓋元件數、安裝編號步驟數、shellcheck 腳本數 |
 | CHANGELOG 已發布區塊不可改動（三道：逐 `## <x.y.z>` 區塊比對最新 `v*` tag、尾段逐字相同、未發布區塊必須存在） | 新條目被寫進已發布的版本區塊 —— `git diff` 看起來正常、其他檢查全綠，發版時會被算進錯的版本（2026-10-05 踩過：插入腳本索引差一位，兩條本輪變更進了 `## 1.2.0`）。需要 `fetch-depth: 0`，shallow clone 一個 tag 都沒有，抓不到 tag 時這個 step 直接失敗、不靜默放過 |
 | 安裝 flag 三方對照（case 分支 ↔ `--help` ↔ 兩份 README） | flag 名稱三方漂移（只驗名稱，語意描述仍手動維護） |
@@ -137,7 +139,7 @@ CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 
 Root MIT（LICENSE）。vendored 內容各自附上游授權
 （`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`（Apache-2.0，有歸屬要求）、
-`skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`），
+`skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`、`output-styles/LICENSE.txt`（i-have-adhd，MIT，只借規則，逐節去向見該檔）），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
 **一個例外**：`commands/workflow-review/` 同為第三方（Alireza Rezvani，`7248a15` 收編），
 但**未隨附 LICENSE、上游 repo 從未記錄**，歸屬只記在 `review.md` 檔頭 ——
