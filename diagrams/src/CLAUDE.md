@@ -113,4 +113,4 @@
 
 `../` 只放成品 GIF（兩份 README 直接嵌）。圖上的文字宣稱（元件數量、迴圈步數、
 目錄用途、段落與小任務的規則）來自 repo 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`、`README`、
-`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
+`templates/global/CLAUDE.md`（§3.9 迴圈、§4.1 估段落數）、`skills/task-planner/SKILL.md` 與 `skills/plan-review/SKILL.md`（裁決者、審查者下限、什麼任務要審；`gen_review.py` 的每個框、每條線與註解都來自它，第 1–5 步任何一句改了都要回頭對）；那些內容改了，這裡的字串要跟著改並重出 GIF —— **CI 不驗圖片內容，只能靠人記得**。
