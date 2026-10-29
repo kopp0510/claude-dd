@@ -41,6 +41,8 @@ source ./install-dd-pipeline.sh
 [ -d "$SANDBOX/.claude/commands/workflow-review" ]
 [ ! -f "$SANDBOX/.claude/commands/workflow-review/README.md" ]
 [ -x "$SANDBOX/.claude/scripts/check-claude-md.sh" ]
+[ "$(ls "$SANDBOX"/.claude/output-styles/*.md | wc -l)" -eq "${#DD_OUTPUT_STYLES[@]}" ]
+grep -qx 'name: ADHD' "$SANDBOX/.claude/output-styles/adhd.md"
 echo "✅ 首次安裝部署內容正確"
 
 # 冪等：重跑不得改動內容、不得產生備份
@@ -64,7 +66,22 @@ HOME="$SANDBOX" ./install-dd-pipeline.sh --commands-only < /dev/null
 [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
 echo "✅ --commands-only 未動到既有 skills"
 
+# --commands-only 在乾淨 HOME：不得部署 output style（上面那個 SANDBOX 已經有了，驗不出來）
+CO_SANDBOX=$(mktemp -d "$WORK/co.XXXXXX")
+HOME="$CO_SANDBOX" ./install-dd-pipeline.sh --commands-only < /dev/null
+[ ! -e "$CO_SANDBOX/.claude/output-styles/adhd.md" ]
+echo "✅ --commands-only 未部署 output style"
+
 # --uninstall 非互動走預設 N：取消移除、不得誤刪
 HOME="$SANDBOX" ./install-dd-pipeline.sh --uninstall < /dev/null
 [ -d "$SANDBOX/.claude/skills/code-simplifier" ]
 echo "✅ 非互動 uninstall 預設取消，未誤刪"
+
+# --uninstall --yes：移除部署的 output style，不動使用者自己的風格檔
+UN_SANDBOX=$(mktemp -d "$WORK/un.XXXXXX")
+HOME="$UN_SANDBOX" ./install-dd-pipeline.sh < /dev/null
+printf -- '---\nname: Mine\n---\n' > "$UN_SANDBOX/.claude/output-styles/mine.md"
+HOME="$UN_SANDBOX" ./install-dd-pipeline.sh --uninstall --yes < /dev/null
+[ ! -e "$UN_SANDBOX/.claude/output-styles/adhd.md" ]
+[ -f "$UN_SANDBOX/.claude/output-styles/mine.md" ]
+echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"

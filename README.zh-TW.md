@@ -4,7 +4,7 @@
 
 > 可攜式 Claude Code 設定庫 — 把「AI 有沒有照規矩做」變成看得見、擋得住的輸出
 
-**是什麼**：跨機器可攜的 Claude Code profile（skills / agents / commands / 全域 CLAUDE.md）。
+**是什麼**：跨機器可攜的 Claude Code profile（skills / agents / commands / scripts / output styles / 全域 CLAUDE.md）。
 `git clone` 後跑一支 bash，整套工作習慣就裝進 `~/.claude/`；此 repo 是 source of truth。
 
 **實際做了什麼**：三件事，強度誠實地不一樣。
@@ -65,7 +65,7 @@ cd claude-dd
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
-另有兩個不列入編號的附加步驟：**步驟 2 之前**檢查每個 skill 的 `hooks.json` 指令路徑（出現相對路徑就在部署任何檔案之前中止安裝），以及**步驟 6 與 7 之間**部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`（它失敗會連帶擋掉後面的全域 CLAUDE.md 那步）。
+另有三個不列入編號的附加步驟：**步驟 2 之前**檢查每個 skill 的 `hooks.json` 指令路徑（出現相對路徑就在部署任何檔案之前中止安裝），以及**步驟 6 與 7 之間**依序部署 `check-claude-md.sh`（pre-commit gate 本體）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`（任一個失敗會連帶擋掉後面的全域 CLAUDE.md 那步）。
 
 ### 安裝選項
 
@@ -205,6 +205,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 |------|------|
 | `/dd-init` | 初始化專案：蓋章 8 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`（僅在專案有前端時；純後端/CLI 跳過）、檢查 plugin 依賴 |
 | `/workflow-review:review` | 綜合程式碼審查（安全、效能、配置）。這是命名空間指令，冒號形式才是可呼叫的名稱 |
+| `/output-style ADHD` | 開啟 ADHD 回覆風格（第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
 
 ## Promoted Skills（預設部署，12 個）
 
@@ -302,6 +303,7 @@ vendored 內容，各自附上游授權檔：
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | 有歸屬／NOTICE 要求 |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（只借規則，逐節去向見該檔） |
 | `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15`（2026-03-24）收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |
 
 收編規則見 [CLAUDE.md「第三方 Skill / Agent 收編檢查清單」](CLAUDE.md)。

@@ -16,6 +16,19 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Added
+
+- **ADHD 回覆風格（Output Style）**：新增 `output-styles/adhd.md`，安裝時部署到 `~/.claude/output-styles/`。
+  重開 Claude Code 後打 `/output-style ADHD` 開、`/output-style default` 關；安裝不改任何 `outputStyle` 設定。
+  內容是：第一句是動作、步驟編號、每輪講進度、具體時間估計、清單一組最多 5 項（只管呈現，該全列照樣全列）、
+  無開場收尾，外加本機 ELI5 風格的繁中白話與「沒驗證照講」；使用者指示與 CLAUDE.md 規則優先於風格。
+  規則改寫自 [i-have-adhd](https://github.com/ayghri/i-have-adhd)（MIT），逐節去向見 `output-styles/LICENSE.txt`。
+  安裝腳本新增 `DD_OUTPUT_STYLES` 陣列與 `create_output_styles()`；`--uninstall` 一併移除（不動使用者自己的風格檔）；
+  CI 陣列一致性加第六組 `DD_OUTPUT_STYLES ↔ output-styles/*.md`；`tests/test-install.sh` 加部署、`--commands-only` 不部署、
+  `--uninstall --yes` 移除三則斷言。行為驗收見 `docs/measurements/2026-10-29-adhd-style/`
+
 ## 1.6.10 — 2026-10-26
 
 ### Changed

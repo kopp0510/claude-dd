@@ -30,6 +30,7 @@ TEMPLATES_DIR="$CLAUDE_DIR/templates/dd"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 SCRIPTS_DIR="$CLAUDE_DIR/scripts"
+OUTPUT_STYLES_DIR="$CLAUDE_DIR/output-styles"
 
 # Skills 部署清單（使用率盤點制：只保留實證常用的元件，其餘刪除、git 歷史可回溯）
 # 註：原 misc 桶（11 skills / 5 NS commands）與 deprecated 桶（34 skills /
@@ -85,6 +86,11 @@ ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 # 輔助腳本（部署到 ~/.claude/scripts/；check-claude-md.sh 由 /dd-init 掛進專案 pre-commit）
 DD_SCRIPTS=(
     "check-claude-md.sh"
+)
+
+# Output styles（部署到 ~/.claude/output-styles/；使用者用 /output-style 自己開關，安裝不改任何 outputStyle 設定）
+DD_OUTPUT_STYLES=(
+    "adhd.md"
 )
 
 # 必要的 MCP
@@ -271,6 +277,7 @@ show_help() {
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（claude-md-management：巢狀 CLAUDE.md 維護依賴；skill-creator：skill 建立與 eval）"
     echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：8 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
+    echo "  - ${#DD_OUTPUT_STYLES[@]} 個 Output Style（ADHD：用 /output-style 開關）"
     echo "  - 1 個全域 CLAUDE.md（互動式比對覆蓋）"
     echo ""
 }
@@ -1004,6 +1011,45 @@ create_scripts() {
     echo ""
 }
 
+# 部署 output styles 到 ~/.claude/output-styles/（同 create_scripts 的語意，不需 chmod）
+create_output_styles() {
+    echo -e "${BLUE}${INFO} 附加步驟：部署 Output Styles${NC}"
+
+    mkdir -p "$OUTPUT_STYLES_DIR"
+
+    local count=${#DD_OUTPUT_STYLES[@]}
+    local i=0
+
+    for s in "${DD_OUTPUT_STYLES[@]}"; do
+        i=$((i + 1))
+        local tree_char="├──"
+        [ "$i" -eq "$count" ] && tree_char="└──"
+
+        local source="$SCRIPT_DIR/output-styles/$s"
+        if [ ! -f "$source" ]; then
+            echo -e "$tree_char $s: ${RED}源檔案不存在${NC}"
+            continue
+        fi
+
+        local target="$OUTPUT_STYLES_DIR/$s"
+        if [ ! -f "$target" ]; then
+            cp "$source" "$target"
+            echo -e "$tree_char $s: ${GREEN}已安裝（新）${NC}"
+        elif cmp -s "$source" "$target"; then
+            echo -e "$tree_char $s: ${YELLOW}已是最新${NC}"
+        else
+            backup_before_overwrite "output-styles" "$target"
+            cp "$source" "$target"
+            if [ "$FORCE" = true ]; then
+                echo -e "$tree_char $s: ${GREEN}已更新（強制）${NC}"
+            else
+                echo -e "$tree_char $s: ${CYAN}已更新${NC}"
+            fi
+        fi
+    done
+    echo ""
+}
+
 # 移除安裝
 uninstall() {
     print_header "${ROCKET} DD Pipeline 移除程式"
@@ -1014,6 +1060,7 @@ uninstall() {
     echo "├── ~/.claude/skills/ 中的 ${#ALL_SKILLS[@]} 個內建 skill"
     echo "├── ~/.claude/agents/ 中的 ${#ALL_AGENTS[@]} 個內建 agent"
     echo "├── ~/.claude/scripts/ 中的 ${#DD_SCRIPTS[@]} 個輔助腳本（含 pre-commit gate — 移除後各專案掛著的 hook 會失效）"
+    echo "├── ~/.claude/output-styles/ 中的 ${#DD_OUTPUT_STYLES[@]} 個 output style（專案或 ~/.claude/settings.json 設為 ADHD 的，請改回 default）"
     # 由陣列生成，不寫死名字：寫死時漏掉 skill-creator，使用者同意移除一個、實際被取消登記兩個。
     # 用 printf 串接而非 IFS='、' —— IFS 在 C/POSIX locale 下逐「位元組」取，全形頓號 3 個
     # 位元組只會用第一個，接出亂碼（實測 bash 3.2：UTF-8 locale 下正常、LC_ALL=C 只剩 \343）。
@@ -1044,6 +1091,11 @@ uninstall() {
         # 僅移除 DD_SCRIPTS 列表中的腳本（不動使用者自己的）
         for s in "${DD_SCRIPTS[@]}"; do
             rm -f "$SCRIPTS_DIR/$s"
+        done
+
+        # 僅移除 DD_OUTPUT_STYLES 列表中的風格（不動使用者自己的）
+        for s in "${DD_OUTPUT_STYLES[@]}"; do
+            rm -f "$OUTPUT_STYLES_DIR/$s"
         done
 
         # 僅移除 ALL_SKILLS 列表中的 skill（不動使用者自己的）
@@ -1206,6 +1258,12 @@ show_completion() {
         esac
     done
     echo ""
+    if [ "$COMMANDS_ONLY" = false ]; then
+        echo -e "${GREEN}📌 ADHD 回覆風格（Output Style）：${NC}"
+        echo "   重開 Claude Code 後打 /output-style ADHD 開啟；/output-style default 關閉"
+        echo "   只對目前專案生效；全域預設見 README"
+        echo ""
+    fi
     echo -e "${GREEN}📌 查看說明：${NC}"
     echo "   參閱 README.zh-TW.md（繁體中文）/ README.md（English）"
     echo ""
@@ -1313,6 +1371,7 @@ main() {
     # 部署輔助腳本（除非只安裝 commands）
     if [ "$COMMANDS_ONLY" = false ]; then
         create_scripts
+        create_output_styles
     fi
 
     # 檢查 / 安裝全域 CLAUDE.md（除非只安裝 commands）

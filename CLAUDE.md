@@ -23,8 +23,9 @@ repo 只保留**有實證使用紀錄**的元件（2026-08-04 盤點留存 9 ski
 dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來源為當次
 對話的完整管線驗證；2026-09-30 新增只有 hook 的 gate-guard —— 它是 gate 的防護、不是「用過才收」的
 元件，是這條規則唯一的例外；2026-10-23 新增自製 plan-review，實證來源為
-`docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
-`PROMOTED_*` 陣列。
+`docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，來源是使用者要求，
+實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
+`PROMOTED_*` 陣列（output style 在 `DD_OUTPUT_STYLES`）。
 
 - 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /
   17 agents / 6 dd 指令 / 13 NS commands）與 misc 桶（SRE 備援性質但零實際調用的
@@ -36,6 +37,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `skills/` — 12 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
+- `output-styles/` — Output Style（`adhd.md`，部署到 `~/.claude/output-styles/`，使用者用 `/output-style ADHD`／`/output-style default` 自己開關；安裝不改任何 `outputStyle` 設定）。`LICENSE.txt` 記上游 i-have-adhd 的逐節去向、不部署；這層別放其他 `.md`，CI 會把它當成要部署的風格
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `diagrams/` — 兩份 README 嵌的 6 張 GIF（使用流程、8 步迴圈、大工作怎麼跑 × 中英），另有 tech-diagram-gif
@@ -135,6 +137,14 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 > 撰寫腳本本身的規矩（bash 3.2 相容、變數緊貼全形字要寫 `${var}`、改了 gate 要故意改壞一行驗證）
 > 見 `scripts/CLAUDE.md`「此層慣例」，那份是腳本內容的單一維護來源；這一節只管「怎麼讓它被部署與被檢查」。
 
+## 新增 Output Style 步驟
+
+1. 在 `output-styles/` 建立 `<name>.md`（frontmatter 含 `name`、`description`；要保留寫程式的行為就加 `keep-coding-instructions: true`）
+2. 加入 `install-dd-pipeline.sh` 頂層的 `DD_OUTPUT_STYLES` 陣列 —— CI 的「陣列與目錄一致性」有 `DD_OUTPUT_STYLES ↔ output-styles/*.md` 會擋
+3. 執行 `./install-dd-pipeline.sh --force` 部署；Claude Code 啟動時才讀風格檔，要重開才看得到
+4. 新增或改了風格檔內文，重跑行為驗收：做法與判定寫在 `docs/measurements/2026-10-29-adhd-style/CLAUDE.md`。
+   只看 `/output-style` 清單有沒有它不算 —— 那只證明檔案被讀到，證明不了回覆真的照規則走、也證明不了沒把全域 CLAUDE.md 的規則壓掉
+
 ## 核心工作法：8 步開發迴圈
 
 骨幹是經實際專案實戰驗證的功能段落迴圈
@@ -201,8 +211,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - 所有回應和註解使用繁體中文
 - Commit message 使用繁體中文
 - 此專案是 source of truth，全域 ~/.claude/ 的內容由安裝腳本從此專案部署
-- 修改 skills / agents / commands / **scripts** 後務必同步更新 install-dd-pipeline.sh 的部署陣列
-  （`PROMOTED_SKILLS`、`PROMOTED_AGENTS`、`DD_COMMANDS`、`NS_COMMANDS`、`DD_SCRIPTS`；五組 CI 都會擋不一致）
+- 修改 skills / agents / commands / **scripts** / **output-styles** 後務必同步更新 install-dd-pipeline.sh 的部署陣列
+  （`PROMOTED_SKILLS`、`PROMOTED_AGENTS`、`DD_COMMANDS`、`NS_COMMANDS`、`DD_SCRIPTS`、`DD_OUTPUT_STYLES`；六組 CI 都會擋不一致）
 - skill / command frontmatter 的 `allowed-tools` 是**該輪的免確認預授權**，不是工具白名單。
   官方文件：「It does not restrict which tools are available: every tool remains callable」，
   要真的拿掉工具得用 `disallowed-tools`，而且預授權在使用者下一則訊息後就失效。
@@ -236,8 +246,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
-  CI 驗的陣列一致性只涵蓋 skills / agents / commands / scripts（`DD_SCRIPTS ↔ scripts/*.sh`
-  於 2026-09-12 補上），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
+  CI 驗的陣列一致性只涵蓋 skills / agents / commands / scripts / output-styles（`DD_SCRIPTS ↔ scripts/*.sh`
+  於 2026-09-12、`DD_OUTPUT_STYLES ↔ output-styles/*.md` 於 2026-10-29 補上），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
   **CI 不驗、只能手動同步的區塊**（不寫總數 — 沒窮舉過，寫個數字只會變成下一個過期宣稱）：
   兩份 README 的安裝步驟清單、指令一覽、官方 Plugins、第三方 Plugin 推薦、MCP 必要表、
   MCP 可選表、前置需求段落、MCP 退化狀態表、**CLAUDE.md 維護規則那幾條**（含 `--no-verify` 與 gate-guard 那條）、**「為什麼要巢狀」

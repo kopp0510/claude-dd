@@ -56,7 +56,7 @@ jobs:
       - name: gate-guard hook 行為測試（該擋 / 該放行各情境）
         run: ./skills/gate-guard/hooks/test-guard-no-verify.sh
 
-      - name: 陣列與目錄一致性（ALL_* 四組 + DD_SCRIPTS）
+      - name: 陣列與目錄一致性（ALL_* 四組 + DD_SCRIPTS + DD_OUTPUT_STYLES）
         run: |
           source ./install-dd-pipeline.sh
           fail=0
@@ -88,6 +88,10 @@ jobs:
           check "DD_SCRIPTS" \
             "$(printf "%s\n" "${DD_SCRIPTS[@]}" | sort)" \
             "$(ls scripts/*.sh | xargs -n1 basename | sort)"
+          # output-styles/ 只放風格檔與 LICENSE.txt；別放其他 .md（CLAUDE.md、README）進去，會被當成要部署的風格
+          check "DD_OUTPUT_STYLES" \
+            "$(printf "%s\n" "${DD_OUTPUT_STYLES[@]}" | sort)" \
+            "$(ls output-styles/*.md | xargs -n1 basename | sort)"
           exit $fail
 
       - name: 數字宣稱一致性（README ×2 / CLAUDE.md / 架構文件 ↔ 腳本陣列）
