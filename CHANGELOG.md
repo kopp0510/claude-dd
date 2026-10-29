@@ -20,6 +20,8 @@
 
 ### Added
 
+- **CI 擋「改了 `/dd-init` 蓋章區塊卻沒跳 `dd-loop-rev`」**：新 step 拿最新的 `v*` tag 比，區塊內容變了而 rev 沒變（或變小）就紅燈。
+  以前只靠 code-review 抓（漏過一次，CI 全綠）。根目錄 CLAUDE.md 那段改成指向這道檢查，並分清哪幾處同步 CI 驗、哪幾處不驗
 - **plan-review 有自己的流程圖**：新增 `diagrams/src/gen_review.py`，產出 `diagrams/claude-dd-plan-review.gif` 與 `.zh-TW.gif`，
   嵌在兩份 README「大工作怎麼跑」那張圖下面。一排一個角色（主對話、裁決者、審查者），看得出誰把事情交給誰：計畫交給裁決者 → 裁決者派 ≥3 個審查者 → 審查者附證據回報 →
   裁決者判通不通過 → 回主對話開工或改計畫再審（最多 3 輪，第 3 輪還不過就停下問你）；重派、審查沒跑成、要你批准寫在圖下方的「例外」。框裡每句話都對過 `skills/plan-review/SKILL.md` 原文

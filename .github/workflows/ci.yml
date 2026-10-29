@@ -354,6 +354,54 @@ jobs:
           [ $fail -eq 0 ] && echo "✅ 四方一致，版本標記與 dd-loop-rev（含舊版判定線的 rev）都對得上"
           exit $fail
 
+      - name: dd-init 蓋章區塊改了就要跳 dd-loop-rev（以最新 v* tag 為基準）
+        run: |
+          # 已蓋章的專案跑 /dd-init 時只比 rev：區塊內容改了、rev 沒跳，它們會被告知「已是現行版」而拿不到修正，
+          # 而且不報錯。上一個 step 只驗 rev 前後一致，驗不到這件事。
+          # 基準取最新的 v* tag（同 CHANGELOG 那個 step）：同一次發版改好幾次區塊，只要跳一次號
+          tag=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          if [ -z "$tag" ]; then
+            echo "❌ 找不到任何 v* tag —— 可能是 checkout 沒設 fetch-depth: 0（shallow clone 不帶 tag），或 tag 還沒推上來"
+            exit 1
+          fi
+          if ! git cat-file -e "$tag:commands/dd-init.md" 2>/dev/null; then
+            echo "❌ $tag 裡沒有 commands/dd-init.md —— 這個檢查沒有基準可比"
+            exit 1
+          fi
+          git show "$tag:commands/dd-init.md" > /tmp/dd-init-tagged.md
+          # 蓋章區塊 = 檔案裡第一個 ```markdown 到下一個 ``` 之間；rev 標記在區塊裡，比對前先把號碼換掉，
+          # 不然「只跳了號」也會被當成內容改了
+          stamp() { awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f' "$1" | sed -E 's/dd-loop-rev: [0-9]+/dd-loop-rev: N/'; }
+          stamp /tmp/dd-init-tagged.md > /tmp/stamp-old.txt
+          stamp commands/dd-init.md > /tmp/stamp-new.txt
+          # 先確認抓到東西非空：區塊的開頭改成別的語言標記時，兩邊都會是空的、比對起來「相同」
+          if [ ! -s /tmp/stamp-old.txt ] || [ ! -s /tmp/stamp-new.txt ]; then
+            echo "❌ 抓不到蓋章區塊（找的是第一個 \`\`\`markdown 圍欄）—— 檢查自己壞了，不是區塊沒改"
+            exit 1
+          fi
+          rev_of() { grep -E '^<!-- dd-loop-version: ' "$1" | head -1 | grep -oE 'dd-loop-rev: [0-9]+' | grep -oE '[0-9]+'; }
+          old_rev=$(rev_of /tmp/dd-init-tagged.md)
+          new_rev=$(rev_of commands/dd-init.md)
+          if [ -z "$old_rev" ] || [ -z "$new_rev" ]; then
+            echo "❌ 抓不到 rev 標記（${tag}：'${old_rev}'、現在：'${new_rev}'）—— 標記格式改了的話，這裡的 regex 要跟著改"
+            exit 1
+          fi
+          # 變數緊貼全形字一律寫 ${var}：bash 會把全形字的位元組吃進變數名（scripts/CLAUDE.md「此層慣例」）
+          echo "基準 ${tag} 的 rev=${old_rev}，現在 rev=${new_rev}"
+          if [ "$new_rev" -lt "$old_rev" ]; then
+            echo "❌ dd-loop-rev 從 ${old_rev} 退回 ${new_rev}"
+            exit 1
+          fi
+          if cmp -s /tmp/stamp-old.txt /tmp/stamp-new.txt; then
+            echo "✅ 蓋章區塊與 ${tag} 相同"
+          elif [ "$new_rev" -gt "$old_rev" ]; then
+            echo "✅ 蓋章區塊改了，rev 已從 ${old_rev} 跳到 ${new_rev}"
+          else
+            echo "❌ 蓋章區塊與 ${tag} 不同，但 dd-loop-rev 還是 ${new_rev} —— 要跳號（同批改判定線、列出差異、UPGRADING、CHANGELOG，見根目錄 CLAUDE.md）："
+            diff /tmp/stamp-old.txt /tmp/stamp-new.txt | head -20 || true
+            exit 1
+          fi
+
       - name: 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要）
         run: |
           # 四方檢查只數「編號清單」，使用者實際看到的兩類文案不在其中：
