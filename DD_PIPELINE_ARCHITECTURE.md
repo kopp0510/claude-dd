@@ -78,7 +78,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
 （清單 = 腳本頂部的部署陣列：`PROMOTED_*` 的 12 個 promoted Skills、4 個 promoted Agents，加上 dd-init、workflow-review，以及 `DD_OUTPUT_STYLES` 的 `adhd.md`；
-2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif，2026-09-30 新增只有 hook 的 gate-guard ——
+2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif（實證來源為當次對話的完整管線驗證），2026-09-30 新增只有 hook 的 gate-guard ——
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞；2026-10-23 新增自製 plan-review，
 實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，
 實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑）。

@@ -275,7 +275,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   rev 恰好是那個值的專案跑 `/dd-init` 會落在兩條分支之間。CI 的「迴圈步數四方一致」會比對兩條判定線
   （`dd-init.md` 的「舊版/手寫版」、`UPGRADING.md` 的「判定為舊版」）上的 rev 是否等於現行 rev；
   分支標籤本身被改掉時它印「抓不到那行」，不會靜默放過。
-  同批還要補判定線下一行起那串「列出與現行版的差異」（`grep -n '列出與現行版的差異' commands/dd-init.md`）（新增一句「rev N 缺什麼」，不然升級對話框少講這次的差異），
+  同批還要補判定線下一行起那串「列出與現行版的差異」（`grep -n '列出與現行版的差異' commands/dd-init.md`；新增一句「rev N 缺什麼」，不然升級對話框少講這次的差異），
   以及 `UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊。
   **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊，用
   ``grep -n '^```' commands/dd-init.md | head -2`` 取得起訖行；Phase 0–6 的執行指示在區塊外，

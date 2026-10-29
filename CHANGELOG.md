@@ -34,10 +34,12 @@
 
 - **兩份 README 清理**：刪掉跟開頭重複的特色、「分享給別人」一節、開頭的 clone 區塊、歷史敘述（日期、評估過的路線、量測過程）與只有維護者需要的實作細節；核心工作法的派工細節改指 `templates/global/CLAUDE.md` §3.9、§4.1，審查者下限的依據改指本檔的五發實驗
 - **CLAUDE.md 清理**（根目錄、`scripts/`、`tests/`、`docs/reviews/`、`diagrams/src/`、`skills/self-improving-agent/`、`skills/tech-diagram-gif/scripts/`）與全域模板：
-  拿掉日期、「某次踩過」的故事、重複的句子；規則本身留著。順手修正幾處寫錯或過時的：
+  拿掉日期、「某次踩過」的故事、重複的句子；規則本身留著。全域模板 §7.2 表的兩列從「派 Task」改成「用 Agent 工具派」。
+  順手修正寫錯或過時的（不只下面這些，完整改動見 commit）：
   `diagrams/src/CLAUDE.md` 說三支產生器沒有 `.ttl`（其實都是 40px）、style-12 沒有 `.sm`、
   `skills/self-improving-agent/CLAUDE.md` 要你手動把 hook 加進 `settings.json`（`hooks.json` 已自動載入）、
-  根 CLAUDE.md 說 CI 不看 `UPGRADING.md` 的 rev（其實會比對判定線）
+  根 CLAUDE.md 說 CI 不看 `UPGRADING.md` 的 rev（其實會比對判定線）、殘留清理表的「與 DD wrapper 撞名」（改成同名 agent）、
+  `diagrams/src/CLAUDE.md` 的 style-8 路徑指向部署版（改成 repo 相對路徑）
 
 ## 1.6.10 — 2026-10-26
 
