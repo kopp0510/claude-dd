@@ -269,17 +269,19 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   不報錯：2026-08-31 迴圈 6→7→8 時標記停在 `6step`（舊專案跑 `/dd-init` 會被誤判為
   最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
   `DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
-- **動到 `commands/dd-init.md` 的蓋章區塊就必須跳 `dd-loop-rev`** —— CI「dd-init 蓋章區塊改了就要跳 dd-loop-rev」會擋：
-  拿最新的 `v*` tag 比，區塊內容變了而 rev 沒變（或 rev 變小）就紅燈；同一次發版改好幾次區塊，只要跳一次號。
+- **動到 `commands/dd-init.md` 的蓋章區塊就必須跳 `dd-loop-rev`**（前例是一個段落跳一次：v1.6.6–v1.6.10 間 S3、S6、S8 各跳一號，
+  同段的 review 修正 commit 不另跳）。CI「dd-init 蓋章區塊改了就要跳 dd-loop-rev」只是下限：拿最新的 `v*` tag 比，
+  區塊內容變了而 rev 沒變（或 rev 變小）才紅燈 —— 發版後已經跳過一次，下一段再改區塊沒跳，它擋不到，
+  而從 main 安裝、已蓋上那個 rev 的專案就會被告知「已是現行版」。
   不跳號的後果：Phase 1 判「rev 等於現行值 → 已是現行版，跳過」，已蓋章的專案永遠拿不到這次修正，還會被告知「已是最新」。
-  **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊（``grep -n '^```' commands/dd-init.md | head -2`` 取起訖行）；
+  **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來、開頭是 `## 開發流程` 的那一整塊（``grep -n '^```' commands/dd-init.md | head -2`` 取起訖行）；
   Phase 0–6 的執行指示在區塊外，改它們不必跳 rev。`dd-loop-rev` 的 grep **不能**拿來夾範圍：它的第一個命中（Phase 1 判定式）在區塊外。
-  跳號時同批要改這四處：
+  跳號時同批要改：
   ①`grep -n 'dd-loop-rev' commands/dd-init.md` 找到的**兩處**（Phase 1 的「已是現行版」判定式與蓋章標記；**不要在這裡寫行號**）
   ②grep 抓不到的「舊版/手寫版」判定線「有 `8step` 但 rev 比 N 舊」（`grep -n 'rev 比' commands/dd-init.md UPGRADING.md`，兩檔各一處）。
   漏改會開出判定縫隙：舊的現行值既不等於新值（不算現行版）、也不「比舊值舊」（不算舊版），rev 恰好是那個值的專案跑 `/dd-init` 會落在兩條分支之間
   ③判定線下一行起那串「列出與現行版的差異」（`grep -n '列出與現行版的差異' commands/dd-init.md`），新增一句「rev N 缺什麼」，不然升級對話框少講這次的差異
-  ④`UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊
+  ④CHANGELOG 未發布區塊（`UPGRADING.md` 寫死的 rev 就是 ② 那條判定線，不是另一處）
   CI「迴圈步數四方一致」驗 ① 前後一致、② 兩條判定線（`dd-init.md` 的「舊版/手寫版」、`UPGRADING.md` 的「判定為舊版」）的 rev 等於現行 rev，
   分支標籤被改掉時印「抓不到那行」；③、④ CI 不驗
 - **CHANGELOG 條目一律寫進 `## 未發布`，已發布的版本區塊不可再動**（連錯字也不行，要改就發新版）——
