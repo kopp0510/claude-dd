@@ -2,6 +2,8 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
+進度以 docs/designs/2026-10-29-plan-review-gif-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
+
 ## 安裝 / 更新
 
 ```bash
@@ -33,7 +35,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
 - `output-styles/` — Output Style（`adhd.md`，部署到 `~/.claude/output-styles/`，使用者用 `/output-style ADHD`／`/output-style default` 自己開關；安裝不改任何 `outputStyle` 設定）。`LICENSE.txt` 記上游 i-have-adhd 的逐節去向、不部署；這層別放其他 `.md`，CI 會把它當成要部署的風格
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
-- `diagrams/` — 兩份 README 嵌的 6 張 GIF（使用流程、8 步迴圈、大工作怎麼跑 × 中英），另有 tech-diagram-gif
+- `diagrams/` — 兩份 README 嵌的 GIF（使用流程、8 步迴圈、大工作怎麼跑、計畫怎麼審 × 中英），另有 tech-diagram-gif
   各風格的示範 GIF；每張的來源與重出方式見 `diagrams/src/CLAUDE.md`
   （改來源再重出，勿手改 GIF）。
   三層架構圖於 2026-08-31 移除 — 它畫的是目錄清單而非架構，資訊都在
@@ -309,7 +311,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   逐條屬實。行號錯得離譜反而好認，錯個三五行才危險 — 一律以原文比對為準，不信行號。
   **它回報的「數字」同理**：要寫進文件的量測值（字級、案例數、幾處誤報）一律自己重跑一次再寫。
   ⚠️ 自己的「實測」也會錯：reviewer 說產生器的 `.ttl` 是 40，當時「實測」後改寫成「三支都沒有 `.ttl`」，
-  其實三支都有 `.ttl` 40px（`grep -n ttl diagrams/src/gen_*.py`）—— 寫進文件前把實測指令與輸出一起附上
+  其實產生器都有 `.ttl` 40px（`grep -n ttl diagrams/src/gen_*.py`）—— 寫進文件前把實測指令與輸出一起附上
 - **在規則文件裡加「例外條款」時，要掃同一份檔案裡所有把該規則寫死成指令的地方**：
   用 `<佔位符>` 描述的段落會自動套用新例外，**把指令逐字寫死的那一段不會**。
   2026-09-12 踩過：全域模板 §3.9 前言加了「有進度表時 `<起點>` 改用表上那個起點」，

@@ -18,6 +18,12 @@
 
 ## 未發布
 
+### Added
+
+- **plan-review 有自己的流程圖**：新增 `diagrams/src/gen_review.py`，產出 `diagrams/claude-dd-plan-review.gif` 與 `.zh-TW.gif`，
+  嵌在兩份 README「大工作怎麼跑」那張圖下面。畫的是計畫寫好 → 裁決者派 ≥3 個審查者 → 讀檔檢查 → 逐條查證 → 通過／不通過／無法判定，
+  加上「再送一輪（最多 3 輪）」與「重派」兩條虛線；框裡每句話都對過 `skills/plan-review/SKILL.md` 原文
+
 ### Changed
 
 - **全域模板 §3.10 加一條「縮短既有文字時，條件最容易被改掉」**：兩條分支壓成一句、拿掉日期或出處、拿掉路徑，

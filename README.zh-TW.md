@@ -109,6 +109,8 @@ git pull && ./install-dd-pipeline.sh --force
 
 ![claude-dd 大工作怎麼跑](diagrams/claude-dd-task-planner.zh-TW.gif)
 
+![claude-dd 計畫怎麼審（plan-review）](diagrams/claude-dd-plan-review.zh-TW.gif)
+
 ![claude-dd 8 步開發迴圈](diagrams/claude-dd-dev-loop.zh-TW.gif)
 
 步驟 1 的測試證明「做出來是對的」，步驟 5 證明「簡化與修 review 沒把對的改壞」—— 目的不同，缺一不可。

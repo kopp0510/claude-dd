@@ -12,6 +12,7 @@
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（框 ⑤ 是複雜工作先過的 plan-review、⑥ 是 8 步迴圈、⑦ gate 在 ⑥ 正下方；簡單中等任務跳過 ⑤（design-brainstorm 的設計例外）、大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
 | `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 對齊） |
 | `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → plan-review 審草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
+| `gen_review.py` | `review-zh-TW.svg`、`review-en.svg` — 計畫怎麼審（plan-review：計畫寫好 → 裁決者派 ≥3 個審查者 → 讀檔檢查 → 逐條查證 → 通過／不通過／無法判定；不通過再送一輪、第 3 輪還不過就停下；讀檔檢查沒過就重派）。框裡每句話對 `skills/plan-review/SKILL.md` 原文 |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
 
@@ -29,7 +30,7 @@
 `skills/tech-diagram-gif/scripts/fixtures/sample-flow.svg` —— 它同時是幾何檢查的
 測試 fixture，不在此重複一份，改它要一併重跑該 skill 的測試。
 
-三支都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
+`gen_*.py` 都是零依賴的純標準函式庫 Python，SVG 全部手寫字串組出來，不引入繪圖套件。
 中英兩版共用同一份版面座標，只換 `ZH` / `EN` 兩個 dict 的字串。
 
 ## 慣例與約束
@@ -42,20 +43,20 @@
   這四張的總循環是 8s（`dur` 只用 2s / 4s / 8s / `8.0s`，全部整除 8），剛好等於腳本預設值，但**還是要明寫** ——
   不寫就等於預設值幫你猜對了，下一張改成別的總循環時不會有任何訊號。
   四份現況皆通過；沒過就不要重出 GIF
-- **三支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
+- **產生器的輸出也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
   連線要畫在 `<defs>` 外、標 `data-role="edge"`、座標只用 M/L（`poly()` 產生），小球的 `<mpath>` 直接指向它 ——
   腳本會先剝掉 `<defs>`、也不認 H/V 簡寫。放在 defs 用 `<use>` 引用的話連線數算成 0，
   交叉、折數、穿越檢查全部空轉，輸出卻看不出來
 - **`gen_loop.py`、`gen_usage.py` 有檢查腳本出現前就在的未通過項**：
   loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 ⑧ 在容器外，以及文字溢出。改這兩張只看有沒有**新增**失敗項。
   文字溢出是腳本估算；以渲染後 `getBBox()` 量到的字尾有沒有超出框右緣為準（2026-09-11 量的四張，字尾離框右緣都還有 ≥12px；這是量到的值，不是門檻）。
-- **`gen_planner.py` 是照檢查腳本畫的，兩版都 0 項不過，改它要維持全過**。三個做法是為了過檢查：
+- **`gen_planner.py`、`gen_review.py` 是照檢查腳本畫的，兩版都 0 項不過，改它們要維持全過**（`gen_review.py` 照 `gen_planner.py` 的做法寫）。三個做法是為了過檢查：
   節點文字的字級只寫在 `font-size` 屬性、CSS 不設（腳本會讀 `<style>`，優先序跟瀏覽器一樣是 CSS > 屬性 > 內建預設表；
   兩邊都寫仍然一致，但人容易改錯邊）；
   節點上限 9 個、全部放進容器（容器外的節點算未通過；要加框就得拿掉別的框）；邊標籤底下墊 `data-role="mask"` 的底色塊（沒有的話標籤間隙沒量到，只印警告）。
   分組標題靠右是因為有連線從容器上緣左半邊進來 —— 文字壓線腳本量不到，只能看截圖
 - **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
-- **三支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
+- **產生器的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
   新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案
 - **總循環 7.2 秒**：所有 `animateMotion` 的 `dur` 必須整除 7.2，否則 GIF 接不回去。
   錯開相位一律用**負值** `begin`（正延遲會讓小球停在左上角）
@@ -73,8 +74,8 @@
     `dd-pipeline-propagation.style-2.svg` 與 `motion-build-to-operate.svg` 的**節點**字級
     （`.nm` 20 / `.sm` 15 / `.al` 15；但 style-2 的 `.ttl` 是 24，不是 31）
   - `style-11-event-transit.svg`、`style-12-ops-pulse.svg` 自成一套：`.nm` 19、`.al` 14、`.ttl` 26；`.sm` 14 只有 style-11 有
-  - 三支產生器又是另一套：`gen_loop` / `gen_usage` 的 `.nm` 15、`.sm` 11.5–12；
-    `gen_planner` 連 `.nm` / `.sm` 都不設（節點字級寫在 `font-size` 屬性上）。三支的 `.ttl` 都是 40
+  - 產生器又是另一套：`gen_loop` / `gen_usage` 的 `.nm` 15、`.sm` 11.5–12；
+    `gen_planner` / `gen_review` 連 `.nm` / `.sm` 都不設（節點字級寫在 `font-size` 屬性上）。`gen_*.py` 的 `.ttl` 都是 40
 - **字體堆疊含 CJK 後備**（`Songti TC` / `Noto Serif CJK TC` 等），改字體要兩版一起改
 - **legend 與實際連線一一對應**：畫面上沒有的線就不要留在 legend
 - **`gen_usage.py` 框② 的「安裝 7 個步驟」不是迴圈步數**：那是 `install-dd-pipeline.sh`
@@ -85,12 +86,12 @@
 
 ## 完整重出 GIF 的流程
 
-1. 在暫存目錄跑三支腳本 → 得到 6 份 `.svg` 與 `.html`
+1. 在暫存目錄跑全部 `gen_*.py` → 得到下表左欄的 `.svg` 與同名 `.html`
 2. playwright 開 `file://<暫存>/xxx.html`，`pauseAnimations()` 後
    `setCurrentTime(i*7.2/144)` 逐幀截圖，144 幀
 3. `ffmpeg -framerate 20 -i f%03d.png -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 out.gif`
-4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再**照下表逐張覆蓋這 6 個檔名**
-   （不要用 `../*.gif` —— 上層有 11 張，其中 5 張是手寫 SVG 出的，不由這個流程產生）：
+4. 抽第 0 幀與第 40 幀比雜湊確認不同（證明動畫真的燒進去），再**照下表逐張覆蓋右欄的檔名**
+   （不要用 `../*.gif` —— 上層還有手寫 SVG 出的 GIF，不由這個流程產生）：
 
    | 產出的 SVG | 覆蓋到 |
    |---|---|
@@ -100,11 +101,13 @@
    | `loop-zh-TW.svg` | `../claude-dd-dev-loop.zh-TW.gif` |
    | `planner-en.svg` | `../claude-dd-task-planner.gif` |
    | `planner-zh-TW.svg` | `../claude-dd-task-planner.zh-TW.gif` |
+   | `review-en.svg` | `../claude-dd-plan-review.gif` |
+   | `review-zh-TW.svg` | `../claude-dd-plan-review.zh-TW.gif` |
 
    命名慣例：英文版用無後綴檔名、繁中版加 `.zh-TW`（與 README 同一套）；
-   字根對照 usage→usage-flow、loop→dev-loop、planner→task-planner
+   字根對照 usage→usage-flow、loop→dev-loop、planner→task-planner、review→plan-review
 
-細節見 `tech-diagram-gif` skill；上面四步是三支腳本那 6 張的做法，手寫 SVG 的圖照該 skill 重出。
+細節見 `tech-diagram-gif` skill；上面四步是 `gen_*.py` 那幾張的做法，手寫 SVG 的圖照該 skill 重出。
 
 ## 與上層的關係
 
