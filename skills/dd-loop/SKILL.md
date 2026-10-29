@@ -19,7 +19,9 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 要等第一個 `SKIP_DOC_CHECK=1` commit 才會自動補記,起點就落在段落中間,它前面的 commit 步驟 3、4、8 全部看不到。
 這時 gate 印的是「記下段落起點 …」、`--segment-base` 也正常 exit 0,兩個訊號都看不出範圍已經縮水。所以段落開始前一定要自己跑一次。
 **有進度表時 `--segment-base` 不是最終答案**:專案有 `task-planner` 產的進度表
-(`docs/designs/…` 的「進度表」)時,`<起點>` 以**表上這段 commits 欄的起點**為準。
+(`docs/designs/…` 的「進度表」)時,`<起點>` 以**表上這段 commits 欄的起點**為準,**只取 `..` 前面那段**(`4b71e3b..` 填 `4b71e3b`)。
+連 `..` 一起代入會靜靜出錯:`git diff 4b71e3b..` 等於 `4b71e3b..HEAD`,漏掉工作目錄還沒 commit 的改動且 exit 0;
+`git diff 4b71e3b.. HEAD` 回 exit 129,放在管線裡整條仍 exit 0。
 兩者在「回頭做 `BLOCKED` 過的段落」時會不一樣 —— 中間插做別段會把 `--segment-base` 往後推,
 用它就漏掉這段先前已經寫好的部分;表上那個較舊、較寬,只會多審
 
@@ -92,8 +94,8 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 
 ## 步驟 8：先算範圍
 
-下面這段是**沒有進度表**時的寫法;**有進度表時 `base` 改填表上這段 commits 欄的起點**(只取 `..` 前面那段,例如 `4b71e3b..` 填 `4b71e3b`;
-連 `..` 一起填時 `git diff` 回 exit 129,整條管線卻 exit 0、輸出空白,看起來就像「範圍是空的」而跳過這一步):
+下面這段是**沒有進度表**時的寫法;**有進度表時 `base` 改填表上這段 commits 欄的起點**(只取 `..` 前面那段,見上方「段落起點與 `<起點>`」;
+連 `..` 一起填時第一條 `git diff` 回 exit 129,整條管線卻 exit 0,只列出還沒 commit 的那幾份,看起來就像範圍正常):
 
 ```bash
 base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] &&
