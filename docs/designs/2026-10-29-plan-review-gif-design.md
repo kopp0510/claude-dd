@@ -9,6 +9,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | plan-review 流程圖（中英 GIF）與同步文件 | DONE | — | 幾何檢查兩版 exit 0、0 警告、連線 9；GIF 144 幀、接點 PSNR 差 ≤1.5dB；README 各嵌對語言版；計數 grep 只剩引用舊錯誤的那句 | f46b73b..beb8956 |
+| S2 | 流程圖改成「誰在做事」分三排的簡單版 | IN_PROGRESS | S1 | 幾何檢查兩版 exit 0、0 警告、連線 7；框裡每句對 SKILL.md 原文；GIF 144 幀、接點 PSNR 差 ≤1.5dB | 062a7dd.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -34,3 +35,12 @@
 - S1-1 新增 `diagrams/src/gen_review.py`、兩張 GIF、兩份 README 嵌入、`diagrams/src/CLAUDE.md` 與根 `CLAUDE.md` 同步、CHANGELOG（一個 commit）
   - 驗證：verify-geometry 兩版 0 項不過、0 警告；playwright 截圖看過；GIF 幀數、接點 PSNR、零 script grep；`ci.yml` 讀文件的 step 在本機跑過
   - commit 訊息：`feat: plan-review 有自己的流程圖（中英 GIF）（S1-1）`
+
+### S2 改成分三排的簡單版
+
+使用者看了 S1 的圖說流程怪：應該看得出「主對話交給裁決者、裁決者分給審查者、審查者回報裁決者、裁決者判通不通過」。
+使用者選了簡單版草圖：三排（主對話／裁決者／審查者）、7 個框、7 條線；「重派」「無法判定」不畫成線，寫在圖下方的「例外」小字。
+
+- S2-1 重寫 `diagrams/src/gen_review.py` 的文字與版面，重出兩張 GIF；同步 `diagrams/src/CLAUDE.md` 與 CHANGELOG
+  - 驗證：verify-geometry 兩版 0 項不過、0 警告、連線 7；playwright 截圖看過；GIF 幀數、接點 PSNR、零 script grep
+  - commit 訊息：`feat: plan-review 流程圖改成分三排的簡單版（S2-1）`

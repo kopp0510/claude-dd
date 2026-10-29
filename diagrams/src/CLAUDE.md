@@ -12,7 +12,7 @@
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（框 ⑤ 是複雜工作先過的 plan-review、⑥ 是 8 步迴圈、⑦ gate 在 ⑥ 正下方；簡單中等任務跳過 ⑤（design-brainstorm 的設計例外）、大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
 | `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 對齊） |
 | `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → plan-review 審草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
-| `gen_review.py` | `review-zh-TW.svg`、`review-en.svg` — 計畫怎麼審（plan-review：計畫寫好 → 裁決者派 ≥3 個審查者 → 讀檔檢查（有效審查者補派後仍不足 3 個 → 無法判定）→ 逐條查證 → 通過／不通過；不通過再送一輪、第 3 輪還不過就停下；讀檔檢查沒過就重派）。框裡每句話對 `skills/plan-review/SKILL.md` 原文 |
+| `gen_review.py` | `review-zh-TW.svg`、`review-en.svg` — 計畫怎麼審（plan-review）。一排一個角色：主對話、裁決者、審查者；計畫寫好交給裁決者 → 裁決者派 ≥3 個審查者 → 審查者附證據回報 → 裁決者查證、判通不通過 → 回主對話開工或改計畫；改好的計畫交給新的裁決者再審（最多 3 輪），第 3 輪還不過就停下問使用者。重派、無法判定這兩條例外路不畫線，寫在「例外」小字。框裡每句話對 `skills/plan-review/SKILL.md` 原文 |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
 
