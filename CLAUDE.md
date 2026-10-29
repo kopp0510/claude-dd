@@ -60,6 +60,8 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    --permission-mode dontAsk --allowedTools "Skill Read Glob Grep" --disallowedTools "Edit Write NotebookEdit Bash Agent"
    < /dev/null > out.jsonl`，正反各一個（該叫的大需求、不該叫的小改動），解析 jsonl 看有沒有 `Launching skill:`，
    並確認 `permission_denials` 是空的 —— dontAsk 沒加 `--allowedTools Skill` 會把 Skill 擋掉，只證明它「想叫」。
+   要量 skill 注入了多少字元，量下一則以 `Base directory for this skill:` 開頭的 user 訊息：Skill 的 tool_result 只有 `Launching skill: <名字>` 那一行
+   （2026-10-30 dd-loop 實測，量法見 `docs/measurements/2026-10-30-dd-loop-trigger/check.sh`）。
    prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不了「不含關鍵字」這種說法；每次約 US$0.4–1.6。
    這種 session 沒有寫檔工具也沒有 AskUserQuestion（題目會印成文字），只測得到「叫不叫、出不出得了草稿」，寫檔與 commit 的步驟要另外在沙盒實跑。
    測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`、`--disallowedTools` 拿掉 `Agent`、加 `--forward-subagent-text`、`--max-budget-usd` 調高 ——
