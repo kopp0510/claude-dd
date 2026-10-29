@@ -11,13 +11,13 @@ GREEN, AMBER, GRAY, MINT = "#5a9e6f", "#fbbf24", "#94a3b8", "#6ee7b7"
 
 ZH = dict(
     title="claude-dd 大工作怎麼跑",
-    sub="要跨好幾段的工作 · 動手前先估段落數，兩段以上交給 task-planner · 小任務只走步驟 1、2，整段才跑 3–8",
-    groups=["動手前 · 先估段落數", "進度表 · 寫進 docs/designs/", "每一段 · 照表由上往下做"],
+    sub="要跨好幾段的工作 · 動手前先估段落數，兩段以上交給 task-planner、草稿先過 plan-review · 小任務只走步驟 1、2，整段才跑 3–8",
+    groups=["動手前 · 先估段落數", "出草稿、審過 · 進度表寫進 docs/designs/", "每一段 · 照表由上往下做"],
     nodes=dict(
-        ask=("交代工作", ["你說要做什麼", "例如一次交代三個功能"]),
         count=("估段落數", ["預估 N 個功能段落"]),
         loop=("照一般 8 步迴圈", ["一圈做得完，不用拆"]),
-        plan=("task-planner 出草稿", ["段落、小任務、要加的測試", "plan-review 審過才寫檔"]),
+        plan=("task-planner 出草稿", ["段落、小任務、要加的測試", "還沒寫檔"]),
+        review=("plan-review 審草稿", ["裁決者派 ≥3 個審查者猛攻", "通過才寫檔，只問你決策題"]),
         table=("進度表", ["跨 session 留著，也進 git", "S1、S2… 由上往下做"]),
         resume=("換 session 或 /compact", ["先讀進度表", "從做到的地方接著做"]),
         tasks=("小任務 S2-1、S2-2…", ["一個一個做：實作、驗證、commit", "只走迴圈的步驟 1、2"]),
@@ -36,13 +36,13 @@ ZH = dict(
 
 EN = dict(
     title="claude-dd: how big work runs",
-    sub="work that spans several increments · count increments first; at two or more, task-planner takes over · small tasks run only steps 1–2, the whole increment runs 3–8",
-    groups=["Before starting · count increments", "Progress table · in docs/designs/", "Each increment · follow the table"],
+    sub="work that spans several increments · count first; at two or more, task-planner drafts and plan-review checks it · small tasks run steps 1–2, the increment runs 3–8",
+    groups=["Before starting · count increments", "Draft, review · table in docs/designs/", "Each increment · follow the table"],
     nodes=dict(
-        ask=("Hand over the work", ["say what should be built", "e.g. three features at once"]),
         count=("Count increments", ["estimate N"]),
         loop=("Normal 8-step loop", ["fits in one loop, no split"]),
-        plan=("task-planner drafts", ["increments, small tasks, tests", "written after plan-review passes"]),
+        plan=("task-planner drafts", ["increments, small tasks, tests", "nothing written yet"]),
+        review=("plan-review checks it", ["adjudicator sends 3+ reviewers", "written only after it passes"]),
         table=("Progress table", ["survives sessions, lives in git", "S1, S2… top to bottom"]),
         resume=("New session or /compact", ["reads the progress table first", "resumes where it stopped"]),
         tasks=("Small tasks S2-1, S2-2…", ["one by one: build, verify, commit", "loop steps 1–2 only"]),
@@ -65,11 +65,12 @@ BW, BH = 250, 100
 XS = [100, 430, 760, 1090]
 YS = [186, 386, 586, 766]
 # 三個分組，每個節點都要在某個容器裡：verify-geometry.py 把容器外的節點記成未通過
-GROUPS = [(76, 146, 958, 164), (406, 346, 958, 164), (736, 546, 628, 344)]
+GROUPS = [(76, 146, 628, 164), (76, 346, 1288, 164), (736, 546, 628, 344)]
 # 節點落在哪一欄、哪一列；count 是菱形，其餘是矩形。
 # 強調色只給兩個焦點（決策與進度表），岔出去的 loop 用灰，其餘同一個金色
-PLACE = dict(ask=(0, 0, GOLD_DIM), count=(1, 0, AMBER), loop=(2, 0, GRAY),
-             plan=(1, 1, GOLD_DIM), table=(2, 1, GREEN), resume=(3, 1, GOLD_DIM),
+# 節點上限 9（verify-geometry.py）：加了 plan-review 之後拿掉「交代工作」，起點直接是 ◇
+PLACE = dict(count=(0, 0, AMBER), loop=(1, 0, GRAY),
+             plan=(0, 1, GOLD_DIM), review=(1, 1, GOLD_DIM), table=(2, 1, GREEN), resume=(3, 1, GOLD_DIM),
              tasks=(2, 2, GOLD_DIM), whole=(3, 2, GOLD_DIM), done=(3, 3, GOLD_DIM))
 
 
@@ -177,9 +178,10 @@ def build(L):
     c0, c1, c2, c3 = [y + BH // 2 for y in YS]
     mid = [x + BW // 2 for x in XS]
     paths = {
-        "ask":    poly((XS[0]+BW, c0), (XS[1]-12, c0)),
-        "one":    poly((XS[1]+BW, c0), (XS[2]-12, c0)),
-        "many":   poly((mid[1], YS[0]+BH), (mid[1], YS[1]-12)),
+        "one":    poly((XS[0]+BW, c0), (XS[1]-12, c0)),
+        # 2 段以上：◇ 往下進 task-planner，再往右依序審查、寫進度表
+        "many":   poly((mid[0], YS[0]+BH), (mid[0], YS[1]-12)),
+        "draft":  poly((XS[0]+BW, c1), (XS[1]-12, c1)),
         "write":  poly((XS[1]+BW, c1), (XS[2]-12, c1)),
         "resume": poly((XS[3], c1), (XS[2]+BW+12, c1)),
         "start":  poly((mid[2], YS[1]+BH), (mid[2], YS[2]-12)),
@@ -191,7 +193,7 @@ def build(L):
     }
     def edge(k, style):
         return f'  <path id="{k}" data-role="edge" d="{paths[k]}" fill="none" {style}/>\n'
-    for k in ("ask", "one", "many", "write", "start", "whole", "done"):
+    for k in ("one", "many", "draft", "write", "start", "whole", "done"):
         o.append(edge(k, f'stroke="{GOLD}" stroke-width="1.6" opacity="0.32" marker-end="url(#ag)"'))
     o.append(edge("resume", f'stroke="{MINT}" stroke-width="1.6" opacity="0.34" marker-end="url(#am)"'))
     o.append(edge("next", f'stroke="{GOLD_DIM}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.45" '
@@ -202,19 +204,19 @@ def build(L):
         draw = diamond if key == "count" else box
         o.append(draw(XS[col], YS[row], name, lines, color))
 
-    o.append(note(XS[3], YS[0]+20, *L["notes"][0]))
+    o.append(note(XS[2], YS[0]+20, *L["notes"][0]))
     o.append(note(XS[0], YS[2]+20, *L["notes"][1]))
 
     # 邊標籤在節點之後畫：先畫的話會被節點蓋掉
-    o.append(label((XS[1]+BW+XS[2]) // 2, c0-12, L["one"], "middle"))
-    o.append(label(mid[1]+13, YS[0]+BH+47, L["many"], "start"))
+    o.append(label((XS[0]+BW+XS[1]) // 2, c0-12, L["one"], "middle"))
+    o.append(label(mid[0]+13, YS[0]+BH+47, L["many"], "start"))
     o.append(label((mid[2]+XS[3]) // 2, c3-12, L["next"], "middle"))
 
     # dur 大致與路徑長成正比（68px→1.44、88px→1.8、323px→7.2），全部整除 7.2；
     # begin 避開 dur 的整數倍，否則小球跳回起點的那一格剛好落在 GIF 的循環接點
-    o.append(ball("ask", GOLD, 1.44, -0.3))
     o.append(ball("one", GOLD, 1.44, -1.0))
     o.append(ball("many", GOLD, 1.8, -0.6))
+    o.append(ball("draft", GOLD, 1.44, -0.5))
     o.append(ball("write", GOLD, 1.44, -0.9))
     o.append(ball("resume", MINT, 1.44, -0.2))
     o.append(ball("start", GOLD, 1.8, -1.3))
