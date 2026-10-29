@@ -29,7 +29,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
 
 ## 目錄結構
 
-- `skills/` — 12 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
+- `skills/` — 13 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）
 - `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
 - `output-styles/` — Output Style（`adhd.md`，部署到 `~/.claude/output-styles/`，使用者用 `/output-style ADHD`／`/output-style default` 自己開關；安裝不改任何 `outputStyle` 設定）。`LICENSE.txt` 記上游 i-have-adhd 的逐節去向、不部署；這層別放其他 `.md`，CI 會把它當成要部署的風格
@@ -151,7 +151,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   → 沉澱本輪所學 → 評分&修正
 ```
 
-第 7、8 步的細則（範圍怎麼算、發現怎麼分類、何時可跳過）見全域模板 §3.9。
+各步的做法細則（起點與範圍怎麼算、步驟 4 怎麼派工與落地報告、第 7、8 步的範圍與發現怎麼分類）在 `skills/dd-loop/SKILL.md`；
+全域模板 §3.9 只留 8 步清單、不能跳的關卡與驗證教訓，並規定段落開始時、步驟 3、4、8 開始前呼叫它。
 
 寫註解、CLAUDE.md、設計文件時的判準在全域模板 **§3.10**，刻意放在 §3.9 之外：
 §3.9 的前言是「每完成一個功能段落…依序走」，放在裡面的話，沒跑迴圈的專案會連這些判準一起跳過。
@@ -252,7 +253,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
   以及 `DD_PIPELINE_ARCHITECTURE.md` 的 **CI 防線表**與**授權清單**。
   （該檔的**數字**有 CI 驗：元件數、安裝編號步驟數、shellcheck 腳本數都在「數字宣稱一致性」裡比對。）
-  **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案**、
+  **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案（含 `skills/dd-loop/SKILL.md`）**、
   **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
   兩份 README 指令範例」名稱完全一致，新增/刪除 flag 忘了同步文件會被擋。

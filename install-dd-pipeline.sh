@@ -37,6 +37,7 @@ OUTPUT_STYLES_DIR="$CLAUDE_DIR/output-styles"
 # 17 agents / 6 dd 指令 / 13 NS commands）均已於 2026-08-04 刪除。
 PROMOTED_SKILLS=(
     "code-simplifier"
+    "dd-loop"                # 8 步迴圈的做法細則：全域 §3.9 明寫呼叫
     "design-brainstorm"
     "frontend-design"
     "gate-guard"             # 只有 hook 的 plugin：擋 Claude 用 --no-verify 繞過 CLAUDE.md gate

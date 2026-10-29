@@ -50,7 +50,7 @@ cd claude-dd
 安裝腳本的進度顯示為 7 步（`1/7` … `7/7`）：
 
 1. 檢查基礎環境（上述硬性需求，缺一即中止）
-2. 安裝 12 個 promoted Skills 到 `~/.claude/skills/`
+2. 安裝 13 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
 5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令
@@ -103,7 +103,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：gate 逼著更新的 `CLAUDE.md` 一樣要審，gate 只確認「有寫」、不確認「寫得對」。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出；有 `task-planner` 進度表時以表上記的起點為準），只看最後一個 commit 會漏掉大半。
 
-三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據。要派時，主對話在同一則訊息裡**直接平行派最少 3 個審查者**（一發只挖到一部分，五發實驗見 [CHANGELOG.md](CHANGELOG.md)，搜「兩發聯集平均」），全部回來後逐條讀程式碼查證；中間不另派裁決者（比較見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。派工要附什麼、報告怎麼落地，見 `templates/global/CLAUDE.md` §3.9 步驟 4。
+三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據。要派時，主對話在同一則訊息裡**直接平行派最少 3 個審查者**（一發只挖到一部分，五發實驗見 [CHANGELOG.md](CHANGELOG.md)，搜「兩發聯集平均」），全部回來後逐條讀程式碼查證；中間不另派裁決者（比較見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。派工要附什麼、報告怎麼落地，見 `skills/dd-loop/SKILL.md`（全域 §3.9 只留步驟清單與關卡，並明寫呼叫這個 skill）。
 
 **要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落，段落裡再列小任務，進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2，全部 commit 完整段才跑步驟 3–8；草稿先交 `plan-review` 審過才寫檔，換 session 或 `/compact` 之後照表接手。不用你開口：複雜工作動手前要先估段落數，兩段以上就自己叫 `task-planner`（規則見 `templates/global/CLAUDE.md` §4.1 與 `skills/task-planner/SKILL.md`）。
 
@@ -173,13 +173,14 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | `/workflow-review:review` | 綜合程式碼審查（安全、效能、配置）。這是命名空間指令，冒號形式才是可呼叫的名稱 |
 | `/output-style ADHD` | 開啟 ADHD 回覆風格（第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
 
-## Promoted Skills（預設部署，12 個）
+## Promoted Skills（預設部署，13 個）
 
 > 「Promoted」指該元件有實證使用紀錄，因此預設部署。唯一的例外是 `gate-guard`：它是 gate 的防護，不是「用過才收」的 skill。
 
 | Skill | 說明 |
 |-------|------|
 | code-simplifier | 程式碼簡化（迴圈步驟 3 的 wrapper） |
+| dd-loop | 8 步迴圈各步的做法細則（起點與範圍、步驟 4 派工與報告落地、步驟 8 範圍）；全域 §3.9 在段落開始與步驟 3、4、8 前明寫呼叫 |
 | design-brainstorm | 蘇格拉底式設計對話（事實自己查、決策才問人） |
 | frontend-design | 前端視覺設計 |
 | gate-guard | 只有 hook、沒有 skill 的 plugin：擋 Claude 用 `git commit --no-verify`／`-n`／`-c core.hooksPath=` 繞過 CLAUDE.md gate（先用 `git config core.hooksPath` 把 hook 關掉的擋不到） |
