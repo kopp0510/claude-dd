@@ -18,8 +18,7 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   `interrupted` / `isImage` / `noOutputExpected`，另有偶發欄位 `gitOperation`(230)、
   `returnCodeInterpretation`(95)、`persistedOutputPath` / `persistedOutputSize`(71)、
   `backgroundTaskId`(50)、`backgroundCwdHint`(11)、`timedOutAfterMs`(9) ——
-  **共 12 種，不是 5 種**（2026-09-12 掃 `~/.claude/projects` 底下 414 份 transcript、
-  9651 筆帶 stdout/stderr 的 `toolUseResult`；括號是出現筆數）。
+  **共 12 種，不是 5 種**（掃本機 transcript 的 `toolUseResult` 得到；括號是出現筆數）。
   但**沒有任何一個是數字退出碼**：最接近的 `returnCodeInterpretation` 只有 95 筆，
   值是 `No matches found` 這種語意註解，不是通用退出狀態。所以這支 hook 是**文字比對**，
   不是「偵測失敗」—— 成功但輸出裡有 `failed`、`error:` 的指令一樣會觸發。
@@ -27,7 +26,7 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
 - **exclusion 一律逐行比對，不可退回整份輸出比對**。舊版用 `[[ "$OUTPUT" == *"$excl"* ]]`
   對整份輸出比，變成一票否決：輸出裡任何一處出現 `console.error` 或 `no error`，
   同一份輸出裡真正的失敗全部被吞掉，而且是完全靜默（零輸出、exit 0，跟「這次沒錯」長得一模一樣）。
-  2026-09-12 修掉，兩個實測會踩到的真實案例已寫成註解留在檔內
+  兩個實測會踩到的真實案例寫成註解留在檔內
 - **不可用 `${OUTPUT//[[:space:]]/}` 這類對整份輸出的 `${var//pattern/}` 替換**。macOS 的
   `/bin/bash` 3.2 做這個替換是超線性的：2026-10-13 實測 ~10KB 輸出在 `zh_TW.UTF-8` 要 57 秒、
   `C` 要 6 秒，而這支 hook 掛在**每一次** Bash 工具呼叫後面 —— 使用者看到的是
@@ -47,13 +46,11 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
   （`npm ERR!`、`ERROR:`、`Build failed`、`console.error`、`.error(`、`no error` …）受保護，
   大幅砍清單會被抓到是**副作用不是設計** —— 動到情境沒碰過的項目，測試不會有任何反應。
   **想知道某個改動有沒有被守到，就自己做一次變異測試**：改壞那一處 → 跑測試 → 還原。
-  2026-09-12 就是這樣量的：第一版有一批變異溜過去，補了 stdout、第一行、hookEventName、
-  雙分支四類情境之後才守住
 - **兩支都在 CI 的 ShellCheck 清單裡**（`.github/workflows/ci.yml`，逐檔寫死 —— 新增腳本要自己加進去），
   也都要 bash 3.2 相容。但兩支的 shell 設定**刻意不同**：`error-capture.sh` 是 `set -eu`，
   裡面不可出現會回非 0 的裸指令；`test-error-capture.sh` 只有 `set -u`，**不可以加 `-e`**。
-  實測（拿一個 `exit 3` 的假 hook 餵給兩個版本）：`set -u` 印 37 行、exit 1、26 個案例
-  全部正確報出 `hook exit=3`；改成 `set -eu` 只印 3 行、exit 3 —— **印完標題就死，
+  實測（拿一個 `exit 3` 的假 hook 餵給兩個版本）：`set -u` 跑完全部案例、每個都正確報出 `hook exit=3`、exit 1；
+  改成 `set -eu` 只印 3 行、exit 3 —— **印完標題就死，
   一個案例都沒跑**，而且看起來只像「輸出比較短」。它整個工作就是去抓 hook 的非 0 結束碼，
   加 `-e` 等於把要驗的東西變成自己的死因。
   （順帶一提，`rc != 0` 那條分支平常沒有情境會走到，就是用這個 `exit 3` 假 hook 驗的）
@@ -63,7 +60,10 @@ vendored skill 裡唯一會實際執行的程式碼：一支 PostToolUse hook，
 上層有**四句**宣稱散在**三份**檔案裡，**改行為就要四句一起改**：
 `../SKILL.md`（「Token overhead」那行）、`../CLAUDE.md`（Hooks 段）、
 `../README.md` **兩句**（What's Included 表格的 Hooks 列，以及 Design Principles 的
-「Zero capture overhead」）。上游原本四句都寫成「成功時零開銷」，都是錯的 ——
-2026-09-12 第一次修只改到四句中的三句，是 code-review 抓到 README 有兩句才補齊。
+「Zero capture overhead」）。上游原本四句都寫成「成功時零開銷」，都是錯的；README 有兩句，最容易漏改。
 這是 vendored 內容（MIT, Reza Rezvani，`../LICENSE`），本地修改要留得住理由 —— 所以踩雷寫在這裡，
 不寫在 commit 訊息裡。
+
+**啟用方式不寫手動設定**：`../.claude-plugin/plugin.json` + 本目錄 `hooks.json` 讓 Claude Code 把它當 skills-dir plugin
+  自動掛上（與 gate-guard 同一套機制，實測見 `skills/gate-guard/hooks/CLAUDE.md`「與上層的關係」）。上游的
+  「加進 `settings.json`」範例已從 `../CLAUDE.md` 拿掉；`error-capture.sh` 檔頭的 `Install:` 註解仍是上游原文，還沒改

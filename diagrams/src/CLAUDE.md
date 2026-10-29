@@ -10,7 +10,7 @@
 | 檔案 | 產出 |
 |---|---|
 | `gen_usage.py` | `usage-zh-TW.svg`、`usage-en.svg` — claude-dd 使用流程（框 ⑤ 是複雜工作先過的 plan-review、⑥ 是 8 步迴圈、⑦ gate 在 ⑥ 正下方；簡單中等任務跳過 ⑤（design-brainstorm 的設計例外）、大工作先用 task-planner 拆段落，寫在右側第 3 則註解） |
-| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 對齊，2026-10-24 S6 改） |
+| `gen_loop.py` | `loop-zh-TW.svg`、`loop-en.svg` — 8 步開發迴圈本身（A 做出來 / B 整理它 / C 留下來；② 回 ① 的虛線是大工作還有小任務；④ 寫「主對話派 ≥3 個審查者、自己逐條查證」，跟全域 §3.9 步驟 4 對齊） |
 | `gen_planner.py` | `planner-zh-TW.svg`、`planner-en.svg` — 大工作怎麼跑（估段落數 → task-planner 出草稿 → plan-review 審草稿 → 進度表 → 每一段：小任務、整段 3–8、標 DONE；換 session 照表接手） |
 
 ### 手寫 SVG（**來源本身就是 `.svg`，要進版控**）
@@ -44,46 +44,42 @@
   四份現況皆通過；沒過就不要重出 GIF
 - **三支產生器也要跑幾何檢查**：`python3 ../../skills/tech-diagram-gif/scripts/verify-geometry.py <產出的 .svg> --cycle 7.2`。
   連線要畫在 `<defs>` 外、標 `data-role="edge"`、座標只用 M/L（`poly()` 產生），小球的 `<mpath>` 直接指向它 ——
-  腳本會先剝掉 `<defs>`、也不認 H/V 簡寫。2026-09-11 以前放在 defs 用 `<use>` 引用，連線數算成 0，
+  腳本會先剝掉 `<defs>`、也不認 H/V 簡寫。放在 defs 用 `<use>` 引用的話連線數算成 0，
   交叉、折數、穿越檢查全部空轉，輸出卻看不出來
-- **`gen_loop.py`、`gen_usage.py` 有 8/31 畫圖時就在的未通過項**（規則多數 8/10 就在 contract 裡，9/7 才有 verify-geometry.py 去量）：
-  loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 ⑧ 在容器外，以及文字溢出（usage 原本還有 `p65` 繞路比 1.35，2026-10-29 加 plan-review 框時重排掉了）。改這兩張只看有沒有**新增**失敗項。
-  文字溢出是腳本估算；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（2026-09-11 四張都 ≥12px）。
-  **2026-09-12 起誤報少很多**：腳本改成會讀 SVG 自己 `<style>` 裡的字級，不再把 `.nm` 一律當 20、`.sm` 一律當 15
-  （這兩支實際是 15 與 11.5–12，全部高估）。實測 `loop-zh-TW` 的溢出失敗項因此從 1 降到 0
+- **`gen_loop.py`、`gen_usage.py` 有檢查腳本出現前就在的未通過項**：
+  loop 的框距 32px、容器 gutter 12px、`next` 3 折，usage 的 ⑧ 在容器外，以及文字溢出。改這兩張只看有沒有**新增**失敗項。
+  文字溢出是腳本估算；以渲染後 `getBBox()` 量到的字尾與框右緣距離為準（要 ≥12px）。
 - **`gen_planner.py` 是照檢查腳本畫的，兩版都 0 項不過，改它要維持全過**。三個做法是為了過檢查：
-  節點文字的字級只寫在 `font-size` 屬性、CSS 不設（**2026-09-12 之後這條只剩「別兩邊都寫」的意義**：
-  腳本已經會讀 `<style>`，優先序跟瀏覽器一樣是 CSS > 屬性 > 內建預設表，所以只寫一邊就不會估錯。
-  兩邊都寫時腳本取 CSS、瀏覽器也取 CSS，仍然一致，但人容易改錯邊）；
-  節點上限 9 個、全部放進容器（容器外的節點算未通過）—— 2026-10-29 給 plan-review 獨立一框時，為了守住上限拿掉了起點的「交代工作」；邊標籤底下墊 `data-role="mask"` 的底色塊（沒有的話標籤間隙沒量到，只印警告）。
+  節點文字的字級只寫在 `font-size` 屬性、CSS 不設（腳本會讀 `<style>`，優先序跟瀏覽器一樣是 CSS > 屬性 > 內建預設表；
+  兩邊都寫仍然一致，但人容易改錯邊）；
+  節點上限 9 個、全部放進容器（容器外的節點算未通過；要加框就得拿掉別的框）；邊標籤底下墊 `data-role="mask"` 的底色塊（沒有的話標籤間隙沒量到，只印警告）。
   分組標題靠右是因為有連線從容器上緣左半邊進來 —— 文字壓線腳本量不到，只能看截圖
 - **loop 的 `task`（② 回 ①）與 `next`（⑧ 回 ①）同色同虛線**，legend 合併成一項；再加回 ① 的線要一起改那項文字
 - **三支的輸出介面一致**：每支都同時產 `.svg` 與同名 `.html`（包裝頁，給 playwright 開）。
-  新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案（2026-08-31 踩過）
+  新增腳本照這個形狀 — 只產 `.svg` 會讓下方重出流程第 2 步找不到檔案
 - **總循環 7.2 秒**：所有 `animateMotion` 的 `dur` 必須整除 7.2，否則 GIF 接不回去。
   錯開相位一律用**負值** `begin`（正延遲會讓小球停在左上角）
 - **`begin` 不可是該球 `dur` 的整數倍**：球跑完一圈會瞬間跳回起點，若 `begin` 對齊
   `dur`，那個跳躍剛好落在 GIF 的循環接點上，每次循環都看得到「跳一下」。
-  驗法：抽第 142、143、0 幀比 PSNR，接點與相鄰幀的差距應 ≤1.5dB
-  （2026-08-31 dev-loop 差 2.9、architecture 差 2.94，都是這個原因）
+  驗法：抽第 142、143、0 幀比 PSNR，接點與相鄰幀的差距應 ≤1.5dB（踩到這個問題時差到 2.9dB）
 - **路徑短於 ~40px 就不要放球**：球是核心 r4 + 光暈 r8（直徑 16px），框間連線只有
   20px 時球會蓋住箭頭、看起來像「圖被覆蓋」。`gen_loop.py` 的 5 條框間連線因此只留
   箭頭，動畫交給跨組長路徑
 - **風格是 Style 8 Dark Luxury**：色票與字級跟隨
-  `~/.claude/skills/tech-diagram-gif/references/style-8-dark-luxury.md`。
+  `../../skills/tech-diagram-gif/references/style-8-dark-luxury.md`。
   畫布 1440×1080。**字級沒有一個統一倍率，不要拿其中一組去套另一組**（以下都是實測值）：
   - `verify-geometry.py` 的 `FONT_SIZES` 退路表 = 該檔 960 基準 ×1.5（`.nm` 13→20、`.sm` 10→15、
     `.al` 10→15、`.ttl` 21→31）。真正對得上這組的只有 `fixtures/sample-flow.svg`，以及
     `dd-pipeline-propagation.style-2.svg` 與 `motion-build-to-operate.svg` 的**節點**字級
     （`.nm` 20 / `.sm` 15 / `.al` 15；但 style-2 的 `.ttl` 是 24，不是 31）
-  - `style-11-event-transit.svg`、`style-12-ops-pulse.svg` 自成一套：`.nm` 19、`.sm`/`.al` 14、`.ttl` 26
+  - `style-11-event-transit.svg`、`style-12-ops-pulse.svg` 自成一套：`.nm` 19、`.al` 14、`.ttl` 26；`.sm` 14 只有 style-11 有
   - 三支產生器又是另一套：`gen_loop` / `gen_usage` 的 `.nm` 15、`.sm` 11.5–12；
-    `gen_planner` 連 `.nm` / `.sm` 都不設（節點字級寫在 `font-size` 屬性上）。三支都沒有 `.ttl`
+    `gen_planner` 連 `.nm` / `.sm` 都不設（節點字級寫在 `font-size` 屬性上）。三支的 `.ttl` 都是 40
 - **字體堆疊含 CJK 後備**（`Songti TC` / `Noto Serif CJK TC` 等），改字體要兩版一起改
 - **legend 與實際連線一一對應**：畫面上沒有的線就不要留在 legend
 - **`gen_usage.py` 框② 的「安裝 7 個步驟」不是迴圈步數**：那是 `install-dd-pipeline.sh`
   自己的步驟數，與 8 步開發迴圈無關。同一張圖上並存兩個數字，改迴圈文案時
-  **不要連它一起替換**（2026-08-31 推 8 步時差點誤改）
+  **不要連它一起替換**
 - **`gen_loop.py` 的 C 組有兩框**（⑦ 沉澱、⑧ 評分）：加減步驟要同時改 `c` 陣列、
   `paths` 的連線與小球 `begin`，並確認 `next` 回起點的線是從最後一框出發
 

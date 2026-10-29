@@ -75,19 +75,5 @@ hook carries no numeric exit code at all — `stdout` / `stderr` / `interrupted`
 command that succeeded while printing `failed` or `error:` will also fire. Matching is per
 line, so one incidental `console.error` no longer silences a real failure beside it.
 
-To enable:
-```json
-// .claude/settings.json
-{
-  "hooks": {
-    "PostToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{
-        "type": "command",
-        "command": "$HOME/.claude/skills/self-improving-agent/hooks/error-capture.sh",
-        "timeout": 30
-      }]
-    }]
-  }
-}
-```
+It is registered automatically by `hooks/hooks.json` — do not add it to `settings.json` by hand
+(see `hooks/CLAUDE.md`).

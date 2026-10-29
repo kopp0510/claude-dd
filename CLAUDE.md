@@ -19,18 +19,11 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 
 ## 部署清單（使用率盤點制）
 
-repo 只保留**有實證使用紀錄**的元件（2026-08-04 盤點留存 9 skills、4 agents、
-dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來源為當次
-對話的完整管線驗證；2026-09-30 新增只有 hook 的 gate-guard —— 它是 gate 的防護、不是「用過才收」的
-元件，是這條規則唯一的例外；2026-10-23 新增自製 plan-review，實證來源為
-`docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，來源是使用者要求，
-實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑），全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
-`PROMOTED_*` 陣列（output style 在 `DD_OUTPUT_STYLES`）。
+repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的
+`PROMOTED_*` 陣列（output style 在 `DD_OUTPUT_STYLES`）。唯一的例外是只有 hook 的 gate-guard：它是 gate 的防護，
+不是「用過才收」的元件。各元件的加入日期與實證來源見 `DD_PIPELINE_ARCHITECTURE.md`「部署清單」。
 
-- 歷次盤點刪除（git 歷史可回溯）：deprecated 桶（全歷史 0 次使用的 34 skills /
-  17 agents / 6 dd 指令 / 13 NS commands）與 misc 桶（SRE 備援性質但零實際調用的
-  11 skills / 5 NS commands）均於 2026-08-04 刪除；取回方式
-  `git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回陣列
+- 2026-08-04 盤點刪掉的元件從 tag 取回：`git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回陣列
 
 ## 目錄結構
 
@@ -41,7 +34,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
 - `diagrams/` — 兩份 README 嵌的 6 張 GIF（使用流程、8 步迴圈、大工作怎麼跑 × 中英），另有 tech-diagram-gif
-  各風格的示範 GIF（2026-09-07 加入）；每張的來源與重出方式見 `diagrams/src/CLAUDE.md`
+  各風格的示範 GIF；每張的來源與重出方式見 `diagrams/src/CLAUDE.md`
   （改來源再重出，勿手改 GIF）。
   三層架構圖於 2026-08-31 移除 — 它畫的是目錄清單而非架構，資訊都在
   `DD_PIPELINE_ARCHITECTURE.md` 的文字版裡，還多一份圖要維護
@@ -58,8 +51,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
 3. 部署前先乾跑（新增或改寫都要）：派 subagent 照 repo 裡這份 `SKILL.md` 做一遍，逐條引用原文回報哪一句讓它卡住、
    只能用猜的、或兩句互相矛盾。skill 有分支就每條各跑一次（例如有沒有設計文件）；只讀的步驟拿實際在用的專案跑、
    不准寫檔；會寫檔或 commit 的步驟改在 scratchpad 的拋棄式 repo 真的跑，跨 session 的流程再派一個只讀專案文件的
-   agent 接手做完，結果用指令核對，不看 agent 自述。2026-09-11 改寫 task-planner：只讀乾跑抓到二十多處；沙盒實跑
-   又抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏
+   agent 接手做完，結果用指令核對，不看 agent 自述。沙盒實跑會抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
    在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
@@ -69,8 +61,7 @@ dd-init、workflow-review；2026-08-10 新增自製 tech-diagram-gif，實證來
    prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不了「不含關鍵字」這種說法；每次約 US$0.4–1.6。
    這種 session 沒有寫檔工具也沒有 AskUserQuestion（題目會印成文字），只測得到「叫不叫、出不出得了草稿」，寫檔與 commit 的步驟要另外在沙盒實跑。
    測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`、`--disallowedTools` 拿掉 `Agent`、加 `--forward-subagent-text`、`--max-budget-usd` 調高 ——
-   不然派不出裁決者，「沒問批准題」會因為審查根本沒跑而自動成立（2026-10-24 plan-review 第 2 輪審查抓到）。
-   2026-09-11 task-planner：三個功能的需求叫起了，一行字的改動沒叫，已有進度表、說「照設計文件繼續做」也沒叫
+   不然派不出裁決者，「沒問批准題」會因為審查根本沒跑而自動成立。
 6. 只有 hook、沒有 skill 的元件也放 `skills/<名字>/`（`.claude-plugin/plugin.json` + `hooks/hooks.json`，不放 SKILL.md），
    會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
    被管的工具（例如 `Bash`），被 hook 擋下的呼叫才會在 tool_result 以「PreToolUse:Bash hook error: <理由>」出現、並列進 `permission_denials`
@@ -107,9 +98,9 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
    沒有時間；subagent 的訊息靠 `parent_tool_use_id != null` 認（每則有 `timestamp`）；**父 session 會有兩筆
    `result`**（`result_index` 0 與 1 —— subagent 在背景跑，父層先結束一輪、它完成後再被喚起），
    只取第一筆會少算整體時間；要讓 subagent 的文字進 jsonl 加 `--forward-subagent-text`。
-   **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型；2026-10-24 S5 是 `claude-fable-5-1`），
-   assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發（S5 B 組兩發因此各多了 2.1 與 2.9 美元、88 與 202 秒）。
-   `--disallowedTools advisor` 擋不掉，要加 `--settings '{"advisorModel":""}'`（同日 scratchpad 實測：前者照樣叫、`modelUsage` 有 fable；後者回「沒有這個工具」、只有 opus）；跑完再讀 `modelUsage` 的鍵核一次
+   **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型），
+   assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發。
+   `--disallowedTools advisor` 擋不掉，要加 `--settings '{"advisorModel":""}'`；跑完再讀 `modelUsage` 的鍵核一次
 
 ## 新增 Command 步驟
 
@@ -120,8 +111,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 兩種都要**同批**同步本檔「目錄結構」那行的數字（`N 個 dd-* 指令`、`N 個命名空間 command 目錄`）——
   CI 的「數字宣稱一致性」step 逐項比對這兩個數字（`CLAUDE.md dd 指令總數`、`CLAUDE.md NS command 總數` 兩個 `ck`），漏改要等 push 才紅燈
 - 改 commands（例如 `/dd-init` 的 Phase 指令）也照「新增 Skill 步驟 3」派 subagent 在沙盒 repo 照做一遍；牽涉 hook
-  管理工具（pre-commit、lefthook、husky）時用 docker 裝真的工具實測 —— 2026-10-01 改 Phase 3，兩輪乾跑抓到 14 處歧義，
-  審查另抓到 husky／lefthook 會在 `npm install` 時把 gate 洗掉
+  管理工具（pre-commit、lefthook、husky）時用 docker 裝真的工具實測 —— husky／lefthook 會在 `npm install` 時把 gate 洗掉，乾跑看不出來
 
 ## 新增 Script 步驟
 
@@ -160,9 +150,6 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ```
 
 第 7、8 步的細則（範圍怎麼算、發現怎麼分類、何時可跳過）見全域模板 §3.9。
-本 repo 是這兩步的 dogfood 來源：2026-08-31 先在這裡實跑 4 次，抓到 2 個真錯誤
-（`diagrams/src/CLAUDE.md` 漏寫 `gen_usage.py` 不產 html、第 8 步條文自己用了
-在該時機為空的 `git diff --cached`），驗證可行後才推進全域模板與 `/dd-init`。
 
 寫註解、CLAUDE.md、設計文件時的判準在全域模板 **§3.10**，刻意放在 §3.9 之外：
 §3.9 的前言是「每完成一個功能段落…依序走」，放在裡面的話，沒跑迴圈的專案會連這些判準一起跳過。
@@ -179,10 +166,6 @@ CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC
 SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit
 （就算沒改程式碼）一樣擋；細節見 `scripts/CLAUDE.md`。
 
-> **舊 DD Pipeline（已刪除）**：`/dd-start → /dd-arch → /dd-approve → /dd-dev → /dd-test`
-> 多階段流程於 2026-07-23 依使用率盤點（全歷史 0 次使用）封存、2026-08-04 刪除，
-> 檔案與舊版 dd-init 見 git 歷史（如 `git show pre-prune-2026-08-04:commands/dd-dev.md`）。
-
 ## 開發本 repo
 
 - clone 後啟用 CLAUDE.md gate（dogfood，本 repo 吃自己的 pre-commit）：
@@ -191,8 +174,6 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   ```
   （`core.hooksPath` 設定後 `.git/hooks/` 會被 git 忽略；`/dd-init` Phase 3
   會偵測此設定並改掛到 hooksPath 目錄，兩者不衝突）
-- gate 規則與逃生口（`SKIP_DOC_CHECK=1`）同各專案：改 `.sh` 等程式碼檔時，
-  該目錄的 CLAUDE.md 必須同批更新
 - 記段落起點、取範圍都用 repo 這份：`scripts/check-claude-md.sh --start-segment` /
   `--segment-base`（全域模板寫的是 `~/.claude/scripts/` 那份）。本 repo 的 hook 跑 repo 這份，
   其他專案的 hook 跑部署那份；安裝腳本不帶 `--force` 也會覆蓋部署那份，gate 還沒驗證完
@@ -250,19 +231,17 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - `~/.claude.json` 只涵蓋官方 `user` 與 `local` 兩種 scope；`project` scope
   （專案根目錄 `.mcp.json`）不在其中，任何以此檔為據的檢查都會低報，文件須註明
 - 增刪 `REQUIRED_MCP` / `OPTIONAL_MCP` 時要**手動**同步**兩份** README 的 MCP 表格 —
-  CI 驗的陣列一致性只涵蓋 skills / agents / commands / scripts / output-styles（`DD_SCRIPTS ↔ scripts/*.sh`
-  於 2026-09-12、`DD_OUTPUT_STYLES ↔ output-styles/*.md` 於 2026-10-29 補上），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
+  CI 驗的陣列一致性只涵蓋 skills / agents / commands / scripts / output-styles（含 `DD_SCRIPTS ↔ scripts/*.sh`
+  與 `DD_OUTPUT_STYLES ↔ output-styles/*.md`），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
   **CI 不驗、只能手動同步的區塊**（不寫總數 — 沒窮舉過，寫個數字只會變成下一個過期宣稱）：
   兩份 README 的安裝步驟清單、指令一覽、官方 Plugins、第三方 Plugin 推薦、MCP 必要表、
   MCP 可選表、前置需求段落、MCP 退化狀態表、**CLAUDE.md 維護規則那幾條**（含 `--no-verify` 與 gate-guard 那條）、**「為什麼要巢狀」
   底下的 gate 對策段落**、**散文裡的「8 步／8-step」字樣**（四方只數圍欄內的編號項、
   第五方只認箭頭行與安裝腳本輸出，標題與內文的步數字樣五道防線一道都碰不到；要改步數時自己
-  `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，**不要在這裡寫死數量** —
-  上一版就在這個括號裡寫了「各 9 處」，跟本條自己的「不寫總數」直接打架）、
+  `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，不要在這裡寫死數量）、
   **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
   以及 `DD_PIPELINE_ARCHITECTURE.md` 的 **CI 防線表**與**授權清單**。
-  （該檔的**數字**已於 2026-09-12 納入 CI：元件數、安裝編號步驟數、shellcheck 腳本數
-  四項都在「數字宣稱一致性」裡比對，不再屬於手動區塊。）
+  （該檔的**數字**有 CI 驗：元件數、安裝編號步驟數、shellcheck 腳本數都在「數字宣稱一致性」裡比對。）
   **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案**、
   **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
@@ -290,33 +269,28 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
 - **動到 `commands/dd-init.md` 的蓋章區塊（三個反引號圍起來、開頭是 `## 開發流程` 的那一整塊）
   就必須同步跳 `dd-loop-rev`** — `grep -n 'dd-loop-rev' commands/dd-init.md` 找到的**兩處**
-  （Phase 1 的「已是現行版」判定式與蓋章標記；**不要在這裡寫行號**，2026-09-12 才因為同一份檔案加了兩行，
-  讓原本寫的 `:51` 指到 code fence 起始行），**外加 grep 抓不到的第三處：緊接在後的「舊版/手寫版」判定線
+  （Phase 1 的「已是現行版」判定式與蓋章標記；**不要在這裡寫行號**），**外加 grep 抓不到的第三處：緊接在後的「舊版/手寫版」判定線
   「有 `8step` 但 rev 比 N 舊」**（這行不含 `dd-loop-rev` 字串，用 `grep -n 'rev 比' commands/dd-init.md UPGRADING.md` 才找得到，
   兩檔各一處）。漏改這條會開出一個判定縫隙：舊的現行值既不等於新值（不算現行版）、也不「比舊值舊」（不算舊版），
-  rev 恰好是那個值的專案跑 `/dd-init` 會落在兩條分支之間（2026-10-02 rev 4 → 5 時踩過，
-  當時 CI 全綠 —— 唯一性檢查只看含 `dd-loop-rev` 字串的行）。**同日已補進「迴圈步數四方一致」那個 step**：
-  錨在分支標籤（`dd-init.md` 的「舊版/手寫版」、`UPGRADING.md` 的「判定為舊版」），取該行 `rev` 之後的
-  第一個數字跟現行 rev 比，所以**改措辭不影響**（措辭跟數字一起被改掉是真實情境，盯措辭只會喊「抓不到」而放過數字錯誤）。
-  剩下的邊界是**改掉分支標籤本身** —— 那時它印「抓不到那行」，不會靜默放過。
-  同批還要補 `:40` 起那串「列出與現行版的差異」（新增一句「rev N 缺什麼」，不然升級對話框少講這次的差異），
+  rev 恰好是那個值的專案跑 `/dd-init` 會落在兩條分支之間。CI 的「迴圈步數四方一致」會比對兩條判定線
+  （`dd-init.md` 的「舊版/手寫版」、`UPGRADING.md` 的「判定為舊版」）上的 rev 是否等於現行 rev；
+  分支標籤本身被改掉時它印「抓不到那行」，不會靜默放過。
+  同批還要補判定線下一行起那串「列出與現行版的差異」（`grep -n '列出與現行版的差異' commands/dd-init.md`）（新增一句「rev N 缺什麼」，不然升級對話框少講這次的差異），
   以及 `UPGRADING.md` 寫死的 rev 值與 CHANGELOG 未發布區塊。
   **界線**：蓋章區塊 = 三個反引號 `markdown` 圍起來的那一整塊，用
   ``grep -n '^```' commands/dd-init.md | head -2`` 取得起訖行；Phase 0–6 的執行指示在區塊外，
   改它們不必跳 rev。注意上面那個 `dd-loop-rev` 的 grep **不能**拿來夾範圍 ——
   它的第一個命中（Phase 1 判定式）本身就在區塊外。Phase 1 的判定是「rev 等於現行值 → 已是現行版，跳過」，
   不跳號的話已蓋章的專案永遠拿不到這次修正，跑 `/dd-init` 還會被告知「已是最新」。
-  CI 只驗 dd-init.md 檔內 rev 前後一致（種類數 == 2），**不驗「內容改了 rev 有沒有跳」**，
-  UPGRADING.md 那份 CI 根本不看。2026-09-12 踩過：同一輪前面已有一個 commit 動過蓋章區塊沒跳號，
-  靠 code-review 才抓到
+  CI 驗 dd-init.md 檔內 rev 前後一致、兩條判定線上的 rev 等於現行 rev，但**不驗「內容改了 rev 有沒有跳」**
+  （同一輪前面的 commit 動過蓋章區塊沒跳號，CI 全綠，靠 code-review 才抓到）
 - **CHANGELOG 條目一律寫進 `## 未發布`，已發布的版本區塊不可再動**（連錯字也不行，要改就發新版）——
   CI 的「CHANGELOG 已發布區塊不可改動」以最新的 `v*` tag 為基準三道擋下：逐 `## <x.y.z>` 區塊比對、
   從 tag 裡最新的版本標題到檔尾逐字相同（這道才擋得住「新標題插進區塊之間」與「區塊順序對調」）、
   以及「與 tag 有差異卻既沒有 `## 未發布` 也沒有新版本區塊」。
-  2026-10-05 踩過：用腳本插條目時索引差一位（`n>=36` 跳過 0-based 35 的 `### Changed`），兩條本輪變更
-  寫進了已發布的 `## 1.2.0`；`git diff` 只看得到「CHANGELOG 多了幾行」，當時所有檢查都綠。
-  **拿腳本改 Markdown 區塊時改用「錨在標題字串」而不是行號／索引**（`L.index('### Changed')` 會抓到
-  第一個，整份檔案有好幾個同名小節時要先切出目標版本區塊再找）
+  **拿腳本改 Markdown 區塊時錨在標題字串，不用行號／索引**（`L.index('### Changed')` 抓的是
+  第一個，整份檔案有好幾個同名小節時要先切出目標版本區塊再找）—— 曾因索引差一位把條目寫進已發布的 `## 1.2.0`，
+  `git diff` 只看得到「CHANGELOG 多了幾行」，當時所有檢查都綠
 - **ci.yml 的 `run: |` 是 YAML block scalar，裡面不能用 heredoc**：`EOF` 寫在第 0 欄會提早結束 scalar、
   整份 YAML 壞掉（縮排到 block 內才算內容）。要把多行餵給 `while` 就先寫檔再 `done < 檔案`，順便避開
   `grep ... | while` 的 subshell 把 `fail=1` 丟掉（那種壞法是靜默變綠）。改完先驗 YAML：本機沒有 pyyaml，
@@ -324,12 +298,9 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `python3 -c "import yaml"` 會 ModuleNotFoundError），不然要等 push 才知道
 - **ci.yml 裡任何「列出檔案再逐檔處理」的指令都要 `git -c core.quotePath=false`**：git 預設把非 ASCII 路徑
   轉成 `"docs/…-\350\210\207-…"` 這種跳脫字串，`awk`／`grep` 拿它當檔名開不了，**而 step 照樣 exit 0** ——
-  那個檔就被整道檢查靜默跳過。2026-10-05 踩過：「迴圈步數第五方」的 `git ls-files '*.md' '*.sh'` 少了它，
-  新增一份中文檔名的設計文件後，裡面步數寫錯也不會被擋（實測修前 exit 0、修後 exit 1 並指名該檔）。
-  gate 腳本早就有這條規矩（`scripts/CLAUDE.md`），但當時沒有推廣到 ci.yml
+  那個檔就被整道檢查靜默跳過（例如中文檔名的設計文件裡步數寫錯也不會被擋）
 - **新增 `.github/workflows/ci.yml` 的檢查 step 必做負面測試**：故意把被檢查的來源改壞一行，
-  確認該 step 真的紅燈，再還原確認回綠。`scripts/CLAUDE.md` 只對 gate 訂了這條規矩、
-  ci.yml 其他 step 沒有 — 而 2026-09-12 新增的兩道護欄，修的正是「抓 0 筆卻印綠燈」。
+  確認該 step 真的紅燈，再還原確認回綠（step 抓 0 筆時常會印綠燈）。
   同批補一列進 `DD_PIPELINE_ARCHITECTURE.md` 的 CI 防線表（沒有任何檢查會擋那張表過期）。
   驗相容性（例如 bash 3.2）時，變異要能改變被驗的結果：3.2 遇到 `${x,,}` 只印 bad substitution、結果照舊，
   只看 pass／fail 的測試照樣全綠，要把 shell 錯誤訊息判為失敗。寫進文件的變異結果要註明插在哪一行（位置不同，❌ 數從 9 到 61 都有）
@@ -337,8 +308,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   code-simplifier 對一份只有 263 行的 `README.md` 報 `README.md:323`，而它描述的內容
   逐條屬實。行號錯得離譜反而好認，錯個三五行才危險 — 一律以原文比對為準，不信行號。
   **它回報的「數字」同理**：要寫進文件的量測值（字級、案例數、幾處誤報）一律自己重跑一次再寫。
-  同日踩過：reviewer 說產生器的 `.ttl` 是 40，照抄進 `diagrams/src/CLAUDE.md`，
-  實測三支產生器**根本沒有 `.ttl`**；同一段我另外抄的三組溢出數字倒是全對 —— 所以不能靠感覺挑
+  ⚠️ 自己的「實測」也會錯：reviewer 說產生器的 `.ttl` 是 40，當時「實測」後改寫成「三支都沒有 `.ttl`」，
+  其實三支都有 `.ttl` 40px（`grep -n ttl diagrams/src/gen_*.py`）—— 寫進文件前把實測指令與輸出一起附上
 - **在規則文件裡加「例外條款」時，要掃同一份檔案裡所有把該規則寫死成指令的地方**：
   用 `<佔位符>` 描述的段落會自動套用新例外，**把指令逐字寫死的那一段不會**。
   2026-09-12 踩過：全域模板 §3.9 前言加了「有進度表時 `<起點>` 改用表上那個起點」，
@@ -354,7 +325,6 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **`claude -p` 的 stream-json 要進 repo 前先去識別，而且要認得 Claude Code 自己編碼過的路徑**：init 訊息的 `memory_paths` 等欄位
   把路徑裡的 `/` 換成 `-`（`-Users-<名字>-…`、`-private-tmp-…`），只換斜線形式、只 grep `/Users/` 都抓不到，還會回 0 筆看起來像通過。
   init 另有連接器清單、plugin 路徑。做法：只抽判定要用的欄位（照 `docs/measurements/2026-10-29-adhd-style/run.sh`），掃描樣式加 `-Users-`、`-private-tmp-`。
-  2026-10-29 第一批輸出就這樣漏掉使用者名稱，三個審查者都抓到，推之前 amend 拿掉
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
@@ -384,7 +354,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 > 不可整節掛名。2026-09-07 `tech-diagram-gif` 借鏡 diagram-design（MIT）時，LICENSE.txt 把整節
 > 「產出前檢查清單」掛到對方名下 — 實際只有四項 remove-test 是借的，其餘來自本 skill 與
 > fireworks-tech-graph，同時構成**過度歸屬**（掛了不是人家的）與**不足歸屬**（漏掉真的借的硬閘門 1）。
-> 判準：能逐條指出「哪一段來自誰」才算寫對；寫不出來就是範圍還沒想清楚。commit b28c22c 已修。
+> 判準：能逐條指出「哪一段來自誰」才算寫對；寫不出來就是範圍還沒想清楚。
 >
 > **對方是 port／fork 時，掛名要逐句掛給寫那句的人**：NOTICE 只分到檔案、不分到句子 —— pstack-claude 的 NOTICE.md
 > 把 `tdd`、worktree-cleanup 記成上游，借的那兩句卻是 port 後來加的。最快的判法是拿原句去比上游原檔
@@ -392,7 +362,6 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 > 要知道 port 哪個 commit 加的，用 `git log -S '<原句>'` 看 commit 訊息；作者欄看不出來（上游的句子也是 port 的維護者 commit 進來的）。
 > ⚠️ **shallow clone 先 `git fetch --unshallow`**：邊界之前就有的句子，`git log -S` 會算在邊界那個不相干的 commit 頭上，
 > exit 0、看起來有答案；邊界之後加的才查得對（2026-10-19 depth 1 與 depth 50 實測）。
-> CHANGELOG 第一版就把上游的 `reflect`、babysit 兩句掛給了 port（`docs/reviews/2026-10-18-pstack-gaps/S1-a.md` 的 A3）。
 
 ## 殘留清理（手動）
 
@@ -401,7 +370,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 類型 | 範例 | 風險 |
 |---|---|---|
 | 安裝包 zip | `~/.claude/skills/*.zip` | 純垃圾，不會載入但佔空間 |
-| 分類子目錄 | `~/.claude/skills/{communication,development,documentation,git,security}/` | 內含同名 skill（如 `code-reviewer`、`security-auditor`），與 DD wrapper 撞名 |
+| 分類子目錄 | `~/.claude/skills/{communication,development,documentation,git,security}/` | 內含同名 skill（如 `code-reviewer`、`security-auditor`），與 DD 的同名 agent 撞名 |
 
 排查指令：
 
