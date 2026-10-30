@@ -18,7 +18,7 @@
 - **`test-gate.sh` 在 gate 的輸出裡看到 shell 錯誤就判失敗**（`bad substitution`、`syntax error`、`command not found`、
   `invalid option`、`unbound variable`，以及 bash 報腳本錯誤固定的「`: line N: `」前綴）：bash 3.2 不支援的寫法常常
   只印一行錯誤、判斷結果照舊，只看 pass／block 的話 macOS job 照樣全綠。2026-10-01 實測：在 gate 的
-  `staged=$(…)` 下一行（第 153 行）加 `lc=${staged,,}`，3.2 下 36 個 ❌、bash 5 全過；`shopt -s lastpipe`、
+  `staged=$(…)` 下一行加 `lc=${staged,,}`，3.2 下 36 個 ❌、bash 5 全過；`shopt -s lastpipe`、
   `${a[-1]}` 這類清單外的錯誤，是加了「`: line N: `」前綴才抓到的。`test-install.sh` 不做這層檢查，靠 `set -e`：
   3.2 在 `set -e` 下遇到這類錯誤會直接中止
 - 兩支都在暫存目錄裡跑、`trap` 跑完清掉（本機會拿來重跑與做變異測試）
