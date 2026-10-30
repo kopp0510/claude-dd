@@ -23,6 +23,8 @@
 - **新腳本 `scripts/dd-init-upgrade.sh`（部署到 `~/.claude/scripts/`）**：`/dd-init` 升級舊蓋章區塊用。把專案 CLAUDE.md 區塊裡的行，
   逐字對照歷代蓋章區塊出現過的行，分成範本原文（換新）與專案自己加的內容（留在原本那一步底下）；`--plan` 只列分類，`--apply` 寫到另一個檔，都不改原檔。
   情境測試 `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 macOS bash 3.2 的 CI job 都跑（兩個 job 的 checkout 改成 `fetch-depth: 0`）。`/dd-init` Phase 1 升級 `8step` 舊版時改用它（見下方 rev 13 那條）
+- **CI 新增「現行蓋章區塊的每一行都在升級清單裡」**：`commands/dd-init.md` 的蓋章區塊與區塊外的 React 片段，每一行都要在 `dd-init-upgrade.sh --list` 裡；
+  漏加的話下次升級時那幾行會被當成專案自己的內容留下，新舊並存
 
 ### Changed
 
@@ -37,6 +39,7 @@
 - **`/dd-init` Phase 1 升級 `8step` 舊版改用 `dd-init-upgrade.sh`**：先列出將刪除與保留的行，同意才換、換之前備份；
   判斷順序改成先看標記、再看 `## 開發流程` 標題 —— 區塊掛在別的標題底下的專案（例如 rental-management）不會再被加第二份區塊。
   `6step`／`7step` 與沒有標記的區塊照舊由 agent 判斷
+- **CI「改了蓋章區塊就要跳 `dd-loop-rev`」連區塊外的 React 片段一起比**：React 片段搬出區塊後，只改它原本不必跳 rev，已蓋 rev 13 的 React 專案會拿不到修正
 
 ## 1.6.12 — 2026-10-30
 
