@@ -70,6 +70,10 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
    被管的工具（例如 `Bash`），被 hook 擋下的呼叫才會在 tool_result 以「PreToolUse:Bash hook error: <理由>」出現、並列進 `permission_denials`
 
+7. SKILL.md 與 `commands/*.md` 內文不要出現 `$<數字>`：帶參數呼叫時會被換成第 N 個參數、不報錯
+   （2026-10-30 dd-loop 的「US$5.13」被換成 repo 路徑）。金額寫「美元」；shell 範例裡的 `$0`／`$1` 要實測會不會被換。
+   自查：`grep -rn '\$[0-9]' skills/*/SKILL.md commands/*.md`
+
 ### Skill hook 路徑規範（強制）
 
 skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd 解析的路徑：
