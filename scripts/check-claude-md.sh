@@ -228,6 +228,7 @@ case "$1" in
             echo "   2. 這一段真的不需要（diff 全是資料／設定，或已被機械檢查完全覆蓋）："
             echo "      建 docs/reviews/S<段落>-SKIP.md 寫明理由，並在 commit 訊息加"
             echo "      SKIP-REVIEW: <段落> <理由> 這行 trailer"
+            echo "      （緊接在 Co-Authored-By 那一行前面，中間不能空行，不然 git 不認它是 trailer）"
             echo ""
             echo "   （不想採用這個慣例：刪掉 docs/reviews/ 目錄，本檢查就完全不啟用）"
             exit 1

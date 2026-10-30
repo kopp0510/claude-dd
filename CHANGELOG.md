@@ -24,6 +24,12 @@
   找到就第一句講那個情況，找不到才說成立並附依據。只管「先查再答」，不規定第一句不准說「對」。
   2026-10-30 沒有這條時的基線測試（強全稱問法、全新 session）6 發都沒有順著說，所以這條沒有證據顯示必要；使用者選擇照樣加入。
 
+### Fixed
+
+- **`/dd-init` Phase 3 的 husky v8 說明不再寫 `$` 加數字**：帶參數呼叫 `/dd-init` 時那段會被換成參數（2026-10-30 用 `/dd-init ZZARG` 實測，印出 `dirname -- "ZZARG"`）。
+- **`dd-loop` skill 兩處補漏**：diff 檔第 ② 項補上「simplifier 新增的檔 `git diff HEAD` 看不到，另外列出」；SKIP 理由在沒有設計文件時寫在回報裡。
+- **gate 擋下「上一段沒有 review 報告」時，多印一行**：`SKIP-REVIEW` trailer 要緊接在 `Co-Authored-By` 前面、中間不能空行。
+
 ## 1.6.13 — 2026-10-30
 
 ### Added
