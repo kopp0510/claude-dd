@@ -66,7 +66,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
       先問使用者留哪份（只留新的就把舊圍欄刪掉，只留舊的就不補），不要兩份並存
    3. `--plan` 列了「疑似改寫過的步驟行」：檔裡會有兩行同號步驟（新的與專案改寫過的），列了「區塊外還有範本行」：會有兩份同名小節。
       每一處都問使用者留哪份（或合併），照答案改完，確認區塊內（`dd-loop-version` 標記到 `CLAUDE.md 維護` 標題之間）1–8 每號剛好一行才往下走：
-      `awk '/dd-loop-version/ {f=1} f && /^#+ CLAUDE\.md 維護/ {exit} f && /^[0-9]+\. / {print NR": "$0}' CLAUDE.md.dd-upgrade`。
+      `awk '/dd-loop-version/ {f=1} f && /^#+ CLAUDE\.md 維護/ {exit} f && /^[0-9]+\. / {printf "%d: ", NR; print}' CLAUDE.md.dd-upgrade`。
       只看區塊內：專案在區塊外自己的編號清單（安裝步驟之類）不算重號，不要動它
 8. 取代之前先備份：`cp CLAUDE.md "CLAUDE.md.bak-$(date +%Y%m%d%H%M%S)"`，再 `mv CLAUDE.md.dd-upgrade CLAUDE.md`。
    把備份路徑告訴使用者，並說明備份檔沒有進版控、確認沒問題後自己刪；Phase 5 不要 add 它
