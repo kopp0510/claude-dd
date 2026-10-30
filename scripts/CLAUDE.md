@@ -166,7 +166,9 @@
     gawk 結果一樣（三種都實跑過）。別用 gawk 專屬函式（`gensub`、`asort`）—— ubuntu runner 的 `awk` 不保證是 gawk
   - **找區塊**：起點是標記上方最近的標題；往下切單位（空行跟著前一個、圍欄整塊一個），遇到「同級或更高、不在清單裡」的標題停；
     終點是停下之前**最後一個範本單位** —— 它之後的在地內容原地不動。在地單位跟著前面最近的範本錨點（編號步驟行、`驗證不過`、
-    `CLAUDE.md 維護` 標題）插回新區塊同一處
+    `CLAUDE.md 維護` 標題）插回新區塊同一處。專案改寫過的步驟行（第 0 欄的 `N. `）本身算在地，但它底下的子項仍錨到步驟 N
+  - **標題比對不看 `#` 的個數**（`inL()`）：區塊掛在在地標題底下時，`--apply` 會把新區塊的標題降級（`## CLAUDE.md 維護` → `####`）；
+    逐字比對的話下一次升級會把降級後的標題當在地行留下，多一個空標題（S2 步驟 4 實測）
   - 情境測試 `tests/test-dd-init-upgrade.sh`（變異對照見 `tests/CLAUDE.md`）
 - `githooks/pre-commit` — 本 repo 自用（dogfood），轉呼叫上面的 gate。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。

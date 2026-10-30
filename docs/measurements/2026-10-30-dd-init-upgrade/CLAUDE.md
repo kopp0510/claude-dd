@@ -10,6 +10,7 @@
 - `run.sh <案例> <同意|拒絕>` —— 跑 `claude -p "/dd-init …"`；沒有 AskUserQuestion，prompt 直接告訴它升級題的答案
 - `check.sh` —— 從 jsonl 抽工具呼叫順序與最終 CLAUDE.md 的計數
 - `results.txt` —— 2026-10-30 那一次的 `check.sh` 輸出（路徑換成 `<OUT>`）；8 例合計 US$5.08
+- `results-after-review.txt` —— S2 步驟 4 修正後、重新部署再跑一次的 `check.sh` 輸出（步驟 5）；8 例合計 US$5.16，結果與第一次相同
 - `*.prompt.txt` —— 每個案例的 prompt 原文
 
 ## 此層慣例

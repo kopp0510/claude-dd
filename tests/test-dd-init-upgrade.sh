@@ -49,9 +49,10 @@ stamp < "$TPL" > "$WORK/new"
 [ -s "$WORK/new" ] || { echo "❌ 抽不到現行蓋章區塊"; exit 2; }
 trimmed "$WORK/new" | LC_ALL=C sort -u > "$WORK/new.trim"
 
-# 舊版區塊插入在地內容：步驟 4、5、8 底下、驗證不過之後（含一行逐字等於 `---` 的）、CLAUDE.md 維護底下、區塊外一個在地小節
+# 舊版區塊插入在地內容：步驟 1 之前、步驟 4、5、8 底下、驗證不過之後（含一行逐字等於 `---` 的）、CLAUDE.md 維護底下、區塊外一個在地小節
 add_locals() {
   awk '
+    /^1\. / && !p { print "LOCALP 步驟 1 之前的在地註記"; print ""; p = 1 }
     /^5\. / { print "   - LOCAL4 步驟 4 的在地規則" }
     /^6\. / { print "   - LOCAL5 專案驗證："; print "     ```bash"; print "     curl -s localhost:3000/LOCAL5"; print "     ```" }
     /^驗證不過/ { print "   - LOCAL8 步驟 8 的在地規則"; print ""; print; print ""; print "LOCALV 驗證不過之後的在地一行"; print "---"; next }
@@ -73,8 +74,9 @@ for tag in v1.6.12 v1.6.4 6a9addd v1.1.0; do
   run "${tag}：--plan" 0 --plan "$f"
   run "${tag}：--apply" 0 --apply "$f" "$o"
   [ -f "$o" ] || { ng "${tag}：沒有產生輸出檔"; continue; }
-  for s in LOCALH LOCAL4 "LOCAL5 專案驗證" "localhost:3000/LOCAL5" LOCAL8 LOCALV LOCALM LOCALX; do count_is "$o" "$s" 1; done
+  for s in LOCALH LOCALP LOCAL4 "LOCAL5 專案驗證" "localhost:3000/LOCAL5" LOCAL8 LOCALV LOCALM LOCALX; do count_is "$o" "$s" 1; done
   before "$o" "LOCALH" "## 開發流程" || true
+  before "$o" "dd-loop-version" "LOCALP" && before "$o" "LOCALP" "1. **實作功能" || true
   before "$o" "4. 跑 **code-review**" "LOCAL4" && before "$o" "LOCAL4" "5. **再測一次**" || true
   before "$o" "5. **再測一次**" "LOCAL5" && before "$o" "curl -s localhost:3000/LOCAL5" "6. **再 commit**" || true
   before "$o" "8. **評分" "LOCAL8" && before "$o" "LOCAL8" "驗證不過" || true
@@ -121,6 +123,18 @@ count_is "$o" "## 開發流程" 0
 count_is "$o" "dd-loop-version" 1
 grep -qx '#### CLAUDE.md 維護' "$o" && ok "rental 型：新區塊的 ## 降成 ####，掛在在地 ### 底下" || ng "rental 型：找不到降級後的 #### CLAUDE.md 維護"
 before "$o" "dd-loop-version" "## 部署" && count_is "$o" "LOCALD" 1 || true
+# 升級過一次（標題已降級）的再升一次：結果不變，降級後的 #### CLAUDE.md 維護 不會被當成在地行多留一份
+run "rental 型：第二次 --apply" 0 --apply "$o" "$WORK/rental.out2.md"
+if cmp -s "$o" "$WORK/rental.out2.md"; then ok "rental 型：第二次升級輸出不變"; else ng "rental 型：第二次升級輸出改變了"; diff "$o" "$WORK/rental.out2.md" | head -10 | sed 's/^/    /'; fi
+
+# ---- 3b. 專案改寫過步驟 5 那一行：它底下的驗證指令仍算步驟 5（Phase 1 靠那一節決定佔位行填或刪） ----
+f="$WORK/s5.md"; o="$WORK/s5.out.md"
+awk '/^5\. / { print "5. **再測一次**（本專案改寫）"; print "   - LOCALS5 npm run e2e"; skip = 1; next } skip && /^6\. / { skip = 0 } !skip { print }' "$WORK/v1.6.12.blk" | wrap > "$f"
+run "改寫步驟 5：--plan" 0 --plan "$f"
+sed -n '/^## 步驟 5 既有的驗證指令行/,/^## /p' "$OUT" | grep -q 'LOCALS5' \
+  && ok "改寫步驟 5：底下的指令列在「步驟 5 既有的驗證指令行」" || ng "改寫步驟 5：「步驟 5 既有的驗證指令行」沒列 LOCALS5"
+run "改寫步驟 5：--apply" 0 --apply "$f" "$o"
+before "$o" "5. **再測一次** —" "LOCALS5" && before "$o" "LOCALS5" "6. **再 commit**" || true
 
 # ---- 4. 在地 ## 夾在步驟 8 與驗證不過之間：後面的範本行換不到，--plan 要點名 ----
 f="$WORK/cut.md"

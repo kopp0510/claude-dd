@@ -425,8 +425,12 @@ jobs:
           fi
           git show "$tag:commands/dd-init.md" > /tmp/dd-init-tagged.md
           # 蓋章區塊 = 檔案裡第一個 ```markdown 到下一個 ``` 之間；rev 標記在區塊裡，比對前先把號碼換掉，
-          # 不然「只跳了號」也會被當成內容改了
-          stamp() { awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f' "$1" | sed -E 's/dd-loop-rev: [0-9]+/dd-loop-rev: N/'; }
+          # 不然「只跳了號」也會被當成內容改了。rev 13 起 React 片段搬到區塊外的 ````markdown 圍欄（偵測到 React 才補進區塊），
+          # 它一樣會被蓋進專案，改了也要跳 rev，所以接在區塊後面一起比（舊 tag 沒有這個圍欄，那一半是空的）
+          stamp() {
+            { awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f' "$1"
+              awk '/^````markdown$/ && !f {f=1; next} f && /^````$/ {exit} f' "$1"; } | sed -E 's/dd-loop-rev: [0-9]+/dd-loop-rev: N/'
+          }
           stamp /tmp/dd-init-tagged.md > /tmp/stamp-old.txt
           stamp commands/dd-init.md > /tmp/stamp-new.txt
           # 先確認抓到東西非空：區塊的開頭改成別的語言標記時，兩邊都會是空的、比對起來「相同」
