@@ -129,6 +129,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 | 迴圈步數四方一致（模板 §3.9 ↔ 蓋章版 ↔ 兩份 README ↔ 版本標記） | 編號清單的步數漂移；另驗 `dd-loop-rev` 的標記格式、檔內唯一性，以及舊版判定線（dd-init.md 與 UPGRADING.md 各一處）寫的 rev 等於現行 rev —— 那兩行不含 `dd-loop-rev` 字串，唯一性檢查看不到。錨在分支標籤而非措辭，改寫句子不會讓它失效 |
 | dd-init 蓋章區塊改了就要跳 dd-loop-rev（以最新 `v*` tag 為基準） | 改了蓋章區塊卻沒跳 rev（或 rev 變小）—— 已蓋章的專案跑 `/dd-init` 會被告知「已是現行版」而拿不到修正，不報錯；比對前先把區塊裡的 rev 號碼換掉，抓不到區塊、區塊第一行不是 `## 開發流程`、或抓不到 rev 標記時紅燈而不是放過。只是下限：發版後已跳過一次，再改沒跳擋不到 |
 | 部署內容裡的 `~/.claude/` 路徑要指得到東西（scripts／tests／commands／skills／agents／output-styles／templates） | 指向只有作者本機才有的檔（例如 `~/.claude/rules/<本機檔>`）的死指標：第一層不是本 repo 部署的目錄、也不是 Claude Code 自己的就紅燈；部署目錄則部署後要真的有（repo 有那個檔，且不是 `scripts/` 第一層以外、`output-styles/` 非 `.md`、`commands/` 第一層非 `dd-*.md`、命名空間 `README.md` 這幾類不部署的）。`projects/`、`plugins/` 與含 `<` `*` `{` `$` `...` 的佔位寫法只驗第一層；路徑字元不列舉 ASCII（中文檔名不會被截斷成目錄本身）；零命中時紅燈而不是放過 |
+| 現行蓋章區塊的每一行都在升級清單裡（`commands/dd-init.md` 區塊與區塊外的 React 片段 ↔ `scripts/dd-init-upgrade.sh --list`） | 改了蓋章區塊卻沒更新升級腳本的清單 —— 下次升級時改過的行被當成專案自己的內容留下、新舊並存，不報錯。抽到空區塊、第一行不是 `## 開發流程`、沒有以 `## CLAUDE.md 維護` 的內容結尾（被第 0 欄的 ``` 截斷）時紅燈而不是放過 |
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
 | gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
 | dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個。要 `fetch-depth: 0`（兩個 job 都設了） |

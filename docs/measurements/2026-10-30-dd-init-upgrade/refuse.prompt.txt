@@ -1,0 +1,3 @@
+/dd-init
+
+（測試環境說明：只執行 Phase 0 與 Phase 1，Phase 2 之後全部跳過、不要掛 hook。這個環境沒有 AskUserQuestion：遇到要問使用者是否升級的那一題時，不要停下來，當作使用者回答「拒絕」，照那條繼續做完 Phase 1。）
