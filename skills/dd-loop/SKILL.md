@@ -50,7 +50,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 - ⚠️⚠️ **派工的 prompt 交事實(行號、數字、實測輸出),不要交「我判斷元凶是 X」** ——
   自己的錯誤診斷寫進去,reviewer 會跟著錯(實證：兩個都接受了錯的框架，只有第三方去查才發現)。要寫就標明是推測。
 - **派工前先準備一個 diff 檔**(放 scratchpad),內容:①「範圍要明講」那條算出的整段 diff;
-  ②步驟 3 自己改了什麼(依序跑時 `git diff HEAD`,分開附 —— simplifier 改了行為正是要抓的,
+  ②步驟 3 自己改了什麼(依序跑時 `git diff HEAD`,simplifier 新增的檔它看不到,另用 `git ls-files --others --exclude-standard` 列出來標明是步驟 3 加的;分開附 —— simplifier 改了行為正是要抓的,
   混在整段裡審查者看不出是誰改的);③**派工當下**被改到檔案的整檔內容(依序跑時取工作目錄版本,
   就是 diff 描述的那一版,另把未追蹤的新檔放整檔;與步驟 3 並行時取 `HEAD` 版本,因為 simplifier 正在改工作目錄);
   ④步驟 1(重跑時加步驟 5)已經跑過的驗證輸出,**連同預期值一起寫**,派工 prompt 標明這些已確認、不要重跑(不寫的話它會把測試、build、渲染指令整組再跑一遍)——「跑過」不代表結果對(實測)。
@@ -92,7 +92,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
     報告檔的命名慣例:見專案自己的 `docs/reviews/CLAUDE.md`。
   - 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由(有 `docs/reviews/` 時 gate 的 `--start-segment` 要範圍裡新增一份
     `S<數字>…md`,只加 trailer 開下一段時會被擋),commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`(放在 `Co-Authored-By` 那一段裡、緊接在它前一行,**中間不能空行** —— 隔了空行 git 就不認它是 trailer,下面的查法回空值、commit 照樣成功),
-    同時寫進設計文件該段底下。查的時候用
+    同時寫進設計文件該段底下(沒有設計文件就寫在回報裡)。查的時候用
     `git log --format='%h %(trailers:key=SKIP-REVIEW,valueonly)'`,**不要用 `--grep`**
     (描述這條規則的 commit 自己就會命中)。
   - ⚠️ **目的不是讓說謊變不可能**(報告內容真偽驗不出來),而是把**「靜默省略」這個選項拿掉**。

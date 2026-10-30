@@ -209,7 +209,7 @@ if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]; then "$HOME/.claude/script
      （這個 repo 先不裝；或他在自己的 hook 裡呼叫 `~/.claude/scripts/check-claude-md.sh`、非 0 就讓 hook 失敗），
      不裝就跳過第 4 步，第 5 步改講「這個 repo 沒裝 gate」。
      插入的內容是「不存在」那條的那行註解加 gate 那行（兩行；hook 常會進版控，留註解協作者才看得懂），插在**最前面**：第一行 shebang 與緊接的註解之後、其他任何指令之前（沒有 shebang 就插在第一行），既有內容保留；
-     husky v8 的 hook 第二行是 `. "$(dirname -- "$0")/_/husky.sh"`，要插在那行**之後**（插在前面 gate 會跑兩次，
+     husky v8 的 hook 第二行是載入 `_/husky.sh` 的那一行（開頭是 `. "$(dirname --`），要插在那行**之後**（插在前面 gate 會跑兩次，
      `HUSKY=0` 也關不掉它；2026-10-01 husky 8.0.3、9.1.7 實測，插對位置時各跑一次、`HUSKY=0` 一起跳過）。
      不要接在檔尾：既有 hook 可能最後一行是 `exec`／`exit`，或每條路都在 `if … fi` 裡結束，接在後面就是死碼，
      而 hook 照樣「跑成功」，看不出 gate 沒執行
