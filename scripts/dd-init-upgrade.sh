@@ -234,8 +234,11 @@ function label(a,   k) {
   k = substr(a, 2); return "步驟 " k " 底下"
 }
 function section(title, cnt) { printf "\n## %s\n", title; if (cnt == 0) print "  （無）" }
+# 標題不看級數：上一次升級把新區塊的標題降級過（區塊掛在在地標題底下時），降級後的 #### CLAUDE.md 維護 也要認得是範本
+function htext(s) { sub(/^#+ /, "", s); return s }
+function inL(t) { return (t in L) || (hlevel(t) > 0 && (htext(t) in LH)) }
 FNR == 1 { fi++ }
-fi == 1 { L[$0] = 1; nl++; LL[nl] = $0; next }
+fi == 1 { L[$0] = 1; nl++; LL[nl] = $0; if (hlevel($0) > 0) LH[htext($0)] = 1; next }
 fi == 2 { nb++; NB[nb] = $0; next }
 { n++; F[n] = $0 }
 END {
@@ -246,7 +249,7 @@ END {
   # 起點：標記上方最近的標題；沒有標題就是標記行本身
   start = mk
   for (i = mk - 1; i >= 1; i--) if (hlevel(F[i]) > 0) { start = i; break }
-  if (start == mk) { Lv = 6; startTpl = 1 } else { Lv = hlevel(F[start]); startTpl = (trim(F[start]) in L) }
+  if (start == mk) { Lv = 6; startTpl = 1 } else { Lv = hlevel(F[start]); startTpl = inL(trim(F[start])) }
 
   # 切單位：空行跟著前一個單位；圍欄開到關算一個；遇到「同級或更高級、不在清單裡的標題」停
   nu = 0; stop = n + 1
@@ -254,13 +257,13 @@ END {
     if (trim(F[i]) == "") { if (nu > 0) ue[nu] = i; continue }
     if (!isfence(F[i])) {
       h = hlevel(F[i])
-      if (h > 0 && h <= Lv && !(trim(F[i]) in L)) { stop = i; break }
+      if (h > 0 && h <= Lv && !inL(trim(F[i]))) { stop = i; break }
     }
     nu++; us[nu] = i; j = i
     if (isfence(F[i])) { for (j = i + 1; j <= n && !isfence(F[j]); j++) ; if (j > n) j = n }
     ul[nu] = j; ue[nu] = j
     if (us[nu] == ul[nu]) {
-      t = trim(F[i]); tpl[nu] = (i == mk) || (t in L)
+      t = trim(F[i]); tpl[nu] = (i == mk) || inL(t)
     } else {
       c = 0; k = 0
       for (x = i + 1; x < j; x++) { t = trim(F[x]); if (generic(t)) continue; c++; if (t in L) k++ }
@@ -273,7 +276,8 @@ END {
   for (u = 1; u <= nu; u++) if (tpl[u]) lastTpl = u
   end = (lastTpl > 0) ? ul[lastTpl] : start
 
-  # 錨點：在地單位跟著前面最近的範本步驟行／驗證不過／CLAUDE.md 維護
+  # 錨點：在地單位跟著前面最近的範本步驟行／驗證不過／CLAUDE.md 維護。
+  # 專案改寫過的步驟行（第 0 欄的「N. 」，縮排的在地編號清單不算）本身是在地，但它底下的子項仍算步驟 N 底下
   anchor = "pre"; del = 0
   for (u = 1; u <= lastTpl; u++) {
     t = trim(F[us[u]])
@@ -282,7 +286,10 @@ END {
       else if (t ~ /^驗證不過/) anchor = "v"
       else if (t ~ /^#+ CLAUDE\.md 維護/) anchor = "m"
       for (x = us[u]; x <= ul[u]; x++) if (trim(F[x]) != "" && x != mk) del++
-    } else ua[u] = anchor
+    } else {
+      ua[u] = anchor
+      if (F[us[u]] ~ /^[0-9]+\. /) { match(F[us[u]], /^[0-9]+/); anchor = "s" substr(F[us[u]], 1, RLENGTH) }
+    }
   }
   if (del == 0) { print "❌ 區塊裡除了標題與標記之外沒有任何一行認得出是範本原文（清單過期，或區塊被整份改寫過），不升級" > "/dev/stderr"; exit 3 }
 
@@ -304,7 +311,7 @@ END {
     }
     section("保留、但與範本某行相似", c)
     for (x = 1; x <= n; x++) if (x in sim) printf "  %d: %s\n      ≈ 範本：%s\n", x, F[x], sim[x]
-    c = 0; for (u = 1; u <= lastTpl; u++) if (!tpl[u]) for (x = us[u]; x <= ul[u]; x++) if (trim(F[x]) ~ /^[0-9]+\. /) { c++; dstep[x] = 1 }
+    c = 0; for (u = 1; u <= lastTpl; u++) if (!tpl[u]) for (x = us[u]; x <= ul[u]; x++) if (F[x] ~ /^[0-9]+\. /) { c++; dstep[x] = 1 }
     section("疑似改寫過的步驟行（不是錨點，會跟新區塊同號步驟並存）", c)
     for (x = 1; x <= n; x++) if (x in dstep) printf "  %d: %s\n", x, F[x]
     c = 0; for (u = 1; u <= lastTpl; u++) if (!tpl[u] && ua[u] == "s5") for (x = us[u]; x <= ul[u]; x++) if (trim(F[x]) != "") c++
