@@ -8,7 +8,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | 新 skill dd-loop + 全域 §3.9 瘦身 | DONE | — | 全域模板行數與 bytes 下降（前後 `wc -lc`）；搬走的每一句在 `skills/dd-loop/SKILL.md` 找得到原文；`claude -p` 沙盒正例（段落開始、做到一半接手、步驟 4 前、步驟 8 前）jsonl 有 `Launching skill: dd-loop` 且 `permission_denials` 裡沒有 Skill；小改動反例不叫；§3.9 引用清單（A、B 兩組樣式）每筆都有判定；ci.yml 讀文件的 step 本機全 exit 0 | f46d4de..a34cda1 |
-| S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | IN_PROGRESS | S1 | `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 bash 3.2 綠（含兩個變異會紅）；ci.yml「蓋章區塊每一行都在升級清單裡」負面測試紅、還原綠；新區塊關卡五條 grep 都命中；部署後 `cmp` 三支一致；`claude -p` 跑部署版 `/dd-init`：同意才 `--apply`、輸出只有一個 rev 13 標記、拒絕時檔案不變 | f2ab54a.. |
+| S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | DONE | S1 | `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 bash 3.2 綠（含兩個變異會紅）；ci.yml「蓋章區塊每一行都在升級清單裡」負面測試紅、還原綠；新區塊關卡五條 grep 都命中；部署後 `cmp` 三支一致；`claude -p` 跑部署版 `/dd-init`：同意才 `--apply`、輸出只有一個 rev 13 標記、拒絕時檔案不變 | f2ab54a..7db79a9 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
