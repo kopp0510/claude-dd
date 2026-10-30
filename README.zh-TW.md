@@ -57,7 +57,7 @@ cd claude-dd
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
-另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
+另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）與 `dd-init-upgrade.sh`（`/dd-init` 升級舊蓋章區塊時分出範本行與自己加的內容）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
 
 ### 安裝選項
 

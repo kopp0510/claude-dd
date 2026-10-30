@@ -18,6 +18,12 @@
 
 ## 未發布
 
+### Added
+
+- **新腳本 `scripts/dd-init-upgrade.sh`（部署到 `~/.claude/scripts/`）**：`/dd-init` 升級舊蓋章區塊用。把專案 CLAUDE.md 區塊裡的行，
+  逐字對照歷代蓋章區塊出現過的行，分成範本原文（換新）與專案自己加的內容（留在原本那一步底下）；`--plan` 只列分類，`--apply` 寫到另一個檔，都不改原檔。
+  情境測試 `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 macOS bash 3.2 的 CI job 都跑（兩個 job 的 checkout 改成 `fetch-depth: 0`）。`/dd-init` 還沒改用它（下一個小任務）
+
 ### Changed
 
 - **全域 CLAUDE.md 的 §3.9 開發迴圈只留 8 步清單、關卡與驗證教訓，做法細則搬進新 skill `dd-loop`**：

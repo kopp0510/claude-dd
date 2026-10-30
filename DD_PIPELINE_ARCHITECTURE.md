@@ -115,7 +115,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 
 | 檢查 | 防什麼 |
 |---|---|
-| bash -n（安裝腳本）+ shellcheck（warning 級，9 支腳本） | 語法與常見 bash 陷阱 |
+| bash -n（安裝腳本）+ shellcheck（warning 級，11 支腳本） | 語法與常見 bash 陷阱 |
 | `--help` smoke test | 腳本連起碼的執行都掛掉 |
 | Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
@@ -131,8 +131,9 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 | 部署內容裡的 `~/.claude/` 路徑要指得到東西（scripts／tests／commands／skills／agents／output-styles／templates） | 指向只有作者本機才有的檔（例如 `~/.claude/rules/<本機檔>`）的死指標：第一層不是本 repo 部署的目錄、也不是 Claude Code 自己的就紅燈；部署目錄則部署後要真的有（repo 有那個檔，且不是 `scripts/` 第一層以外、`output-styles/` 非 `.md`、`commands/` 第一層非 `dd-*.md`、命名空間 `README.md` 這幾類不部署的）。`projects/`、`plugins/` 與含 `<` `*` `{` `$` `...` 的佔位寫法只驗第一層；路徑字元不列舉 ASCII（中文檔名不會被截斷成目錄本身）；零命中時紅燈而不是放過 |
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
 | gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
+| dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個。要 `fetch-depth: 0`（兩個 job 都設了） |
 | Sandbox 端到端非互動安裝（`tests/test-install.sh`） | 只有執行期才會出現的安裝 bug |
-| macOS `/bin/bash` 3.2 行為測試（`bash32` job：error-capture、gate-guard、gate 情境、安裝端到端） | ubuntu 的 bash 5 驗不到的 3.2 不相容（`${x,,}`、`declare -A`、`mapfile`…）。先確認 `/bin/bash` 真的是 3.2，否則直接失敗。這類錯誤常常只印一行、結果照舊，所以 gate-guard 測試看 hook 的 stderr、gate 情境測試比對輸出裡的 shell 錯誤；error-capture 與安裝測試靠 `set -e` 的非 0 中止。公開 repo 的 macOS runner 不計費 |
+| macOS `/bin/bash` 3.2 行為測試（`bash32` job：error-capture、gate-guard、gate 情境、dd-init 升級分類、安裝端到端） | ubuntu 的 bash 5 驗不到的 3.2 不相容（`${x,,}`、`declare -A`、`mapfile`…）。先確認 `/bin/bash` 真的是 3.2，否則直接失敗。這類錯誤常常只印一行、結果照舊，所以 gate-guard 測試看 hook 的 stderr、gate 情境測試比對輸出裡的 shell 錯誤；error-capture 與安裝測試靠 `set -e` 的非 0 中止。公開 repo 的 macOS runner 不計費 |
 
 > 這張表是 CI 覆蓋範圍的單一入口，**新增 CI step 時要同步補一列**（沒有任何檢查會擋它過期）。
 

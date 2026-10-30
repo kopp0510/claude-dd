@@ -25,12 +25,14 @@ jobs:
           shellcheck -S warning \
             install-dd-pipeline.sh \
             scripts/check-claude-md.sh \
+            scripts/dd-init-upgrade.sh \
             scripts/githooks/pre-commit \
             skills/self-improving-agent/hooks/error-capture.sh \
             skills/self-improving-agent/hooks/test-error-capture.sh \
             skills/gate-guard/hooks/guard-no-verify.sh \
             skills/gate-guard/hooks/test-guard-no-verify.sh \
             tests/test-gate.sh \
+            tests/test-dd-init-upgrade.sh \
             tests/test-install.sh
 
       - name: help smoke test
@@ -518,6 +520,10 @@ jobs:
       - name: gate 段落起點（SKIP 跳過的目錄，之後的正常 commit 要補上 CLAUDE.md）
         run: tests/test-gate.sh
 
+      # fixture 從 v* tag 抽各版蓋章區塊（git show <tag>:），靠上面 checkout 的 fetch-depth: 0
+      - name: dd-init 升級分類腳本情境測試
+        run: tests/test-dd-init-upgrade.sh
+
       # 情境本體在 tests/test-install.sh（2026-10-01 從這裡搬出去，macOS 那個 job 才能共用同一份）
       - name: Sandbox 端到端安裝測試（非互動）
         run: tests/test-install.sh
@@ -530,6 +536,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # dd-init 升級分類腳本的測試要 git show <tag>: 抽各版蓋章區塊，shallow clone 沒有 tag
+          fetch-depth: 0
 
       # 這個 job 存在的理由就是驗 3.2：/bin/bash 哪天不是 3.2 了，後面全綠也不代表驗過
       - name: 確認 /bin/bash 是 3.2
@@ -548,6 +557,9 @@ jobs:
 
       - name: gate 情境測試
         run: /bin/bash tests/test-gate.sh
+
+      - name: dd-init 升級分類腳本情境測試
+        run: /bin/bash tests/test-dd-init-upgrade.sh
 
       # 每個 macOS 使用者真正會跑的部署路徑（首次安裝、冪等、--force、--uninstall…）
       - name: Sandbox 端到端安裝測試（非互動）
