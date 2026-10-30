@@ -340,6 +340,13 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **`claude -p` 的 stream-json 要進 repo 前先去識別，而且要認得 Claude Code 自己編碼過的路徑**：init 訊息的 `memory_paths` 等欄位
   把路徑裡的 `/` 換成 `-`（`-Users-<名字>-…`、`-private-tmp-…`），只換斜線形式、只 grep `/Users/` 都抓不到，還會回 0 筆看起來像通過。
   init 另有連接器清單、plugin 路徑。做法：只抽判定要用的欄位（照 `docs/measurements/2026-10-29-adhd-style/run.sh`），掃描樣式加 `-Users-`、`-private-tmp-`。
+- **`claude -p` 實驗的 fixture 有子目錄時，子目錄的 CLAUDE.md 會被受測 session 當巢狀記憶讀進去**：gate 對 `docs/measurements/` 底下
+  放 `.py`／`.sh` 的目錄一樣要求 CLAUDE.md（2026-10-30 在另一台機器的 branch 實測，第一次 commit 就被擋），所以檔照寫，
+  `run.sh` 把 fixture 複製到拋棄式目錄後跑 `find "$WORK" -mindepth 2 -name CLAUDE.md -delete`。fixture 由 `run.sh` 當場 `printf` 出來、
+  不從 repo 複製的（`docs/measurements/2026-10-29-adhd-style/run.sh`）碰不到。
+- **用 auto mode 跑 `claude -p` 時，受測 session 自己到 `/tmp` 開副本做實驗會被擋**，`permission_denials` 不為 0：擋它的是 auto mode 的分類器
+  （理由字串 `[Shared Scratch Sweep]`），不是目錄白名單，`--add-dir /tmp /private/tmp` 照樣擋（2026-10-30 同一次實測，denial 2 → 3；本機沒重現）。
+  `docs/measurements/2026-10-29-adhd-style/run.sh` 用的是 `--permission-mode dontAsk`，它會不會經過這個分類器沒驗證；判準要求 denials=0 時，先決定用哪個 mode 再跑。
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
