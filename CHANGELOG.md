@@ -22,14 +22,21 @@
 
 - **新腳本 `scripts/dd-init-upgrade.sh`（部署到 `~/.claude/scripts/`）**：`/dd-init` 升級舊蓋章區塊用。把專案 CLAUDE.md 區塊裡的行，
   逐字對照歷代蓋章區塊出現過的行，分成範本原文（換新）與專案自己加的內容（留在原本那一步底下）；`--plan` 只列分類，`--apply` 寫到另一個檔，都不改原檔。
-  情境測試 `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 macOS bash 3.2 的 CI job 都跑（兩個 job 的 checkout 改成 `fetch-depth: 0`）。`/dd-init` 還沒改用它（下一個小任務）
+  情境測試 `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 macOS bash 3.2 的 CI job 都跑（兩個 job 的 checkout 改成 `fetch-depth: 0`）。`/dd-init` Phase 1 升級 `8step` 舊版時改用它（見下方 rev 13 那條）
 
 ### Changed
 
 - **全域 CLAUDE.md 的 §3.9 開發迴圈只留 8 步清單、關卡與驗證教訓，做法細則搬進新 skill `dd-loop`**：
   起點與 `<起點>` 怎麼算、步驟 4 怎麼派工、查證與落地報告、步驟 8 怎麼算範圍、步驟 7 與 8 的關係，原文搬過去。
   §3.9 規定段落開始時、以及步驟 3、4、8 開始前一律呼叫 `dd-loop`。全域模板從 842 行（56,068 bytes）降到 748 行（46,257 bytes），
-  不跑迴圈的 session 少載這一塊（扣掉 skill 清單多出的 description，淨省約 4.8k 字元）；跑迴圈的 session 照規則一段叫 4 次 skill（每次約 6.2k 字元），總量反而增加（`docs/measurements/2026-10-30-dd-loop-trigger/`）。`/dd-init` 蓋章區塊這次沒動（另行規劃）
+  不跑迴圈的 session 少載這一塊（扣掉 skill 清單多出的 description，淨省約 4.8k 字元）；跑迴圈的 session 照規則一段叫 4 次 skill（每次約 6.2k 字元），總量反而增加（`docs/measurements/2026-10-30-dd-loop-trigger/`）
+- **`/dd-init` 蓋章區塊 rev 12 → 13，從 96 行（6,762 字元）縮到 37 行（1,733 字元）**：區塊只留 8 步、各步的關卡與步驟 5 的專案驗證指令，
+  做法細則改成「段落開始時、步驟 3、4、8 開始前呼叫 `dd-loop`」（沒裝 claude-dd 時指向 GitHub 上的 `skills/dd-loop/SKILL.md`）。
+  只在舊區塊裡有的內容（`--start-segment` 的兩個擋點與舊版 gate 的處置、五發實測、「不另派裁決者」與「時間花在哪」的數字、`CODE_EXT` 不是閉環那句）搬進 `dd-loop`。
+  React 那段改成 Phase 0 偵測到 React 才加。已蓋章的專案不跑迴圈的 session 每次少載約 5k 字元
+- **`/dd-init` Phase 1 升級 `8step` 舊版改用 `dd-init-upgrade.sh`**：先列出將刪除與保留的行，同意才換、換之前備份；
+  判斷順序改成先看標記、再看 `## 開發流程` 標題 —— 區塊掛在別的標題底下的專案（例如 rental-management）不會再被加第二份區塊。
+  `6step`／`7step` 與沒有標記的區塊照舊由 agent 判斷。`/dd-init` 蓋章區塊同樣瘦身，見下一條
 
 ## 1.6.12 — 2026-10-30
 

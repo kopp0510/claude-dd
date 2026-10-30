@@ -24,6 +24,8 @@
 #   done | LC_ALL=C sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
 #     | LC_ALL=C grep -v -e '^$' -e '^---$' -e '^```[A-Za-z]*$' | LC_ALL=C sort -u
 # （zsh 下 "$t:commands" 的 :c 會被當成修飾詞，一定要寫 "${t}:…" 或用 bash 跑）
+# 另外要有 commands/dd-init.md 裡 ````markdown 那段 React 片段的行（它在區塊外，Phase 1 偵測到 React 才補進區塊），
+# 上面的指令抓不到它；目前的內容跟舊版區塊裡的那段相同，所以已經在清單裡。
 set -e
 
 list_lines() {
@@ -35,7 +37,9 @@ cat <<'__DD_TEMPLATE_LINES__'
 **hotfix 段落通常正是人工判斷最密的地方。**
 **判斷有沒有真的送出，看後端有沒有收到請求，不是看畫面。**
 **判斷有沒有真的送出，看後端有沒有收到請求，不是看畫面。** 拿不到後端 log 時，
+**報告一律落地成 committed 檔，跳過要申報**（檔名、格式、SKIP 的寫法見 `dd-loop`）
 **有進度表時 `--segment-base` 不是最終答案**：專案有 `task-planner` 產的進度表（根目錄 CLAUDE.md 開頭的指路句會寫明檔名，通常在 `docs/designs/`）時，
+**段落開始時、以及步驟 3、4、8 開始前，先呼叫 Skill `dd-loop`**，每次都叫。叫不到時（沒裝 claude-dd，或裝的是還沒有這個 skill 的舊版），
 **註解與文件裡的宣稱**,不是運算式。實測某段只跑 simplifier 就抓到一句「作者自稱查證過
 - **主對話直接派審查者**：在同一則訊息裡平行派審查者（`subagent_type: "code-reviewer"`，不帶 model 參數、不換 haiku）**最少 3 個**（設定的下限），實際數量自己定並寫理由；**先派工、派完自己讀 diff 檔**；在派工 prompt 寫明審查者職責：找漏洞、每條附證據、沒證據不算。某個審查者沒回來 → 補派，補不了就照實寫進報告。一發只挖到一部分（實測同一段 diff 五發，每發都只命中 3 個已知錯誤中的 2 個、子集還不同；兩發聯集平均 2.3/3 對單發 1.8/3）
 - **主對話直接派審查者**：在同一則訊息裡平行派審查者（`subagent_type: "code-reviewer"`，不帶 model 參數、不換 haiku）**最少 3 個**（設定的下限），實際數量自己定，理由寫進 `-judge.md` 的派工節；**先派工、派完自己讀 diff 檔**；在派工 prompt 寫明審查者職責：找漏洞、每條附證據、沒證據不算。某個審查者沒回來或報告不完整 → 補派，補不了就照實寫進報告；收回的完整報告少於 3 份 → 不算跑過步驟 4，照實說，不續行。一發只挖到一部分（實測同一段 diff 五發，每發都只命中 3 個已知錯誤中的 2 個、子集還不同；兩發聯集平均 2.3/3 對單發 1.8/3）
@@ -86,18 +90,22 @@ cat <<'__DD_TEMPLATE_LINES__'
 3. 跑 **code-simplifier**（對該段新增/修改的程式碼：`git diff <起點>`，官方 agent）
 4. 跑 **code-review**（該段 diff，每段全量跑；修掉 Critical/Important 才續行）
 4. 跑 **code-review**（該段 diff：`git diff <起點>`，範圍要明講給 reviewer；每段全量跑；修掉 Critical/Important 才續行）
+4. 跑 **code-review**（該段 diff；每段全量跑，例外見 `dd-loop`；修掉 Critical/Important 才續行）。
 4. 跑 **code-review**（該段 diff；每段全量跑，例外見下；修掉 Critical/Important 才續行）
 4. 跑 **code-review**（該段 diff；每段全量跑；修掉 Critical/Important 才續行）
 5. **再測一次** — 確認步驟 3、4 沒破壞行為，不可只跑單元測試：
 6. **再 commit**（最終版本）
+6. **再 commit**（最終版本；gate 必須全過，不可用 SKIP 繞過）
 7. **沉澱本輪學到的**（有才做）— 本輪若留下踩雷、指令或慣例，用
 7. **沉澱本輪所學**（有才做）— 本輪若留下踩雷、指令或慣例，用
 8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審。
+8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審（指令見 `dd-loop`）。
 8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審：
 <!-- dd-loop-version: 6step；供 /dd-init 判斷是否提議升級，勿刪 -->
 <!-- dd-loop-version: 8step；dd-loop-rev: 10；供 /dd-init 判斷是否提議升級，勿刪 -->
 <!-- dd-loop-version: 8step；dd-loop-rev: 11；供 /dd-init 判斷是否提議升級，勿刪 -->
 <!-- dd-loop-version: 8step；dd-loop-rev: 12；供 /dd-init 判斷是否提議升級，勿刪 -->
+<!-- dd-loop-version: 8step；dd-loop-rev: 13；供 /dd-init 判斷是否提議升級，勿刪 -->
 <!-- dd-loop-version: 8step；dd-loop-rev: 2；供 /dd-init 判斷是否提議升級，勿刪 -->
 <!-- dd-loop-version: 8step；dd-loop-rev: 3；供 /dd-init 判斷是否提議升級，勿刪 -->
 <!-- dd-loop-version: 8step；dd-loop-rev: 4；供 /dd-init 判斷是否提議升級，勿刪 -->
@@ -116,6 +124,7 @@ UI 字串 / commit 範圍的敘述,就不是「只有一個運算式」—— �
 `performance.getEntriesByType('resource').filter(r => r.name.includes('/api/x')).length`
 `task-planner` 的規則區塊沒寫明這條,而那份規則是照抄進設計文件、不跟著 skill 更新的。
 `{ git show --name-only --pretty=format: HEAD; git status --porcelain | awk '{print $NF}'; } | grep 'CLAUDE\.md$' | sort -u`
+`~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出（exit 非 0 或輸出是空的 = 範圍沒算出來，不是範圍為空）。其餘情況見 `dd-loop`。
 claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
 const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
 gate 不會強制它存在 —— 不要把它寫成閉環。
@@ -133,6 +142,7 @@ set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true }));
 ⚠️ 證據**不可以放 `.git/`**(`dd-segment-base` 走 `git rev-parse --git-path`、不進版控)。
 一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出
 一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出。
+下文的 `<起點>`：有 `task-planner` 進度表時以**表上這段 commits 欄的起點**為準（只取 `..` 前面那段）；沒有進度表時是
 下面這行是**沒有進度表**時的寫法；有進度表時 `base` 改填表上這段 commits 欄的起點
 不先算範圍會全 repo 掃。範圍是空的才跳過
 不先算範圍會全 repo 掃。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）
@@ -151,6 +161,7 @@ set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true }));
 又抓到一個新的錯宣稱,而 playwright 攔 request body 看不到這一類東西。
 受控輸入（工具回報成功但畫面 state 沒變，照著它的回報就會宣稱「測過了」其實沒點到）。
 只是補檔進同一個 commit、或純文件/資料改動,才算前一段的小任務。
+各步的做法細則（段落起點與 `<起點>` 怎麼算、步驟 4 怎麼派工與報告落地、步驟 8 怎麼算範圍）在 `dd-loop` skill：
 在瀏覽器裡數請求數也算數（驗「前端擋下來、根本沒送出」特別好用）：
 它是唯一可跳過、也是唯一會回問你的步驟
 它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
@@ -162,13 +173,17 @@ set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true }));
 改用 `browser_evaluate` 直接操作 DOM；填欄位要用 native value setter 再 dispatch
 段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`（要印出「段落起點：…」才算記好；
 段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好。
+段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好；被擋下時照它印的做，不要繞過。
 沒印出這行就是沒記好；若是舊版 gate（grep 不到 `--start-segment`），它會照常檢查 staged，印出「commit 已擋下」也不要照著補檔或 commit，
 沒有新增 `docs/reviews/S*.md`。兩者都會 `exit 1` 並印出該怎麼做 —— 照它印的做，不要繞過。
 用它就漏掉這段先前已經寫好的部分；表上那個較舊、較寬，只會多審。
+算出幾份就只審那幾份（用 claude-md-improver）。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）
 算出幾份就只審那幾份（用 claude-md-improver）。該 skill 預設會 find 全部，
+細則見 claude-dd repo（https://github.com/kopp0510/claude-dd）的 `skills/dd-loop/SKILL.md`。
 自己的錯誤診斷寫進去，reviewer 會跟著錯（實證：兩個都接受了錯的框架，只有第三方去查才發現）。
 表單送不出去時（後端零請求）改用 `form.requestSubmit()`。
 要寫就標明是推測。
+要派 agent 時（不派的例外見 `dd-loop`），主對話平行派 `code-reviewer` **最少 3 個**；收回的完整報告少於 3 份 → 不算跑過步驟 4，照實說，不續行。
 起點就落在段落中間，它前面的 commit 步驟 3、4、8 全看不到，而 gate 印「記下段落起點 …」、`--segment-base` 也正常 exit 0，兩個訊號都看不出範圍縮水。
 跳過時 commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`**。步驟 4 是 8 步裡最容易**靜默**
 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由（gate 認的是這個檔，只加 trailer 開下一段時照樣被擋），commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`**。步驟 4 是 8 步裡最容易**靜默**
@@ -272,7 +287,7 @@ END {
   if (del == 0) { print "❌ 區塊裡除了標題與標記之外沒有任何一行認得出是範本原文（清單過期，或區塊被整份改寫過），不升級" > "/dev/stderr"; exit 3 }
 
   if (mode == "plan") {
-    printf "區塊：第 %d–%d 行；起點標題：%s（%s）\n", start, end, (start == mk ? "（無，從標記行起算）" : F[start]), (startTpl ? "範本，換新" : "在地，保留，新區塊標題降級接在底下")
+    printf "區塊：第 %d–%d 行；起點標題：%s（%s）\n", start, end, (start == mk ? "（無，從標記行起算）" : F[start]), (startTpl ? "範本，換新" : "在地，保留；新區塊的第一個標題不放，其餘標題降級接在底下")
     c = 0; for (u = 1; u <= lastTpl; u++) if (tpl[u]) for (x = us[u]; x <= ul[u]; x++) if (trim(F[x]) != "") c++
     if (startTpl && start != mk) c++
     section("將刪除的行", c)

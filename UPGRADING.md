@@ -68,7 +68,7 @@ rm -rf ~/.claude/templates/dd    # 1.0.0 起不再部署文件模板；--prune �
 1. 到該專案跑一次 `/dd-init` — 會補上缺的部分（pre-commit gate、`.screenshots/`（僅前端專案）、plugin 檢查）
 2. **注意**：專案 CLAUDE.md 若已有 `## 開發流程` 區塊，`/dd-init` 會看區塊裡的版本標記 ——
    舊版（`6step` / `7step` / 沒有標記）會列出與現行版的差異並詢問是否升級，同意才改，
-   專案自己加的內容會保留；不想讓它改就選拒絕，再自行手動編輯
+   專案自己加的內容會保留；不想讓它改就選拒絕，再自行手動編輯（`8step` 的舊版見下一節）
 3. 舊 DD Pipeline 專案的 `claude_docs/`、`PROJECT_STATE.md` 不受影響，可保留或自行清理
 
 ## 已是 8 步迴圈的專案：補上「段落起點」
@@ -79,7 +79,8 @@ CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「1.2.0」）。
 1. 先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。舊版 gate 不認得 `--start-segment`：
    沒有 staged 時什麼都不印；有 staged 程式碼時會照常檢查、印出「commit 已擋下」—— 那不是真的要你補檔，
    不要照著做，先更新 gate
-2. 到專案跑 `/dd-init` — 區塊標記是 `8step` 但 rev 比 12 舊的，會被判定為舊版並詢問是否升級。
+2. 到專案跑 `/dd-init` — 區塊標記是 `8step` 但 rev 比 13 舊的，會被判定為舊版並詢問是否升級。
+   升級由 `~/.claude/scripts/dd-init-upgrade.sh` 分類：先列出「將刪除的行」「保留的行」給你看，同意才換，換之前備份原檔。
    **這一步不能省**：專案 CLAUDE.md 的優先序高於全域 CLAUDE.md，舊區塊「只看最後一個 commit」的寫法
    會蓋過全域模板的新寫法
 3. **第一個功能段落開始前，自己跑一次 `~/.claude/scripts/check-claude-md.sh --start-segment`。**

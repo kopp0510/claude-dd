@@ -465,6 +465,30 @@ jobs:
             exit 1
           fi
 
+      - name: 現行蓋章區塊的每一行都在升級清單裡（scripts/dd-init-upgrade.sh）
+        run: |
+          # 升級腳本靠清單認範本行：區塊改了、清單沒跟上，下次升級時改過的那幾行會被當成專案自己加的內容留下來，
+          # 新舊兩份並存、不報錯。React 那段放在區塊外的 ````markdown 圍欄（Phase 1 偵測到 React 才補進區塊），一起查
+          blk=$(awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f' commands/dd-init.md)
+          react=$(awk '/^````markdown$/ && !f {f=1; next} f && /^````$/ {exit} f' commands/dd-init.md)
+          # 抽取先自證：抽到空的、抽錯圍欄、或在 ## CLAUDE.md 維護之前就被截斷（區塊裡有第 0 欄的 ```），都算這道檢查自己壞了
+          [ -n "$blk" ] || { echo "❌ 抽不到蓋章區塊（第一個 \`\`\`markdown 圍欄）"; exit 1; }
+          case "$(printf '%s\n' "$blk" | head -1)" in "## 開發流程"*) ;; *) echo "❌ 抽到的圍欄第一行不是「## 開發流程」"; exit 1 ;; esac
+          printf '%s\n' "$blk" | awk '/^## CLAUDE\.md 維護/ {h = NR} NF {l = NR} END {exit !(h && l > h)}' \
+            || { echo "❌ 抽到的區塊沒有以「## CLAUDE.md 維護」小節的內容結尾 —— 區塊被截斷了（裡面有第 0 欄的 \`\`\`？）"; exit 1; }
+          [ -n "$react" ] || { echo "❌ 抽不到 React 片段（\`\`\`\`markdown 圍欄）"; exit 1; }
+          list=$(mktemp)
+          scripts/dd-init-upgrade.sh --list > "$list"
+          [ -s "$list" ] || { echo "❌ --list 沒有輸出"; exit 1; }
+          missing=$(printf '%s\n%s\n' "$blk" "$react" | LC_ALL=C sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+            | LC_ALL=C grep -v -e '^$' -e '^---$' -e '^```[A-Za-z]*$' | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$list")
+          if [ -n "$missing" ]; then
+            echo "❌ 這幾行不在 scripts/dd-init-upgrade.sh 的清單裡（加進 heredoc，產生指令在腳本檔頭）："
+            printf '%s\n' "$missing" | sed 's/^/    /'
+            exit 1
+          fi
+          echo "✅ 蓋章區塊 $(printf '%s\n' "$blk" | grep -c .) 行與 React 片段都在升級清單裡"
+
       - name: 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要）
         run: |
           # 四方檢查只數「編號清單」，使用者實際看到的兩類文案不在其中：

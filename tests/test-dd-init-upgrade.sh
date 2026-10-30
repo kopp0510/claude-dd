@@ -83,6 +83,7 @@ for tag in v1.6.12 v1.6.4 6a9addd v1.1.0; do
   before "$o" "## CLAUDE.md 維護" "LOCALM" && before "$o" "LOCALM" "## 在地小節" || true
   before "$o" "## 在地小節" "LOCALX" || true
   count_is "$o" "dd-loop-version" 1
+  count_is "$o" "$(grep 'dd-loop-version' "$WORK/new")" 1   # 標記是現行版（rev 13）那一行
   count_is "$o" "## 開發流程" 1
   # 該版有、現行區塊沒有的範本行，在輸出裡要是 0 次
   trimmed "$o" > "$o.trim"
@@ -101,6 +102,11 @@ wrap < "$WORK/v1.6.4.blk" > "$f"
 run "純範本：--apply" 0 --apply "$f" "$o"
 wrap < "$WORK/new" > "$WORK/pure.want"
 if cmp -s "$o" "$WORK/pure.want"; then ok "純範本：輸出等於檔頭 + 現行區塊 + 檔尾"; else ng "純範本：輸出與預期不同"; diff "$WORK/pure.want" "$o" | head -20 | sed 's/^/    /'; fi
+
+# 現行區塊自己跑一次：結果與原檔逐字相同（現行區塊的每一行都在清單裡，不會被當成在地內容多留一份）
+wrap < "$WORK/new" > "$WORK/cur.md"
+run "現行區塊：--apply" 0 --apply "$WORK/cur.md" "$WORK/cur.out.md"
+if cmp -s "$WORK/cur.md" "$WORK/cur.out.md"; then ok "現行區塊：輸出與原檔相同"; else ng "現行區塊：輸出與原檔不同"; diff "$WORK/cur.md" "$WORK/cur.out.md" | head -20 | sed 's/^/    /'; fi
 
 # ---- 3. rental-management 型：區塊掛在專案自己的 ### 底下 ----
 f="$WORK/rental.md"; o="$WORK/rental.out.md"

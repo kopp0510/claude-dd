@@ -25,91 +25,96 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    - 有 HTTP API（後端/全端）→ 驗證含 **curl 打真實 API**
    - 有前端 UI → 驗證含 **playwright 開真實瀏覽器**（截圖存 `.screenshots/`）
    - 純 CLI / 函式庫 → 驗證退化為「跑真實指令 / 消費端範例」
+   - 根目錄或第一層子目錄的 `package.json`，其 `dependencies` 或 `devDependencies` 有 `react`；新專案則是使用者回答用 React → React 專案（Phase 1 要加 React 那段）
 
 3. **檢查 CLAUDE.md 是否存在**：
-   - 存在 → 補充模式（在末尾加區塊）
+   - 存在 → 補充模式（加在哪、要不要升級，照 Phase 1 的判斷）
    - 不存在 → 建立模式（現有專案先派 **Task**（subagent_type: `Explore`）分析技術棧與目錄結構，新專案用 **AskUserQuestion** 問專案類型/技術棧/名稱）
 
 ### Phase 1: 蓋章開發迴圈到專案 CLAUDE.md
 
 - **建立模式**：用 **Write** 寫入下方區塊
-- **補充模式**（CLAUDE.md 已存在）：
-  - 無 `## 開發流程` 區塊 → 用 **Edit** 在末尾加入
-  - 已含區塊 → **版本檢查**：
-    - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 12` → 已是現行版，跳過並告知
-    - 含 `6step` / `7step` 標記、有 `8step` 但 rev 比 12 舊（沒有 rev 標記，或 rev 是更早的號碼），或無標記、或缺 code-review 步驟 → 舊版/手寫版：
-      列出與現行版的差異（6step 缺步驟 7、8；7step 缺步驟 8；8step 沒有 rev 缺「段落起點」，
+- **補充模式**（CLAUDE.md 已存在），依序判斷（先看標記、再看標題 —— 帶標記的區塊掛在別的標題底下也認得出來；沒有標記又不在 `## 開發流程` 底下的手寫流程認不出來）：
+  - 含 `dd-loop-version: 8step` 且含 `dd-loop-rev: 13` → 已是現行版，跳過並告知
+  - 含 `8step`、rev 號碼比 13 大 → 專案是被較新的 `/dd-init` 蓋的章，這台機器部署的是舊版：不動，提示到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`
+  - 有 `8step` 但 rev 比 13 舊（沒有 rev 標記，或 rev 是更早的號碼）→ 舊版/手寫版，用升級腳本換新（見下方「用升級腳本升級」）。
+    列出與現行版的差異，從專案的 rev 那一條起、往後每一條都列（8step 沒有 rev 缺「段落起點」，
       步驟 3、4、8 只看最後一個 commit；rev 1–2 的步驟 8 算範圍用 `status --porcelain` 加 `awk '{print $NF}'`，
       含空白的目錄名會被切斷、少列一份卻照樣 exit 0，而且「忘了記起點只會多審」那句沒有但書；
       rev 3 缺「有進度表時起點以表上為準」的例外、缺步驟 4 的「語意無從判定就交回使用者」，
       且把「逐層堆疊更新」說成由 gate 把關；rev 4 缺步驟 4 的兩條：prompt 要附已跑過的驗證輸出、
-      沒有人工寫的程式碼就不派 agent；rev 5 缺步驟 4 的「派兩個 reviewer 取聯集」與「兩份報告不一致時讀程式碼判定」（rev 10 已由裁決結構取代，rev 11 再拿掉裁決者）；rev 6 缺步驟 4 的「界定探索預算」那條，並仍把並行 wall 寫成未實測的推論（rev 10 已改成「時間花在哪」）；rev 8 缺步驟 4 的「派工 prompt 交事實、不交『我判斷元凶是 X』」；rev 9 的步驟 4 是「派兩個 reviewer 取聯集」，缺「先備 diff 檔、最少 3 個審查者並逐條查證、報告加 `-judge.md`」（rev 10 是由裁決者派，rev 11 改成主對話直接派），還列了「最多做一次重現實驗」這個工具上限選項；rev 10 的步驟 4 由裁決者派審查者，缺「主對話直接平行派審查者、先派工再讀」與「diff 檔用 Read 每次 300 行讀到最後一行」；rev 11 的步驟 4 跳過時只寫加 trailer，沒寫要建 `docs/reviews/S<段落>-SKIP.md`，照做的人開下一段時會被 gate 擋下），
-      **AskUserQuestion 詢問是否升級**。同意 → 升級為現行版但**保留在地內容**
-      （專案特有註記、具體驗證指令、額外規則行），補上版本標記；拒絕 → 保留原樣
+      沒有人工寫的程式碼就不派 agent；rev 5 缺步驟 4 的「派兩個 reviewer 取聯集」與「兩份報告不一致時讀程式碼判定」（rev 10 已由裁決結構取代，rev 11 再拿掉裁決者）；rev 6 缺步驟 4 的「界定探索預算」那條，並仍把並行 wall 寫成未實測的推論（rev 10 已改成「時間花在哪」）；rev 8 缺步驟 4 的「派工 prompt 交事實、不交『我判斷元凶是 X』」；rev 9 的步驟 4 是「派兩個 reviewer 取聯集」，缺「先備 diff 檔、最少 3 個審查者並逐條查證、報告加 `-judge.md`」（rev 10 是由裁決者派，rev 11 改成主對話直接派），還列了「最多做一次重現實驗」這個工具上限選項；rev 10 的步驟 4 由裁決者派審查者，缺「主對話直接平行派審查者、先派工再讀」與「diff 檔用 Read 每次 300 行讀到最後一行」；rev 11 的步驟 4 跳過時只寫加 trailer，沒寫要建 `docs/reviews/S<段落>-SKIP.md`，照做的人開下一段時會被 gate 擋下；rev 12 把起點、步驟 4、步驟 8 的做法細則整段寫在區塊裡（約 96 行），rev 13 改成指向 `dd-loop` skill、區塊只留 8 步與關卡，React 那段改成偵測到 React 才加）
+  - 含 `6step` / `7step` 標記（6step 缺步驟 7、8；7step 缺步驟 8），或沒有標記但有 `## 開發流程` 區塊（手寫版、或缺 code-review 步驟）→
+    列出與現行版的差異，**AskUserQuestion 詢問是否升級**。同意 → 升級為現行版但**保留在地內容**
+    （專案特有註記、具體驗證指令、額外規則行），補上版本標記；拒絕 → 保留原樣。這幾種的步驟編號與現行版不同或沒有標記，不走升級腳本
+  - 沒有標記也沒有 `## 開發流程` → 用 **Edit** 在末尾加入
+
+**用升級腳本升級**（上面「有 `8step` 的舊版」那條；只碰專案根目錄 CLAUDE.md，巢狀的 CLAUDE.md 不動）：
+
+1. `~/.claude/scripts/dd-init-upgrade.sh` 不存在 → 提示到 claude-dd repo 跑 `./install-dd-pipeline.sh --force`，這次不升級
+2. 跑 `~/.claude/scripts/dd-init-upgrade.sh --plan CLAUDE.md`。exit 非 0（1 是用法錯或讀不到範本，2–5 見腳本檔頭）→ 不升級，把它印的原因照實告訴使用者
+3. 跑 `git status --porcelain -- CLAUDE.md`，記下有沒有還沒 commit 的修改
+4. 把 `--plan` 的輸出**整份**原樣列給使用者（每一節都列，含「疑似改寫過的步驟行」「保留的圍欄裡有部分行在清單中」），連同上面那串差異，
+   用 **AskUserQuestion** 詢問是否升級。第 3 步有還沒 commit 的修改，就在問題裡說明：它們會跟著留在檔裡，Phase 5 的 commit 會一起送進去
+5. 如果使用者拒絕，保留原樣，結束 Phase 1
+6. 同意 → 跑 `~/.claude/scripts/dd-init-upgrade.sh --apply CLAUDE.md CLAUDE.md.dd-upgrade`（輸出放專案根目錄、固定檔名：Bash 每次呼叫不保留變數，第 7、8 步才找得到它）
+7. 在 `CLAUDE.md.dd-upgrade` 裡：
+   1. 照 Phase 0 結果處理步驟 5 的兩行 `<依偵測結果填入…>`：該填的填成具體指令；不適用的那行刪掉（沒有前端時，playwright 那行連同底下的截圖子項一起刪）；
+      `--plan` 的「步驟 5 既有的驗證指令行」已經有同一類指令的，刪掉那一行佔位（那一節也可能列到被改寫過的步驟行，不是驗證指令的不算）；
+      純 CLI／函式庫專案兩行都換成「跑真實指令 / 消費端範例」的具體指令
+   2. Phase 0 偵測到 React 就補上 React 那段
+   3. `--plan` 列了「疑似改寫過的步驟行」：檔裡會有兩行同號步驟（新的與專案改寫過的），列了「區塊外還有範本行」：會有兩份同名小節。
+      每一處都問使用者留哪份（或合併），照答案改完、用 `grep -nE '^[0-9]+\. ' CLAUDE.md.dd-upgrade` 確認 1–8 每號剛好一行，才往下走
+8. 取代之前先備份：`cp CLAUDE.md "CLAUDE.md.bak-$(date +%Y%m%d%H%M%S)"`，再 `mv CLAUDE.md.dd-upgrade CLAUDE.md`。
+   把備份路徑告訴使用者，並說明備份檔沒有進版控、確認沒問題後自己刪；Phase 5 不要 add 它
 
 **依 Phase 0 偵測結果填入具體驗證指令**，不留模板變數：
 
 ```markdown
 ## 開發流程（每個功能段落依序走）
-<!-- dd-loop-version: 8step；dd-loop-rev: 12；供 /dd-init 判斷是否提議升級，勿刪 -->
+<!-- dd-loop-version: 8step；dd-loop-rev: 13；供 /dd-init 判斷是否提議升級，勿刪 -->
 
-段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好。
-⚠️ **這個指令有兩個擋點**：①起點以來有 `SKIP_DOC_CHECK=1` 欠下、還沒補的 CLAUDE.md
-②**專案有 `docs/reviews/` 目錄時**（= 採用了 review 留痕慣例），上一段的 commit 範圍內
-沒有新增 `docs/reviews/S*.md`。兩者都會 `exit 1` 並印出該怎麼做 —— 照它印的做，不要繞過。
-剛採用第二個慣例時第一次一定會被擋（上一段本來就沒報告），補一份 `S<N>-SKIP.md` 即可。
-沒印出這行就是沒記好；若是舊版 gate（grep 不到 `--start-segment`），它會照常檢查 staged，印出「commit 已擋下」也不要照著補檔或 commit，
-先到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force`。
-一段常有好幾個 commit，步驟 3、4、8 都看「起點到現在」的整段；`<起點>` = `~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出
-（exit 非 0 或輸出是空的 = 範圍沒算出來，不是範圍為空）。忘了記下一段的起點時，範圍會連上一段一起算——只會多審，不會漏；
-但這只在起點檔已經存在時成立：從沒跑過 `--start-segment` 的專案要等第一個 `SKIP_DOC_CHECK=1` commit 才會自動補記，
-起點就落在段落中間，它前面的 commit 步驟 3、4、8 全看不到，而 gate 印「記下段落起點 …」、`--segment-base` 也正常 exit 0，兩個訊號都看不出範圍縮水。
-**有進度表時 `--segment-base` 不是最終答案**：專案有 `task-planner` 產的進度表（根目錄 CLAUDE.md 開頭的指路句會寫明檔名，通常在 `docs/designs/`）時，
-`<起點>` 以**表上這段 commits 欄的起點**為準。回頭做 `BLOCKED` 過的段落時兩者會不一樣 —— 中間插做別段會把 `--segment-base` 往後推，
-用它就漏掉這段先前已經寫好的部分；表上那個較舊、較寬，只會多審。
+各步的做法細則（段落起點與 `<起點>` 怎麼算、步驟 4 怎麼派工與報告落地、步驟 8 怎麼算範圍）在 `dd-loop` skill：
+**段落開始時、以及步驟 3、4、8 開始前，先呼叫 Skill `dd-loop`**，每次都叫。叫不到時（沒裝 claude-dd，或裝的是還沒有這個 skill 的舊版），
+細則見 claude-dd repo（https://github.com/kopp0510/claude-dd）的 `skills/dd-loop/SKILL.md`。
+
+段落開始前先記起點：`~/.claude/scripts/check-claude-md.sh --start-segment`，印出「段落起點：…」才算記好；被擋下時照它印的做，不要繞過。
+下文的 `<起點>`：有 `task-planner` 進度表時以**表上這段 commits 欄的起點**為準（只取 `..` 前面那段）；沒有進度表時是
+`~/.claude/scripts/check-claude-md.sh --segment-base` 的輸出（exit 非 0 或輸出是空的 = 範圍沒算出來，不是範圍為空）。其餘情況見 `dd-loop`。
 
 1. **實作功能 + 首輪測試通過**（相關既有測試跑綠 + 基本手動驗證，不可帶紅燈進 commit）
 2. **commit**（第一次 — 保留簡化前還原點）
 3. 跑 **code-simplifier**（對該段新增/修改的程式碼：`git diff <起點>`，官方 agent）
-4. 跑 **code-review**（該段 diff；每段全量跑，例外見下；修掉 Critical/Important 才續行）
-   - 範圍要明講給 reviewer：依序跑時 `git diff <起點>` 加上 `git ls-files --others --exclude-standard`（步驟 3 新增、還沒 commit 的檔案 `git diff` 看不到）
-   - prompt 要附上步驟 1（重跑時加步驟 5）已跑過的驗證輸出，明寫「已確認，不要重跑」，否則它會把測試、build、渲染指令整組再跑一遍
-   - 這段沒有「人工寫的程式碼」（diff 全是資料／設定／註解／文件，或改動已被專案的機械檢查完全覆蓋）就不派 agent，
-     改成自己逐條核對、在回報附證據，理由寫進設計文件「段落與小任務」該段底下（沒有設計文件就寫在回報裡）；有 `docs/reviews/` 時另建 `docs/reviews/S<段落>-SKIP.md`（見下方報告落地那條）。
-     判準是**「這段有沒有正確性還沒被機械檢查證明的人工判斷」，不是 diff 多長**
-   - ⚠️⚠️ **派工的 prompt 交事實（行號、數字、實測輸出），不要交「我判斷元凶是 X」** ——
-     自己的錯誤診斷寫進去，reviewer 會跟著錯（實證：兩個都接受了錯的框架，只有第三方去查才發現）。
-     要寫就標明是推測。
-   - **派工前先準備一個 diff 檔**（放 scratchpad）：①整段 diff（依序跑時 `git diff <起點>` 加未追蹤新檔，與步驟 3 並行時 `git diff <起點> HEAD`）；②步驟 3 自己改了什麼（依序跑時 `git diff HEAD`，分開附 —— simplifier 改了行為正是要抓的）；③**派工當下**被改到檔案的整檔內容（依序取工作目錄版本，另把未追蹤新檔放整檔；並行取 `HEAD` 版本，因為 simplifier 正在改工作目錄）；④已跑過的驗證輸出，**連同預期值一起寫**（「已確認」只代表跑過，不代表結果對）。被改到的檔，審查者與主對話一律讀 diff 檔裡那一份、不讀工作目錄；diff 檔用 Read 的 `offset`／`limit` 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯，約 47 KB 就停），這句也寫進給審查者的 prompt
-   - **主對話直接派審查者**：在同一則訊息裡平行派審查者（`subagent_type: "code-reviewer"`，不帶 model 參數、不換 haiku）**最少 3 個**（設定的下限），實際數量自己定，理由寫進 `-judge.md` 的派工節；**先派工、派完自己讀 diff 檔**；在派工 prompt 寫明審查者職責：找漏洞、每條附證據、沒證據不算。某個審查者沒回來或報告不完整 → 補派，補不了就照實寫進報告；收回的完整報告少於 3 份 → 不算跑過步驟 4，照實說，不續行。一發只挖到一部分（實測同一段 diff 五發，每發都只命中 3 個已知錯誤中的 2 個、子集還不同；兩發聯集平均 2.3/3 對單發 1.8/3）
-   - **等全部審查者回來才查證**：派工 prompt 派出時、每個審查者的完整報告（含 Not reported、What I ran）一回來，都逐字存進 scratchpad 檔。逐條讀程式碼查證（預設「這條可能是錯的」；查證的人就是寫 diff 的人，要駁回就讀程式碼證明）：採納 / 駁回 / 需使用者決定。採納項沿用審查者的級別，調級要寫理由；採納的 Critical / Important 修掉才續行，Smells 照改不擋。審查者講不一樣時讀程式碼判定、不表決；被判成「既有問題」丟進 Not reported 的，回去看那幾行（實測踩過：那個錯誤寫法正是這次 diff 複製進新路徑的）。審查者列的外部查證項，能查就查，查不了另列「需要外部查證」
-   - 不另派裁決者：2026-10-24 實測主對話（Opus）直接派平均 269s、US$5.13、命中 4/6，另派 Opus 裁決者 350s、US$3.83、命中 3/6（直接派比較貴；n 小、同時改了三件事，只是方向）
-   - **時間花在哪**：實測派送管線只佔 ~25s，時間由它跑幾次工具決定（3–5 次 = 2–4 分、21/26 次 = 13–17 分）。prompt 寫明「需要外部查證的列出來交回、不要自己去抓」；不設工具次數上限（砍上限會連查證一起砍）
-   - 發現若是「行為變了，但**無從判定哪個才是預期**」（程式碼、測試、文件都沒寫明語意），**用 AskUserQuestion 把選擇交回使用者**，
-     不要自己選一邊也不要讓 reviewer 選 —— 查證時標成「需使用者決定」（附選項與建議答案）再問。金額、權限、資料保留期這類決定選錯了不會報錯，只會靜靜地錯下去
-   - ⚠️ **報告落地成 committed 檔(每個審查者一份 `docs/reviews/S<段落>-a.md`、`-b.md`、`-c.md`…,加查證 `S<段落>-judge.md`(檔名沿用,內容是主對話的查證);各三節:派工/發現/處置 —— 審查者那幾份的派工照給它的派工 prompt、發現放逐字原文、處置由主對話寫;重疊與獨有項寫進 `-judge.md`),
-     跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由（有 `docs/reviews/` 時 `--start-segment` 要範圍裡新增一份 `S<數字>…md`，只加 trailer 開下一段時會被擋），commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`**。步驟 4 是 8 步裡最容易**靜默**
-     掉的一步:①不留痕(跑完什麼都不產生,進度表標 `DONE` 是同一個 agent 自己填的,等於自證)
-     ②最貴(至少 3 個審查者)③跳過條款就寫在上面。**而它一跳,步驟 7 就沒東西可寫 ——
-     那是迴圈唯一固化教訓的格子,剪斷這條回授線不會報錯。**
-     ⚠️ 證據**不可以放 `.git/`**(`dd-segment-base` 走 `git rev-parse --git-path`、不進版控)。
-     ⚠️ 目的是**拿掉「靜默省略」這個選項**,不是讓說謊變不可能;`.md` 不在 gate 的 `CODE_EXT` 裡,
-     pre-commit 不會強制它存在(只在開下一段時查,而且只查「有沒有新增任何一份」)—— 不要把它寫成閉環。
-   - ⚠️ **「程式碼只有一行 / 定義域全被測試覆蓋」不是合法的跳過理由**:review 真正抓的是
-     **註解與文件裡的宣稱**,不是運算式。實測某段只跑 simplifier 就抓到一句「作者自稱查證過
-     卻仍然錯」的宣稱;下一段同等規模的改動,兩個 reviewer 抓出 2 個 Critical。
-     **hotfix 段落通常正是人工判斷最密的地方。**
-     ⚠️ 判準用「**有沒有引別處**」而不是「程式碼幾行」:diff 裡只要有引別處行號 / 函式 /
-     UI 字串 / commit 範圍的敘述,就不是「只有一個運算式」—— 補審在那段的「修正版」裡
-     又抓到一個新的錯宣稱,而 playwright 攔 request body 看不到這一類東西。
-   - ⚠️ **半號段落(`S2.5`)有自己的 commit 且改了人工邏輯 → 算新段落,要走步驟 3–8**;
-     只是補檔進同一個 commit、或純文件/資料改動,才算前一段的小任務。
-     `task-planner` 的規則區塊沒寫明這條,而那份規則是照抄進設計文件、不跟著 skill 更新的。
+4. 跑 **code-review**（該段 diff；每段全量跑，例外見 `dd-loop`；修掉 Critical/Important 才續行）。
+   要派 agent 時（不派的例外見 `dd-loop`），主對話平行派 `code-reviewer` **最少 3 個**；收回的完整報告少於 3 份 → 不算跑過步驟 4，照實說，不續行。
+   **報告一律落地成 committed 檔，跳過要申報**（檔名、格式、SKIP 的寫法見 `dd-loop`）
 5. **再測一次** — 確認步驟 3、4 沒破壞行為，不可只跑單元測試：
    - 重跑步驟 1 的相關測試
    - <依偵測結果填入：curl 打真實 API 驗證後端邏輯（登入/CRUD/權限…）>
    - <依偵測結果填入：playwright 真的開瀏覽器登入、操作 UI、截圖驗證前端可用>
      - 截圖一律存 `.screenshots/`（已 gitignore）；勿丟專案根目錄
+6. **再 commit**（最終版本；gate 必須全過，不可用 SKIP 繞過）
+7. **沉澱本輪所學**（有才做）— 本輪若留下踩雷、指令或慣例，用
+   claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
+   它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
+8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審（指令見 `dd-loop`）。
+   算出幾份就只審那幾份（用 claude-md-improver）。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）
+
+驗證不過 → 修完重跑步驟 5，不可帶著紅燈進步驟 6。
+
+## CLAUDE.md 維護
+
+- 每個有程式碼的資料夾都要有 CLAUDE.md（說明該層職責與慣例）
+- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（程式碼改了 → 文件跟著改）。
+  **gate 只擋改碼的那一層**（缺 CLAUDE.md 或沒同批更新）；往上逐層堆疊是這裡的工作流規則，
+  gate 不檢查，上層過期不會有任何訊號
+```
+
+建立模式時，區塊前面先寫入標準專案資訊（專案名稱、技術棧、目錄結構 — 來自偵測或詢問結果）。
+
+**Phase 0 偵測到 React 時**（建立模式、末尾加入、升級三種都一樣），把下面這段原樣接在步驟 5 以 `- 截圖一律存` 開頭的那一行底下（縮排照抄）；沒有 React 就不加：
+
+````markdown
      - ⚠️ **React 專案**：`browser_click` / `browser_fill_form` 常常不觸發 onClick 與
        受控輸入（工具回報成功但畫面 state 沒變，照著它的回報就會宣稱「測過了」其實沒點到）。
        改用 `browser_evaluate` 直接操作 DOM；填欄位要用 native value setter 再 dispatch
@@ -122,33 +127,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
        **判斷有沒有真的送出，看後端有沒有收到請求，不是看畫面。** 拿不到後端 log 時，
        在瀏覽器裡數請求數也算數（驗「前端擋下來、根本沒送出」特別好用）：
        `performance.getEntriesByType('resource').filter(r => r.name.includes('/api/x')).length`
-6. **再 commit**（最終版本）
-7. **沉澱本輪所學**（有才做）— 本輪若留下踩雷、指令或慣例，用
-   claude-md-management plugin 的 /revise-claude-md 寫進 CLAUDE.md；
-   它會先列出建議、等你同意才寫檔。沒有值得留的就跳過
-8. **評分 & 修正本輪動過的 CLAUDE.md** — 第一個動作是算範圍，不是開始審。
-   下面這行是**沒有進度表**時的寫法；有進度表時 `base` 改填表上這段 commits 欄的起點
-   （步驟 3、4 寫 `<起點>` 會自動套用上面那條例外，只有這裡把指令寫死）：
-   `base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] && { git -c core.quotePath=false diff --name-only "$base" HEAD; git -c core.quotePath=false diff --name-only HEAD; git -c core.quotePath=false ls-files --others --exclude-standard; } | grep 'CLAUDE\.md$' | sort -u`
-   算出幾份就只審那幾份（用 claude-md-improver）。該 skill 預設會 find 全部，
-   不先算範圍會全 repo 掃。範圍是空的才跳過（指令 exit 非 0 是範圍沒算出來，不算空）。
-   後兩條抓「還沒 commit 的」；**不要改用 `status --porcelain -uall | awk '{print $NF}'`** —— 含空白的路徑
-   git 會加引號，`$NF` 切開後比對不到，少列一份卻照樣 exit 0 不報錯
-
-驗證不過 → 修完重跑步驟 5，不可帶著紅燈進步驟 6。
-
-## CLAUDE.md 維護
-
-- 每個有程式碼的資料夾都要有 CLAUDE.md（說明該層職責與慣例）
-- 功能落地後，受影響目錄的 CLAUDE.md 逐層堆疊更新（程式碼改了 → 文件跟著改）。
-  **gate 只擋改碼的那一層**（缺 CLAUDE.md 或沒同批更新）；往上逐層堆疊是這裡的工作流規則，
-  gate 不檢查，上層過期不會有任何訊號
-- 步驟 7 處理的是「本輪學到什麼」，與上一條的「程式碼改了所以文件要同步」是兩件事
-- **步驟 7 跳過不代表步驟 8 跳過**：步驟 2、6 被 gate 逼著更新的 CLAUDE.md
-  也要進步驟 8 的範圍 — gate 只確認「有寫」、不確認「寫得對」
-```
-
-建立模式時，區塊前面先寫入標準專案資訊（專案名稱、技術棧、目錄結構 — 來自偵測或詢問結果）。
+````
 
 ### Phase 2: 建立截圖目錄與 gitignore
 

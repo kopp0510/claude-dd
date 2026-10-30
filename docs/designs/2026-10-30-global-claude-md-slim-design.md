@@ -103,7 +103,7 @@ S2 是設計文件 `docs/designs/2026-10-30-global-claude-md-slim-design.md` 進
 
 - 已蓋章的專案除了全域 CLAUDE.md，還會載入專案根目錄 CLAUDE.md 裡的蓋章區塊。rev 12 的範本區塊是 96 行、6,762 字元（量過），
   內容幾乎是 S1 搬進 `dd-loop` 的同一批細則。
-- 估計（沒量過，S2-2 寫完後重量並更新）：新區塊約 25 行、2k 字元，已蓋章專案不跑迴圈的 session 每次約省 4.7k 字元；跑迴圈的 session 仍是淨增（S1 量測：一段叫 4 次 `dd-loop`、每次約 6.2k 字元）
+- 量過（S2-2，2026-10-30）：新區塊 37 行、1,733 字元，已蓋章專案不跑迴圈的 session 每次約省 5k 字元；跑迴圈的 session 仍是淨增（S1 量測：一段叫 4 次 `dd-loop`、每次約 6.2k 字元）
 - 目標：①新蓋章的專案拿到短區塊（rev 13）②舊專案跑 `/dd-init` 時，能**機械地**把「範本原文」換成新區塊、留下專案自己加的內容
 - 範圍：`/dd-init` 只碰專案**根目錄** CLAUDE.md 裡的蓋章區塊；巢狀 CLAUDE.md 由各專案自己維護，不碰（使用者決定）
 - 不在範圍：實際去升級使用者的 11 個專案（使用者之後逐專案跑 `/dd-init`，看過清單、同意才改）
@@ -228,6 +228,21 @@ S2 是設計文件 `docs/designs/2026-10-30-global-claude-md-slim-design.md` 進
   8. 新區塊寫完重量行數與字元，更新「為什麼要做」與 CHANGELOG 的數字
   9. **順序**：驗證 1–8 綠、乾跑沒有卡住的句子 → `cmp ~/.claude/CLAUDE.md templates/global/CLAUDE.md`（不同就先停下說明，`--force` 會覆蓋它）→ `./install-dd-pipeline.sh --force`（從工作目錄複製，不需先 commit；改了 SKILL.md、dd-init.md、清單，根 CLAUDE.md「新增 Skill 步驟 4」）→ `cmp` 比部署版與 repo 版（`~/.claude/commands/dd-init.md`、`~/.claude/scripts/dd-init-upgrade.sh`、`~/.claude/skills/dd-loop/SKILL.md`），不一致就中止 → 測試清單 4（用部署版跑）→ 綠了才 commit S2-2
 - commit：`feat: dd-init 蓋章區塊改成短版、指向 dd-loop，舊區塊升級改用分類腳本，rev 跳 13（S2-2）`
+- S2-2 實測（2026-10-30）：
+  - 乾跑（部署前，2026-10-30）：SKILL.md 段落起點三分支實跑，抓到 8 處，修了 5 處（trailer 要跟 `Co-Authored-By` 同一段、「第一次一定被擋」改成有條件、補 SKIP 要 commit、舊版 gate 的徵兆與 grep 寫法、出路給 clone URL 並重跑 `--start-segment`）；
+    沒修的 3 處是本段以前就有的文字（diff 檔第 ② 項看不到 simplifier 新增的未追蹤檔、沒有設計文件時 SKIP 理由寫哪、gate 擋下訊息沒講 trailer 不可隔空行），段落結束時回報。
+    dd-init Phase 0、1 唯讀乾跑抓到 14 處，修了 12 處（列 `--plan` 全部節、重號步驟與重複小節要問、暫存檔改成專案根目錄的 `CLAUDE.md.dd-upgrade`、rev 比 13 大與 exit 1 的分支、差異清單從專案 rev 起累加等）；
+    6step／7step 照舊由 agent 判斷、沒標記又不在 `## 開發流程` 底下的手寫流程認不出來，兩條照實寫明、不修
+  - 測試清單 4（部署後，`docs/measurements/2026-10-30-dd-init-upgrade/`）：8 例全部照預期 —— 升級的 5 例都先 `--plan` 再 `--apply`、備份、標記剛好一個 rev 13、在地行留在原步驟、佔位都填掉；
+    拒絕那例只跑 `--plan`、檔案逐字不變；rev 13 那例跳過不動；新建那例加了 React 段。合計 US$5.08
+  - 測試 35 則 ✅（加了 rev 13 標記與「現行區塊跑一次不變」兩則）；變異重跑：空殼 33 ❌、a 9 ❌、b 10 ❌（明細在 `tests/CLAUDE.md`）
+  - 新區塊 37 行、1,733 字元（`wc -m`，UTF-8）；rev 12 是 96 行、6,762 字元。React 片段放在區塊外的 ````markdown 圍欄
+  - 驗證 5（舊區塊每個非空行到「新區塊 ∪ 全域 §3.9 與 §4.4 ∪ `skills/dd-loop/SKILL.md` ∪ React 片段」裡逐字找）：搬完後 53 行找不到，逐條判定如下
+    （行的內容見 `git show v1.6.12:commands/dd-init.md`；比對指令：兩邊各去前後空白、`sort -u` 後 `comm -23`）
+    - 已在 SKILL.md、只是斷行或全半形標點不同（同一句話換行位置不同就逐字比不到）：兩個擋點那段、`.git/` 不放證據、報告落地那整條、派工交事實、程式碼只有一行不是理由、主對話直接派、時間花在哪、步驟 7／8 的關係兩條、diff 檔四項、等全部回來才查證、附驗證輸出、需使用者決定、範圍要明講、沒有人工程式碼不派、hotfix、有進度表時的起點例外、起點檔不存在的但書、步驟 8 指令與 `$NF` 陷阱、`CODE_EXT` 不是閉環
+    - 這次搬進 SKILL.md 的（原本只在區塊裡）：兩個擋點與「剛採用 `docs/reviews/` 第一次一定被擋」、舊版 gate 的處置、「實證：兩個都接受了錯的框架」、不寫附驗證輸出時「整組再跑一遍」、五發實測 2.3/3 對 1.8/3、不另派裁決者的數字、時間花在哪的數字、`CODE_EXT` 那句、「只跑 simplifier 就抓到」「補審又抓到一個新的錯宣稱」兩個實例
+    - 由新區塊改寫取代：rev 12 的標記行、步驟 4、步驟 6、步驟 8 的舊寫法
+    - 刪除：「步驟 3、4 寫 `<起點>` 會自動套用上面那條例外，只有這裡把指令寫死」（新區塊不再寫死指令，這句沒有對象）；半號段落 `S2.5` 那兩行與「task-planner 的規則區塊沒寫明這條」（全域 §4.4 已有同一條判準，每個 session 都載入）
 
 #### 步驟 3、4 的做法
 
