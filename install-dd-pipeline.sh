@@ -87,6 +87,7 @@ ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 # 輔助腳本（部署到 ~/.claude/scripts/；check-claude-md.sh 由 /dd-init 掛進專案 pre-commit）
 DD_SCRIPTS=(
     "check-claude-md.sh"
+    "dd-init-upgrade.sh"
 )
 
 # Output styles（部署到 ~/.claude/output-styles/；使用者用 /output-style 自己開關，安裝不改任何 outputStyle 設定）

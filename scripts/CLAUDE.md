@@ -155,6 +155,17 @@
     /bin/bash tests/test-gate.sh              # 測 repo 裡這份 gate
     /bin/bash tests/test-gate.sh /tmp/gate.sh # 測改壞的副本（變異測試）
     ```
+- `dd-init-upgrade.sh` — `/dd-init` 升級舊蓋章區塊時的分類器（2026-10-30，S2）。把專案根目錄 CLAUDE.md 裡帶
+  `dd-loop-version` 標記的區塊逐行分成「範本原文」（去前後空白後逐字等於腳本內 heredoc 清單的某一行）與「在地內容」，
+  `--plan` 只印分類、`--apply <檔> <輸出>` 寫合併結果到另一個檔、`--list` 印清單；三個模式都不改原檔。用法、exit 碼與清單的
+  產生指令寫在檔頭。
+  - **清單是歷代蓋章區塊的行**：改了 `commands/dd-init.md` 的蓋章區塊就要把新的行加進 heredoc（產生指令在檔頭，要用 bash 跑）
+  - **分類核心是一支 awk、一律 `LC_ALL=C`**：中文比對與「共同前綴 60 bytes」按位元組算，macOS 的 BWK awk、Debian 的 mawk、
+    gawk 結果一樣（三種都實跑過）。別用 gawk 專屬函式（`gensub`、`asort`）—— ubuntu runner 的 `awk` 不保證是 gawk
+  - **找區塊**：起點是標記上方最近的標題；往下切單位（空行跟著前一個、圍欄整塊一個），遇到「同級或更高、不在清單裡」的標題停；
+    終點是停下之前**最後一個範本單位** —— 它之後的在地內容原地不動。在地單位跟著前面最近的範本錨點（編號步驟行、`驗證不過`、
+    `CLAUDE.md 維護` 標題）插回新區塊同一處
+  - 情境測試 `tests/test-dd-init-upgrade.sh`（變異對照見 `tests/CLAUDE.md`）
 - `githooks/pre-commit` — 本 repo 自用（dogfood），轉呼叫上面的 gate。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。
   注意 `core.hooksPath` 設定後 git 會完全忽略 `.git/hooks/`，與 `/dd-init` 的

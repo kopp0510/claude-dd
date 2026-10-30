@@ -56,7 +56,7 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
-Plus unnumbered steps: before step 2, every skill's `hooks.json` command paths are checked (a relative path aborts); between steps 6 and 7, `check-claude-md.sh` (the gate itself) goes into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
+Plus unnumbered steps: before step 2, every skill's `hooks.json` command paths are checked (a relative path aborts); between steps 6 and 7, `check-claude-md.sh` (the gate itself) and `dd-init-upgrade.sh` (sorts template lines from your own when `/dd-init` upgrades an old stamp) go into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
 
 ### Install options
 

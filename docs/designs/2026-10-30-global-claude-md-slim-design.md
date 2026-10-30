@@ -8,7 +8,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | 新 skill dd-loop + 全域 §3.9 瘦身 | DONE | — | 全域模板行數與 bytes 下降（前後 `wc -lc`）；搬走的每一句在 `skills/dd-loop/SKILL.md` 找得到原文；`claude -p` 沙盒正例（段落開始、做到一半接手、步驟 4 前、步驟 8 前）jsonl 有 `Launching skill: dd-loop` 且 `permission_denials` 裡沒有 Skill；小改動反例不叫；§3.9 引用清單（A、B 兩組樣式）每筆都有判定；ci.yml 讀文件的 step 本機全 exit 0 | f46d4de..a34cda1 |
-| S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | TODO | S1 | 待重規劃（見「段落與小任務」S2 的開工前提） | |
+| S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | IN_PROGRESS | S1 | `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 bash 3.2 綠（含兩個變異會紅）；ci.yml「蓋章區塊每一行都在升級清單裡」負面測試紅、還原綠；新區塊關卡五條 grep 都命中；部署後 `cmp` 三支一致；`claude -p` 跑部署版 `/dd-init`：同意才 `--apply`、輸出只有一個 rev 13 標記、拒絕時檔案不變 | f2ab54a.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -91,22 +91,155 @@
 
 ### S2 /dd-init 蓋章區塊瘦身並跳 rev 12→13
 
-- **開工前提**：先重新規劃並送 plan-review（使用者決定）。下面的 S2 草稿是確認輪 3C 不通過後的改稿，未經審查，只當重規劃的起點，不可照做。重規劃時一併處理 3C 範圍外小事：rental-management 沒有 `## 開發流程` 標題（Phase 1 會在末尾再加一份區塊）
+計畫經 plan-review 第 1–3 輪與確認輪 3C（每輪 4 個審查者）；3C 通過，3C 的小事改法照改、未再送審。各輪報告見 `docs/reviews/2026-10-30-global-claude-md-slim/plan-review-S2-r*.md`（檔名刻意不以 `S<數字>` 開頭，免得被 gate 當成步驟 4 的報告）。
 
-- S2-1 蓋章區塊縮成專案具體版，跳 rev
-  - 檔案：`commands/dd-init.md`（蓋章區塊；兩處 `dd-loop-rev`；「舊版/手寫版」判定線；「列出與現行版的差異」加 rev 13 一句）、`UPGRADING.md`（「判定為舊版」那行的 rev）、`CHANGELOG.md`
-  - 檔案另含 `skills/dd-loop/SKILL.md`（起點擋點、CODE_EXT 等搬進來）、`UPGRADING.md:70–71`（「專案自己加的內容會保留」照新規則核對）、`commands/dd-init.md:323`（區塊外「逐層往上堆疊更新是 §3.9 的工作流規則」改指向）、`scripts/CLAUDE.md:44–52`（「區塊內：步驟 8 的範圍指令寫死…得跳 dd-loop-rev」在搬出後不成立，改寫）
-  - 引用蓋章區塊內容的地方清點：`git grep -n -E '蓋章區塊|區塊內|dd-loop-rev|步驟 [348] 的'`（排除條件同 S1 的 A 組），逐筆判定寫進設計文件
-  - Phase 1 升級指示（rev ≤12 與只有 `8step` 的舊版 → 13，第一次「減法」升級），以**行**對照新舊範本內容判，不看位置：
-    - 範本段落完整清單（整段換新、不保留）：`## 開發流程` 標題行、`dd-loop-version` 標記行、起點段落、8 個編號步驟、`驗證不過` 那行、範本自帶的 `## CLAUDE.md 維護` 小節
-    - 判準：區塊內凡是「任何一版範本文字」的行就換新；不是任何一版範本文字的行一律保留（不只靠「含識別符」判），放回新區塊**同一步驟底下**；步驟外的在地小節放在新區塊末尾。圍欄與它包住的指令整塊一起判
-    - 舊細則歸零檢查只套在「被判成範本、已換新」的範圍，保留下來的在地行不列入。識別字串用各舊版範本的整句（例如 v1.6.4 區塊的「派兩個 reviewer 跑同一份 prompt，報告取聯集」、6a9addd 區塊的 `git status --porcelain | awk '{print $NF}'` 那行），不用 `報告一律落地`、`diff 檔` 這種一般詞；檢查前先確認每個字串在對應 fixture 升級前 ≥1
-    - 「列出與現行版的差異」的 rev 12 那句如實寫出換掉的範圍（標題、標記、起點段落、8 步的子項、驗證不過、CLAUDE.md 維護小節），並寫「不是範本文字的行會保留在原步驟底下」；AskUserQuestion 之前先列出「將刪除的行」，清單是空的就當成異常回報、不升級
-  - 蓋章區塊留：`## 開發流程` 標題、rev 標記、呼叫 `dd-loop` 的時機（照全域：段落開始、步驟 3、4、8 前一律呼叫）、`--start-segment` 一行、8 個編號步驟（CI 從 `^## 開發流程` 數到 `^驗證不過`）、步驟 5 的 `<依偵測結果填入>` 驗證指令、截圖路徑、`驗證不過` 那行；8 個編號步驟各帶與全域相同的關卡；「呼叫 dd-loop」旁加後備句「沒有這個 skill 時，細則見 claude-dd repo 的 `skills/dd-loop/SKILL.md`」（區塊進專案版控，協作者未必裝 claude-dd，見 `commands/dd-init.md:165`）
-  - 只在區塊裡有、全域與 skill 都沒有的內容逐項定去處（清單以驗證 ② 實際比對結果為準；已知另有「不要把它寫成閉環」「CODE_EXT」「只有這裡把指令寫死」「時間花在哪」「不另派裁決者」，各寫搬進 skill 或刪掉的理由）：起點兩個擋點與舊版 gate 處置（:56–69）→ 搬進 skill；React 驗證法（:113–124）→ 留在步驟 5 底下當專案驗證指令；`## CLAUDE.md 維護` 小節（:140–148，含 :142「每個有程式碼的資料夾都要有 CLAUDE.md」）→ 留在區塊（專案具體規則）
-  - 驗收另加：區塊內沒有第 0 欄的 ``` 圍欄
-  - 驗證：① ci.yml 跳號檢查與四方一致本機綠；②把舊區塊每個非空行在「新區塊 ∪ 全域 §3.9 ∪ SKILL.md」裡找，印出找不到的行逐條判；本機跑 ci.yml 的 stamp step 時把它寫的 `/tmp/dd-init-tagged.md` 等路徑改到 scratchpad；③照根 CLAUDE.md「新增 Command 步驟」派 subagent 在沙盒 repo 照 **repo 的** `commands/dd-init.md` 做一遍（若改用 `claude -p` 跑 `/dd-init`，先重跑 `--force` 部署新版）。測試檔不手寫，fixture 從各版 `commands/dd-init.md` 用 stamp 抽法取出範本區塊（zsh 下寫 `git show "${t}:commands/dd-init.md"`）：rev 12（`v1.6.12`）、rev 9（`v1.6.4`）、rev 2（`6a9addd`，`awk '{print $NF}'` 當指令寫）、只有 8step 沒有 rev（`v1.1.0`）、rev 13（現行版，確認跳過、不改檔）。每個舊版 fixture 插入自編在地內容：步驟 4、步驟 8 底下各一行沒有識別符的規則、步驟 5 一段帶圍欄的專案指令、步驟外一個在地小節，其中至少一個在地小節故意含一個舊版識別字串。subagent 以「同意」作答跑一次，機械核對：①`diff` 升級前後，被刪掉的行是「將刪除的行」清單的子集；②在地行留在原本那一步底下；③範本換新範圍內的舊識別字串為 0，在地小節那個仍在；④沒有重複標題、只有一個 rev 標記；⑤區塊含「呼叫 dd-loop」。再以「拒絕」作答跑一次 rev 12 那份，確認區塊原樣保留
-  - commit：`feat: dd-init 蓋章區塊改成專案具體版、指向 dd-loop，rev 跳 13（S2-1）`
+S2 是設計文件 `docs/designs/2026-10-30-global-claude-md-slim-design.md` 進度表上的一段（依賴 S1，S1 已 DONE）。
+一段、兩個小任務；小任務各自 commit，整段再跑步驟 3–8。
+
+開工（跟 S2-1 的 commit 一起送）：`scripts/check-claude-md.sh --start-segment` 記起點；把這份計畫寫進設計文件 S2 段，取代舊草稿；
+進度表 S2 的驗收欄改成本計畫的驗收；S2 標 `IN_PROGRESS`，commits 欄填 `<起點>..`；測試清單照使用者選定的寫進設計文件。
+
+#### 為什麼要做、做到什麼程度
+
+- 已蓋章的專案除了全域 CLAUDE.md，還會載入專案根目錄 CLAUDE.md 裡的蓋章區塊。rev 12 的範本區塊是 96 行、6,762 字元（量過），
+  內容幾乎是 S1 搬進 `dd-loop` 的同一批細則。
+- 估計（沒量過，S2-2 寫完後重量並更新）：新區塊約 25 行、2k 字元，已蓋章專案不跑迴圈的 session 每次約省 4.7k 字元；跑迴圈的 session 仍是淨增（S1 量測：一段叫 4 次 `dd-loop`、每次約 6.2k 字元）
+- 目標：①新蓋章的專案拿到短區塊（rev 13）②舊專案跑 `/dd-init` 時，能**機械地**把「範本原文」換成新區塊、留下專案自己加的內容
+- 範圍：`/dd-init` 只碰專案**根目錄** CLAUDE.md 裡的蓋章區塊；巢狀 CLAUDE.md 由各專案自己維護，不碰（使用者決定）
+- 不在範圍：實際去升級使用者的 11 個專案（使用者之後逐專案跑 `/dd-init`，看過清單、同意才改）
+
+#### 上次（3C）卡在哪、這次怎麼避開
+
+上次的升級規則要 agent 自己判斷「哪一行是範本、哪一行是在地內容」，3C 指出：結構規則會把在地規則行刪掉，
+「舊細則歸零檢查」又跟「保留在地小節」互相衝突。
+
+這次改成**查表**：把**帶 `dd-loop-version` 標記的**歷代蓋章區塊出現過的每一行（去前後空白）做成一份清單，放在腳本裡。
+- 區塊裡的行**逐字等於清單某一行** → 範本原文 → 換新
+- 不等於 → 在地內容 → 保留
+- 清單排除太通用的行：空行、`---`、單獨的圍欄行（```、```bash、```js…）。圍欄的開合行不查表，圍欄單位只看裡面的行
+- 不做「識別字串歸零」檢查；測試改用兩條獨立斷言（見測試清單）
+
+代價：被 agent 在先前升級時改寫過措辭的範本句，不會被認成範本，會被保留（多留、不會少）。為了不讓它們靜靜留下過期指引，
+`--plan` 另列一節「保留、但與範本某行相似」（去前後空白後與清單某行共同前綴 ≥60 bytes；awk 在 macOS 按 bytes 算長度，兩個平台都用 bytes），升級前給使用者看。
+
+實測（2026-10-30；清單用全部 45 版、174 行時量的，改成只取帶標記的版本後在 S2-1 重量）：
+- R3 舊計畫說的「91 行只對到 3 行」是拿單一版範本比；全版查表後 GlucoLink（rev 12）74 行只剩 6 行不匹配、duoduo-infra（rev 9）72/6、lawyerWebsite（rev 9）74/7、duoduo-helm（rev 9）79/13
+- rental-line（rev 7）85 行中 39 行匹配；不匹配的 46 行逐行看過：步驟 5 的專案驗證指令（圍欄內）、專案踩雷紀錄、少數幾句改寫過措辭的範本句（步驟 7、8 的說明、多行版的步驟 8 指令）
+- lawdesk-ai（rev 12，業主資料敏感，只量數字）：187 個非空行只有 10 行匹配，最後一個匹配在區塊中段，區塊內 7 個 `###` 子標題。升級對它幾乎沒有效果，使用者已知道
+- 無 rev 的 4 個舊版不匹配比例約一半到 9 成，沒逐行看
+- 標記種類（2026-10-30 只數標記）：11 個全是 `8step`；7 個有 rev（2、7、9×3、12×2），4 個沒有 rev；沒有 `6step`／`7step`。所以「6step／7step 走 agent 判斷」目前影響 0 個專案
+- rental-management（rev 2）的區塊掛在 `### 工作流程（完成的定義，不可省略）` 底下，不是 `## 開發流程`
+
+#### 小任務
+
+##### S2-1 新增升級分類腳本 `scripts/dd-init-upgrade.sh`
+
+- 新區塊來源：`--template <dd-init.md>`，預設 `~/.claude/commands/dd-init.md`。區塊錨點用 ci.yml `stamp()` 那組（`^```markdown$` 開、之後第一個 `^```$` 關）
+- 模式：
+  - `--plan <CLAUDE.md>`：只印區塊起訖行號、將刪除的行（附行號）、保留的行（附「原在步驟 N／驗證不過之後／CLAUDE.md 維護底下」）、「保留但與範本相似」、「步驟 5 既有的驗證指令行」、「保留的圍欄裡有部分行在清單中」警示
+  - `--apply <CLAUDE.md> <輸出路徑>`：把合併後的完整檔寫到輸出路徑；寫之前自檢輸出只有一個 `dd-loop-version`，不對就 exit 5、不寫
+  - `--list`：印清單（CI 用，不讓 CI 自己解析 heredoc）
+  - 三個模式都不改原檔；取代原檔由 Phase 1 在使用者同意後做
+- 找區塊：以 `dd-loop-version` 標記行定位；起點 = 標記行上方最近的標題；終點 = 從起點往下掃，「下一個同級或更高級、而且不在清單裡的標題」之前**最後一個範本單位**。
+  最後一個範本單位之後的內容原地不動（lawdesk-ai 那種區塊後段是大段專案內容的情況）。
+  區塊中間夾了清單外的同級 `##` 時，終點會停在它前面、它後面的舊範本行不會被換掉 → `--plan` 另列「區塊外還有範本行」並附行號（不靜默）
+- 分類單位：空行不算單位，跟著前一個單位走；一般行一行一單位；圍欄（開合行先去前後空白再判斷，處理縮排圍欄）從開到關算一個單位，裡面每一行都在清單裡才算範本
+- 錨點（決定在地單位放哪）：清單裡的編號步驟行（`^[0-9]+\. `）、`驗證不過` 那行、`## CLAUDE.md 維護` 標題。在地單位跟著前面最近的錨點：
+  步驟 1 之前 → 新區塊前言之後；步驟 N 底下 → 新區塊步驟 N 那段末尾（原縮排、原順序）；`驗證不過` 之後 → 新區塊 `驗證不過` 之後；`## CLAUDE.md 維護` 底下 → 新區塊同一小節末尾
+- 起點標題不在清單裡時（rental-management 的 `### 工作流程…`）：保留那個標題，新區塊去掉自己的 `## 開發流程` 那行接在它底下；新區塊其他標題（`## CLAUDE.md 維護`）降一級，避免 `##` 掛在 `###` 底下
+- 新區塊 `<依偵測結果填入…>` 的佔位行：一律保留，交給 Phase 1 依 Phase 0 偵測結果填或刪（後端 curl、前端 playwright 兩行各自判；舊區塊步驟 5 底下已有對應的具體指令就刪那一行佔位）
+- `--plan` 另標「疑似改寫過的步驟行」：保留行裡符合 `^[[:space:]]*[0-9]+\. ` 的（措辭被改過的編號步驟不是錨點，會跟新區塊同號步驟並存）
+- exit：0 正常；2 找不到標記；3 刪除的行扣掉標題與標記之後是 0（清單過期或區塊被整份改寫，不升級）；4 一檔兩個標記；5 `--apply` 自檢失敗
+- 清單：腳本內 heredoc，由 `git log --format=%h -- commands/dd-init.md` 中蓋章區塊帶 `dd-loop-version` 的版本產生（排除條件見上）；產生指令寫在腳本檔頭。S2-2 改完新區塊後把 rev 13 的行加進去
+- 分類主體用 awk（一律 `LC_ALL=C`，長度按 bytes、兩個平台一致）、外殼 bash，macOS bash 3.2 相容，過 `shellcheck -S warning`；寫中文訊息照 `scripts/CLAUDE.md`「此層慣例」
+- 測試：`tests/test-dd-init-upgrade.sh`（見測試清單）
+- 同批（根 CLAUDE.md「新增 Script 步驟」與 gate）：
+  - `install-dd-pipeline.sh` 的 `DD_SCRIPTS`
+  - `.github/workflows/ci.yml` 三處：ShellCheck 檔案清單（腳本與測試兩支）、ubuntu job 加 `run: tests/test-dd-init-upgrade.sh`、bash32 job 加 `run: /bin/bash tests/test-dd-init-upgrade.sh`，bash32 job 的 checkout 補 `fetch-depth: 0`（fixture 要 `git show <tag>:`）
+  - `DD_PIPELINE_ARCHITECTURE.md` 的「shellcheck（warning 級，N 支腳本）」加兩支，CI 防線表加「升級分類腳本測試」一列
+  - `scripts/CLAUDE.md`、`tests/CLAUDE.md` 的關鍵檔案表；根 CLAUDE.md「目錄結構」`tests/` 那行的測試檔名
+  - 兩份 README 安裝步驟裡只寫了部署 `check-claude-md.sh` 的那句（README.md、README.zh-TW.md 各一處），補上新腳本
+  - 新腳本與新測試 `chmod +x`，`git ls-files -s` 確認是 100755（ubuntu job 直接執行）
+  - 執行 `./install-dd-pipeline.sh --force` 部署（S2-1 commit 之後）
+- 驗證：①測試清單 1；②11 個已蓋章專案的 CLAUDE.md **複製**到 scratchpad 跑 `--plan > <scratchpad 檔>`，只用 `grep -c` 取各節行數與 exit，不把內容印進對話、不進 repo（lawdesk-ai 同樣只取數字）；③`ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'`
+- commit：`feat: 新增 dd-init 升級分類腳本，以歷代範本行查表分出在地內容（S2-1）`
+- S2-1 實測（2026-10-30）：
+  - 清單 150 行（45 版裡帶標記的版本；原本 174 行是全部 45 版）
+  - 測試 33 則 ✅：macOS `/bin/bash` 3.2＋BWK awk、docker `bash:5`＋gawk、docker `debian:stable-slim`＋mawk 三種都全綠
+  - 空殼腳本（只 `exit 0`）：16 ✅／32 ❌，紅的是「沒有產生輸出檔」與各斷言的錯值
+  - 變異 a（圍欄一律算範本，`tpl[nu] = 1`）：9 ❌，四版的 LOCAL5 圍欄內容不見、React 圍欄沒列進「部分行在清單中」
+  - 變異 b（終點遇到任何同級標題就停，拿掉 `!(… in L)`）：7 ❌，四版 LOCALV 跑到 `## CLAUDE.md 維護` 之後、6a9addd 與 v1.1.0 各留一行舊範本、純範本輸出不等於預期
+  - 11 個已蓋章專案的複本跑 `--plan`（只量測、不作驗收；內容沒印出來）全部 exit 0：
+
+    | 專案 | 刪 | 留 | 相似 | 疑似改寫步驟 | 步驟 5 在地行 | 部分圍欄 | 區塊外範本行 |
+    |---|---|---|---|---|---|---|---|
+    | duoduo-infra | 74 | 8 | 0 | 0 | 6 | 0 | 0 |
+    | rental-line | 37 | 47 | 0 | 0 | 29 | 0 | 10 |
+    | lawdesk-ai | 7 | 91 | 0 | 11 | 0 | 0 | 0 |
+    | postpartumcaresystem | 13 | 49 | 3 | 2 | 0 | 0 | 0 |
+    | lawyerWebsite | 75 | 7 | 0 | 0 | 6 | 0 | 0 |
+    | rental-management | 27 | 7 | 2 | 2 | 0 | 0 | 0 |
+    | duoduo-helm | 74 | 15 | 0 | 0 | 9 | 0 | 0 |
+    | ansible | 6 | 37 | 2 | 8 | 0 | 0 | 0 |
+    | line-card | 21 | 18 | 1 | 0 | 10 | 0 | 0 |
+    | GlucoLink | 68 | 6 | 0 | 0 | 6 | 0 | 8 |
+    | gps-simulator | 14 | 26 | 4 | 2 | 0 | 0 | 0 |
+
+    「留」只算區塊內被保留的行；最後一個範本行之後的內容原地不動、不算在內（lawdesk-ai 那 91 行之後還有大段）
+
+##### S2-2 蓋章區塊縮成 rev 13，Phase 1 升級改用腳本
+
+- 新區塊（`commands/dd-init.md` 蓋章區塊）留：
+  - `## 開發流程（每個功能段落依序走）`、rev 13 標記
+  - 一句：做法細則在 `dd-loop`，段落開始時、步驟 3、4、8 開始前先呼叫；沒有這個 skill 時見 https://github.com/kopp0510/claude-dd 的 `skills/dd-loop/SKILL.md`（區塊進專案版控，協作者未必裝 claude-dd）
+  - `--start-segment` 一行
+  - 8 個編號步驟，各帶與全域 §3.9 相同的關卡（不帶紅燈進 commit；步驟 4「要派 agent 時最少 3 個、收回少於 3 份不續行、報告落地跳過要申報」；步驟 8「先算範圍、指令見 `dd-loop`」）
+  - 步驟 5 的兩行 `<依偵測結果填入…>`、截圖路徑；React 那段改成 Phase 0 偵測到 React 才填入
+  - `驗證不過` 那行；`## CLAUDE.md 維護` 小節只留前兩條（每個有程式碼的資料夾要有 CLAUDE.md、逐層堆疊更新與 gate 只擋改碼那層）
+- 舊區塊內容去處（驗收：舊 rev 12 區塊每個非空行到「新區塊 ∪ 全域 §3.9 ∪ `skills/dd-loop/SKILL.md`」裡找，印出找不到的逐條判；這份清單以那個比對結果為準）：
+  - 起點的兩個擋點、剛採用 `docs/reviews/` 時第一次一定被擋、舊版 gate 的處置 → 搬進 SKILL.md「段落起點與 `<起點>`」節
+  - 「一發只挖到一部分」的五發實測（2.3/3 對 1.8/3）、「不另派裁決者」的實測數字、「時間花在哪」 → 搬進 SKILL.md 步驟 3、4 節
+  - 「`.md` 不在 gate 的 `CODE_EXT` 裡…不要把它寫成閉環」 → 搬進 SKILL.md「報告一律落地」那條
+  - 步驟 7、8 的關係（兩條）→ SKILL.md 已有，刪
+  - React 驗證法 → 留在 dd-init（Phase 0 偵測到 React 才填）
+- Phase 0：加 React 偵測（`package.json` 的 dependencies／devDependencies 有 `react`）；建立模式、末尾加入模式、升級三種都照 Phase 0 結果填 React 段
+- Phase 1：
+  - 路由改成先看有沒有 `dd-loop-version` 標記，再看有沒有 `## 開發流程` 標題（現在先判「無 `## 開發流程` → 末尾加入」，rental-management 會被加第二份區塊）
+  - rev 判定線全部跳 13（照根 CLAUDE.md「動到蓋章區塊就必須跳 dd-loop-rev」那條的 ①–④；保留 CI 依賴的「舊版/手寫版」「判定為舊版」字樣）；「列出與現行版的差異」加一句 rev 12 缺什麼
+  - 有 `8step` 標記的舊版（rev ≤12 或沒有 rev）：部署版 `~/.claude/scripts/dd-init-upgrade.sh` 不存在就提示到 claude-dd repo 跑 `./install-dd-pipeline.sh --force`、不升級；存在就跑 `--plan`，把將刪除的行、保留的行、「保留但與範本相似」、「區塊外還有範本行」原樣列出來，再 AskUserQuestion；取代之前先跑 `git status --porcelain -- CLAUDE.md`，有未 commit 的修改就在 AskUserQuestion 裡一併告知；同意 → `--apply` 寫到 `mktemp` 暫存檔、照 Phase 0 結果把 `<依偵測結果填入…>` 填掉或刪掉（純 CLI／函式庫專案：兩行佔位改成「跑真實指令或消費端範例」的具體指令，同全域 §3.9 步驟 5）、Phase 0 偵測到 React 就把 React 那段補進步驟 5 底下、取代前把原檔複製一份並印出備份路徑、再取代原檔；拒絕 → 原樣。exit 2–5 → 不升級，照實回報
+  - `6step`／`7step` 標記（目前 0 個專案，不為它驗證錨點）與沒有標記的（手寫版、缺 code-review 步驟）：維持現行做法（agent 判斷），不走腳本
+- 引用蓋章區塊內容的地方清點：`git grep -n -E '蓋章區塊|區塊內|蓋章版|dd-loop-rev' -- . ':!docs/reviews' ':!docs/designs' ':!docs/measurements' ':!CHANGELOG.md'`，逐筆判定寫進設計文件。已知要改：
+  - `scripts/CLAUDE.md`「區塊內：步驟 8 的範圍指令寫死…得跳 dd-loop-rev」（搬出後不成立）、「`commands/dd-init.md` 的蓋章版也寫明了這點」（改指 `dd-loop`）
+  - `UPGRADING.md`「判定為舊版」那行的 rev 與「專案自己加的內容會保留」的說法
+  - `commands/dd-init.md` 區塊外「逐層往上堆疊更新是 §3.9 的工作流規則」
+  - 判定是否仍成立：`diagrams/src/gen_usage.py` 描述 Phase 1 的字串、`README.md`／`README.zh-TW.md` 指令一覽的 `/dd-init` 說明
+- 改了 SKILL.md 與蓋章區塊，照根 CLAUDE.md「CI 不驗、只能手動同步的區塊」的觸發時機，逐項巡兩份 README 與 `DD_PIPELINE_ARCHITECTURE.md` 那幾個區塊
+- 根 CLAUDE.md「動到蓋章區塊就必須跳 dd-loop-rev」的同批清單加 ⑤：升級清單要加入新區塊的行（CI「現行蓋章區塊的每一行都在升級清單裡」會擋）
+- 把 rev 13 新區塊的行加進 S2-1 的清單；ci.yml 加 step「現行蓋章區塊的每一行都在升級清單裡」（呼叫 `--list`，空行與通用行照同一套排除；先確認抽到的區塊非空、最後一行是 `## CLAUDE.md 維護` 小節的內容，抽取失效就紅）
+- CHANGELOG `## 未發布`
+- 驗證：
+  1. 測試清單 1 裡 rev 13 的斷言、測試清單 2
+  2. ci.yml 跳號檢查、四方一致、陣列一致、數字宣稱、「蓋章區塊每一行都在升級清單裡」本機綠（照 S1 的做法：把 ci.yml 每個 `run: |` 抽成 scratchpad 腳本、`/tmp/` 換成 scratchpad 路徑，`/bin/bash -e` 逐支跑）
+  3. **新區塊的關卡逐條 grep**（0 命中就補在括號裡那一步）：`不可帶紅燈`（步驟 1）、`最少 3 個`與`少於 3 份`（步驟 4）、`落地`與`跳過要申報`（步驟 4）、`不可用 SKIP`（步驟 6）、`第一個動作是算範圍`（步驟 8）；新區塊這幾處措辭照全域 §3.9 原文寫
+  4. 新區塊沒有第 0 欄的 ```（stamp 遇到就截斷）；8 個步驟行以外的新增行不以 `數字. ` 開頭；本機跑 ci.yml「第五方」整個 step（它掃全部 `*.md`、`*.sh`，不只 README）
+  5. 「舊區塊內容去處」的逐行比對：找不到的每一行，判定（搬到哪、或刪的理由）寫進設計文件 S2 底下
+  6. **部署前乾跑**（根 CLAUDE.md「新增 Skill 步驟 3」，改寫與改 commands 都要）：在 `--force` 部署之前，①派 subagent 照 repo 改後的 `skills/dd-loop/SKILL.md`「段落起點」節與步驟 3、4 節做一遍，分支各跑一次（有 `docs/reviews/` 的第一次被擋；舊版 gate：從 git 歷史取沒有 `--start-segment` 的 `check-claude-md.sh` 掛進拋棄式 repo 的 hook）；②派 subagent 只讀 repo 的 `commands/dd-init.md` Phase 0、1，不寫檔，逐條引用原文回報卡住、猜測、互相矛盾的句子；①的會寫檔步驟在 scratchpad 拋棄式 repo 真的跑；Phase 1 的寫檔實跑留給部署後的測試清單 4
+  7. `ruby -ryaml` 解析 ci.yml
+  8. 新區塊寫完重量行數與字元，更新「為什麼要做」與 CHANGELOG 的數字
+  9. **順序**：驗證 1–8 綠、乾跑沒有卡住的句子 → `cmp ~/.claude/CLAUDE.md templates/global/CLAUDE.md`（不同就先停下說明，`--force` 會覆蓋它）→ `./install-dd-pipeline.sh --force`（從工作目錄複製，不需先 commit；改了 SKILL.md、dd-init.md、清單，根 CLAUDE.md「新增 Skill 步驟 4」）→ `cmp` 比部署版與 repo 版（`~/.claude/commands/dd-init.md`、`~/.claude/scripts/dd-init-upgrade.sh`、`~/.claude/skills/dd-loop/SKILL.md`），不一致就中止 → 測試清單 4（用部署版跑）→ 綠了才 commit S2-2
+- commit：`feat: dd-init 蓋章區塊改成短版、指向 dd-loop，舊區塊升級改用分類腳本，rev 跳 13（S2-2）`
+
+#### 步驟 3、4 的做法
+
+- 步驟 3：code-simplifier 只審腳本、測試與 ci.yml，不改搬過去的原文
+- 步驟 4：至少 3 個 code-reviewer，其中一個專審「舊區塊搬移前後條件與指向有沒有掉」、一個專審分類腳本與測試
+- 步驟 5：步驟 3、4 動到 `scripts/dd-init-upgrade.sh`、`commands/dd-init.md`、`skills/dd-loop/SKILL.md` 任一支時，依序：改到 SKILL.md 重跑驗證 6 ①、改到 dd-init.md Phase 0、1 重跑驗證 6 ②、改到 dd-init.md 或清單重跑驗證 2、4 → `cmp ~/.claude/CLAUDE.md templates/global/CLAUDE.md` → `./install-dd-pipeline.sh --force` → 三支 `cmp` 部署版與 repo 版、不一致就中止 → 重跑測試清單 1 與 4 → 綠了才進步驟 6 commit
+
+#### 假設
+
+- 腳本放 `scripts/`（部署到 `~/.claude/scripts/`，跟 gate 同一層），不放 `skills/dd-loop/`：它是 `/dd-init` 的工具，不是迴圈細則
+- 範本行清單放在腳本 heredoc，不放 `commands/dd-init.md`：清單裡有舊版的 `dd-loop-rev: N` 標記行與 `## 開發流程` 行，放進 dd-init.md 會讓 CI 的「整份檔的 `dd-loop-rev: N` 只能有一種值」（`revs=` 那行）與「從 `^## 開發流程` 數編號項」（`count_block` 那行）兩道檢查誤判
+- 不升級使用者現有的 11 個專案
 
 ### 要新增的測試清單
 
@@ -117,5 +250,30 @@
 3. subagent 照 SKILL.md 乾跑一段，加一個只讀專案文件的接手 agent
 4. `claude -p` 觸發實測：正例 4 種（段落開始、做到一半接手、步驟 4 前、步驟 8 前）各 2 次，反例改 typo；去識別結果放 `docs/measurements/2026-10-30-dd-loop-trigger/` 當證據，不是 CI 測試
 
-S2 的測試清單在重規劃時另定。
+S2 使用者選定（2026-10-30，「照這份清單加」）：
+
+1. `tests/test-dd-init-upgrade.sh`（新增，ubuntu 與 bash32 job 都跑，照 `test-gate.sh` 的慣例）。fixture 從 git 歷史抽各版範本區塊（v1.6.12 rev 12、v1.6.4 rev 9、6a9addd rev 2、v1.1.0 只有 8step），抽出來先確認非空。各插入自編在地內容：步驟 4、8 底下各一行、步驟 5 一段縮排的圍欄專案指令、`驗證不過` 之後一行、步驟外一個在地小節、一行逐字等於清單外通用行（`---`）的在地行。新區塊用 `--template` 指向 repo 的 `commands/dd-init.md`。斷言（獨立於腳本自己的清單）：
+   - fixture 自編的每一行在地內容都出現在輸出，而且落在對應錨點底下
+   - 該版範本的每一行（套用清單的排除條件），在新區塊以外出現 0 次（「保留但相似」列出的除外；「區塊外還有範本行」那則 fixture 不套這條，改斷言 `--plan` 列出那幾行）
+   - 合併後只有一個 `dd-loop-version`、沒有重複的 `## 開發流程`
+   - rental-management 型：起點是在地 `###`，標題保留、新區塊標題降級
+   - 在地 `##` 夾在步驟 8 與 `驗證不過` 之間：`--plan` 列出「區塊外還有範本行」
+   - 區塊後段的大段在地內容原地不動；「保留但相似」列得出一句改寫過的範本句
+   - 純範本 fixture（零在地內容）：exit 0、整塊換新
+   - 步驟 7 那行措辭被改過的 fixture：`--plan` 列在「疑似改寫過的步驟行」
+   - `--plan` 輸出的各節標題與行號真的出現，並抽一筆行號用 `sed -n "<N>p"` 印出原檔那一行、與輸出的原文比對（防訊息字串寫壞、行號指錯）
+   - React 圍欄改過一行的 fixture：`--plan` 列出「保留的圍欄裡有部分行在清單中」
+   - exit 2（無標記）、3（只剩標題與標記可刪）、4（兩個標記）、5（`--apply` 自檢）
+   - rev 13 的斷言（新區塊的標記是 rev 13）S2-2 才加
+   - 先放空殼腳本，確認紅的是斷言；再做兩個變異（分類吃掉一行在地內容、終點提早停），比對固定版的完整輸出確認會紅
+2. ci.yml 新 step「現行蓋章區塊的每一行都在升級清單裡」（S2-2）：做負面測試（改區塊一行不更新清單 → 紅；區塊抽取失效 → 紅；還原 → 綠），補進 `DD_PIPELINE_ARCHITECTURE.md` CI 防線表
+3. 11 個已蓋章專案 CLAUDE.md 的複本跑 `--plan`（**只量測、不作驗收**；scratchpad，不進 repo，只記數字；順便數「在地行逐字等於清單裡、但不在 rev 12 區塊的行」「步驟 5 在地圍欄有沒有縮排」）
+4. `--force` 部署、`cmp` 三支一致之後，在沙盒 repo 用 `claude -p --output-format stream-json` 跑部署版 `/dd-init` Phase 1（prompt 寫死「AskUserQuestion 那一步當作使用者回答『同意』（或『拒絕』）」）。從 jsonl 的 tool_use 紀錄核：①`dd-init-upgrade.sh … --plan` 出現在寫死的答案點之前 ②「同意」才有 `--apply`、「拒絕」沒有（不看 agent 自述）。每個「同意」類案例都斷言：`dd-loop-version` 數 = 1、`## 開發流程` 數 = 1（rental 型數降級後的標題）、rev 13 區塊的非空行扣掉佔位行全部出現在輸出裡。案例：
+   - rev 12「同意」（非 React fixture）：輸出的標記是 rev 13；不含 rev 12 獨有的行（= `git show v1.6.12:commands/dd-init.md` 區塊的行減去 rev 13 區塊的行，照清單的排除條件，先斷言這個集合非空）；`grep -c '<依偵測結果填入'` 回 0；有呼叫 `--apply`
+   - rev 12「拒絕」：`cmp` 前後相同、沒呼叫 `--apply`
+   - rental-management 型一次
+   - 帶 React 的升級一次、建立模式＋React 一次：「獨有行」集合扣掉 React 段；斷言 React 段的識別字串（`native value setter`）在步驟 5 底下、只出現一次
+   - 純 CLI 專案 fixture：步驟 5 底下有具體驗證指令（不只是佔位數 = 0）
+   - 步驟 5 已有具體 curl 指令的 fixture：該 curl 行出現次數 = 1，而且後端佔位行不在
+   - rev 13 fixture：判現行版、不改檔
 
