@@ -431,7 +431,7 @@ t2_case acw a-pm-mixed    '{"modelSettings":{"m":"x","n":{"autoCompactWindow":40
 t2_case acw a-bom         "${T2_BOM}{\"autoCompactWindow\":400000}" "@absent" "@absent" '^all$'
 t2_case acw a-multi       '{"autoCompactWindow":400000} {}' "@absent" "@absent" '^unparseable$' '^(all|none)$'
 # 2026-11-15 審查時找到的四類（當時兩臂結論不同）：
-#   數字字面值比 float 精確、四捨五入後剛好落在邊界上：jq 1.7 起拿字面值的原樣比大小，python3 先轉成 float
+#   數字字面值比 float 精確、四捨五入後剛好落在邊界上：jq（1.7、1.7.1、1.8.1 實測）拿字面值的原樣比大小，python3 先轉成 float
 #   settings.json 裡有不合法的 UTF-8 位元組（跟這個鍵無關的地方）：jq 換成替代字元照樣解析，python3 預設報錯
 #   別的鍵是幾千位的整數：python 3.11 起整數字串超過 4300 位就報 ValueError，jq 照收
 t2_case acw a-top-edge-lo '{"autoCompactWindow":99999.99999999999999999}'  "@absent" "@absent" '^all$'
