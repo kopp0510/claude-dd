@@ -2,8 +2,6 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
-進度以 docs/designs/2026-11-15-speed-cost-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
-
 ## 安裝 / 更新
 
 ```bash
@@ -392,7 +390,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **受測 session 的快照放在 scratchpad 底下時，它找得到 scratchpad 裡別的檔**：2026-11-15 有個審查者 `cd` 到快照的上三層（暫存區的根）去 `find` 計畫提到的探針腳本。
   洩題檢查要掃「快照以外的暫存區絕對路徑」，只認家目錄、`../` 會漏（那個目錄的 `outside.py`）；答案檔不要跟快照放在同一棵暫存樹下
 - **同一則訊息裡派的幾個 subagent 不一定同時開跑**：2026-11-15 四發 `claude -p`（2.1.325）裡，opus 裁決者在一則訊息派 4 個審查者，每個 Agent 呼叫的 prompt 約 1.48 萬字元，
-  審查者一個隔約 75 秒才開始（第 84、159、234、312 秒）—— 第 4 個開跑時已經過了整發 455–614 秒的一半以上。這是不是 Claude Code 一般的行為沒查文件。
+  審查者一個隔約 75 秒才開始（`P-med-2` 是第 84、159、234、312 秒，另外三發差 3 秒以內）—— 第 4 個開跑時已經過了整發 455–614 秒的一半以上。這是不是 Claude Code 一般的行為沒查文件。
   量「等的時間花在哪」要看每個 subagent 在時間軸上的起訖（`docs/measurements/2026-11-15-reviewer-effort/timeline.py`），拿整發秒數減最慢的 subagent 會算錯；
   要給好幾個 subagent 同一份長內容時放成檔、prompt 只給路徑（步驟 4 的 diff 檔就是這樣做，見 `skills/dd-loop/SKILL.md`「派工前先準備一個 diff 檔」）
 - **`commands/*.md` 的安全檢查不可以只靠 `scripts/` 的新行為**：`--commands-only` 只跑 `create_commands`、不跑 `create_scripts`

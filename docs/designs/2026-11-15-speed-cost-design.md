@@ -29,7 +29,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7..fd96d69 |
-| S2 | 審查者思考強度實驗（medium 對 low） | IN_PROGRESS | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I table.py` 能從存下的 stats 重印出表（原本寫 `stats.py`：它要讀不在 repo 的原始紀錄，從存下的 stats 重印的是 `table.py`） | 58fc4ba.. |
+| S2 | 審查者思考強度實驗（medium 對 low） | DONE | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I table.py` 能從存下的 stats 重印出表（原本寫 `stats.py`：它要讀不在 repo 的原始紀錄，從存下的 stats 重印的是 `table.py`） | 58fc4ba..024546e |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -201,6 +201,10 @@ S2 跑的結果（細節在量測文件「結果」）：
 - 乙只跑 1 發：跑完第一發重估全部跑完約 36–40 美元，超過 30 美元的檢查點；用 AskUserQuestion 問使用者，他選「現在停」（2026-11-15）。乙寫「沒跑完，不下結論」
 - 作廢一發（`claude -p` 在父 session 最後一輪結束 10 分鐘後把背景 subagent 停掉；`run.sh` 補 `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`）、中途結束一發
 - 規則檔沒動；沒有任何一部分達到「建議改」
+- 步驟 3、4（2026-11-15）：code-simplifier 改了 `stats.py`、`outside.py`（6 發輸出逐位元組相同）；3 個 `code-reviewer` 的報告與查證在 `docs/reviews/2026-11-15-speed-cost/S2-*.md`，採納 Important 7 條、Smells 3 條，沒有駁回。
+  最重的一條：結果文件第一版把「時間花在哪」寫錯（照時間戳，計畫審查一發有一半以上花在裁決者一份份寫審查者的 prompt），已改
+- 步驟 7：根目錄 CLAUDE.md「注意事項」補三條（`claude -p` 的 10 分鐘背景等待上限、快照放暫存區時的洩題檢查、同一則訊息派的 subagent 錯開開跑）。步驟 8：審這一段動到的三份 CLAUDE.md，改了一句秒數的寫法
+- 沒做、另外問使用者的：計畫審查改成「計畫與事實放成檔、審查者 prompt 只給路徑」（要改 `skills/plan-review/SKILL.md`，省多少沒量過）
 
 ### 要新增的測試清單（全部在 `tests/test-install.sh`）
 
