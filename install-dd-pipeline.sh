@@ -211,13 +211,15 @@ print_backup_notice() {
 # 回寫用 cat 而非 mv，保留原檔 inode / 權限 / symlink 身分（settings.json 可能被
 # dotfiles 管理器 symlink 到別處，mv 會把它換成獨立實體檔且權限變 0600）
 # 失敗（JSON 損毀等）回傳 1 且原檔不動，呼叫端須用 `|| ...` 接住，以免 set -e 中止安裝
-# 空檔、只有空白、頂層不是物件也算失敗：jq 對空輸入 exit 0 而且什麼都不印（照著寫回去就是
-# 「回報成功、實際沒寫」），對 null 則會把整個檔改寫成物件；python3 那條對這幾種都報錯，兩條要一致
+# 空檔、只有空白、頂層不是物件、檔案裡不只一個 JSON 值也算失敗：jq 對空輸入 exit 0 而且什麼都不印
+# （照著寫回去就是「回報成功、實際沒寫」），對 null 會把整個檔改寫成物件，對 `{} {}` 會兩個都改再黏著寫回；
+# python3 那條對這幾種都報錯，兩條要一致。用 -s 把整個檔收成陣列再檢查「剛好一個、而且是物件」：
+# 不加 -s 的 `jq -e` 只看最後一個值，`null {}` 會被放行
 # 用法：jq_inplace <檔案> <jq 參數...>
 jq_inplace() {
     local file="$1"
     shift
-    jq -e 'type == "object"' "$file" >/dev/null 2>&1 || return 1
+    jq -e -s 'length == 1 and (.[0] | type) == "object"' "$file" >/dev/null 2>&1 || return 1
     local tmp
     tmp=$(mktemp)
     if jq "$@" "$file" > "$tmp"; then
@@ -234,6 +236,8 @@ jq_inplace() {
 # 呼叫端撰寫變更敘述時：用單引號或 quoted heredoc（避免 shell 先展開 $），
 # 且首行不得縮排（敘述會原樣插入 python 原始碼頂層）
 # 失敗（JSON 損毀等）回傳非零且原檔不動（載入失敗即退出，不會走到寫入）；頂層不是物件也算失敗（同 jq_inplace）
+# 讀檔用 utf-8-sig：開頭有 UTF-8 BOM 時 jq 會略過它照常解析，python 預設的 utf-8 會報錯；
+# 本檔所有用 python3 讀 JSON 的地方都一樣（兩條路徑寫回時都不帶 BOM）
 py_inplace() {
     local file="$1" mutate="$2"
     shift 2
@@ -241,7 +245,7 @@ py_inplace() {
 import json, os
 env = os.environ
 path = env['JSON_FILE']
-with open(path) as f:
+with open(path, encoding='utf-8-sig') as f:
     data = json.load(f)
 if not isinstance(data, dict):
     raise SystemExit(1)
@@ -411,11 +415,13 @@ plugin_enabled_state() {
     file_exists "$file" || { echo "none"; return; }
 
     if command_exists "jq"; then
-        # 型別護欄與 python3 分支對齊：頂層或 enabledPlugins 非物件時回 none，
-        # 而不是讓 filter 報錯（報錯會被下方誤讀成 unparseable）
-        out=$(jq -r --arg key "$key" '
-            if type != "object" then "none"
-            else (.enabledPlugins // {}) as $e
+        # 型別護欄與 python3 分支對齊：enabledPlugins 非物件時回 none（頂層是物件、只是那個鍵型別不對），
+        # 而不是讓 filter 報錯。頂層不是物件、或檔案裡不只一個 JSON 值則刻意報錯、落到下面的 unparseable：
+        # 整個檔不是設定檔的形狀時講「未啟用」是把不確定講成確定（2026-11-14 改，原本回 none；與 mcp_scope 同一條規則）。
+        # -s 把整個檔收成陣列：不加的話 `{} {}` 會印兩行，落到呼叫端的「未啟用」
+        out=$(jq -r -s --arg key "$key" '
+            if length != 1 or (.[0] | type) != "object" then error("not a single top-level object")
+            else .[0] | (.enabledPlugins // {}) as $e
                 | if ($e | type) != "object" then "none"
                   elif $e[$key] == true then "enabled"
                   elif $e[$key] == false then "disabled"
@@ -425,11 +431,13 @@ plugin_enabled_state() {
         out=$(PLUGIN_KEY="$key" SETTINGS_FILE="$file" python3 -c '
 import json, os, sys
 try:
-    with open(os.environ["SETTINGS_FILE"]) as f:
+    with open(os.environ["SETTINGS_FILE"], encoding="utf-8-sig") as f:
         data = json.load(f)
 except Exception:
     sys.exit(1)
-enabled = data.get("enabledPlugins") if isinstance(data, dict) else None
+if not isinstance(data, dict):
+    sys.exit(1)
+enabled = data.get("enabledPlugins")
 value = enabled.get(os.environ["PLUGIN_KEY"]) if isinstance(enabled, dict) else None
 print("enabled" if value is True else "disabled" if value is False else "none")
 ' 2>/dev/null) || out=""
@@ -633,7 +641,7 @@ install_builtin_agents() {
 #   global      — 根層 mcpServers（官方 scope 名稱為 user；所有專案皆可用，profile 要的就是這個）
 #   local:<N>   — 僅出現在 N 個專案的 projects.<路徑>.mcpServers（官方 scope 名稱為 local）
 #   none        — 檔案不存在，或解析成功但找不到
-#   unparseable — 檔案存在但 JSON 解析失敗（損毀 / 截斷），或頂層不是物件（null、陣列、字串…），有無安裝無從判定
+#   unparseable — 檔案存在但 JSON 解析失敗（損毀 / 截斷），或內容不是「剛好一個物件」（null、陣列、字串、接連兩個值…），有無安裝無從判定
 #   unknown     — 無 jq 也無 python3，只能字串比對，連「是否真的設定」都僅為字串證據
 # 兩點必須留意：
 #   1) 純字串 grep 會把別的專案的 scoped 設定誤判為已安裝，故需真正解析 JSON
@@ -645,24 +653,26 @@ mcp_scope() {
 
     if command_exists "jq"; then
         # 型別護欄與 python3 分支對齊：非物件的 mcpServers / projects 條目一律略過，
-        # 而不是讓整條 filter 報錯（報錯會被誤讀成「沒安裝」）。頂層不是物件則刻意報錯、落到
-        # 下面的 unparseable：整個檔不是設定檔的形狀時，講「沒安裝」是把不確定講成確定
-        # （頂層是 null 時 jq 原本回 none、python3 回 unparseable）
-        out=$(jq -r --arg name "$mcp" '
+        # 而不是讓整條 filter 報錯（報錯會被誤讀成「沒安裝」）。頂層不是物件、或檔案裡不只一個 JSON 值
+        # 則刻意報錯、落到下面的 unparseable：整個檔不是設定檔的形狀時，講「沒安裝」是把不確定講成確定
+        # （頂層是 null 時 jq 原本回 none、python3 回 unparseable；`{…} {}` 時 jq 原本印兩行，落到呼叫端的「未安裝」）
+        out=$(jq -r -s --arg name "$mcp" '
             def hasmcp($o): ($o | type) == "object" and (($o.mcpServers // {}) | type) == "object"
                             and (($o.mcpServers // {}) | has($name));
-            if type != "object" then error("top level is not an object")
-            elif hasmcp(.) then "global"
-            else
-                (((.projects // {}) | if type == "object" then [to_entries[] | select(hasmcp(.value))] | length else 0 end)) as $n
-                | if $n > 0 then "local:\($n)" else "none" end
+            if length != 1 or (.[0] | type) != "object" then error("not a single top-level object")
+            else .[0]
+                | if hasmcp(.) then "global"
+                  else
+                    (((.projects // {}) | if type == "object" then [to_entries[] | select(hasmcp(.value))] | length else 0 end)) as $n
+                    | if $n > 0 then "local:\($n)" else "none" end
+                  end
             end' "$file" 2>/dev/null) || out=""
     elif command_exists "python3"; then
         out=$(MCP_NAME="$mcp" MCP_FILE="$file" python3 -c '
 import json, os, sys
 name, path = os.environ["MCP_NAME"], os.environ["MCP_FILE"]
 try:
-    with open(path) as f:
+    with open(path, encoding="utf-8-sig") as f:
         data = json.load(f)
 except Exception:
     sys.exit(1)
@@ -818,16 +828,16 @@ PYEOF
 
         # 讀取版本號（解析失敗時跳過該 plugin，不中止安裝）
         # 兩條路徑都只接受 JSON 字串，非字串（null / 數字 / array / object）一律回空字串
-        # 當成「這裡沒有版本」。少了這道型別護欄兩路徑會不等價：`"version": null` 在
+        # 當成「這裡沒有版本」；檔案裡不只一個 JSON 值也一樣（jq 加 -s 才看得出來，python3 本來就報錯）。少了這道型別護欄兩路徑會不等價：`"version": null` 在
         # jq 印出 "null"、在 python3 印出 "None"，後者會繞過下方守衛寫出
         # installPath=.../None 這種指向不存在目錄的紀錄。
         local version=""
         if command_exists "jq"; then
-            version=$(jq -r '.version | if type == "string" then . else "" end' "$plugin_json" 2>/dev/null) || version=""
+            version=$(jq -r -s 'if length == 1 then (.[0].version | if type == "string" then . else "" end) else "" end' "$plugin_json" 2>/dev/null) || version=""
         else
             version=$(PLUGIN_JSON="$plugin_json" python3 -c '
 import json, os
-value = json.load(open(os.environ["PLUGIN_JSON"])).get("version")
+value = json.load(open(os.environ["PLUGIN_JSON"], encoding="utf-8-sig")).get("version")
 print(value if isinstance(value, str) else "")
 ' 2>/dev/null) || version=""
         fi
@@ -838,11 +848,11 @@ print(value if isinstance(value, str) else "")
         # 的目錄。同樣的型別護欄，理由同上。
         if [ -z "$version" ]; then
             if command_exists "jq"; then
-                version=$(jq -r --arg key "$plugin_key" '.plugins[$key][0].version | if type == "string" then . else "" end' "$installed_file" 2>/dev/null) || version=""
+                version=$(jq -r -s --arg key "$plugin_key" 'if length == 1 then (.[0].plugins[$key][0].version | if type == "string" then . else "" end) else "" end' "$installed_file" 2>/dev/null) || version=""
             else
                 version=$(INSTALLED_JSON="$installed_file" PLUGIN_KEY="$plugin_key" python3 -c '
 import json, os
-data = json.load(open(os.environ["INSTALLED_JSON"]))
+data = json.load(open(os.environ["INSTALLED_JSON"], encoding="utf-8-sig"))
 entry = (data.get("plugins") or {}).get(os.environ["PLUGIN_KEY"]) or [{}]
 value = entry[0].get("version") if isinstance(entry[0], dict) else None
 print(value if isinstance(value, str) else "")
@@ -860,8 +870,29 @@ print(value if isinstance(value, str) else "")
             continue
         fi
 
-        # 更新 settings.json — 啟用 Plugin（讀寫失敗時跳過該 plugin，不在 set -e 下中止安裝）
+        # 先登記、再啟用：登記（installed_plugins.json）失敗就跳過，settings.json 不動 —— 反過來做的話，
+        # 登記失敗時 settings.json 已經寫成啟用，留下「啟用了一個沒登記的 plugin」，完成訊息卻說沒啟用。
+        # 啟用失敗時留下的是「登記了但沒啟用」，那個狀態不會讓 Claude Code 去載入東西。
+        # 更新 installed_plugins.json — 登記 Plugin（讀寫失敗時跳過該 plugin，不在 set -e 下中止安裝）
+        mkdir -p "$(dirname "$installed_file")"
+        local install_path="$CLAUDE_DIR/plugins/cache/$PLUGINS_MARKETPLACE/$plugin/$version"
+        local now
+        now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
         # 檔案不存在時先種空骨架，讓下方只需處理「就地更新」一種路徑
+        local installed_ok=true
+        if [ ! -f "$installed_file" ] && ! echo '{"version":2,"plugins":{}}' > "$installed_file"; then
+            installed_ok=false   # 連空骨架都寫不進去（權限等問題）
+        else
+            json_edit "$installed_file" "$jq_register" "$py_register" \
+                "key=$plugin_key" "path=$install_path" "ver=$version" "ts=$now" || installed_ok=false
+        fi
+
+        if [ "$installed_ok" = false ]; then
+            echo -e "$tree_char $plugin: ${YELLOW}${WARN} installed_plugins.json 更新失敗（檔案可能損毀），跳過${NC}"
+            continue
+        fi
+
+        # 更新 settings.json — 啟用 Plugin（同上：不存在時先種空骨架，失敗就跳過）
         local settings_ok=true
         if [ ! -f "$settings_file" ] && ! echo '{}' > "$settings_file"; then
             settings_ok=false   # 連空骨架都寫不進去（權限等問題）
@@ -874,25 +905,6 @@ print(value if isinstance(value, str) else "")
         fi
         if [ "$settings_ok" = false ]; then
             echo -e "$tree_char $plugin: ${YELLOW}${WARN} settings.json 更新失敗（檔案可能損毀），跳過${NC}"
-            continue
-        fi
-
-        # 更新 installed_plugins.json — 登記 Plugin（讀寫失敗時跳過，不中止安裝）
-        mkdir -p "$(dirname "$installed_file")"
-        local install_path="$CLAUDE_DIR/plugins/cache/$PLUGINS_MARKETPLACE/$plugin/$version"
-        local now
-        now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-        # 同 settings.json：不存在時先種空骨架，只留「就地更新」一種路徑
-        local installed_ok=true
-        if [ ! -f "$installed_file" ] && ! echo '{"version":2,"plugins":{}}' > "$installed_file"; then
-            installed_ok=false   # 連空骨架都寫不進去（權限等問題）
-        else
-            json_edit "$installed_file" "$jq_register" "$py_register" \
-                "key=$plugin_key" "path=$install_path" "ver=$version" "ts=$now" || installed_ok=false
-        fi
-
-        if [ "$installed_ok" = false ]; then
-            echo -e "$tree_char $plugin: ${YELLOW}${WARN} installed_plugins.json 更新失敗（檔案可能損毀），跳過${NC}"
             continue
         fi
 
@@ -1278,7 +1290,7 @@ show_completion() {
     echo "   2. /dd-init  （蓋章 8 步開發迴圈 + 專案 CLAUDE.md）"
     echo "   3. 開發：實作+測試 → commit → 簡化 → review → 再測 → commit → 沉澱所學 → 評分修正"
     echo ""
-    # agent 與 plugin 兩段只在這次真的跑過那兩步時才印（--commands-only 兩步都沒跑）
+    # agent、plugin、output style 三段只在這次真的跑過那幾步時才印（--commands-only 三步都沒跑）
     if [ "$COMMANDS_ONLY" = false ]; then
         echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
         echo "   供 wrapper skills 透過 Task tool 調用"
@@ -1301,8 +1313,6 @@ show_completion() {
             echo -e "${YELLOW}📌 這次沒有啟用任何官方 Plugin（原因見上方步驟 5）${NC}"
         fi
         echo ""
-    fi
-    if [ "$COMMANDS_ONLY" = false ]; then
         # 同上：名字走訪陣列，說明用 case 補（新增風格漏寫說明只會少一句，不會整個不見）
         echo -e "${GREEN}📌 已部署的 Output Style（${#DD_OUTPUT_STYLES[@]} 個；重開 Claude Code 後生效，只對目前專案，全域預設見 README）：${NC}"
         for s in "${DD_OUTPUT_STYLES[@]}"; do

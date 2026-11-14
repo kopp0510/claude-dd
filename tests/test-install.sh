@@ -1,7 +1,7 @@
 #!/bin/bash
 # 安裝腳本（install-dd-pipeline.sh）的端到端測試：在拋棄式 HOME 裡非互動安裝，驗部署內容、冪等、
 # --force／--update／--commands-only／--uninstall 與 --check 不寫入。
-# 2026-11-14 補上 T1–T9：symlink 的備份、jq 與 python3 兩條路徑的等價表、plugin 登記、--check 的 MCP 輸出、
+# 2026-11-14 補上 T1–T9：symlink 的備份、jq 與 python3 兩條路徑的等價表（只守它列的那幾類輸入）、plugin 登記、--check 的 MCP 輸出、
 # 覆蓋前備份、全域 CLAUDE.md 三種情境、hook 路徑驗證、舊指令檔的備份、完成訊息。
 # 測不到的：全域 CLAUDE.md 的互動選單（ask 用 [ -t 0 ] 判斷，管線餵 stdin 一律走預設值）。
 # CI 在 ubuntu（bash 5）與 macOS（/bin/bash 3.2）各跑一次（.github/workflows/ci.yml）。
@@ -95,9 +95,14 @@ echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"
 # 斷言失敗時一律印出「組名＋斷言名」再 exit 1 —— 上面那些裸 [ … ] 在 set -e 下失敗不印任何字。
 # 本機做變異實驗時可以只跑一組：`TEST_ONLY=T5 tests/test-install.sh`（上面原有的檢查與 T1 照跑，T2 之後只跑指定那組）。
 # ---------------------------------------------------------------------------
+# TEST_ONLY 打錯（t5、T05）時會一組都沒跑卻 rc=0，所以先驗值；新增一組時這裡要跟著加
+case "${TEST_ONLY:-}" in
+    ""|T2|T3|T4|T5|T6|T7|T8|T9) ;;
+    *) echo "❌ TEST_ONLY=${TEST_ONLY} 不是 T2–T9 其中一組"; exit 2 ;;
+esac
 want() { [ -z "${TEST_ONLY:-}" ] || [ "$TEST_ONLY" = "$1" ]; }
-# 去掉顏色碼。LC_ALL=C：輸出裡有壞的位元組時 BSD sed 會整個失敗、什麼都不印，
-# 後面「不可以出現某字」的斷言就會空通過
+# 去掉顏色碼。LC_ALL=C：輸出裡有壞的位元組時，UTF-8 locale 下的 BSD sed 印到那一行就失敗、
+# 那一行之後的內容全部不見，「不可以出現某字」的斷言就可能空通過
 plain() { LC_ALL=C sed $'s/\x1b\\[[0-9;]*m//g' "$1"; }
 # 輸出是不是合法的 UTF-8：訊息裡的變數緊貼全形字（`$old（…`）時 bash 3.2 會把變數名吃掉、印出壞的位元組
 utf8_ok() { iconv -f UTF-8 -t UTF-8 "$1" > /dev/null 2>&1; }
@@ -125,8 +130,7 @@ echo "✅ T1 全域 CLAUDE.md 是 symlink 時，--force 覆蓋前備份的是它
 # 不在這支測試裡直接 `函式 || rc=$?` —— 那樣呼叫，bash 會讓函式裡的 set -e 失效，測到的就不是真的安裝行為；
 # 而且這支測試上面那行 source 是在真實 HOME 下跑的，CLAUDE_DIR 已經定死，直接呼叫會寫進真的 ~/.claude。
 # python3 那一臂靠重新定義 command_exists（對 jq 回 1）走到。
-command -v jq >/dev/null 2>&1 || { echo "❌ T2：這台機器沒有 jq —— 兩臂會走同一條路，等價比對沒有意義"; exit 1; }
-command -v python3 >/dev/null 2>&1 || { echo "❌ T2：這台機器沒有 python3 —— 兩臂會走同一條路，等價比對沒有意義"; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "❌ 這台機器沒有 python3 —— T2 的另一臂要它，T3 之後各組也用它把 JSON 正規化再比"; exit 1; }
 T2_DIR=$(mktemp -d "$WORK/t2.XXXXXX")
 T2_KEY="${OFFICIAL_PLUGINS[0]}@${PLUGINS_MARKETPLACE}"
 cat > "$T2_DIR/drive.sh" <<'DRIVE'
@@ -146,9 +150,10 @@ case "$1" in
 esac
 DRIVE
 
-t2_canon() {  # 印檔案的正規化內容：鍵排序、時間戳換成 TS；解析不了就印位元組數與開頭
+t2_canon() {  # 印檔案的正規化內容：鍵排序、安裝腳本填的時間戳換成 TS（別的值照留）；解析不了就印位元組數與開頭
     python3 - "$1" <<'PY'
-import json, os, sys
+import json, os, re, sys
+ISO = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T")
 p = sys.argv[1]
 if not os.path.exists(p):
     print("(absent)")
@@ -161,7 +166,8 @@ except Exception:
     sys.exit()
 def scrub(o):
     if isinstance(o, dict):
-        return dict((k, "TS" if k in ("installedAt", "lastUpdated") else scrub(v)) for k, v in o.items())
+        return dict((k, "TS" if k in ("installedAt", "lastUpdated") and isinstance(v, str) and ISO.match(v) else scrub(v))
+                    for k, v in o.items())
     if isinstance(o, list):
         return [scrub(x) for x in o]
     return o
@@ -169,19 +175,24 @@ print(json.dumps(scrub(d), sort_keys=True, ensure_ascii=False))
 PY
 }
 
+T2_PLUGIN_JSON=""   # 非空時，第一個官方 plugin 的 plugin.json 改用這份內容
 t2_mkhome() {  # $1=沙盒 HOME：建假的 marketplace，每個官方 plugin 的 plugin.json 都有 version
     local p d
     for p in "${OFFICIAL_PLUGINS[@]}"; do
         d="$1/.claude/plugins/marketplaces/$PLUGINS_MARKETPLACE/plugins/$p/.claude-plugin"
         mkdir -p "$d"
-        printf '{"name":"%s","version":"1.2.3"}\n' "$p" > "$d/plugin.json"
+        if [ -n "$T2_PLUGIN_JSON" ] && [ "$p" = "${OFFICIAL_PLUGINS[0]}" ]; then
+            printf '%s' "$T2_PLUGIN_JSON" > "$d/plugin.json"
+        else
+            printf '{"name":"%s","version":"1.2.3"}\n' "$p" > "$d/plugin.json"
+        fi
     done
 }
 
 T2_FAILED=""
 T2_COUNT=0
 # $1=函式 $2=案例名 $3=settings.json $4=installed_plugins.json $5=~/.claude.json（三個都可填 @absent=不建檔）
-# $6=兩臂的結論都要符合的 regex（可空） $7=兩臂的結論都不可以出現的 regex（可空）
+# $6=兩臂的結論都要符合的 regex $7=兩臂的結論都不可以出現的 regex（都可空；要放好幾條就一行一條，用 $NL 接）
 t2_case() {
     local site="$1" name="$2" arm h rc why=""
     T2_COUNT=$((T2_COUNT + 1))
@@ -211,13 +222,20 @@ t2_case() {
         why="${why} stderr 有 shell 錯誤；"
     fi
     cmp -s "$T2_DIR/$site.$name.jq.txt" "$T2_DIR/$site.$name.py.txt" || why="${why} 兩臂結論不同；"
+    local pat
     for arm in jq py; do
-        if [ -n "$6" ] && ! grep -qE -- "$6" "$T2_DIR/$site.$name.$arm.txt"; then
-            why="${why} ${arm} 那一臂沒有出現「${6}」；"
-        fi
-        if [ -n "${7:-}" ] && grep -qE -- "$7" "$T2_DIR/$site.$name.$arm.txt"; then
-            why="${why} ${arm} 那一臂出現了不該有的「${7}」；"
-        fi
+        while IFS= read -r pat; do
+            [ -z "$pat" ] && continue
+            grep -qE -- "$pat" "$T2_DIR/$site.$name.$arm.txt" || why="${why} ${arm} 那一臂沒有出現「${pat}」；"
+        done <<EOF
+$6
+EOF
+        while IFS= read -r pat; do
+            [ -z "$pat" ] && continue
+            if grep -qE -- "$pat" "$T2_DIR/$site.$name.$arm.txt"; then why="${why} ${arm} 那一臂出現了不該有的「${pat}」；"; fi
+        done <<EOF
+${7:-}
+EOF
     done
     if [ -n "$why" ]; then
         T2_FAILED="${T2_FAILED}${site}.${name} "
@@ -226,12 +244,16 @@ t2_case() {
 }
 
 if want T2; then
+command -v jq >/dev/null 2>&1 || { echo "❌ T2：這台機器沒有 jq —— 兩臂會走同一條路，等價比對沒有意義"; exit 1; }
+NL=$'\n'
+T2_BOM=$'\xef\xbb\xbf'
 T2_OK_SETTINGS='^settings: \{"enabledPlugins": \{"[^"]+": true'
 T2_OK_INSTALLED='^installed: \{"plugins": \{"[^"]+": \[\{"installPath": "<HOME>/\.claude/plugins/cache/[^"]+/1\.2\.3"'
 
-# settings.json 的 15 種內容 × 安裝／移除／查啟用狀態。三類定案的結論直接斷言：
-#   空檔、只有空白、頂層不是物件 → 失敗、不改檔；enabledPlugins 是 null → 當成沒有這個鍵；
-#   plugin_enabled_state 對頂層不是物件回 none 是既有的刻意設計，不在這條裡
+# settings.json 的各種內容 × 安裝／移除／查啟用狀態。定案的結論直接斷言：
+#   空檔、只有空白、頂層不是物件、檔案裡不只一個 JSON 值 → 失敗、不改檔（查啟用狀態回 unparseable）；
+#   enabledPlugins 是 null → 當成沒有這個鍵；是字串或陣列 → 安裝與移除失敗，查啟用狀態回 none（頂層是物件、只是那個鍵型別不對）；
+#   開頭有 UTF-8 BOM → 當成正常的檔
 t2_case install   s-absent    "@absent" "@absent" "@absent" "$T2_OK_SETTINGS"
 t2_case uninstall s-absent    "@absent" "@absent" "@absent" '^settings: \(absent\)$' '解析失敗'
 t2_case state     s-absent    "@absent" "@absent" "@absent" '^none$'
@@ -249,16 +271,16 @@ t2_case uninstall s-badjson   '{'       "@absent" "@absent" 'settings\.json 解�
 t2_case state     s-badjson   '{'       "@absent" "@absent" '^unparseable$'
 t2_case install   s-null      'null'    "@absent" "@absent" '^settings: null$' '已啟用'
 t2_case uninstall s-null      'null'    "@absent" "@absent" 'settings\.json 解析失敗'
-t2_case state     s-null      'null'    "@absent" "@absent" '^none$'
+t2_case state     s-null      'null'    "@absent" "@absent" '^unparseable$'
 t2_case install   s-array     '[]'      "@absent" "@absent" 'settings\.json 更新失敗' '已啟用'
 t2_case uninstall s-array     '[]'      "@absent" "@absent" 'settings\.json 解析失敗'
-t2_case state     s-array     '[]'      "@absent" "@absent" '^none$'
+t2_case state     s-array     '[]'      "@absent" "@absent" '^unparseable$'
 t2_case install   s-string    '"str"'   "@absent" "@absent" 'settings\.json 更新失敗' '已啟用'
 t2_case uninstall s-string    '"str"'   "@absent" "@absent" 'settings\.json 解析失敗'
-t2_case state     s-string    '"str"'   "@absent" "@absent" '^none$'
+t2_case state     s-string    '"str"'   "@absent" "@absent" '^unparseable$'
 t2_case install   s-number    '123'     "@absent" "@absent" 'settings\.json 更新失敗' '已啟用'
 t2_case uninstall s-number    '123'     "@absent" "@absent" 'settings\.json 解析失敗'
-t2_case state     s-number    '123'     "@absent" "@absent" '^none$'
+t2_case state     s-number    '123'     "@absent" "@absent" '^unparseable$'
 t2_case install   s-emptyobj  '{}'      "@absent" "@absent" "$T2_OK_SETTINGS"
 t2_case uninstall s-emptyobj  '{}'      "@absent" "@absent" '^settings: \{\}$' '解析失敗'
 t2_case state     s-emptyobj  '{}'      "@absent" "@absent" '^none$'
@@ -280,26 +302,39 @@ t2_case state     s-ep-false  "{\"enabledPlugins\":{\"$T2_KEY\":false}}" "@absen
 t2_case install   s-ep-true   "{\"enabledPlugins\":{\"$T2_KEY\":true}}"  "@absent" "@absent" "$T2_OK_SETTINGS"
 t2_case uninstall s-ep-true   "{\"enabledPlugins\":{\"$T2_KEY\":true}}"  "@absent" "@absent" '^settings: \{"enabledPlugins": \{\}\}$' '解析失敗'
 t2_case state     s-ep-true   "{\"enabledPlugins\":{\"$T2_KEY\":true}}"  "@absent" "@absent" '^enabled$'
+t2_case install   s-multi     '{} {}'   "@absent" "@absent" 'settings\.json 更新失敗' '已啟用'
+t2_case uninstall s-multi     '{} {}'   "@absent" "@absent" 'settings\.json 解析失敗'
+t2_case state     s-multi     '{} {}'   "@absent" "@absent" '^unparseable$'
+t2_case install   s-nullobj   'null {}' "@absent" "@absent" 'settings\.json 更新失敗' '已啟用'
+t2_case uninstall s-nullobj   'null {}' "@absent" "@absent" 'settings\.json 解析失敗'
+t2_case state     s-nullobj   'null {}' "@absent" "@absent" '^unparseable$'
+t2_case install   s-bom       "${T2_BOM}{}" "@absent" "@absent" "$T2_OK_SETTINGS" '更新失敗'
+t2_case uninstall s-bom       "${T2_BOM}{}" "@absent" "@absent" '^settings: \{\}$' '解析失敗'
+t2_case state     s-bom       "${T2_BOM}{\"enabledPlugins\":{\"$T2_KEY\":true}}" "@absent" "@absent" '^enabled$'
 
-# installed_plugins.json 的 16 種內容 × 安裝／移除。登記項的第一筆不是物件（[null]、["x"]）→ 失敗、不改檔
+# installed_plugins.json 的各種內容 × 安裝／移除。登記項的第一筆不是物件（[null]、["x"]）→ 失敗、不改檔。
+# 登記失敗的 plugin 不可以已經在 settings.json 被寫成啟用（先登記、再啟用）
 T2_E='{"enabledPlugins":{}}'
+T2_INST_FAIL='installed_plugins\.json 更新失敗'"$NL"'^settings: \(absent\)$'
+T2_FIRST_FAIL="${OFFICIAL_PLUGINS[0]}: .*installed_plugins\\.json 更新失敗"
+T2_FIRST_ON="^settings: .*\"${T2_KEY}\": true"
 t2_case install   p-absent        "@absent" "@absent" "@absent" "$T2_OK_INSTALLED"
 t2_case uninstall p-absent        "$T2_E"   "@absent" "@absent" '^installed: \(absent\)$' '解析失敗'
-t2_case install   p-empty         "@absent" ''        "@absent" 'installed_plugins\.json 更新失敗' '已啟用'
+t2_case install   p-empty         "@absent" ''        "@absent" "$T2_INST_FAIL" '已啟用'
 t2_case uninstall p-empty         "$T2_E"   ''        "@absent" 'installed_plugins\.json 解析失敗'
-t2_case install   p-badjson       "@absent" '{'       "@absent" 'installed_plugins\.json 更新失敗' '已啟用'
+t2_case install   p-badjson       "@absent" '{'       "@absent" "$T2_INST_FAIL" '已啟用'
 t2_case uninstall p-badjson       "$T2_E"   '{'       "@absent" 'installed_plugins\.json 解析失敗'
-t2_case install   p-null          "@absent" 'null'    "@absent" '^installed: null$' '已啟用'
+t2_case install   p-null          "@absent" 'null'    "@absent" '^installed: null$'"$NL"'^settings: \(absent\)$' '已啟用'
 t2_case uninstall p-null          "$T2_E"   'null'    "@absent" 'installed_plugins\.json 解析失敗'
-t2_case install   p-array         "@absent" '[]'      "@absent" 'installed_plugins\.json 更新失敗' '已啟用'
+t2_case install   p-array         "@absent" '[]'      "@absent" "$T2_INST_FAIL" '已啟用'
 t2_case uninstall p-array         "$T2_E"   '[]'      "@absent" 'installed_plugins\.json 解析失敗'
 t2_case install   p-emptyobj      "@absent" '{}'      "@absent" "$T2_OK_INSTALLED"
 t2_case uninstall p-emptyobj      "$T2_E"   '{}'      "@absent" '^installed: \{\}$' '解析失敗'
 t2_case install   p-plugins-null  "@absent" '{"plugins":null}'  "@absent" "$T2_OK_INSTALLED" '更新失敗'
 t2_case uninstall p-plugins-null  "$T2_E"   '{"plugins":null}'  "@absent" '^installed: \{"plugins": null\}$' '解析失敗'
-t2_case install   p-plugins-array "@absent" '{"plugins":[]}'    "@absent" 'installed_plugins\.json 更新失敗' '已啟用'
+t2_case install   p-plugins-array "@absent" '{"plugins":[]}'    "@absent" "$T2_INST_FAIL" '已啟用'
 t2_case uninstall p-plugins-array "$T2_E"   '{"plugins":[]}'    "@absent" 'installed_plugins\.json 解析失敗'
-t2_case install   p-plugins-str   "@absent" '{"plugins":"x"}'   "@absent" 'installed_plugins\.json 更新失敗' '已啟用'
+t2_case install   p-plugins-str   "@absent" '{"plugins":"x"}'   "@absent" "$T2_INST_FAIL" '已啟用'
 t2_case uninstall p-plugins-str   "$T2_E"   '{"plugins":"x"}'   "@absent" 'installed_plugins\.json 解析失敗'
 t2_case install   p-skeleton      "@absent" '{"version":2,"plugins":{}}' "@absent" "$T2_OK_INSTALLED"
 t2_case uninstall p-skeleton      "$T2_E"   '{"version":2,"plugins":{}}' "@absent" '^installed: \{"plugins": \{\}, "version": 2\}$' '解析失敗'
@@ -307,16 +342,28 @@ t2_case install   p-entry-empty   "@absent" "{\"plugins\":{\"$T2_KEY\":[]}}"   "
 t2_case uninstall p-entry-empty   "$T2_E"   "{\"plugins\":{\"$T2_KEY\":[]}}"   "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
 t2_case install   p-entry-obj     "@absent" "{\"plugins\":{\"$T2_KEY\":{}}}"   "@absent" "$T2_OK_INSTALLED"
 t2_case uninstall p-entry-obj     "$T2_E"   "{\"plugins\":{\"$T2_KEY\":{}}}"   "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
-t2_case install   p-entry-str     "@absent" "{\"plugins\":{\"$T2_KEY\":\"x\"}}" "@absent" "${OFFICIAL_PLUGINS[0]}: .*installed_plugins\\.json 更新失敗"
+t2_case install   p-entry-str     "@absent" "{\"plugins\":{\"$T2_KEY\":\"x\"}}" "@absent" "$T2_FIRST_FAIL" "$T2_FIRST_ON"
 t2_case uninstall p-entry-str     "$T2_E"   "{\"plugins\":{\"$T2_KEY\":\"x\"}}" "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
-t2_case install   p-entry-valid   "@absent" "{\"plugins\":{\"$T2_KEY\":[{\"version\":\"0.9\",\"installPath\":\"/old\",\"installedAt\":\"A\",\"lastUpdated\":\"B\"}]}}" "@absent" "$T2_OK_INSTALLED" '/old'
-t2_case uninstall p-entry-valid   "$T2_E"   "{\"plugins\":{\"$T2_KEY\":[{\"version\":\"0.9\",\"installPath\":\"/old\",\"installedAt\":\"A\",\"lastUpdated\":\"B\"}]}}" "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
-t2_case install   p-entry-null    "@absent" "{\"plugins\":{\"$T2_KEY\":[null]}}"  "@absent" "${OFFICIAL_PLUGINS[0]}: .*installed_plugins\\.json 更新失敗"
+# 既有的登記：只更新 version／lastUpdated／installPath，installedAt 與其他欄位要留著（整筆新建的話這兩個斷言會紅）
+t2_case install   p-entry-valid   "@absent" "{\"plugins\":{\"$T2_KEY\":[{\"version\":\"0.9\",\"installPath\":\"/old\",\"installedAt\":\"A\",\"lastUpdated\":\"B\",\"keepme\":1}]}}" "@absent" "${T2_OK_INSTALLED}${NL}\"installedAt\": \"A\"${NL}\"keepme\": 1" '/old'
+t2_case uninstall p-entry-valid   "$T2_E"   "{\"plugins\":{\"$T2_KEY\":[{\"version\":\"0.9\",\"installPath\":\"/old\",\"installedAt\":\"A\",\"lastUpdated\":\"B\",\"keepme\":1}]}}" "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
+t2_case install   p-entry-null    "@absent" "{\"plugins\":{\"$T2_KEY\":[null]}}"  "@absent" "$T2_FIRST_FAIL" "$T2_FIRST_ON"
 t2_case uninstall p-entry-null    "$T2_E"   "{\"plugins\":{\"$T2_KEY\":[null]}}"  "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
-t2_case install   p-entry-stritem "@absent" "{\"plugins\":{\"$T2_KEY\":[\"x\"]}}" "@absent" "${OFFICIAL_PLUGINS[0]}: .*installed_plugins\\.json 更新失敗"
+t2_case install   p-entry-stritem "@absent" "{\"plugins\":{\"$T2_KEY\":[\"x\"]}}" "@absent" "$T2_FIRST_FAIL" "$T2_FIRST_ON"
 t2_case uninstall p-entry-stritem "$T2_E"   "{\"plugins\":{\"$T2_KEY\":[\"x\"]}}" "@absent" '^installed: \{"plugins": \{\}\}$' '解析失敗'
+t2_case install   p-multi         "@absent" '{} {}'   "@absent" "$T2_INST_FAIL" '已啟用'
+t2_case uninstall p-multi         "$T2_E"   '{} {}'   "@absent" 'installed_plugins\.json 解析失敗'
+t2_case install   p-bom           "@absent" "${T2_BOM}{}" "@absent" "$T2_OK_INSTALLED" '更新失敗'
+t2_case uninstall p-bom           "$T2_E"   "${T2_BOM}{}" "@absent" '^installed: \{\}$' '解析失敗'
 
-# ~/.claude.json 的 15 種內容 × mcp_scope。解析不了、或頂層不是物件 → unparseable（無從判定），不可以講成 none（確定沒有）
+# plugin.json（marketplace 裡那份）不只一個 JSON 值 → 當成讀不到版本；開頭有 BOM → 照常讀
+T2_PLUGIN_JSON='{"version":"9.9.9"} {}'
+t2_case install   j-multi         "@absent" "@absent" "@absent" "${OFFICIAL_PLUGINS[0]}: .*都取不到版本字串" "${OFFICIAL_PLUGINS[0]} \\(v"
+T2_PLUGIN_JSON="${T2_BOM}{\"version\":\"1.2.3\"}"
+t2_case install   j-bom           "@absent" "@absent" "@absent" "${OFFICIAL_PLUGINS[0]} \\(v1\\.2\\.3\\): .*已啟用"
+T2_PLUGIN_JSON=""
+
+# ~/.claude.json 的各種內容 × mcp_scope。解析不了、頂層不是物件、或不只一個 JSON 值 → unparseable（無從判定），不可以講成 none（確定沒有）
 t2_case mcp c-absent        "@absent" "@absent" "@absent"  '^none$'
 t2_case mcp c-empty         "@absent" "@absent" ''         '^unparseable$'
 t2_case mcp c-badjson       "@absent" "@absent" '{'        '^unparseable$'
@@ -332,6 +379,8 @@ t2_case mcp c-projects-arr  "@absent" "@absent" '{"projects":[]}'     '^none$'
 t2_case mcp c-project-null  "@absent" "@absent" '{"projects":{"/a":null}}' '^none$'
 t2_case mcp c-local         "@absent" "@absent" '{"projects":{"/a":{"mcpServers":{"playwright":{}}},"/b":{"mcpServers":null}}}' '^local:1$'
 t2_case mcp c-mixed         "@absent" "@absent" '{"mcpServers":"x","projects":{"/a":{"mcpServers":{"playwright":1}}}}' '^local:1$'
+t2_case mcp c-multi         "@absent" "@absent" '{"mcpServers":{"playwright":{}}} {}' '^unparseable$' '^(global|none)$'
+t2_case mcp c-bom           "@absent" "@absent" "${T2_BOM}{\"mcpServers\":{\"playwright\":{}}}" '^global$'
 
 if [ -n "$T2_FAILED" ]; then
     echo "❌ T2：${T2_COUNT} 個案例裡有不符的：${T2_FAILED}"
@@ -340,8 +389,8 @@ fi
 echo "✅ T2 jq 與 python3 兩條路徑在 ${T2_COUNT} 個假設定檔案例上結論相同，定案的結論也都對"
 fi
 
-# --- T3：plugin 登記端到端。新開的沙盒 HOME、裡面有假的 marketplace；
-# 不沿用上面那個 SANDBOX —— 它的「無備份產生」斷言靠 plugin 步驟被跳過才成立
+# --- T3：plugin 登記端到端。新開的沙盒 HOME、裡面有假的 marketplace
+# （各組都用自己的沙盒：不去動上面原有檢查沿用的那個 SANDBOX 的狀態）
 if want T3; then
 T3_HOME=$(mktemp -d "$WORK/t3.XXXXXX")
 t2_mkhome "$T3_HOME"
@@ -514,7 +563,16 @@ plain "$T9_DIR/c.txt" | grep -q '已啟用的 Plugin（1 個）' || { echo "❌ 
 t9_list=$(plain "$T9_DIR/c.txt" | sed -n '/已啟用的 Plugin（/,/^$/p')
 echo "$t9_list" | grep -q "^   ${OFFICIAL_PLUGINS[0]}" || { echo "❌ T9：完成訊息沒有列出啟用成功的 ${OFFICIAL_PLUGINS[0]}"; exit 1; }
 if echo "$t9_list" | grep -q "^   ${OFFICIAL_PLUGINS[1]}"; then echo "❌ T9：${OFFICIAL_PLUGINS[1]} 沒有啟用，卻列在「已啟用的 Plugin」底下"; exit 1; fi
-for t9_f in a b c; do
+# (d) marketplace 在、installed_plugins.json 壞掉：登記失敗的 plugin 不可以已經在 settings.json 被寫成啟用，完成訊息也要照實說
+mkdir -p "$T9_DIR/d"
+t2_mkhome "$T9_DIR/d"
+printf '[]' > "$T9_DIR/d/.claude/plugins/installed_plugins.json"
+HOME="$T9_DIR/d" ./install-dd-pipeline.sh < /dev/null > "$T9_DIR/d.txt" 2>&1 \
+    || { echo "❌ T9：安裝失敗（installed_plugins.json 壞掉）"; tail -20 "$T9_DIR/d.txt"; exit 1; }
+plain "$T9_DIR/d.txt" | grep -q '這次沒有啟用任何官方 Plugin' || { echo "❌ T9：登記全部失敗，完成訊息卻沒有說沒啟用"; exit 1; }
+t9_s=$(t2_canon "$T9_DIR/d/.claude/settings.json")
+if echo "$t9_s" | grep -q ': true'; then echo "❌ T9：登記失敗，settings.json 卻已經寫成啟用（完成訊息說沒啟用）：${t9_s}"; exit 1; fi
+for t9_f in a b c d; do
     utf8_ok "$T9_DIR/$t9_f.txt" || { echo "❌ T9：安裝輸出有不合法的 UTF-8（${t9_f}）"; exit 1; }
 done
 echo "✅ T9 完成訊息：--commands-only 不印 plugin 與 agent 兩段；沒啟用就照實說；只列啟用成功的"

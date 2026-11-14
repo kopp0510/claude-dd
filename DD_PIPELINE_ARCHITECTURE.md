@@ -70,8 +70,9 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
   不會中止；破壞性操作（`--uninstall`）預設取消，自動化用 `--yes`。
 - **失敗不半套**：JSON 讀寫失敗（settings.json 損毀等）警告後跳過該項，
   不在 `set -e` 下炸掉整個安裝；JSON 就地改寫保留 inode / symlink / 權限
-  （`jq_inplace` / `py_inplace` / `json_edit`，jq 優先、python3 後備）。空檔、只有空白、頂層不是物件也算失敗、不改檔；
-  兩條路徑對同一份檔案的結論相同（`tests/test-install.sh` 的 T2）。
+  （`jq_inplace` / `py_inplace` / `json_edit`，jq 優先、python3 後備）。空檔、只有空白、內容不是「剛好一個物件」也算失敗、不改檔；
+  plugin 先登記（`installed_plugins.json`）、再啟用（`settings.json`），登記失敗就不啟用。
+  jq 與 python3 兩條路徑在 `tests/test-install.sh` T2 列的那幾類輸入上結論相同（沒列的類別沒有保證）。
 - **可回復**：覆蓋差異檔前備份到 `~/.claude/backups/pre-install-<時間>/`，
   完成訊息顯示位置；清掉舊版留下的指令檔之前也先備份；目標是指向檔案的 symlink 時，備份的是它指到的內容；
   `--uninstall` 只移除本 repo 部署過的項目。`settings.json` 與 `installed_plugins.json` 是就地改寫、不備份。
