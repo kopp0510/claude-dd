@@ -2,6 +2,8 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
+進度以 docs/designs/2026-11-14-loop-tuning-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
+
 ## 安裝 / 更新
 
 ```bash
@@ -57,7 +59,8 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    列完再拿判準逐段掃一次；條件句的做法寫在配套檔時也要跟過去讀（`skills/security-audit/CLAUDE.md` 分支表的 D17 出處是 Cost budget，另見 RECONNAISSANCE.md）。
    一次派好幾個沙盒臂或乾跑時，派工 prompt 要它交回短的，過程（讀了什麼、怎麼推的）不要整份貼回來 —— 交回的訊息會整份進主對話的 context
    （量測見 `docs/measurements/2026-11-14-session-cost.md`）。沙盒臂：第一行結論，接著最多 5 行判定要用的事實（跑了哪條指令與 exit code、建了或沒建哪個檔）。
-   乾跑：上面要它逐條引的原句照樣引，那是要的內容、不算過程。交回的內容是 agent 自述，結果照樣用指令核對。
+   乾跑：上面要它逐條引的原句照樣引，那是要的內容、不算過程；派工時寫明「」裡要跟檔案一字不差，不用省略號、不改寫、不把兩處併成一句，
+   太長就只引卡住的那一段（沒寫明時會用省略號縮短，原句對不回原檔）。交回的內容是 agent 自述，結果照樣用指令核對。
    不要叫 subagent 把**報告**寫成檔：2026-11-14 五個沙盒臂（sonnet、fable、opus）用 Write 寫 `report.md` 都被擋下（`Subagents should return findings as text, not write report files`），
    同一天稍早兩個 haiku 臂寫別的檔名成功過，差在哪沒有查。這只講報告檔：被測的指令本來用 Write、Edit 寫的檔照樣讓它用；
    要動檔的臂派 general-purpose（agent 清單上 Explore、Plan 沒有 Edit、Write）
