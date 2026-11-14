@@ -57,8 +57,10 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    乾跑報告說上游「沒寫」的，寫進文件前拿 skill 目錄的每一份 `.md` 找反例：原句 `grep -F` 得到只證明引文存在，不證明缺口是真的
    （2026-11-14 security-audit 有 4 條其實寫在別處，步驟 4 的審查才抓到）。照判準列的分支清單也會漏（同一次漏 5 條），
    列完再拿判準逐段掃一次；條件句的做法寫在配套檔時也要跟過去讀（`skills/security-audit/CLAUDE.md` 分支表的 D17 出處是 Cost budget，另見 RECONNAISSANCE.md）。
-   一次派好幾個沙盒臂或乾跑時，派工 prompt 給每個 agent 一個 scratchpad 報告檔名：完整報告寫進那個檔，交回的訊息只給一行（結論加檔案路徑）。
-   主對話用指令核對檔案在、結論對得上，要看細節才分段讀檔 —— 交回的全文會一直留在主對話的 context 裡（量測見 `docs/measurements/2026-11-14-session-cost.md`）
+   一次派好幾個沙盒臂或乾跑時，派工 prompt 給每個 agent 一個 scratchpad 報告檔名（派有寫檔工具的類型，例如 general-purpose）：
+   完整報告寫進那個檔，交回的訊息只給一行（結論加檔案路徑）。scratchpad 的報告檔不算上面說的「寫檔」，不准寫的是被測的專案。
+   那一行結論與報告檔都是 agent 自述，結果照樣用指令核對；主對話先確認報告檔在，要看細節才分段讀。
+   交回的訊息會整份進主對話的 context（量測見 `docs/measurements/2026-11-14-session-cost.md`）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
    在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
@@ -131,7 +133,10 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 要模型照做的檢查，能寫成腳本就寫成腳本（exit code 加 `tests/` 的 bash 測試），指令文字只留「先跑它、非 0 就停下回報」。
   只靠措辭的檢查，每條分支都要派 agent 照文字實跑才驗得到（2026-11-14：腳本層的檢查靠 `tests/test-dd-init-upgrade.sh` 裡 exit 6 那組測試；
   `/dd-init` 文字層派了 136 個沙盒臂，含使用者同意的範圍擴大與重複的基準臂；算法與限制見 `docs/measurements/2026-11-14-session-cost.md`）。
-  腳本要跟指令一起到得了使用者手上，見「注意事項」`--commands-only` 那條
+  這只適用**新開的腳本**：`--commands-only` 更新的人手上沒有它，跑起來非 0，照樣會停。把新檢查加進**既有**腳本不算 ——
+  那些人手上是舊版腳本，指令文字還是要自己先查（「注意事項」`--commands-only` 那條）。
+  新腳本照「新增 Script 步驟」納管；測試加進既有的 `tests/test-*.sh`，新開測試檔的話要自己接進 `.github/workflows/ci.yml`
+  （ShellCheck 清單與跑測試的 step 都逐檔寫死，ubuntu 與 macOS 兩個 job 各一份）與本檔「目錄結構」`tests/` 那行
 
 ## 新增 Script 步驟
 
@@ -391,12 +396,6 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
 | 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
 | 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → **同批**同步兩份 README 的 Promoted Skills 表格與數字、本檔「目錄結構」的總數、`DD_PIPELINE_ARCHITECTURE.md` 的元件數字、以及三處授權段的 vendored 清單 → 跑 `--force` → 納入 source of truth | — |
-
-> **照原文收、不改它的文字時**：第 3 項照樣要真的跑一次；「新增 Skill 步驟」第 3 步的乾跑照樣每條分支跑，但只回答「這條分支做不做得完」。
-> 做不完的寫進該 skill 目錄 CLAUDE.md 的已知限制，交使用者決定收不收。「要猜但做得完」的不整理成清單：文字既然不改，清單沒有東西會用到，
-> 還要另外審它寫得對不對（2026-11-14 security-audit：`docs/reviews/2026-11-14-security-audit-intake/S2-judge.md`「採納（Important）」的 10 條裡，
-> 除了「README 前置需求沒提上游要的沙盒」與「拒絕清單先截再換路徑」兩條，其餘都改到 `skills/security-audit/CLAUDE.md`；改變決定的只有 D11c）。想留的回報上游。
-> 已經收的 `skills/security-audit/CLAUDE.md` 照舊、不回頭刪，它的「從上游更新」第 8 步仍照它自己寫的做。
 
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 需要 `npm -g` 安裝的 binary 外加 Python runtime，
 > 第 3、4 項直接擋下。**不收的理由只寫「它不符合本 repo 的哪一項約束」就夠了** —— 這是公開 repo，
