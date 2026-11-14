@@ -134,7 +134,8 @@ S1-b 的審查結果：Critical 0、Important 5、Smell 1。範圍是 58ae9b0..9
   後來 S1.5 把整段改寫成不寫報告檔的版本（測試查出 subagent 的 Write 會被系統擋下），這一句跟著拿掉
 - Important 3（「清單沒有東西會用到」與 security-audit 第 8 步相反）採納，處置是**撤回 S1-3**：`skills/security-audit/CLAUDE.md` 第 8 步確實拿「本檔引用的原句」判斷要不要重跑，
   那些原句就在乾跑發現那份清單裡，所以那段的理由不成立。收編很少發生、根目錄 CLAUDE.md 每個 session 都載入，不改寫、直接拿掉那一段與 CHANGELOG 條目（設計文件 S1-3 記了原因）
-- Important 4（「結論對得上」可能變成核對自述）採納：改寫成「那一行結論與報告檔都是 agent 自述，結果照樣用指令核對；主對話先確認報告檔在，要看細節才分段讀」
+- Important 4（「結論對得上」可能變成核對自述）採納：當時改寫成「那一行結論與報告檔都是 agent 自述，結果照樣用指令核對；主對話先確認報告檔在，要看細節才分段讀」。
+  後來 S1.5 把整段改寫，「先確認報告檔在」那半句不在了（不再叫 agent 寫報告檔）；留下來的是「交回的內容是 agent 自述，結果照樣用指令核對」
 - Important 5（測試怎麼進 CI 沒交代）採納：`grep -n 'tests/test-' .github/workflows/ci.yml` 確認 ShellCheck 清單與兩個 job 的 `run:` 都逐檔寫死。規則補上：新腳本照「新增 Script 步驟」納管；
   測試加進既有的 `tests/test-*.sh`，新開測試檔要自己接進 `ci.yml` 與本檔「目錄結構」`tests/` 那行
 - Smell 1（「10 條」用數字）：那一段隨 S1-3 撤回
