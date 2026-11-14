@@ -23,8 +23,12 @@
 - **收編 [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（MIT，上游 `c1c8a8c`）為 user-invoked skill `security-audit`**：
   用 `/security-audit` 叫，frontmatter 加 `disable-model-invocation: true`（不讓模型自己叫）；其餘上游文字未改。
   收編前在 claude-dd 的拋棄式 clone 試跑一次 quick（`docs/measurements/2026-11-14-security-audit-trial/`），
-  `SKILL.md` 裡會改變寫不寫檔、派不派 agent、要不要停下來問的條件句，試跑沒走到的各派一個 subagent 只讀乾跑；
-  沒有一條走不下去，文字沒寫清楚的地方與沒走過的分支記在 `skills/security-audit/CLAUDE.md`。
+  `SKILL.md` 裡會改變寫不寫檔、派不派 agent、要不要停下來問的條件句逐條標記：試跑走過、乾跑（各派一個 subagent 只讀照走）、或不另跑（附理由）。
+  乾跑判「做不完」的只有大 target 沒設 budget 那條：提議 budget 要先知道偵察後才有的 unit 數，headless 時提議之後也沒有下一步。
+  記成已知限制、skill 不改；自己先設 budget 就避開。
+  文字沒寫清楚的地方與沒走過的分支記在 `skills/security-audit/CLAUDE.md`。
+  部署後用全新的 `claude -p` 各跑一發（`docs/measurements/2026-11-14-security-audit-trigger/`）：`/security-audit` 叫得起來；
+  只說「做完整安全稽核」時不會自己叫，拿掉 dmi 的對照副本會叫；沒指定輸出目錄時解出 `~/security-audit-skill/claude-dd/run-2`，與預期相同。
   `agents/security-auditor.md` 的 description 改成把全面稽核指向 `/security-audit`。
 
 ### Fixed

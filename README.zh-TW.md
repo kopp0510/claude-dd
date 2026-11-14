@@ -35,6 +35,7 @@
 - 必要 MCP：`playwright`（腳本只檢查不安裝，請先[安裝 playwright MCP](https://github.com/microsoft/playwright-mcp)）
 - **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過、MCP 檢查退化成字串比對，而安裝照樣成功
 - 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
+- 可選：給 `/security-audit` 用的 OS 層沙盒（上游要求它斷外網、只給白名單環境變數、限制資源、只准寫指定的 scratch 路徑）。沒有它時 full audit 不執行目標程式碼，要實跑才能確認的線索停在 `needs_validation`。Claude Code 自帶的 sandbox 能不能滿足這四項沒驗證
 - claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 要先自己裝過一次：`claude plugin install skill-creator@claude-plugins-official`
 
 ### 首次安裝

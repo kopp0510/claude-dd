@@ -1,0 +1,1 @@
+/security-audit 使用者明確要求完整稽核（full audit mode）。這次只做 Full audit setup 裡解析 Output directory 那一步：把解析出的絕對路徑印成一行，不建目錄、不往下做。這是非互動執行。

@@ -14,6 +14,7 @@
   - U6：`/dd-init` Phase 2 的 symlink 寫入點併進 S1 一起修
   - U7：S1-3 保留擴大到 Phase 1、Phase 3，含 docker 真工具實測
   - U8：計畫審查第 3 輪後選「跑確認輪」
+  - U9：S2 步驟 4 的審查查出 D11c（大 target 沒設 budget）乾跑做不完，照 A6 停下來問，選「照收，記成已知限制」（skill 不改）
   - 決策題 Q1：`--apply` 的輸出路徑已存在時拒絕寫出、exit 6（建議答案）
   - 測試清單題：照「要新增的測試清單」加
 - 上游：`cloudflare/security-audit-skill` commit `c1c8a8c`（MIT，Copyright (c) 2025-2026 Cloudflare, Inc.）
@@ -32,7 +33,7 @@
 - A9：`agents/security-auditor.md` 的 description「不適用於自動化全面掃描、SecOps 管線建置或威脅建模(不在部署範圍)」收編後「全面稽核」有了 `/security-audit`，在 S2-2 改成指過去；agent 本文「不做自動化全面掃描」講的是 agent 自己，不改
 - A10：README「指令一覽」不加 `/security-audit`：前例 `writing-great-skills`（同為 user-invoked）也沒列；在 Promoted Skills 表格那列寫明用 `/security-audit` 叫
 - A11：S2 步驟 5 的 `claude -p` 觸發實測，結果放新目錄 `docs/measurements/2026-11-14-security-audit-trigger/`（prompt、check.sh、results.txt、CLAUDE.md；只抽判定欄位，原始 jsonl 不進 repo），由步驟 6 的 commit 送；試跑那個目錄的 `results.txt` 不重跑覆蓋
-- A12：收編清單逐項結論：#1 MIT（Cloudflare），放 `LICENSE.txt`，上游 frontmatter 沒有 license 欄位；#2 上游沒有 hooks；#3 試跑實跑（quick，輸出目錄是 prompt 指定的，見試跑 `real.prompt.txt`）＋兩支驗證器 65 則測試；「路徑算式、目錄命名」要實跑對照，所以預設輸出路徑 `~/security-audit-skill/<repo-name>/run-<N>` 另外在 S2 步驟 5 用 `claude -p` 實跑一次對照（D5b）；#4 Node 本來就是安裝腳本的必要依賴（README 前置需求段：Claude Code CLI、Node.js、Git、Bash 缺一安裝中止），不新增 runtime；#5 `grep` 過沒有 `~/.claude`、`$<數字>`，預設輸出路徑在 target 外；#6 skill `security-audit` 與 agent `security-auditor` 名稱不同、不撞，功能互補（全面稽核 vs 逐項手動審查），處置是 A9 的指路；skill `review`（description「跨維度綜合審查包裝器，調用 workflow-review 命令同時執行安全+效能+配置審查」）與 `/workflow-review:review` 審的是變更或合併前的多維度審查，security-audit 審整個 codebase 的信任邊界，不重疊；S2 不改 `review`。S2 步驟 5 反向那發若叫起 `review`，另開一個小任務（先問使用者，照進度表規則補條目）：在它的 description 加一句指路、照「新增 Skill 步驟」第 5 步跑兩發觸發重測（該叫的、不該叫的各一），並寫明「只動 description、沒動本文步驟，第 3 步乾跑不另跑」；#7 S2-1 同批納管
+- A12：收編清單逐項結論：#1 MIT（Cloudflare），放 `LICENSE.txt`，上游 frontmatter 沒有 license 欄位；#2 上游沒有 hooks；#3 試跑實跑（quick，輸出目錄是 prompt 指定的，見試跑 `real.prompt.txt`）＋兩支驗證器 65 則測試；「路徑算式、目錄命名」要實跑對照，所以預設輸出路徑 `~/security-audit-skill/<repo-name>/run-<N>` 另外在 S2 步驟 5 用 `claude -p` 實跑一次對照（D5b；已跑：解出的路徑與跑之前算的 `run-2` 相同，denials 1 是 session 把 git 指令串成一條 Bash 被擋，見 `docs/measurements/2026-11-14-security-audit-trigger/README.md`）；#4 Node 本來就是安裝腳本的必要依賴（README 前置需求段：Claude Code CLI、Node.js、Git、Bash 缺一安裝中止），不新增 runtime；#5 `grep` 過沒有 `~/.claude`、`$<數字>`，預設輸出路徑在 target 外；#6 skill `security-audit` 與 agent `security-auditor` 名稱不同、不撞，功能互補（全面稽核 vs 逐項手動審查），處置是 A9 的指路；skill `review`（description「跨維度綜合審查包裝器，調用 workflow-review 命令同時執行安全+效能+配置審查」）與 `/workflow-review:review` 審的是變更或合併前的多維度審查，security-audit 審整個 codebase 的信任邊界，不重疊；S2 不改 `review`。S2 步驟 5 反向那發若叫起 `review`，另開一個小任務（先問使用者，照進度表規則補條目）：在它的 description 加一句指路、照「新增 Skill 步驟」第 5 步跑兩發觸發重測（該叫的、不該叫的各一），並寫明「只動 description、沒動本文步驟，第 3 步乾跑不另跑」；#7 S2-1 同批納管
 - A13：設計文件與根 CLAUDE.md 指路在 task-planner 步驟 5 寫到磁碟，但**不單獨 commit**，跟 S1 的最後一個修正 S1-3 同一個 commit 送 —— 文件裡有三處寫出點的描述，U4 規定修好之前不進 repo。S1-1、S1-2 commit 時只 `git add` 自己的檔。這偏離 task-planner 步驟 5 的完成條件（「`git log -1` 看得到那個 commit」）與「開工標記跟第一個小任務一起送」；形狀同它「還沒有 git repo 時，文件與指路跟第一個小任務一起 commit」那條。驗收：S1-3 之前沒有任何 commit 含這份文件
 - A14：會進 repo 的紀錄，寫進去之前先過一次。判準：原文描述了一條能讓寫入落到專案外、而 S1 沒修的路徑。命中時預設處置：在 S1 補一個小任務修掉（照「進度表」規則先問使用者、補小任務條目），再落地；修不了才停下問。要過的有：
   - 本計畫各輪 plan-review 報告留在 scratchpad，不進 repo
@@ -43,9 +44,9 @@
 - A16：遇到 symlink 一律「`ls -ld` 給使用者看（S1 步驟 4 的 c-9 從 `ls -l` 改成 `ls -ld`）、問要不要照寫」，不硬擋：有的專案刻意把 `CLAUDE.md` 做成指向 repo 內 `AGENTS.md` 的 symlink。使用者答「照寫」之後，Phase 3 第 5 步既有的「掛載點是 symlink、實際改的是連結目標 → 提醒他 commit」照舊（那句留著、不刪）
 - A17：S1-3 的範圍：U6 選的是 Phase 2；Phase 1、Phase 3 是同類掃描補進來的，第 3 輪後使用者選「保留擴大」（U7）
 - A18：S1 全部完成（S1-3 commit）之前不 push；交進度時提醒使用者（U3）。S1-1、S1-2 的 commit 訊息與 CHANGELOG 只寫各自已修的那一處
-- A19：沙盒臂與 docker 臂的 subagent 用 sonnet（跟乾跑一致；它代表的是「照文字做的模型」，不是使用者實際用的模型，所以宣稱只到「這份文字下 sonnet 會停」）。subagent 沒有可以回答的使用者：`commands/dd-init.md` 要它問使用者的地方，它把問句原文寫進回報，symlink 問句一律當成答「不要」（S1 步驟 4 加的 Y、Y5、YD 例外，答「要」）、其他問句照該臂 prompt 給的答案（照 `docs/measurements/2026-10-30-dd-init-upgrade/run.sh` 的寫法），然後往下做。一臂可以因此走過不只一個寫檔終點
+- A19：沙盒臂與 docker 臂的 subagent 用 sonnet（跟乾跑一致；它代表的是「照文字做的模型」，不是使用者實際用的模型，所以宣稱只到「這份文字下 sonnet 會停」）。subagent 沒有可以回答的使用者：`commands/dd-init.md` 要它問使用者的地方，它把問句原文寫進回報，symlink 問句一律當成答「不要」（Y 臂從 S1-3 就有、Y5 與 YD 臂是 S1 步驟 4 加的；這三臂例外，答「要」）、其他問句照該臂 prompt 給的答案（照 `docs/measurements/2026-10-30-dd-init-upgrade/run.sh` 的寫法），然後往下做。一臂可以因此走過不只一個寫檔終點
 - A20：S1-3 的各臂 fixture 與斷言寫成腳本放 `docs/measurements/2026-11-14-dd-init-symlink/`（`setup.sh` 建 fixture、`check.sh` 用指令核對、`results.txt` 記每臂在舊文字與新文字下的結果、用到的工具版本、CLAUDE.md），跟 S1-3 一起 commit。subagent 的回報原文留 scratchpad，只抽判定要用的句子進 `results.txt`，照根目錄 CLAUDE.md 的去識別規則掃過（`-Users-`、`-private-tmp-`）
-- A21（需要外部查證，小事）：①Claude Code 的 Write／Edit 遇到 symlink 是寫穿還是取代連結 —— 已查（S1-3 舊文字基準，Claude Code 2.1.325）：兩個都不寫，拒絕並建議改寫連結目標（「Refusing to write …: it is a symbolic link. Write to the link's target path instead: …」）；指向存在的檔與懸空的連結都拒絕（2026-11-14 主對話另測）。這不是保護：舊文字下 H3 直接對連結目標的路徑用 Edit、G 改用 heredoc，都改到了專案外的檔（`docs/measurements/2026-11-14-dd-init-symlink/results.txt`）②`pre-commit install`、`npm install`（husky v8／v9）遇到已經是 symlink 的掛載點怎麼處理 —— H1–H3 的 fixture 一律「先 install、後把掛載點換成 symlink」，實跑記錄；另一種順序不測 ③部署後的 `~/.claude/skills/security-audit/CLAUDE.md` 會不會在 skill 被叫起時當成巢狀記憶載入 —— 沒查；前例 `skills/self-improving-agent/CLAUDE.md` 一樣部署，所以那份 CLAUDE.md 只寫給維護者看、被稽核 session 讀到也無害的內容 ④dontAsk 會不會經過 auto mode 分類器 —— 擋下的話 `permission_denials` 不為空，看得到
+- A21（需要外部查證，小事）：①Claude Code 的 Write／Edit 遇到 symlink 是寫穿還是取代連結 —— 已查（S1-3 舊文字基準，Claude Code 2.1.325）：兩個都不寫，拒絕並建議改寫連結目標（「Refusing to write …: it is a symbolic link. Write to the link's target path instead: …」）；指向存在的檔與懸空的連結都拒絕（2026-11-14 主對話另測）。這不是保護：舊文字下 H3 直接對連結目標的路徑用 Edit、G 改用 heredoc，都改到了專案外的檔（`docs/measurements/2026-11-14-dd-init-symlink/results.txt`）②`pre-commit install`、`npm install`（husky v8／v9）遇到已經是 symlink 的掛載點怎麼處理 —— H1–H3 的 fixture 一律「先 install、後把掛載點換成 symlink」，實跑記錄；另一種順序不測 ③部署後的 `~/.claude/skills/security-audit/CLAUDE.md` 會不會在 skill 被叫起時當成巢狀記憶載入 —— S2 步驟 5 查了：`/security-audit` 叫起後 Read 它的 HUNTING.md，沒有載入；skill 目錄放在 cwd 專案裡的對照臂有載入（n=1、靠模型自述，`docs/measurements/2026-11-14-security-audit-trigger/README.md`）；前例 `skills/self-improving-agent/CLAUDE.md` 一樣部署，所以那份 CLAUDE.md 只寫給維護者看、被稽核 session 讀到也無害的內容 ④dontAsk 會不會經過 auto mode 分類器 —— 擋下的話 `permission_denials` 不為空，看得到
 
 ## 進度表
 
@@ -155,7 +156,7 @@
   - 檔案：
     - `skills/security-audit/`：上游 `skills/security-audit/` 底下所有檔原樣複製（上游 c1c8a8c 的 AI-AND-LLM.md、ATTACK-CLASSES.md、CLIENT-SIDE.md、CLOUD-AND-DEPLOYMENT.md、DATA-ISOLATION-AND-LIFECYCLE.md、DESKTOP-MOBILE-AND-LOCAL-IPC.md、HUNTING.md、MEMORY-SAFETY-AND-BINARY.md、PROTOCOLS-RPC-AND-MESSAGING.md、RECONNAISSANCE.md、report-schema.json、RESOURCE-EXHAUSTION-AND-AVAILABILITY.md、SKILL.md、SUPPLY-CHAIN-AND-RELEASE.md、validate-coverage-ledger.cjs、validate-coverage-ledger.test.cjs、validate-findings.cjs、validate-findings.test.cjs、VALIDATION-AND-REPORTING.md、WEB-PROTOCOL-AND-AUTH.md；照抄前 `ls` 上游目錄重核一次），`SKILL.md` 照 A5 加兩處
     - `skills/security-audit/LICENSE.txt`：上游 `LICENSE`（MIT，Cloudflare）原文
-    - `skills/security-audit/CLAUDE.md`：gate 要求（目錄有 `.cjs`，`scripts/check-claude-md.sh` 的 `CODE_EXT` 含 `cjs`）；寫上游 repo 與 commit `c1c8a8c`、本 repo 的兩處改動、怎麼從上游更新、兩支驗證器的測試怎麼跑、A6 的分支清單與每條的標記、乾跑發現（含試跑那筆：session 因 US$15 上限把獵人從 2 減成 1，`run-metadata.json` 的 `plan_revision` 有記，不是靜默；但 SKILL.md「Cost budget」的預算只算 agent 次數，美元上限不在它的模型裡，`-p` 底下也沒有使用者可以接它的提議）
+    - `skills/security-audit/CLAUDE.md`：gate 要求（目錄有 `.cjs`，`scripts/check-claude-md.sh` 的 `CODE_EXT` 含 `cjs`）；寫上游 repo 與 commit `c1c8a8c`、本 repo 的兩處改動、怎麼從上游更新、兩支驗證器的測試怎麼跑、A6 的分支清單與每條的標記、乾跑發現（含試跑那筆：session 因 US$15 上限把獵人從 2 減成 1，`run-metadata.json` 的 `plan_revision` 有記，不是靜默；但 SKILL.md「Cost budget」的預算只算 agent 次數，美元上限不在它的模型裡，`-p` 底下也沒有使用者可以接它的提議。S2 步驟 4 查證：上限沒有真的碰到，是 session 預估撐不起；HUNTING.md 的 early stop 規則有路可走，所以寫成「試跑看到的情況」而不是文字缺口）
     - `install-dd-pipeline.sh` `PROMOTED_SKILLS`：加 `"security-audit"   # user-invoked（disable-model-invocation）；vendored 自 cloudflare/security-audit-skill`（依字母序放在 `self-improving-agent` 之前）
     - `README.md`：`Install 13 promoted Skills` → 14、`## Promoted Skills (13, …)` → 14、表格加一列（說明、vendored 自哪、user-invoked、用 `/security-audit` 叫）、授權表加一列
     - `README.zh-TW.md`：`安裝 13 個 promoted Skills` → 14、`## Promoted Skills（預設部署，13 個）` → 14、表格加一列、授權表加一列
@@ -185,7 +186,7 @@
        - D14a wave 1 前估算明顯不夠 → 說出來、提議更窄範圍或更粗 profile（132）→ 乾跑
        - D14b final-critic 保留額被吃掉 → incomplete `critic_budget_exhausted`（132）→ 乾跑
        - D15 驗證預算用完 → incomplete `validation_budget_exhausted`、部分報告（134）→ 乾跑
-       - D16 兩種終止狀態（179）：(a) 全部寫完且驗證器通過 → 試跑已實跑（`results.txt` 的 `run_status=complete`）；(b) incomplete → 不另跑，由 D12–D15 走到
+       - D16 兩種終止狀態（179）：(a) 全部寫完且驗證器通過 → 試跑已實跑（`results.txt` 的 `run_status=complete`）；(b) incomplete → 不另跑，由 D12–D15 走到（S2 步驟 4 查證：實際走到的是 D12、D14b、D15，D13、D14a 沒走到）
        標「乾跑」的 16 條（D1、D2、D4、D5b、D5c、D6 有 prior ledger、D8、D9、D10、D11b、D11c、D12、D13、D14a、D14b、D15）各派一個 subagent（sonnet；只讀，不寫檔、不跑 node、不派 agent），讀 repo 的 `skills/security-audit/SKILL.md` 與它引用的配套檔，以 claude-dd 為目標走那一條，逐條引用卡住、要猜、互相矛盾的原文；會寫檔的步驟只描述會寫什麼、寫到哪
     3. 乾跑發現照 A14 過一次，整理進 `skills/security-audit/CLAUDE.md`（分支清單、標記、沒走過的照實列）；有分支不能用就停下回報使用者
     4. 改部署陣列、數字、授權
@@ -214,7 +215,7 @@
   - 正向對照：同一個 prompt 與旗標，slash 換成不存在的名稱 → 回覆比不到那一行
   - 反向：不含 skill 名、要求做這個 repo 的完整安全稽核；照根目錄 CLAUDE.md「新增 Skill 步驟」第 5 步的旗標（`--allowedTools "Skill Read Glob Grep"`、`--disallowedTools "Edit Write NotebookEdit Bash Agent"`）→ jsonl 沒有含 `security-audit` 的 `Launching skill:` 行、沒有 Read 到 `~/.claude/skills/security-audit/` 的 tool_use（clone 裡 repo 自己那份 `skills/security-audit/` 是被稽核的目標，讀到不算觸發）、`permission_denials` 是空的；叫起了 `review` 就照 A12 #6 另開小任務
   - 反向對照：同一個 prompt 與旗標，加 `--plugin-dir` 載入照試跑 README「跑法」第 1 步做的副本（`.claude-plugin/plugin.json` + `skills/security-audit/`），但**拿掉** dmi 那一行 → 預期有含 `security-audit` 的 `Launching skill:` 行（plugin skill 帶命名空間，所以用子字串比）。這一發同時也載入部署的 dmi 版，兩臂的載入方式不同，寫進 results 說明。沒出現 → 反向那發沒有鑑別力，兩發一起換 prompt 重跑
-  - 預設輸出路徑（D5b）：prompt 寫明「使用者明確要求完整稽核（full audit mode），這次只做 Full audit setup 裡解析 Output directory 那一步，把解析出的絕對路徑印成一行，不建目錄、不往下做」；旗標另給：`--allowedTools "Skill Glob Bash(ls:*)"`、`--disallowedTools "Edit Write NotebookEdit Agent"`（只放行列目錄，一般 Bash 與寫檔照擋）。預期值由 harness 在跑之前 `ls ~/security-audit-skill/claude-dd/` 算出下一個未用編號（目前 run-1 已存在（U1），所以是 run-2），不寫死。判準：印出的路徑等於那個值，而且 jsonl 裡有這個 session 自己列 `~/security-audit-skill/claude-dd/` 的 tool_use；`permission_denials` 是空的。結果與涵蓋到哪寫進 A12 #3 與 `skills/security-audit/CLAUDE.md`
+  - 預設輸出路徑（D5b）：prompt 寫明「使用者明確要求完整稽核（full audit mode），這次只做 Full audit setup 裡解析 Output directory 那一步，把解析出的絕對路徑印成一行，不建目錄、不往下做」；旗標另給：`--allowedTools "Skill Glob Bash(ls:*)"`、`--disallowedTools "Edit Write NotebookEdit Agent"`（只放行列目錄，一般 Bash 與寫檔照擋）。預期值由 harness 在跑之前 `ls ~/security-audit-skill/claude-dd/` 算出下一個未用編號（目前 run-1 已存在（U1），所以是 run-2），不寫死。判準：印出的路徑等於那個值，而且 jsonl 裡有這個 session 自己列 `~/security-audit-skill/claude-dd/` 的 tool_use；`permission_denials` 是空的。結果與涵蓋到哪寫進 A12 #3 與 `skills/security-audit/CLAUDE.md`（已跑；偏離計畫的地方：d5b 加了 `--add-dir ~/security-audit-skill`，第 2 次另放行 `git remote`、`git rev-parse`；另加 inj、injctrl 兩臂查 A21 ③。見 `docs/measurements/2026-11-14-security-audit-trigger/README.md`）
 
 ### 要新增的測試清單（使用者選定）
 
