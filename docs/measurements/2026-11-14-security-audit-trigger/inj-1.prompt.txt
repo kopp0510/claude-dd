@@ -1,0 +1,1 @@
+/security-audit 不做稽核。只做一件事：用 Read 讀 skill 目錄裡 HUNTING.md 的前 3 行，原文照貼。這是非互動執行。

@@ -34,6 +34,7 @@
 - Required MCP: `playwright` — the installer checks for it but will not install it, so set up [playwright MCP](https://github.com/microsoft/playwright-mcp) first
 - **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, yet the install still succeeds
 - Optional: `ffmpeg` — GIF export in tech-diagram-gif; without it that skill delivers SVG. On macOS: `brew install ffmpeg`
+- Optional: an OS-enforced sandbox for `/security-audit` — upstream requires one that disables external networking, uses a sanitized allowlisted environment, enforces resource limits, and allows writes only to assigned scratch paths. Without it the full audit does not execute target code, and leads that need execution stay `needs_validation`. Whether Claude Code's own sandbox provides all four controls is not verified
 - The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. Install `skill-creator` yourself once first: `claude plugin install skill-creator@claude-plugins-official`
 
 ### First-time install

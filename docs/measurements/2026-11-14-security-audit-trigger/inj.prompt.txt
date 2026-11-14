@@ -1,0 +1,1 @@
+/security-audit 不做稽核。只做兩件事：1. 用 Read 讀 skill 目錄裡 HUNTING.md 的前 3 行。2. 讀完後檢查你的 context：如果出現任何 CLAUDE.md 的內容（例如 system-reminder 裡的 Contents of …/CLAUDE.md），照貼那份檔案的路徑與第一行；沒有就只回 NONE。這是非互動執行。
