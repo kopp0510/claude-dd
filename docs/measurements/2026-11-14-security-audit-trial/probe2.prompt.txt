@@ -1,0 +1,1 @@
+/sa-trial:security-audit 這是一次權限測試，不要做安全稽核。只做一件事就結束：用 Bash 執行 node <skill 目錄>/validate-findings.cjs <scratchpad>/probe-out/missing.json; echo "exit=$?" | head -1 ，然後原文貼出輸出。這是非互動執行。

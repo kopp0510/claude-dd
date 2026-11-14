@@ -1,0 +1,5 @@
+/sa-trial:security-audit 對目前工作目錄這個 repo 做完整安全稽核（full audit mode）。
+- profile: quick
+- budget: 最多 9 次 agent 呼叫（所有 phase 合計）
+- 輸出目錄：<scratchpad>/audit-out/run-1
+這是非互動執行，沒有人能回答問題。需要詢問或確認的地方，一律採 skill 的預設做法，並把你做的選擇寫進 REPORT.md。

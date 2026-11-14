@@ -18,6 +18,15 @@
 
 ## 未發布
 
+### Added
+
+- **收編 [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（MIT，上游 `c1c8a8c`）為 user-invoked skill `security-audit`**：
+  用 `/security-audit` 叫，frontmatter 加 `disable-model-invocation: true`（不讓模型自己叫）；其餘上游文字未改。
+  收編前在 claude-dd 的拋棄式 clone 試跑一次 quick（`docs/measurements/2026-11-14-security-audit-trial/`），
+  `SKILL.md` 裡會改變寫不寫檔、派不派 agent、要不要停下來問的條件句，試跑沒走到的各派一個 subagent 只讀乾跑；
+  沒有一條走不下去，文字沒寫清楚的地方與沒走過的分支記在 `skills/security-audit/CLAUDE.md`。
+  `agents/security-auditor.md` 的 description 改成把全面稽核指向 `/security-audit`。
+
 ### Fixed
 
 - **`dd-init-upgrade.sh --apply` 的輸出路徑已經存在就不寫、exit 6**：awk 的 `print > out` 會跟著 symlink 寫到它指的地方，
