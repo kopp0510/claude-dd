@@ -174,5 +174,5 @@ S2-d 報告：審 skills/security-audit/CLAUDE.md 整檔（139 行）。結果�
 - d-8（Smell）採納：改成「試跑的 session 預估 US$15 上限撐不起第二個獵人」；設計文件 S2-1 的來源句加了查證註記
 - d-9（Smell）採納：同 S2-a 的 a-4
 - d-10（Smell）採納：D4 的兩條改寫 —— 做不到時上游 Write isolation 第 11 步有寫落到 `needs_validation`（「沒驗證」改成「沒實跑過」）；allowlist 那條縮成「名單能不能在執行後擴充沒寫」
-- 需要外部查證 ①（A21③）：步驟 5 正向那發的 jsonl 查
+- 需要外部查證 ①（A21③）：步驟 5 查了：jsonl 查不出來（stream-json 不記巢狀記憶，skill 目錄放在專案裡的對照臂也是 0），改成另開 inj、injctrl 兩臂叫 session 照貼 context 裡的 CLAUDE.md —— 部署版沒載入、對照臂有載入（n=1、靠模型自述；`docs/measurements/2026-11-14-security-audit-trigger/`）
 - 需要外部查證 ②（乾跑都是 sonnet）：S2-b 已用 `tasks/*.output` 的 `message.model` 核過，全是 `claude-sonnet-5-5`

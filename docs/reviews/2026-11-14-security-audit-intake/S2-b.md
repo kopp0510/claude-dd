@@ -114,4 +114,4 @@ Smell｜docs/measurements/2026-11-14-security-audit-trial/results.txt:31-38、CL
 - b-9（Smell）採納：同 S2-a 的 a-5
 - Not reported 裡的「Count reconnaissance…」代號標得鬆：那條改寫後同時引了「Also reserve verifier cost from the profile」，D13、D15 撞到的那句在裡面了，代號維持（D11c、D13、D15）
 - 需要外部查證 ①（A6：D11c 判「做不完」時有沒有回報使用者）：沒有。之前對使用者講的是「沒有一條分支走不下去」，這次在回報裡更正，並照 A6 交使用者決定（見 `S2-judge.md`）
-- 需要外部查證 ②（A21③）：步驟 5 正向那發的 jsonl 查
+- 需要外部查證 ②（A21③）：步驟 5 查了：jsonl 查不出來（stream-json 不記巢狀記憶，skill 目錄放在專案裡的對照臂也是 0），改成另開 inj、injctrl 兩臂叫 session 照貼 context 裡的 CLAUDE.md —— 部署版沒載入、對照臂有載入（n=1、靠模型自述；`docs/measurements/2026-11-14-security-audit-trigger/`）
