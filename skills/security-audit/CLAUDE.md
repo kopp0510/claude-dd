@@ -107,7 +107,9 @@ D11c 照設計文件 A6 交使用者決定，2026-11-14 選「照收，記成已
   預算剛好等於最低額時 gate 會過，hunting allowance 卻是 0（D12、D17）。這時該停在哪個終止狀態沒寫：列出的三個 `incomplete_reason` 都對不上，寫完一份全部 `deferred` 的報告走 (a) 也說得通（D17）
 - gate 不過時的選項「ask for a larger budget, narrower scope, or different profile」：最低保留額跟範圍大小無關，縮範圍過不了 gate（D12）
 - 「when in doubt reserve 30% of the balance after critic reservation」：balance 從哪裡算起沒寫（總額減 critic，或再減偵察）（D11c、D13）；
-  同一句的「about 1 or 2 agents per expected candidate」，expected candidate 數沒有估法、也沒有整數算式（D14a、D14b）；「implied hunter count」也沒有從 unit 數換算的規則（D14a）
+  同一句的「about 1 or 2 agents per expected candidate」，expected candidate 數沒有估法、也沒有整數算式（D14a、D14b）；
+  「implied hunter count」散在三句：SKILL.md「one unit is roughly one hunter assignment」、HUNTING.md「One hunter may own closely related units in one subsystem」
+  與「When a budget or profile caps hunter count, assign units in priority order」，可以合併時是幾個沒有算式（D14a）
 - 每個 candidate 要保留幾個 verifier 散在三句，要自己拼：SKILL.md「one surviving candidate is one or two verifier assignments depending on profile」、
   「Also reserve verifier cost from the profile」，與 VALIDATION-AND-REPORTING.md「Every other profile keeps the two passes separate.」（quick 1 個，standard、deep 是 Phase 3 加 Phase 5 共 2 個）。
   「Count reconnaissance, every post-wave critic, and the separate final-clean critic as agent invocations.」沒列 verifier（D11c、D13、D15）
@@ -117,8 +119,11 @@ D11c 照設計文件 A6 交使用者決定，2026-11-14 選「照收，記成已
   與「If later facts consume the required final-critic reserve」（記 incomplete `critic_budget_exhausted`）的分界沒寫，「later facts」指什麼也沒定義（D13、D14b）；
   被擋的 wave 之後，保留的 final-clean critic 吃什麼輸入、什麼時候觸發沒寫（D13）；quick 沒有 final-clean critic，這句在 quick 怎麼套沒寫（D17）；
   `critic_budget_exhausted` 那條要把 planned work 標 `deferred`，unit 的 reason 寫什麼沒寫（D14b）
-- 驗證預算不夠時的「validate candidates in fingerprint order while the budget permits」：standard 一個 candidate 算一次還是兩次（Phase 3 加 Phase 5）、fingerprint 升冪還是降冪沒寫；
-  只經 Phase 3 驗過的記錄算不算「An incomplete run may report independently verified records」的 independently verified 沒寫；「that unresolved reason」是 `validation_budget_exhausted` 字串還是自由文字也沒寫（D15）
+- 驗證預算不夠時的「validate candidates in fingerprint order while the budget permits」：standard 一個 candidate 算一次還是兩次（Phase 3 加 Phase 5）沒寫；
+  fingerprint 的順序只有 VALIDATION-AND-REPORTING.md 寫 `findings.json`「sorted by fingerprint」可以對照，升冪降冪都沒寫。
+  驗證散在兩處：Phase 3 的標題是「Independently validate every candidate」，同檔又要「Only after Phase 5 passes for every record retained in `findings.json`」才寫報告；
+  預算只夠 Phase 3 時，那筆能不能留在 `findings.json`、算不算「An incomplete run may report independently verified records」的那種，沒寫。
+  `unresolved` 是陣列（RECONNAISSANCE.md 範例的 `"unresolved": []`），「that unresolved reason」要放 `validation_budget_exhausted` 還是自由文字沒寫（D15）
 - 沒設 budget 時，除了「`budget` (null if unset)」與報告的「budget (if set)」，沒有一句說 gate 與保留額要不要套用（D11b）；
   hunter 數量只有「Use enough focused hunters to cover the units without combining unrelated boundaries」，沒有量（D11b）
 
@@ -131,7 +136,7 @@ D11c 照設計文件 A6 交使用者決定，2026-11-14 選「照收，記成已
   independent 也沒定義（D9）
 - scoped 跟 profile 是兩條獨立的軸、還是 scoped 暗示 quick，沒寫；只能從 metadata 同時有 `profile`、`scope_paths` 反推並存（D10）
 - scoped：SKILL.md「record everything else as `out_of_scope`」與 RECONNAISSANCE.md「retain discovered excluded surfaces as `out_of_scope` units」管的範圍不同；`scope_paths` 的格式沒定義，沒有 scoped 時填什麼也沒寫（D8、D8b、D10）
-- scoped 的 `out_of_scope` unit 粒度、trace 能不能讀到範圍外、prior run 怎樣算「compatible」都沒寫；「states plainly that it is a partial pass」沒給措辭與位置（D10）
+- scoped 的 `out_of_scope` unit 粒度、trace 能不能讀到範圍外都沒寫；prior run 怎樣算「compatible」沒定義（RECONNAISSANCE.md 只寫「Record missing or incompatible ledgers instead of treating them as empty coverage.」）；「states plainly that it is a partial pass」沒給措辭與位置（D10）
 
 **檔案形狀**
 

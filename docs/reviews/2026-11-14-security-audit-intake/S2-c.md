@@ -151,4 +151,4 @@ S2-c 的結果：Critical 0、Important 2、Smell 5。範圍是 6f2118a 到工�
 - c-6（Smell）採納：同 S2-b 的 b-8
 - c-7（Smell）採納：「從上游更新」第 3 步改成「刪掉本目錄裡 `LICENSE.txt`、`CLAUDE.md` 以外的檔，再把上游整份複製過來」，加第 4 步重跑 `diff -r` 確認只剩兩處插入與兩個 `Only in`
 - 審查者留在 scratchpad 的 `s2c-review-tmp` 目錄：在 scratchpad 內、不進 repo
-- 需要外部查證（D5b 那發 `ls ~/security-audit-skill/claude-dd/` 會不會被 dontAsk 擋）：步驟 5 先用 haiku 探針跑一發再定旗標
+- 需要外部查證（D5b 那發 `ls ~/security-audit-skill/claude-dd/` 會不會被 dontAsk 擋）：步驟 5 用 haiku 探針跑了：只放行 `Bash(ls:*)` 時被擋（denials 1），加 `--add-dir ~/security-audit-skill` 才放行。d5b 兩發都加了，解出的路徑對，但 session 把 git、echo、ls 串成一條 Bash，兩發都還是 denials 1

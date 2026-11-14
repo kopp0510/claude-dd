@@ -81,7 +81,10 @@
     這 5 份報告落地前掃過 `<使用者名>|/Users/|-Users-|/private/tmp`，只剩審查者描述 grep 樣式的兩句
 - 更正（S2 步驟 8 查到）：派工節「④ 的勘誤」不成立。`diff -r`（④ 跑的）印 `2a3`、`4a6,7`，單檔 `diff`（①-b 跑的）印 `2a3`、`5a7,8`，
   是同一次插入的兩種對齊（插入的是一個空行加 vendored 行，上游第 5 行也是空行，可以對在前面或後面），兩份都對；S2-c 判成同一次插入是對的。派工節照規矩不改
-- 步驟 5 照上面「需要外部查證」那三條調整：D5b 先跑 haiku 探針、正向那發查注入、反向對照沒叫起來就換中性目錄
+- 「需要外部查證」裡步驟 5 那三條的結果（`docs/measurements/2026-11-14-security-audit-trigger/`）：
+  - 注入：步驟 5 查了：jsonl 查不出來（stream-json 不記巢狀記憶，skill 目錄放在專案裡的對照臂也是 0），改成另開 inj、injctrl 兩臂叫 session 照貼 context 裡的 CLAUDE.md —— 部署版沒載入、對照臂有載入（n=1、靠模型自述；`docs/measurements/2026-11-14-security-audit-trigger/`）
+  - D5b：步驟 5 用 haiku 探針跑了：只放行 `Bash(ls:*)` 時被擋（denials 1），加 `--add-dir ~/security-audit-skill` 才放行。d5b 兩發都加了，解出的路徑對，但 session 把 git、echo、ls 串成一條 Bash，兩發都還是 denials 1
+  - 反向對照：步驟 5 的反向對照叫起來了（`Launching skill: sa-ctrl:security-audit`），反向那發有鑑別力，不必換中性目錄
 
 ## 重疊與獨有項
 

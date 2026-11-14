@@ -154,5 +154,5 @@ What I ran
 - a-4（Important）採納：:108 改寫 —— SKILL.md 列了至少要有的鍵、也寫了 `budget` 是「a maximum number of agent invocations across all phases」，試跑的 session 寫成物件是偏離了這句、沒有東西擋；真的沒給鍵名的只有 selected companion files、prior-run paths、shared-file owners。:90-91 改寫成「每個 candidate 要保留幾個 verifier 散在三句，要自己拼」，三句原文都列出
 - a-5（Smell）採納：試跑 `check.sh` 補「## 探針」「## 各模型花費（real）」兩節的產生指令，用同一份輸入重跑，`bash` 與 `/bin/bash`（3.2.57）的整份輸出都與 `results.txt` 逐字相同（diff rc=0）、`shellcheck -S warning` 過；README 跑法第 3 步補「probe1 跑完先把 `runs/probe.jsonl` 改名成 `runs/probe1.jsonl` 再跑 probe2」；目錄 CLAUDE.md 的 `results.txt` 那條改成「`check.sh` 的輸出」
 - 給主對話的提醒 ①（④ 的 `4a6,7`）：派工材料不改（派工節照當時送出的逐字記）；勘誤記在 `S2-judge.md`
-- 給主對話的提醒 ②（反向對照臂可能被 clone 裡的「user-invoked」字樣壓住）：帶進步驟 5，見 `S2-judge.md` 處置
-- 需要外部查證：沙盒四項 → 沒查，README 寫「沒驗證」；部署後的 skill CLAUDE.md 會不會被注入 → 步驟 5 正向那發的 jsonl 查；dmi skill 的 `$1` 會不會被換 → 沒另外量，第 6 步的自查照做就不必知道答案
+- 給主對話的提醒 ②（反向對照臂可能被 clone 裡的「user-invoked」字樣壓住）：帶進了步驟 5：步驟 5 的反向對照叫起來了（`Launching skill: sa-ctrl:security-audit`），反向那發有鑑別力，不必換中性目錄
+- 需要外部查證：沙盒四項 → 沒查，README 寫「沒驗證」；部署後的 skill CLAUDE.md 會不會被注入 → 步驟 5 查了：jsonl 查不出來（stream-json 不記巢狀記憶，skill 目錄放在專案裡的對照臂也是 0），改成另開 inj、injctrl 兩臂叫 session 照貼 context 裡的 CLAUDE.md —— 部署版沒載入、對照臂有載入（n=1、靠模型自述；`docs/measurements/2026-11-14-security-audit-trigger/`）；dmi skill 的 `$1` 會不會被換 → 沒另外量，第 6 步的自查照做就不必知道答案
