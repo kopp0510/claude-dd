@@ -390,6 +390,12 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
 | 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → **同批**同步兩份 README 的 Promoted Skills 表格與數字、本檔「目錄結構」的總數、`DD_PIPELINE_ARCHITECTURE.md` 的元件數字、以及三處授權段的 vendored 清單 → 跑 `--force` → 納入 source of truth | — |
 
+> **照原文收、不改它的文字時**：第 3 項照樣要真的跑一次；「新增 Skill 步驟」第 3 步的乾跑照樣每條分支跑，但只回答「這條分支做不做得完」。
+> 做不完的寫進該 skill 目錄 CLAUDE.md 的已知限制，交使用者決定收不收。「要猜但做得完」的不整理成清單：文字既然不改，清單沒有東西會用到，
+> 還要另外審它寫得對不對（2026-11-14 security-audit：步驟 4 採納的 10 條 Important 有 8 條改在 `skills/security-audit/CLAUDE.md`，
+> 其中 4 條在「乾跑發現」那份清單；改變決定的只有 D11c，見 `docs/reviews/2026-11-14-security-audit-intake/S2-judge.md`）。想留的回報上游。
+> 已經收的 `skills/security-audit/CLAUDE.md` 照舊、不回頭刪，它的「從上游更新」第 8 步仍照它自己寫的做。
+
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 需要 `npm -g` 安裝的 binary 外加 Python runtime，
 > 第 3、4 項直接擋下。**不收的理由只寫「它不符合本 repo 的哪一項約束」就夠了** —— 這是公開 repo，
 > 不要在這裡評論別人專案的人氣、品質或維護者。那些是讀者無從查證、對本清單也毫無作用的話。
