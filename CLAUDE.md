@@ -255,9 +255,12 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   回報「已啟用」）。兩者各有專屬 helper：`mcp_scope()` 與 `plugin_enabled_state()`，
   同為 jq → python3 → 退化標示無法判定
 - 檢查類輸出的鐵則：**不確定就說不確定，不可退化成有把握的斷言**。`mcp_scope()`
-  區分 `none`（確定沒有）／`unparseable`（檔案損毀，無從判定）／`unknown`（缺 jq
+  區分 `none`（確定沒有）／`unparseable`（檔案損毀，或頂層不是物件，無從判定）／`unknown`（缺 jq
   與 python3，只有字串證據）；jq 與 python3 兩條路徑須逐項等價（型別護欄要對齊），
-  否則同一台機器裝不裝 jq 會得到不同結論
+  否則同一台機器裝不裝 jq 會得到不同結論。等價靠 `tests/test-install.sh` 的 T2 守：改這幾支（`jq_inplace`、`py_inplace`、
+  `install_plugins`、`uninstall`、`plugin_enabled_state`、`mcp_scope`）的任何一條路徑，先跑它。
+  2026-11-14 第一次拿同一批假設定檔兩條都跑，92 例裡 16 例結論不同（空檔時 jq 回報成功而檔案沒寫、頂層是 `null` 時 jq 把整個檔改寫成物件…），
+  之前逐項讀程式碼對過好幾輪都沒看出來
 - `OFFICIAL_PLUGINS` 新增項目前先確認該 plugin 的 `.claude-plugin/plugin.json`
   **有沒有 `version` 欄位** — 官方 `skill-creator` 就沒有（marketplace 與 cache 兩份都沒有）。
   缺 version 時 `install_plugins()` 改讀 `installed_plugins.json` 裡 Claude Code 自己記的值

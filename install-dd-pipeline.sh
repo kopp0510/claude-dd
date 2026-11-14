@@ -742,6 +742,10 @@ check_mcp() {
     echo ""
 }
 
+# 這次執行真的啟用成功的官方 plugin（install_plugins 填、show_completion 讀）。
+# 完成訊息只列這些：被跳過的（檔案不在、取不到版本、設定檔更新失敗）與沒跑這一步的（--commands-only）不可以印成「已啟用」
+ENABLED_PLUGINS=()
+
 # 安裝官方 Plugins
 install_plugins() {
     print_step "5/7" "啟用官方 Plugins"
@@ -893,6 +897,7 @@ print(value if isinstance(value, str) else "")
         fi
 
         echo -e "$tree_char $plugin (v$version): ${GREEN}${CHECK} 已啟用${NC}"
+        ENABLED_PLUGINS+=("$plugin")
     done
 
     echo ""
@@ -912,8 +917,10 @@ create_commands() {
     local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status" "dd-stop")
     for old in "${deprecated_dd[@]}"; do
         if [ -f "$COMMANDS_DIR/$old.md" ]; then
+            # 使用者可能改過這個檔：跟覆蓋一樣先備份，完成訊息會印備份位置
+            backup_before_overwrite "commands" "$COMMANDS_DIR/$old.md"
             rm "$COMMANDS_DIR/$old.md"
-            echo -e "├── ${YELLOW}🧹 已清理舊命令：$old${NC}"
+            echo -e "├── ${YELLOW}🧹 已清理舊命令：${old}（刪除前已備份）${NC}"
         fi
     done
 
@@ -1271,23 +1278,30 @@ show_completion() {
     echo "   2. /dd-init  （蓋章 8 步開發迴圈 + 專案 CLAUDE.md）"
     echo "   3. 開發：實作+測試 → commit → 簡化 → review → 再測 → commit → 沉澱所學 → 評分修正"
     echo ""
-    echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
-    echo "   供 wrapper skills 透過 Task tool 調用"
-    echo ""
-    echo -e "${GREEN}📌 已啟用的 Plugin（${#OFFICIAL_PLUGINS[@]} 個）：${NC}"
-    # 名字一律走訪陣列；說明用 case 補。漏寫說明只會少一句話，不會像寫死清單那樣
-    # 整個項目不見（數量從陣列來、名字用手打，才是最糟的組合：印「3 個」只列 2 個）
-    for plugin in "${OFFICIAL_PLUGINS[@]}"; do
-        case "$plugin" in
-            claude-md-management)
-                echo "   ${plugin} — 用 /revise-claude-md 與 /claude-md-improver 管理 CLAUDE.md" ;;
-            skill-creator)
-                echo "   ${plugin} — 建立新 skill 的鷹架" ;;
-            *)
-                echo "   ${plugin}" ;;
-        esac
-    done
-    echo ""
+    # agent 與 plugin 兩段只在這次真的跑過那兩步時才印（--commands-only 兩步都沒跑）
+    if [ "$COMMANDS_ONLY" = false ]; then
+        echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
+        echo "   供 wrapper skills 透過 Task tool 調用"
+        echo ""
+        if [ "${#ENABLED_PLUGINS[@]}" -gt 0 ]; then
+            echo -e "${GREEN}📌 已啟用的 Plugin（${#ENABLED_PLUGINS[@]} 個）：${NC}"
+            # 名字一律走訪陣列；說明用 case 補。漏寫說明只會少一句話，不會像寫死清單那樣
+            # 整個項目不見（數量從陣列來、名字用手打，才是最糟的組合：印「3 個」只列 2 個）
+            for plugin in "${ENABLED_PLUGINS[@]}"; do
+                case "$plugin" in
+                    claude-md-management)
+                        echo "   ${plugin} — 用 /revise-claude-md 與 /claude-md-improver 管理 CLAUDE.md" ;;
+                    skill-creator)
+                        echo "   ${plugin} — 建立新 skill 的鷹架" ;;
+                    *)
+                        echo "   ${plugin}" ;;
+                esac
+            done
+        else
+            echo -e "${YELLOW}📌 這次沒有啟用任何官方 Plugin（原因見上方步驟 5）${NC}"
+        fi
+        echo ""
+    fi
     if [ "$COMMANDS_ONLY" = false ]; then
         # 同上：名字走訪陣列，說明用 case 補（新增風格漏寫說明只會少一句，不會整個不見）
         echo -e "${GREEN}📌 已部署的 Output Style（${#DD_OUTPUT_STYLES[@]} 個；重開 Claude Code 後生效，只對目前專案，全域預設見 README）：${NC}"

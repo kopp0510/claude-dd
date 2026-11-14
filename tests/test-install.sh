@@ -1,10 +1,14 @@
 #!/bin/bash
 # 安裝腳本（install-dd-pipeline.sh）的端到端測試：在拋棄式 HOME 裡非互動安裝，驗部署內容、冪等、
 # --force／--update／--commands-only／--uninstall 與 --check 不寫入。
+# 2026-11-14 補上 T1–T9：symlink 的備份、jq 與 python3 兩條路徑的等價表、plugin 登記、--check 的 MCP 輸出、
+# 覆蓋前備份、全域 CLAUDE.md 三種情境、hook 路徑驗證、舊指令檔的備份、完成訊息。
+# 測不到的：全域 CLAUDE.md 的互動選單（ask 用 [ -t 0 ] 判斷，管線餵 stdin 一律走預設值）。
 # CI 在 ubuntu（bash 5）與 macOS（/bin/bash 3.2）各跑一次（.github/workflows/ci.yml）。
 # 2026-10-01 從 ci.yml 內嵌 step 搬出來，macOS 那個 job 才能共用；判斷一行都沒改。
 #
 # 用法：tests/test-install.sh　（在哪個目錄跑都可以；只寫拋棄式 HOME 與暫存目錄，跑完清掉）
+#       TEST_ONLY=T5 tests/test-install.sh　（原有的檢查與 T1 照跑，T2 之後只跑指定那一組；本機做變異實驗用）
 set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
@@ -92,7 +96,11 @@ echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"
 # 本機做變異實驗時可以只跑一組：`TEST_ONLY=T5 tests/test-install.sh`（上面原有的檢查與 T1 照跑，T2 之後只跑指定那組）。
 # ---------------------------------------------------------------------------
 want() { [ -z "${TEST_ONLY:-}" ] || [ "$TEST_ONLY" = "$1" ]; }
-plain() { sed $'s/\x1b\\[[0-9;]*m//g' "$1"; }   # 去掉顏色碼
+# 去掉顏色碼。LC_ALL=C：輸出裡有壞的位元組時 BSD sed 會整個失敗、什麼都不印，
+# 後面「不可以出現某字」的斷言就會空通過
+plain() { LC_ALL=C sed $'s/\x1b\\[[0-9;]*m//g' "$1"; }
+# 輸出是不是合法的 UTF-8：訊息裡的變數緊貼全形字（`$old（…`）時 bash 3.2 會把變數名吃掉、印出壞的位元組
+utf8_ok() { iconv -f UTF-8 -t UTF-8 "$1" > /dev/null 2>&1; }
 
 # --- T1 開始（這一段自足：GNU 容器裡用 sed 把這兩行註解之間抽出來單獨跑，見 tests/CLAUDE.md）
 # 全域 CLAUDE.md 是指向別處的 symlink（dotfiles 管理的常見擺法）時，--force 覆蓋前備份的要是它指到的內容。
@@ -452,7 +460,7 @@ DRIVE
 mkdir -p "$T7_DIR/home" "$T7_DIR/bad/skills/x/hooks" "$T7_DIR/good/skills/x/hooks"
 printf '{"hooks":{"PostToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"./hooks/x.sh"}]}]}}\n' > "$T7_DIR/bad/skills/x/hooks/hooks.json"
 # shellcheck disable=SC2016  # 要寫進檔案的就是字面的 $HOME
-printf '{"hooks":{"PostToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"$HOME/.claude/skills/x/hooks/x.sh"}]}]}}\n' > "$T7_DIR/good/skills/x/hooks/hooks.json"
+printf '{"hooks":{"PostToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"$HOME/.claude/skills/gate-guard/hooks/guard-no-verify.sh"}]}]}}\n' > "$T7_DIR/good/skills/x/hooks/hooks.json"
 t7_rc=0
 "$BASH" "$T7_DIR/drive.sh" "$T7_DIR/home" "$T7_DIR/bad" < /dev/null > "$T7_DIR/bad.out" 2>&1 || t7_rc=$?
 [ "$t7_rc" -eq 1 ] || { echo "❌ T7：相對路徑的 hook 應該讓它 exit 1，實際 rc=${t7_rc}"; exit 1; }
@@ -462,4 +470,52 @@ t7_rc=0
 [ "$t7_rc" -eq 0 ] || { echo "❌ T7：合法路徑的 hook 不該被擋，實際 rc=${t7_rc}"; cat "$T7_DIR/good.out"; exit 1; }
 [ -z "$(ls -A "$T7_DIR/home")" ] || { echo "❌ T7：驗證 hook 路徑時寫了東西進 HOME"; exit 1; }
 echo "✅ T7 hooks.json 用相對路徑 → validate_skill_hooks 以 exit 1 中止；合法路徑放行"
+fi
+
+# --- T8：舊版留下的指令檔（deprecated_dd 列的那幾個）被清掉之前要先備份
+if want T8; then
+T8_HOME=$(mktemp -d "$WORK/t8.XXXXXX")
+mkdir -p "$T8_HOME/.claude/commands"
+printf '我改過的舊指令\n' > "$T8_HOME/.claude/commands/dd-help.md"
+HOME="$T8_HOME" ./install-dd-pipeline.sh < /dev/null > "$T8_HOME/out.txt" 2>&1 \
+    || { echo "❌ T8：安裝失敗"; tail -20 "$T8_HOME/out.txt"; exit 1; }
+utf8_ok "$T8_HOME/out.txt" || { echo "❌ T8：安裝輸出有不合法的 UTF-8（訊息裡的變數緊貼全形字時要寫成 \${var}）"; exit 1; }
+[ ! -e "$T8_HOME/.claude/commands/dd-help.md" ] || { echo "❌ T8：舊指令檔 dd-help.md 沒有被清掉"; exit 1; }
+t8_bak=$(find "$T8_HOME/.claude/backups" -path '*/commands/dd-help.md' 2>/dev/null | head -1)
+[ -n "$t8_bak" ] || { echo "❌ T8：dd-help.md 被清掉之前沒有備份"; exit 1; }
+[ "$(cat "$t8_bak")" = "我改過的舊指令" ] || { echo "❌ T8：dd-help.md 的備份內容不對"; exit 1; }
+plain "$T8_HOME/out.txt" | grep -q '覆蓋前的舊版已備份至' || { echo "❌ T8：完成訊息沒有印備份位置"; exit 1; }
+echo "✅ T8 舊指令檔 dd-help.md 被清掉前有備份，完成訊息印出備份位置"
+fi
+
+# --- T9：完成訊息只報這次真的做了的
+if want T9; then
+T9_DIR=$(mktemp -d "$WORK/t9.XXXXXX")
+# (a) --commands-only：agent 與 plugin 兩步都沒跑，不可以印這兩段
+mkdir -p "$T9_DIR/a"
+HOME="$T9_DIR/a" ./install-dd-pipeline.sh --commands-only < /dev/null > "$T9_DIR/a.txt" 2>&1 \
+    || { echo "❌ T9：--commands-only 安裝失敗"; tail -20 "$T9_DIR/a.txt"; exit 1; }
+if plain "$T9_DIR/a.txt" | grep -q '已啟用的 Plugin'; then echo "❌ T9：--commands-only 沒跑 plugin 步驟，卻印了「已啟用的 Plugin」"; exit 1; fi
+if plain "$T9_DIR/a.txt" | grep -q '已安裝的內建 Agents'; then echo "❌ T9：--commands-only 沒裝 agent，卻印了「已安裝的內建 Agents」"; exit 1; fi
+# (b) 完整安裝、沒有任何 plugin 啟用成功（沙盒裡沒有 marketplace）
+mkdir -p "$T9_DIR/b"
+HOME="$T9_DIR/b" ./install-dd-pipeline.sh < /dev/null > "$T9_DIR/b.txt" 2>&1 \
+    || { echo "❌ T9：安裝失敗（沒有 marketplace）"; tail -20 "$T9_DIR/b.txt"; exit 1; }
+if plain "$T9_DIR/b.txt" | grep -q '已啟用的 Plugin'; then echo "❌ T9：沒有任何 plugin 啟用成功，卻印了「已啟用的 Plugin」"; exit 1; fi
+plain "$T9_DIR/b.txt" | grep -q '這次沒有啟用任何官方 Plugin' || { echo "❌ T9：沒有任何 plugin 啟用成功時，沒有照實印出來"; exit 1; }
+plain "$T9_DIR/b.txt" | grep -q '已安裝的內建 Agents' || { echo "❌ T9：完整安裝卻沒有印「已安裝的內建 Agents」"; exit 1; }
+# (c) 只有第一個官方 plugin 在 marketplace：只列它、數量是 1
+mkdir -p "$T9_DIR/c"
+t2_mkhome "$T9_DIR/c"
+rm -rf "$T9_DIR/c/.claude/plugins/marketplaces/$PLUGINS_MARKETPLACE/plugins/${OFFICIAL_PLUGINS[1]}"
+HOME="$T9_DIR/c" ./install-dd-pipeline.sh < /dev/null > "$T9_DIR/c.txt" 2>&1 \
+    || { echo "❌ T9：安裝失敗（只有一個 plugin）"; tail -20 "$T9_DIR/c.txt"; exit 1; }
+plain "$T9_DIR/c.txt" | grep -q '已啟用的 Plugin（1 個）' || { echo "❌ T9：只啟用了 1 個 plugin，完成訊息的數量不是 1"; exit 1; }
+t9_list=$(plain "$T9_DIR/c.txt" | sed -n '/已啟用的 Plugin（/,/^$/p')
+echo "$t9_list" | grep -q "^   ${OFFICIAL_PLUGINS[0]}" || { echo "❌ T9：完成訊息沒有列出啟用成功的 ${OFFICIAL_PLUGINS[0]}"; exit 1; }
+if echo "$t9_list" | grep -q "^   ${OFFICIAL_PLUGINS[1]}"; then echo "❌ T9：${OFFICIAL_PLUGINS[1]} 沒有啟用，卻列在「已啟用的 Plugin」底下"; exit 1; fi
+for t9_f in a b c; do
+    utf8_ok "$T9_DIR/$t9_f.txt" || { echo "❌ T9：安裝輸出有不合法的 UTF-8（${t9_f}）"; exit 1; }
+done
+echo "✅ T9 完成訊息：--commands-only 不印 plugin 與 agent 兩段；沒啟用就照實說；只列啟用成功的"
 fi
