@@ -75,7 +75,8 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
   jq 與 python3 兩條路徑在 `tests/test-install.sh` T2 列的那幾類輸入上結論相同（沒列的類別沒有保證）。
 - **可回復**：覆蓋差異檔前備份到 `~/.claude/backups/pre-install-<時間>/`，
   完成訊息顯示位置；清掉舊版留下的指令檔之前也先備份；目標是指向檔案的 symlink 時，備份的是它指到的內容；
-  `--uninstall` 只移除本 repo 部署過的項目。`settings.json` 與 `installed_plugins.json` 是就地改寫、不備份。
+  `--uninstall` 只移除本 repo 部署過的檔案，另外會取消登記 `OFFICIAL_PLUGINS` 列的官方 plugin（不管當初是誰裝的）；
+  安裝時被換掉的同名檔不會放回去，只在備份裡。`settings.json` 與 `installed_plugins.json` 是就地改寫、不備份。
 
 ## 部署清單（使用率盤點制）
 

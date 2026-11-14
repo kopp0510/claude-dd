@@ -36,7 +36,8 @@
 - **兩份 README 補上裝之前該知道的事**：新小節「安裝會改到什麼」（同名的檔帶不帶 `--force` 都會被換掉、兩個設定檔就地改寫不備份、
   全域模板會讓 Claude 改用繁體中文回覆與寫 commit、兩個跟著 skill 裝的全域 hook、CI 跑在哪些環境）；`--uninstall` 實際移除與留下什麼；
   新小節「審查那一步要花多少」（兩組量測各量什麼、樣本多大）；安裝第 5 步補上設定檔更新不了時的行為；
-  「翻譯全域模板就能換語言」與「不要裝 gate」兩句照實際情況改寫。`--help` 與 README 的 `--force` 說明改成講它實際多做的事（全域 CLAUDE.md 不問直接覆蓋）。
+  「翻譯全域模板就能換語言」與「不要裝 gate」兩句照實際情況改寫。`--help` 與 README 的 `--force`、`--uninstall` 說明改成講它們實際做的事
+  （`--force`：例行更新用，另外全域 CLAUDE.md 不問直接覆蓋；`--uninstall`：也會取消登記官方 plugin）。
 - **根目錄 CLAUDE.md「新增 Command 步驟」加一條：要模型照做的檢查，能寫成腳本就寫成腳本**。
   指令文字只留「先跑它、非 0 就停下回報」；只靠措辭的檢查要逐分支派 agent 實跑才驗得到（量測：`docs/measurements/2026-11-14-session-cost.md`）。
   只適用新開的腳本；把新檢查加進既有腳本時，指令文字仍要自己先查。
@@ -47,6 +48,7 @@
 
 ### Fixed
 
+- **`--uninstall` 在沒有 jq 也沒有 python3 時，手動清理的提示補上 `installed_plugins.json`**：原本只講 `settings.json` 的 `enabledPlugins`，照做會留下兩筆登記。
 - **安裝腳本：目標是指向檔案的 symlink 時，覆蓋前備份的是它指到的內容**：`backup_before_overwrite` 原本一律 `cp -r`，
   GNU 的 `cp -r` 只複製連結本身，呼叫端接著 `cp` 寫穿連結，備份讀出來就是新內容 —— Linux 上用 dotfiles 把 `~/.claude/CLAUDE.md`
   （或 agent、指令、腳本、輸出風格的單一檔）連到別處的人，`--force` 之後原內容就沒了。macOS 的 `cp -r` 會跟著連結，所以只在 Linux 發生。
