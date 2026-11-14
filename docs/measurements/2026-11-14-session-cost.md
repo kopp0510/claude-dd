@@ -145,6 +145,7 @@ print("## 主對話 token（依 message.id 去重）請求 %d 次，輸出 %d" %
 
 - 只有一個 session、一件工作。那次的產品碼大半是指令文字，所以沙盒臂特別多，不算典型
 - 字元數不是 token 數；中文一個字是多少 token 沒量
-- 「136 個沙盒臂」是 157 減掉 description 含 `dry-run` 的 21 個，沒有逐個核對
+- 「136 個沙盒臂」是 157 減掉 description 含 `dry-run` 的 21 個，沒有逐個核對；「那 21 個是 security-audit 的乾跑」「其餘是沙盒臂」這兩個歸類
+  來自那次的設計文件（`docs/designs/2026-11-14-security-audit-intake-design.md`），腳本只數得出 description 的字樣
 - subagent 自己用掉的 token 不在這支腳本裡（要讀各 agent 自己的紀錄檔）
 - 等待時間含使用者不在電腦前的時間（最長那次跨夜）

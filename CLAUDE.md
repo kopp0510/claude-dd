@@ -130,7 +130,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   管理工具（pre-commit、lefthook、husky）時用 docker 裝真的工具實測 —— husky／lefthook 會在 `npm install` 時把 gate 洗掉，乾跑看不出來
 - 要模型照做的檢查，能寫成腳本就寫成腳本（exit code 加 `tests/` 的 bash 測試），指令文字只留「先跑它、非 0 就停下回報」。
   只靠措辭的檢查，每條分支都要派 agent 照文字實跑才驗得到（2026-11-14：腳本層的檢查靠 `tests/test-dd-init-upgrade.sh` 裡 exit 6 那組測試；
-  `/dd-init` 文字層派了 136 個 agent，含使用者同意的範圍擴大與重複的基準臂，`docs/measurements/2026-11-14-session-cost.md`）。
+  `/dd-init` 文字層派了 136 個沙盒臂，含使用者同意的範圍擴大與重複的基準臂；算法與限制見 `docs/measurements/2026-11-14-session-cost.md`）。
   腳本要跟指令一起到得了使用者手上，見「注意事項」`--commands-only` 那條
 
 ## 新增 Script 步驟
@@ -394,8 +394,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 
 > **照原文收、不改它的文字時**：第 3 項照樣要真的跑一次；「新增 Skill 步驟」第 3 步的乾跑照樣每條分支跑，但只回答「這條分支做不做得完」。
 > 做不完的寫進該 skill 目錄 CLAUDE.md 的已知限制，交使用者決定收不收。「要猜但做得完」的不整理成清單：文字既然不改，清單沒有東西會用到，
-> 還要另外審它寫得對不對（2026-11-14 security-audit：步驟 4 採納的 10 條 Important 有 8 條改在 `skills/security-audit/CLAUDE.md`，
-> 其中 4 條在「乾跑發現」那份清單；改變決定的只有 D11c，見 `docs/reviews/2026-11-14-security-audit-intake/S2-judge.md`）。想留的回報上游。
+> 還要另外審它寫得對不對（2026-11-14 security-audit：`docs/reviews/2026-11-14-security-audit-intake/S2-judge.md`「採納（Important）」的 10 條裡，
+> 除了「README 前置需求沒提上游要的沙盒」與「拒絕清單先截再換路徑」兩條，其餘都改到 `skills/security-audit/CLAUDE.md`；改變決定的只有 D11c）。想留的回報上游。
 > 已經收的 `skills/security-audit/CLAUDE.md` 照舊、不回頭刪，它的「從上游更新」第 8 步仍照它自己寫的做。
 
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 需要 `npm -g` 安裝的 binary 外加 Python runtime，
