@@ -13,6 +13,10 @@
 - `prepare.py` —— 產生每一發的快照 repo、diff 檔與 prompt 檔；乙的快照與 diff 檔做法照 `../2026-10-24-s5-inputs/prepare.py`，範圍說明讀 `../2026-10-24-s4-inputs/briefs.txt`
 - `run.sh` —— 跑一發：父 session `--model haiku`、`--settings '{"advisorModel":""}'`、`--max-budget-usd 8`、硬逾時 40 分鐘、`CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`（不設的話父 session 最後一輪結束 10 分鐘後，還在跑的背景 subagent 會被停掉）
 - `stats.py` —— 每一發的秒數、token、工具次數、費用、每個審查者紀錄檔裡的 `effort`、作廢檢查、洩題檢查命中清單；`--dump` 把每個 subagent 交回的報告存成檔
+- `outside.py` —— 補充的洩題掃描（跑完甲之後加的）：列出工具呼叫裡指到工作目錄以外暫存區、`/tmp`、`../` 的，人工判。`stats.py` 的 `leaky()` 抓不到這一類
+- `deid.py` —— 把 `stats.py --dump` 存下的報告去識別後複製進 `out/reports/`；有殘留的那一份不寫、印出檔名
+- `table.py` —— 從 `out/stats.jsonl` 印結果表與判準要比的數字
+- `out/stats.jsonl` —— 算數的每一發一行（`stats.py` 的輸出；洩題命中只留筆數，原文含本機路徑）；`out/reports/` —— 每個 subagent 交回的報告（去識別後）。作廢的 `P-med-1` 只有審查者的報告、不在 `stats.jsonl`
 
 ## 約束
 
