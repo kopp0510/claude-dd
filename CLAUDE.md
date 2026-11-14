@@ -136,7 +136,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   這只適用**新開的腳本**：`--commands-only` 更新的人手上沒有它，跑起來非 0，照樣會停。把新檢查加進**既有**腳本不算 ——
   那些人手上是舊版腳本，指令文字還是要自己先查（「注意事項」`--commands-only` 那條）。
   新腳本照「新增 Script 步驟」納管；測試加進既有的 `tests/test-*.sh`，新開測試檔的話要自己接進 `.github/workflows/ci.yml`
-  （ShellCheck 清單與跑測試的 step 都逐檔寫死，ubuntu 與 macOS 兩個 job 各一份）與本檔「目錄結構」`tests/` 那行
+  （ShellCheck 清單逐檔寫死；跑測試的 step 也逐檔寫死，ubuntu 與 macOS 兩個 job 各有一份）與本檔「目錄結構」`tests/` 那行
 
 ## 新增 Script 步驟
 
