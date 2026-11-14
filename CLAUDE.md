@@ -62,7 +62,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    乾跑：上面要它逐條引的原句照樣引，那是要的內容、不算過程。交回的內容是 agent 自述，結果照樣用指令核對。
    不要叫 subagent 把**報告**寫成檔：2026-11-14 五個沙盒臂（sonnet、fable、opus）用 Write 寫 `report.md` 都被擋下（`Subagents should return findings as text, not write report files`），
    同一天稍早兩個 haiku 臂寫別的檔名成功過，差在哪沒有查。這只講報告檔：被測的指令本來用 Write、Edit 寫的檔照樣讓它用；
-   要動檔的臂派 general-purpose（Explore、Plan 沒有 Edit、Write）
+   要動檔的臂派 general-purpose（agent 清單上 Explore、Plan 沒有 Edit、Write）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
    在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
