@@ -16,6 +16,16 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Fixed
+
+- **`dd-init-upgrade.sh --apply` 的輸出路徑已經存在就不寫、exit 6**：awk 的 `print > out` 會跟著 symlink 寫到它指的地方，
+  輸出路徑事先是 clone 帶進來、指到專案外的 symlink 時，升級結果會寫到專案外。一般檔、目錄、symlink、懸空 symlink 都算已存在。
+  `tests/test-dd-init-upgrade.sh` 加四則情境並核檔案狀態（外部檔不變、symlink 還在、懸空 symlink 指的檔沒被建立、既有一般檔不被蓋掉）。
+- **`/dd-init` Phase 1「用升級腳本升級」第 6 步處理 `--apply` 的非 0 exit**：不升級、照實告訴使用者；exit 6 時 `ls -l CLAUDE.md.dd-upgrade`
+  給使用者看它是什麼、問要不要刪掉重跑，不自己刪。
+
 ## 1.6.14 — 2026-10-30
 
 ### Changed
