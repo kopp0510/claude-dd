@@ -191,7 +191,13 @@ backup_before_overwrite() {
         BACKUP_ROOT="$CLAUDE_DIR/backups/pre-install-$(date +%Y-%m-%d-%H%M%S)"
     fi
     mkdir -p "$BACKUP_ROOT/$category"
-    cp -r "$target" "$BACKUP_ROOT/$category/"
+    if [ -L "$target" ] && [ -f "$target" ]; then
+        # 目標是指向檔案的 symlink：備份它指到的內容。GNU 的 cp -r 只複製連結本身，
+        # 呼叫端接著 cp 寫穿連結，備份讀出來就變成新內容（macOS 的 cp -r 會跟著連結，所以只在 Linux 丟）
+        cp -L "$target" "$BACKUP_ROOT/$category/"
+    else
+        cp -r "$target" "$BACKUP_ROOT/$category/"
+    fi
 }
 
 print_backup_notice() {
