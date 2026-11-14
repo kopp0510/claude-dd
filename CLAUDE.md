@@ -126,6 +126,10 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   CI 的「數字宣稱一致性」step 逐項比對這兩個數字（`CLAUDE.md dd 指令總數`、`CLAUDE.md NS command 總數` 兩個 `ck`），漏改要等 push 才紅燈
 - 改 commands（例如 `/dd-init` 的 Phase 指令）也照「新增 Skill 步驟 3」派 subagent 在沙盒 repo 照做一遍；牽涉 hook
   管理工具（pre-commit、lefthook、husky）時用 docker 裝真的工具實測 —— husky／lefthook 會在 `npm install` 時把 gate 洗掉，乾跑看不出來
+- 要模型照做的檢查，能寫成腳本就寫成腳本（exit code 加 `tests/` 的 bash 測試），指令文字只留「先跑它、非 0 就停下回報」。
+  只靠措辭的檢查，每條分支都要派 agent 照文字實跑才驗得到（2026-11-14：腳本層的檢查靠 `tests/test-dd-init-upgrade.sh` 裡 exit 6 那組測試；
+  `/dd-init` 文字層派了 136 個 agent，含使用者同意的範圍擴大與重複的基準臂，`docs/measurements/2026-11-14-session-cost.md`）。
+  腳本要跟指令一起到得了使用者手上，見「注意事項」`--commands-only` 那條
 
 ## 新增 Script 步驟
 

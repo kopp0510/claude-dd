@@ -31,6 +31,11 @@
   只說「做完整安全稽核」時不會自己叫，拿掉 dmi 的對照副本會叫；沒指定輸出目錄時解出 `~/security-audit-skill/claude-dd/run-2`，與預期相同。
   `agents/security-auditor.md` 的 description 改成把全面稽核指向 `/security-audit`。
 
+### Changed
+
+- **根目錄 CLAUDE.md「新增 Command 步驟」加一條：要模型照做的檢查，能寫成腳本就寫成腳本**。
+  指令文字只留「先跑它、非 0 就停下回報」；只靠措辭的檢查要逐分支派 agent 實跑才驗得到（量測：`docs/measurements/2026-11-14-session-cost.md`）。
+
 ### Fixed
 
 - **`dd-init-upgrade.sh --apply` 的輸出路徑已經存在就不寫、exit 6**：awk 的 `print > out` 會跟著 symlink 寫到它指的地方，
