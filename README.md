@@ -207,7 +207,7 @@ Degraded states are reported distinctly, so "I can't tell" never turns into a co
 
 | Situation | Reported as |
 |---|---|
-| `~/.claude.json` can't be parsed (corrupt), or its top level isn't an object | 無法判定 — cannot determine |
+| `~/.claude.json` can't be parsed (corrupt), or isn't exactly one JSON object | 無法判定 — cannot determine |
 | Neither `jq` nor `python3`, name found by string match | 疑似已設定…範圍未知 — probably configured, scope unknown |
 | Neither `jq` nor `python3`, name not found | 未安裝 — not installed (a required MCP also gets a ❌) |
 

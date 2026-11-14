@@ -13,7 +13,9 @@
 - A1 範圍是上一則評分的弱項 4（安裝腳本）與弱項 5（README）。弱項 1–3 這次不動：速度與費用要動審查者數量這類規則，得先做對照實驗；行為回歸要另開一套會花錢的測試機制；文件只增不減依使用者先前的指示要逐條判必要性、交他選
 - A2 `settings.json` 與 `installed_plugins.json` 不加備份：`settings.json` 可能放 token，備份等於多留一份；而且登記每次都會改 `lastUpdated`，加了備份會每跑一次多一個備份目錄。改在 README 講明這兩個檔會被就地改
 - A3 `--uninstall` 取消登記官方 plugin 的行為不改（移除前的提示本來就列了），只改 README 的說法
-- A4 不改 `plugin_enabled_state` 對「頂層不是物件」回 `none` 的既有設計（兩條路徑本來就一致，註解寫明是刻意的）
+- A4 ~~不改 `plugin_enabled_state` 對「頂層不是物件」回 `none` 的既有設計（兩條路徑本來就一致，註解寫明是刻意的）~~
+  步驟 4 審查後改了：頂層不是物件改回 `unparseable`，跟這一段給 `mcp_scope` 定的規則一致（審查者指出同一個理由在兩支函式得到相反的結論）；
+  `enabledPlugins` 這個鍵型別不對時仍回 `none`
 - A5 測試加在既有的 `tests/test-install.sh`，不另開檔（另開要同步兩個 CI job、ShellCheck 清單、目錄結構那行）
 - A6 不動 `commands/dd-init.md` 的蓋章區塊，所以不跳 `dd-loop-rev`；不發版、不 push
 - A7 兩件留給使用者：兩個 agent 備份檔的上游授權（要外部查證）、README「only components with an evidenced usage record are kept」這句的措辭
@@ -109,6 +111,24 @@
 - `CHANGELOG.md` 的 `## 未發布`
 - 改到的識別符各跑一次 `git grep`，核對提到它的敘述還成立（`jq_inplace`、`py_inplace` 檔頭的「原檔不動」「保留 inode / symlink」等）
 
+**步驟 3、4 的結果（2026-11-14）**
+
+- 步驟 3（code-simplifier，與步驟 4 同時跑）：只合併了 `show_completion` 裡兩個相鄰、條件相同的 `if`，其餘判斷不值得改
+- 步驟 4：派 3 個審查者（安裝腳本的邏輯／測試／文件與註解的宣稱），報告在 `docs/reviews/2026-11-14-installer-hardening/S1-*.md`。0 條 Critical、9 條 Important（去掉重疊是 8 件事），全部採納：
+  - 檔案裡不只一個 JSON 值（`{} {}`、`null {}`）與開頭有 BOM 時，兩條路徑仍然結論不同 → 所有用 jq 讀設定檔的地方加 `-s`、python3 改用 `utf-8-sig`，T2 補 17 例
+  - 登記失敗時 `settings.json` 已經先寫成啟用，完成訊息卻說沒啟用 → 改成先登記、再啟用
+  - T2 的 `p-entry-valid` 分不出「更新三個欄位」與「整筆新建」→ fixture 多放一個欄位、正規化只換掉真的時間戳
+  - `plugin_enabled_state` 對頂層不是物件回 `none`，跟 `mcp_scope` 的規則相反 → 改回 `unparseable`（假設 A4 跟著改）
+  - `TEST_ONLY` 打錯字時一組都沒跑卻 rc=0 → 開頭先驗值
+  - 文件把 T2 寫成「兩條路徑結論相同」的保證 → 改寫成「只守它列的那幾類輸入」
+  - T3 的註解與上面 S1-3 寫「不沿用 `SANDBOX` 是因為它的無備份斷言靠 plugin 步驟被跳過才成立」：這個理由是錯的，`install_plugins` 從來不產生備份。真正的理由只是各組用自己的沙盒、不去動原有檢查的狀態；註解已改
+  - `plain` 的說明把 BSD sed 遇到壞位元組的行為寫錯（不是整個不印，是印到那一行就失敗）→ 改掉
+- 已知、這次沒處理：
+  - 目標是懸空的 symlink 時，`backup_before_overwrite` 直接返回，呼叫端接著 `cp` —— 審查者指出 GNU 的 `cp` 會拒絕寫穿懸空連結、在 `set -e` 下中止安裝（既有行為，沒有實跑確認）
+  - 全域 CLAUDE.md 的互動選單（o／k／s）測不到
+  - macOS runner 的 jq 1.8.2 對 BOM 的行為沒驗證（本機 jq 1.7.1 與 Ubuntu 的 jq 1.7 都略過 BOM）；push 之後 macOS job 的 T2 會跑到
+  - jq 與 python3 對大整數、NaN 的寫回格式沒比過
+
 ### S2 兩份 README：陌生人裝之前該知道的事
 
 **開工前提**（每一項查完把結果寫進設計文件，README 只寫查得到的）
@@ -126,6 +146,7 @@
   3. 會就地改的兩個設定檔（`~/.claude/settings.json` 的 `enabledPlugins`、`~/.claude/plugins/installed_plugins.json`），不備份
   4. 語言：全域模板被寫入之後（全新機器在第 7 步答 y；本機已有不同版本時選 o，或選 s 之後答 y；或帶 `--force`），模板要求 Claude 用繁體中文回覆；commit 訊息也用繁體中文，但專案自己另有規定時照專案；`/dd-init` 會在專案裡 commit 一筆中文訊息
   5. 全域會掛的 hook：除了已經寫的 gate-guard，補上 self-improving-agent 的那一個
+  5b.（S1 的審查者 C 提的）安裝第 5 步的說明補上「`settings.json` 或 `installed_plugins.json` 更新失敗時跳過那個 plugin」這種情況
   6. 迴圈的時間與費用，分三句寫，不寫成「每段要花多少」：
      - 有人工寫的程式碼時，步驟 4 至少派 3 個審查者（本 repo 部署的 `agents/code-reviewer.md` 定義的 model 是 opus）；diff 全是資料、設定、註解、文件，或已被機械檢查完全覆蓋時不派
      - 單個審查者的耗時：2026-10-23 從維護者機器約 30 天的 session 紀錄算出，311 次、中位 11.8 分、第 90 百分位 27.7 分；限制照量測檔原文寫（wall time，含模型思考與工具執行；被喚醒續跑過的審查會把中間閒置算進去）（`docs/measurements/2026-10-23-reviewer-real-sessions.md`）
