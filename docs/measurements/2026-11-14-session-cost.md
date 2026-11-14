@@ -6,11 +6,12 @@
 
 ## 方法
 
-- 來源：那個 session 的 transcript jsonl（Claude Code 存在本機的對話紀錄），只算主對話（`isSidechain` 的不算），
-  時間範圍 `2026-11-13T17:42:47Z` → `2026-11-14T10:30:08Z`
+- 來源：那個 session 的 transcript jsonl（Claude Code 存在本機的對話紀錄，`~/.claude/projects/<專案目錄的編碼>/<session id>.jsonl`），
+  只算主對話（`isSidechain` 的不算），時間範圍 `2026-11-13T17:42:47Z` → `2026-11-14T10:30:08Z`。
+  找是哪一份：`grep -l '2026-11-13T17:42:47' ~/.claude/projects/*/*.jsonl`（當天只命中一份）
 - 指令：`python3 -I session_cost.py <transcript>.jsonl 2026-11-13T17:42:47 2026-11-14T10:30:08`（腳本在下面）
 - 行數另外用 `git diff --numstat 9584605..58ae9b0` 依路徑分類
-- session 一開始的輸入量：`jq -r 'select(.type=="assistant" and (.isSidechain|not)) | (.message.usage | (.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens))' <transcript>.jsonl | head -1`
+- session 一開始的輸入量（**不套上面的時間範圍**，取的是整份 transcript 的第一個請求，時間是 `2026-11-13T12:54:31Z`）：`jq -r 'select(.type=="assistant" and (.isSidechain|not)) | (.message.usage | (.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens))' <transcript>.jsonl | head -1`
 - 引用數字前先重跑。transcript 只在本機、會被清掉；清掉之後這些數字就重算不了
 
 ```python
@@ -136,8 +137,9 @@ print("## 主對話 token（依 message.id 去重）請求 %d 次，輸出 %d" %
 - context：自動壓縮 12 次，其中 11 次在 `2026-11-14T05:46` 起的 4.4 小時內。壓縮前 36.7–38.5 萬 token，壓縮後第一個請求 13.3–19.0 萬
 - 進到主對話的字元：Bash 的結果 717,583、subagent 的交回訊息 463,196（148 則，平均 3,129）、Read 的結果 247,975、
   Agent 的啟動回覆 181,512、完成通知 140,225
-- session 的第一個請求（還沒做任何事）輸入 97,571 token
-- 行數（`9584605..58ae9b0`）：`scripts/`、`commands/`、`tests/`、`agents/`、安裝腳本合計 +101／−13；`docs/reviews/` +1,626；
+- 整個 session 的第一個請求（還沒做任何事，`2026-11-13T12:54`，在上面的時間範圍之前）輸入 97,571 token。
+  這個數字來自「方法」節那條 jq，不在「當天輸出」裡；這件工作開始時 context 已經不是空的（3 分多鐘後就第一次壓縮）
+- 行數（`9584605..58ae9b0`，來自「方法」節的 `git diff --numstat`，不在「當天輸出」裡）：`scripts/`、`commands/`、`tests/`、`agents/`、安裝腳本合計 +101／−13；`docs/reviews/` +1,626；
   `docs/measurements/` +860；`docs/designs/` +229；`skills/security-audit/CLAUDE.md` +189；其他文件 +76／−10；照抄上游的檔 +5,300。
   審查報告是逐字存的，行數不等於花的工夫
 
@@ -146,6 +148,9 @@ print("## 主對話 token（依 message.id 去重）請求 %d 次，輸出 %d" %
 - 只有一個 session、一件工作。那次的產品碼大半是指令文字，所以沙盒臂特別多，不算典型
 - 字元數不是 token 數；中文一個字是多少 token 沒量
 - 「136 個沙盒臂」是 157 減掉 description 含 `dry-run` 的 21 個，沒有逐個核對；「那 21 個是 security-audit 的乾跑」「其餘是沙盒臂」這兩個歸類
-  來自那次的設計文件（`docs/designs/2026-11-14-security-audit-intake-design.md`），腳本只數得出 description 的字樣
+  來自那次的設計文件（`docs/designs/2026-11-14-security-audit-intake-design.md`），腳本只數得出 description 的字樣。
+  步驟 4 的審查之後補查過一次：157 個裡不含 `dry-run` 的 description 全都是臂的名字（arm、docker、control、baseline、final-text、`v3…`）
+- 腳本用字串比時間，結束那一秒裡帶毫秒的紀錄會被排除；當天查過，那一秒沒有紀錄
+- 「交回訊息」是 `queued_command` 且 `isMeta` 的那一類；當天抽看開頭，都是 `[Subagent hand-back`
 - subagent 自己用掉的 token 不在這支腳本裡（要讀各 agent 自己的紀錄檔）
 - 等待時間含使用者不在電腦前的時間（最長那次跨夜）
