@@ -430,6 +430,14 @@ t2_case acw a-pm-notobj   '{"modelSettings":{"m":"x","n":null,"o":[400000]}}'   
 t2_case acw a-pm-mixed    '{"modelSettings":{"m":"x","n":{"autoCompactWindow":400000}}}' "@absent" "@absent" '^permodel$'
 t2_case acw a-bom         "${T2_BOM}{\"autoCompactWindow\":400000}" "@absent" "@absent" '^all$'
 t2_case acw a-multi       '{"autoCompactWindow":400000} {}' "@absent" "@absent" '^unparseable$' '^(all|none)$'
+# 2026-11-15 審查時找到的四類（當時兩臂結論不同）：
+#   數字字面值比 float 精確、四捨五入後剛好落在邊界上：jq 1.7 起拿字面值的原樣比大小，python3 先轉成 float
+#   settings.json 裡有不合法的 UTF-8 位元組（跟這個鍵無關的地方）：jq 換成替代字元照樣解析，python3 預設報錯
+#   別的鍵是幾千位的整數：python 3.11 起整數字串超過 4300 位就報 ValueError，jq 照收
+t2_case acw a-top-edge-lo '{"autoCompactWindow":99999.99999999999999999}'  "@absent" "@absent" '^all$'
+t2_case acw a-top-edge-hi '{"autoCompactWindow":1000000.0000000000000001}' "@absent" "@absent" '^all$'
+t2_case acw a-badutf8     $'{"t":"caf\xe9","autoCompactWindow":400000}'    "@absent" "@absent" '^all$'
+t2_case acw a-bigint      "{\"x\":1$(printf '%05000d' 0),\"autoCompactWindow\":400000}" "@absent" "@absent" '^all$'
 
 if [ -n "$T2_FAILED" ]; then
     echo "❌ T2：${T2_COUNT} 個案例裡有不符的：${T2_FAILED}"
@@ -655,15 +663,10 @@ t10_check() {
     h="$T10_DIR/h${T10_N}"
     mkdir -p "$h/.claude"
     if [ "$1" != "@absent" ]; then printf '%s' "$1" > "$h/.claude/settings.json"; fi
-    if [ -n "$2" ]; then
-        CLAUDE_CODE_AUTO_COMPACT_WINDOW="$2" HOME="$h" ./install-dd-pipeline.sh --check < /dev/null > "$h/out.txt" 2>&1 \
-            || { echo "❌ T10：--check 失敗（${3}）"; tail -20 "$h/out.txt"; exit 1; }
-    else
-        # 開發者的 shell 設著這個變數的話，每一格都會變成「環境變數」那一行
-        ( unset CLAUDE_CODE_AUTO_COMPACT_WINDOW
-          HOME="$h" ./install-dd-pipeline.sh --check < /dev/null > "$h/out.txt" 2>&1 ) \
-            || { echo "❌ T10：--check 失敗（${3}）"; tail -20 "$h/out.txt"; exit 1; }
-    fi
+    # 不設時要明確 unset：開發者的 shell 設著這個變數的話，每一格都會變成「環境變數」那一行
+    ( if [ -n "$2" ]; then export CLAUDE_CODE_AUTO_COMPACT_WINDOW="$2"; else unset CLAUDE_CODE_AUTO_COMPACT_WINDOW; fi
+      HOME="$h" ./install-dd-pipeline.sh --check < /dev/null > "$h/out.txt" 2>&1 ) \
+        || { echo "❌ T10：--check 失敗（${3}）"; tail -20 "$h/out.txt"; exit 1; }
     line=$(plain "$h/out.txt" | grep -F '自動壓縮視窗' | head -1)
     case "$line" in
         "└── "*"$4"*) ;;
@@ -674,16 +677,16 @@ t10_check() {
         "├── "*) ;;
         *) echo "❌ T10：${3} 時，ffmpeg 那一行應該以「├── 」開頭（它不再是最後一行），實際：${ff:-（沒有這一行）}"; exit 1 ;;
     esac
-    if grep -qE 'integer expression expected|value too great for base|bad substitution|syntax error|command not found|unbound variable' "$h/out.txt"; then
-        echo "❌ T10：${3} 時，輸出裡有 shell 錯誤：$(grep -E 'integer expression expected|value too great for base|bad substitution|syntax error|command not found|unbound variable' "$h/out.txt" | head -1)"; exit 1
-    fi
+    local shell_err
+    shell_err=$(grep -E 'integer expression expected|value too great for base|bad substitution|syntax error|command not found|unbound variable' "$h/out.txt" | head -1)
+    [ -z "$shell_err" ] || { echo "❌ T10：${3} 時，輸出裡有 shell 錯誤：${shell_err}"; exit 1; }
     utf8_ok "$h/out.txt" || { echo "❌ T10：${3} 時，輸出有不合法的 UTF-8"; exit 1; }
 }
 t10_check '{"autoCompactWindow":400000}' "" "最上層有設" "最上層已設"
 t10_check '{"autoCompactWindow":5}' "" "最上層的值在範圍外" "不是 100000–1000000 之間的整數"
 t10_check '{"modelSettings":{"m":{"autoCompactWindow":400000}}}' "" "只設在個別模型" "只設在個別模型"
-t10_check '{"theme":"dark"}' "" "都沒設" "沒設，Claude Code 用它替各模型調的預設視窗"
-t10_check "@absent" "" "沒有 settings.json" "沒設，Claude Code 用它替各模型調的預設視窗"
+t10_check '{"theme":"dark"}' "" "都沒設" "都沒有有效的設定（其他設定檔沒查）"
+t10_check "@absent" "" "沒有 settings.json" "都沒有有效的設定（其他設定檔沒查）"
 t10_check '{' "" "檔案壞掉" "settings.json 無法解析"
 t10_check '{"theme":"dark"}' "400000" "環境變數是 400000" "設了環境變數"
 t10_check '{"autoCompactWindow":400000}' "5" "環境變數是 5" "不是 100000–1000000 的純數字"
@@ -702,15 +705,16 @@ DRIVE
 mkdir -p "$T10_DIR/n1/.claude" "$T10_DIR/n2/.claude" "$T10_DIR/n3/.claude"
 printf '{"autoCompactWindow":400000}' > "$T10_DIR/n1/.claude/settings.json"
 printf '{"theme":"dark"}' > "$T10_DIR/n2/.claude/settings.json"
-t10_s=$("$BASH" "$T10_DIR/nojson.sh" "$T10_DIR/n1" state < /dev/null 2> "$T10_DIR/n1.err") \
-    || { echo "❌ T10：沒有 jq 與 python3 時 autocompact_state 失敗"; cat "$T10_DIR/n1.err"; exit 1; }
-[ "$t10_s" = unknown ] || { echo "❌ T10：沒有 jq 與 python3、檔案裡有這個鍵的字樣時應該回 unknown，實際：${t10_s}"; exit 1; }
-t10_s=$("$BASH" "$T10_DIR/nojson.sh" "$T10_DIR/n2" state < /dev/null 2> "$T10_DIR/n2.err") \
-    || { echo "❌ T10：沒有 jq 與 python3 時 autocompact_state 失敗（沒有字樣）"; cat "$T10_DIR/n2.err"; exit 1; }
-[ "$t10_s" = none ] || { echo "❌ T10：沒有 jq 與 python3、檔案裡沒有這個鍵的字樣時應該回 none，實際：${t10_s}"; exit 1; }
-t10_s=$("$BASH" "$T10_DIR/nojson.sh" "$T10_DIR/n3" state < /dev/null 2> "$T10_DIR/n3.err") \
-    || { echo "❌ T10：沒有 jq 與 python3 時 autocompact_state 失敗（沒有檔）"; cat "$T10_DIR/n3.err"; exit 1; }
-[ "$t10_s" = none ] || { echo "❌ T10：沒有 jq 與 python3、沒有 settings.json 時應該回 none，實際：${t10_s}"; exit 1; }
+# $1=沙盒 HOME 的目錄名 $2=應該回的狀態 $3=說明
+t10_nojson_state() {
+    local s
+    s=$("$BASH" "$T10_DIR/nojson.sh" "$T10_DIR/$1" state < /dev/null 2> "$T10_DIR/$1.err") \
+        || { echo "❌ T10：沒有 jq 與 python3 時 autocompact_state 失敗（${3}）"; cat "$T10_DIR/$1.err"; exit 1; }
+    [ "$s" = "$2" ] || { echo "❌ T10：沒有 jq 與 python3、${3} 時應該回 ${2}，實際：${s}"; exit 1; }
+}
+t10_nojson_state n1 unknown "檔案裡有這個鍵的字樣"
+t10_nojson_state n2 none "檔案裡沒有這個鍵的字樣"
+t10_nojson_state n3 none "沒有 settings.json"
 "$BASH" "$T10_DIR/nojson.sh" "$T10_DIR/n1" line < /dev/null > "$T10_DIR/n1.txt" 2>&1 \
     || { echo "❌ T10：沒有 jq 與 python3 時環境檢查失敗"; tail -20 "$T10_DIR/n1.txt"; exit 1; }
 plain "$T10_DIR/n1.txt" | grep -F '自動壓縮視窗' | grep -qF '缺 jq 與 python3' \

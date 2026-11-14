@@ -19,6 +19,7 @@
 GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。
 只偵測提示、不代裝系統套件。最後一行報**自動壓縮視窗**有沒有設（`autocompact_state`，讀 `~/.claude/settings.json`
 最上層與 `modelSettings` 的 `autoCompactWindow`、以及這個 shell 的 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`）：只提示、不改檔、不影響結束碼。
+只讀這一個設定檔，專案層等其他設定檔不讀，所以「都沒設」那一行印的是「沒有有效的設定（其他設定檔沒查）」，不寫成確定沒設。
 印出的句子只寫官方文件原文撐得住的說法（出處在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15），「幾萬才壓縮」這類數字不進安裝輸出。
 
 ## 部署清單（使用率盤點制）
@@ -264,6 +265,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   ⚠️ T2 只守它列的那幾類輸入，不是「等價」的證明 —— 2026-11-14 第一版 92 例抓到 16 例結論不同
   （空檔時 jq 回報成功而檔案沒寫、頂層是 `null` 時 jq 把整個檔改寫成物件…，之前逐項讀程式碼對過好幾輪都沒看出來），
   審查又找到表上沒有的兩類（檔案裡不只一個 JSON 值：不加 `-s` 的 `jq -e` 只看最後一個值；開頭有 BOM：jq 略過、python 預設的 utf-8 報錯）。
+  2026-11-15 `autocompact_state` 的審查再找到三類（數字字面值比浮點數精確：jq 1.7 起拿字面值的原樣比大小；別處有不合法的 UTF-8 位元組：jq 換成替代字元、python 報錯；
+  別處有幾千位的整數：python 3.11 起超過 4300 位就報錯），只對 `autocompact_state` 修了、補了列，其他幾支沒測過這三類。
   想到新的輸入類別就加進表裡，不要只改一條路徑
 - `OFFICIAL_PLUGINS` 新增項目前先確認該 plugin 的 `.claude-plugin/plugin.json`
   **有沒有 `version` 欄位** — 官方 `skill-creator` 就沒有（marketplace 與 cache 兩份都沒有）。
