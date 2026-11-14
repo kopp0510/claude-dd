@@ -386,6 +386,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **用 auto mode 跑 `claude -p` 時，受測 session 自己到 `/tmp` 開副本做實驗會被擋**，`permission_denials` 不為 0：擋它的是 auto mode 的分類器
   （理由字串 `[Shared Scratch Sweep]`），不是目錄白名單，`--add-dir /tmp /private/tmp` 照樣擋（2026-10-30 同一次實測，denial 2 → 3；本機沒重現）。
   `docs/measurements/2026-10-29-adhd-style/run.sh` 用的是 `--permission-mode dontAsk`，它會不會經過這個分類器沒驗證；判準要求 denials=0 時，先決定用哪個 mode 再跑。
+- **`claude -p` 在父 session 最後一輪結束 10 分鐘後，會把還在跑的背景 subagent 停掉**：stderr 印 `Background tasks still running 10m after the last turn (…); stopping them`，
+  父 log 照樣有 `subtype: success` 的 result，subagent 的紀錄檔停在一半、沒有最後的報告。要等超過 10 分鐘的 subagent（例如裁決者再派審查者）時設
+  `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`（2.1.325 實測；2026-11-15 `docs/measurements/2026-11-15-reviewer-effort/run.sh`）；跑完 grep 父 log 有沒有那句
+- **受測 session 的快照放在 scratchpad 底下時，它找得到 scratchpad 裡別的檔**：2026-11-15 有個審查者 `cd` 到快照的上兩層去 `find` 計畫提到的探針腳本。
+  洩題檢查要掃「快照以外的暫存區絕對路徑」，只認家目錄、`../` 會漏（那個目錄的 `outside.py`）；答案檔不要跟快照放在同一棵暫存樹下
 - **`commands/*.md` 的安全檢查不可以只靠 `scripts/` 的新行為**：`--commands-only` 只跑 `create_commands`、不跑 `create_scripts`
   （`install-dd-pipeline.sh` 的 `if [ "$COMMANDS_ONLY" = false ]` 那段），使用者手上會是新指令配舊腳本。
   2026-11-14 dd-init 把 `CLAUDE.md.dd-upgrade` 交給升級腳本的 exit 6 擋，舊腳本照樣寫出；指令文字要自己先查
