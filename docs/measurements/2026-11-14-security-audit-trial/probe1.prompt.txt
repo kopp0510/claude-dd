@@ -1,0 +1,7 @@
+/sa-trial:security-audit 這是一次載入測試，不要做安全稽核，也不要建立稽核產物。只依序做下面五件事，做完就結束：
+1. 回報你有沒有看到這個 skill 的內容，以及 skill 目錄的絕對路徑。
+2. 用 Read 讀 skill 目錄裡 HUNTING.md 的前 3 行，原文貼出。
+3. 執行 node <skill 目錄>/validate-findings.cjs <scratchpad>/probe-out/missing.json（檔案不存在，預期會報錯），貼出結束碼與輸出第一行。
+4. 派一個 general-purpose subagent，請它讀目前工作目錄的 README.md 前 2 行並原文回報。
+5. 用 Write 寫一個檔案 <scratchpad>/probe-out/probe.txt，內容為 ok。
+這是非互動執行，沒有人能回答問題。

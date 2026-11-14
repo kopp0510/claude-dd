@@ -1,0 +1,38 @@
+## session
+results=1
+  idx=0 subtype=success cost=12.700726100000006 duration_ms=1300379 api_ms=1859331 turns=48 denials=3 models=claude-opus-5-5,claude-sonnet-5-5
+agent_calls_by_type:
+  Explore=5
+  general-purpose=2
+agent_calls_total=7
+skill_calls=
+denials:
+  Bash S=$S/sa-plugin/skills/securi
+  Bash git ls-files | grep -E '\.(sh|py|yml|json)$|hooks' | head -60
+  Bash ls -la $S/sa-plugin/skills/s
+## 產物
+  run-metadata.json bytes=3335
+  architecture.md bytes=5554
+  coverage-ledger.json bytes=29056
+  findings.json bytes=4713
+  REPORT.md bytes=7990
+  FINDINGS-DETAIL.md bytes=446
+  NEEDS-VALIDATION.md bytes=3876
+run_status=complete incomplete_reason=- profile=quick budget={"max_agent_invocations":9,"unit":"agent invocations across all phases","gate":"4 baseline reconnaissance + 1 quick final critic + >=1 verifier = 6 <= 9: passes","plan":{"reconnaissance":4,"hunters":2,"final_critic":1,"verifier_reserve":2},"plan_revision":"Hunters reduced from 2 to 1 after reconnaissance because the session USD cap (US$15; about US$9.2 spent after reconnaissance) could not fund a second hunter while keeping the mandatory final critic and validation reserve.","spent":7,"spent_breakdown":{"reconnaissance":4,"hunters":1,"final_critic":1,"verifiers":1},"agents":{"recon-1a":"Explore, default model","recon-1b":"Explore, default model","recon-1c":"Explore, default model","recon-1d":"Explore, default model","hunter-a1":"general-purpose, sonnet","critic-final":"Explore, sonnet","verifier-c1":"general-purpose, sonnet"}}
+  verdict needs_validation=1
+  unit candidate=1
+  unit covered=2
+  unit deferred=9
+## 自己重跑驗證器
+  validate-findings exit=0 first=PASS: 1 findings valid
+  validate-coverage-ledger exit=0 first=PASS: 12 coverage units valid
+## 目標 repo 有沒有被改
+  git_status_lines=0 head=9584605
+
+## 探針
+  probe1 idx=0 cost=0.02531948 denials=1 models=claude-haiku-5-5
+  probe1 idx=1 cost=0.026606309999999998 denials=0 models=claude-haiku-5-5
+  probe2 idx=0 cost=0.01511677 denials=0 models=claude-haiku-5-5
+## 各模型花費（real）
+  claude-opus-5-5 cost=11.963298200000002
+  claude-sonnet-5-5 cost=0.7374279000000001

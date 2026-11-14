@@ -1,6 +1,6 @@
 ---
 name: security-auditor
-description: 應用安全手動審查專家,逐項檢查程式碼安全問題。當需要 OWASP Top 10 逐項檢查、認證流程審查、授權邏輯分析、輸入驗證檢查、XSS/SQL injection 手動審查時使用。不適用於自動化全面掃描、SecOps 管線建置或威脅建模(不在部署範圍)。
+description: 應用安全手動審查專家,逐項檢查程式碼安全問題。當需要 OWASP Top 10 逐項檢查、認證流程審查、授權邏輯分析、輸入驗證檢查、XSS/SQL injection 手動審查時使用。不適用於整個 codebase 的全面安全稽核(用 /security-audit)、SecOps 管線建置或威脅建模(不在部署範圍)。
 model: inherit
 ---
 

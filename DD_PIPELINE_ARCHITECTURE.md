@@ -82,7 +82,8 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞；2026-10-23 新增自製 plan-review，
 實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，
 實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑；2026-10-30 新增自製 dd-loop，
-內容是從全域 §3.9 原文搬出的迴圈做法細則，實證來源為 `docs/measurements/2026-10-30-dd-loop-trigger/` 的觸發實測）。
+內容是從全域 §3.9 原文搬出的迴圈做法細則，實證來源為 `docs/measurements/2026-10-30-dd-loop-trigger/` 的觸發實測；2026-11-14 收編 vendored security-audit（user-invoked），
+實證來源為 `docs/measurements/2026-11-14-security-audit-trial/` 的試跑）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
