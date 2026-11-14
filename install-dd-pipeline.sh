@@ -309,11 +309,13 @@ show_help() {
 #   all         最上層 autoCompactWindow 是有效值（個別模型另外有沒有值都回這個）
 #   outofrange  最上層有這個鍵、不是 null、也不是有效值（範圍外、非整數、字串、布林）
 #   permodel    最上層沒有這個鍵（或是 null），modelSettings 底下至少一個模型是有效值
-#   none        檔案不存在，或兩處都沒有有效值
+#   none        檔案不存在，或兩處都沒有有效值（只看 ~/.claude/settings.json；專案層等其他設定檔沒查，印出的句子要照實講）
 #   unknown     缺 jq 與 python3，檔案裡有這個鍵的字樣（只有字串證據）
 # 「有效值」= 100000–1000000 之間、值是整數的數字（400000.0 算、布林不算）；範圍取自官方文件 settings-reference 的 autoCompactWindow 條目（2026-11-15 讀的）。
-# 個別模型的值不是有效值（"auto"、布林、範圍外）就當那一格沒設；modelSettings 或某個模型的值不是物件時略過。
+# 比大小用的是轉成浮點數之後的值（99999.99999999999999999 等於 100000，算有效）。
+# 個別模型的值不是有效值（"auto"、布林、範圍外）就當那一格沒有有效值；modelSettings 或某個模型的值不是物件時略過。
 # jq 與 python3 兩條路徑的型別護欄要對齊，改任何一條先跑 tests/test-install.sh 的 T2（acw 那幾列）。
+# 已知沒對齊的輸入（2026-11-15 審查時實測，都要刻意造才會有）：小寫的 nan（jq 收、python3 不收）、幾千層的巢狀（兩邊的深度上限不同）。
 # 只認這個 shell 的環境變數，不認 settings.json 的 env 區塊（官方文件沒說那樣設有沒有效）。
 autocompact_state() {
     local file="$1" out="" env_val="${CLAUDE_CODE_AUTO_COMPACT_WINDOW:-}"
@@ -335,9 +337,10 @@ autocompact_state() {
     file_exists "$file" || { echo "none"; return; }
 
     if command_exists "jq"; then
-        # -s 與「剛好一個頂層物件」的理由同 plugin_enabled_state
+        # -s 與「剛好一個頂層物件」的理由同 plugin_enabled_state。
+        # `. * 1`：jq 1.7 起拿數字字面值的原樣比大小，先算一次換成浮點數，結論才跟 python3 的 float 一樣（jq 1.7.1、1.8.1 實測）
         out=$(jq -r -s '
-            def valid: type == "number" and . >= 100000 and . <= 1000000 and . == floor;
+            def valid: type == "number" and ((. * 1) as $n | $n >= 100000 and $n <= 1000000 and $n == ($n | floor));
             if length != 1 or (.[0] | type) != "object" then error("not a single top-level object")
             else .[0] as $d
                 | if ($d | has("autoCompactWindow")) and $d.autoCompactWindow != null then
@@ -351,8 +354,11 @@ autocompact_state() {
     elif command_exists "python3"; then
         out=$(SETTINGS_FILE="$file" python3 -c '
 import json, os, sys
+# 跟 jq 對齊的兩處：不合法的 UTF-8 位元組換成替代字元照樣解析；幾千位的整數照收（python 3.11 起預設超過 4300 位就報錯）
+if hasattr(sys, "set_int_max_str_digits"):
+    sys.set_int_max_str_digits(0)
 try:
-    with open(os.environ["SETTINGS_FILE"], encoding="utf-8-sig") as f:
+    with open(os.environ["SETTINGS_FILE"], encoding="utf-8-sig", errors="replace") as f:
         data = json.load(f)
 except Exception:
     sys.exit(1)
@@ -393,16 +399,16 @@ print_autocompact_line() {
         all)
             echo -e "└── ${name}：settings.json 最上層已設（有個別設定的模型以個別值為準）: ${GREEN}${CHECK}${NC}" ;;
         outofrange)
-            echo -e "└── ${YELLOW}⚠ ${name}：settings.json 最上層 autoCompactWindow 的值不是 100000–1000000 之間的整數，實際用多少無從判定${NC}"
-            echo -e "    ${YELLOW}有個別設定的模型以個別值為準${NC}" ;;
+            echo -e "└── ${YELLOW}⚠ ${name}：settings.json 最上層 autoCompactWindow 的值不是 100000–1000000 之間的整數，實際用多少無從判定${NC}" ;;
         permodel)
             echo -e "└── ${YELLOW}⚠ ${name}（可選）：只設在個別模型，沒設過的模型不適用${NC}"
             echo -e "    ${YELLOW}在 settings.json 最上層加 \"autoCompactWindow\"，沒有個別設定的模型也會套用${NC}" ;;
         unknown)
             echo -e "└── ${YELLOW}⚠ ${name}：缺 jq 與 python3，settings.json 裡有 autoCompactWindow 字樣但無從判定${NC}" ;;
         *)
-            echo -e "└── ${YELLOW}⚠ ${name}（可選）：沒設，Claude Code 用它替各模型調的預設視窗${NC}"
-            echo -e "    ${YELLOW}想提早壓縮：/autocompact <token 數>（只存給當下的模型），或在 settings.json 最上層加 \"autoCompactWindow\"（每個模型）${NC}" ;;
+            echo -e "└── ${YELLOW}⚠ ${name}（可選）：~/.claude/settings.json 與這個 shell 的環境變數都沒有有效的設定（其他設定檔沒查）${NC}"
+            echo -e "    ${YELLOW}都沒設時 Claude Code 用它替各模型調的預設視窗。想提早壓縮：/autocompact <token 數>（v2.1.288 起只存給當下的模型），${NC}"
+            echo -e "    ${YELLOW}或在 settings.json 最上層加 \"autoCompactWindow\"（每個模型）${NC}" ;;
     esac
 }
 

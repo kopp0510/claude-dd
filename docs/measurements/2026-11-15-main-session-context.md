@@ -13,7 +13,7 @@
 - 「每次請求帶的 context」= 那次請求 `usage` 的 `input_tokens`＋`cache_read_input_tokens`＋`cache_creation_input_tokens`。
   `usage.iterations` 長度大於 1 的請求（那次回合裡另外叫了 advisor）數字是幾次迭代的合計，另外列、不算進 context 大小
 - 壓縮紀錄 = `type` 是 `system`、`subtype` 是 `compact_boundary` 的那幾筆，取 `compactMetadata` 的 `trigger` 與 `preTokens`
-- 那台機器當時的 `~/.claude/settings.json`（用 jq 讀）：最上層沒有 `autoCompactWindow`；`modelSettings` 裡 `claude-opus-5-5` 有 `autoCompactWindow: 400000`，
+- 那台機器的 `~/.claude/settings.json`（`2026-11-14T16:20:44Z` 用 jq 讀的一次，在那件工作做完之後、下面那條 `/autocompact` 之前）：最上層沒有 `autoCompactWindow`；`modelSettings` 裡 `claude-opus-5-5` 有 `autoCompactWindow: 400000`，
   `claude-fable-5-2` 那一格沒有這個鍵。使用者在 `2026-11-14T16:25:48Z` 對 `claude-fable-5-2` 下了 `/autocompact 400000`（transcript 裡有指令的回覆「Auto-compact window for Fable 5.2 set to 400k tokens」）
 - 引用數字前先重跑。transcript 只在本機、會被清掉；清掉之後這些數字就重算不了。那個 session 在量測之後還繼續用，
   重跑時「壓縮紀錄」會多出 `2026-11-14T17:17:38` 之後的列，其他段落的數字不受影響（時間範圍固定）
@@ -145,13 +145,14 @@ print("## Bash：%d 次、從送出到結果回來合計 %.1f 分；超過 30 �
   換成沒有設定的 `claude-fable-5-2` 之後 1 次，969,715；對它下了 `/autocompact 400000` 之後的下一次，371,343。
   中間那筆 `manual` 779,930 是使用者自己打的 `/compact`
 - **那件 104 分鐘的工作**：主對話 124 次請求，每次帶的 context 從 244,546 長到 759,029 token；`cache_read` 合計 63,481,446
-- **時間**：等模型 55.6 分、跑 Bash 22.5 分（93 次裡超過 30 秒的 17 次佔 17.0 分）、等 agent 交回 21.9 分、等使用者回答一次選單 3.2 分。
+- **時間**：等模型 55.6 分、跑 Bash 22.5 分、等 agent 交回 21.9 分、等使用者回答一次選單 3.2 分。
+  Bash 換一種算法（每個呼叫從送出到結果回來）是 93 次合計 22.9 分，其中超過 30 秒的 17 次合計 17.0 分。
   輸出 321,419 token 裡 thinking 佔 136,430
 
 ## 最上層的鍵有沒有作用（另外做的一次對照）
 
 官方文件寫最上層的 `autoCompactWindow` 對每個模型生效（原文抄在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15）。
-2026-11-15 在 Claude Code 2.1.325 各跑一發確認：兩臂只差 `--settings` 裡有沒有這個鍵；用的模型（haiku）在那台機器的 `modelSettings` 沒有個別設定，
+2026-11-15 在 Claude Code 2.1.325（兩臂 init 訊息的 `claude_code_version`）各跑一發確認：兩臂只差 `--settings` 裡有沒有這個鍵；用的模型（haiku）在那台機器的 `modelSettings` 沒有個別設定，
 環境變數 `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 沒設。
 
 ```bash
@@ -175,6 +176,7 @@ perl -e 'alarm 900; exec @ARGV or exit 127' claude -p "這個目錄有 f01.txt �
 ## 限制
 
 - 一個 session、一件工作；壓縮門檻那三組的次數是 12、1、1
+- 設定檔只讀了「方法」節寫的那一次。`claude-opus-5-5` 那 12 次壓縮發生在讀之前，當時它的視窗是不是已經是 400000，沒有另外的紀錄
 - 「沒有設定的模型到 969,715 才壓縮」只看到 `claude-fable-5-2` 這一次，不能推到別的模型；官方文件對沒設時的說法是
   `Default: unset, so Claude Code picks a window tuned for your model`，沒有給數字
 - 沒有換算成錢：`cache_read` 的單價沒有查證

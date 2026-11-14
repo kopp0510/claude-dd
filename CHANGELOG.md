@@ -22,7 +22,8 @@
 
 - **安裝的環境檢查（步驟 1，`--check` 與 `--commands-only` 也會跑）最後多一行，報自動壓縮視窗有沒有設**：
   讀 `~/.claude/settings.json` 最上層與 `modelSettings` 的 `autoCompactWindow`，以及這個 shell 的 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`。
-  只提示、不改檔、不影響結束碼；設定檔解析不了、值不是 100000–1000000 的整數、或缺 jq 與 python3 時照實說「無從判定」。
+  只提示、不改檔、不影響結束碼；設定檔解析不了、最上層的值或環境變數不是 100000–1000000 的整數、或缺 jq 與 python3 時照實說「無從判定」。
+  個別模型的值不是有效值時，那一格當成沒有有效設定。只讀這一個設定檔，專案層等其他設定檔不讀，印出的句子有註明。
   起因是一次量測：換到沒存視窗的模型之後，主對話的 context 長到 969,715 token 才自動壓縮（`docs/measurements/2026-11-15-main-session-context.md`）；
   兩份 README 加了「主對話那一塊要花多少／What the main session costs」一節。
   `tests/test-install.sh` 的 T2 加 `autocompact_state` 的 jq／python3 對照，新的一組 T10 跑真的 `--check`

@@ -68,7 +68,7 @@
   ⚠️ `utf8_ok` 把轉出來的內容寫到 `$WORK` 的檔案，不可以改回 `> /dev/null`：macOS 的 `/usr/bin/iconv` 在輸出是 `/dev/null`、
   而某個多位元組字剛好跨過 1024 位元組邊界時，對合法的 UTF-8 回 1（`iconv(): Inappropriate ioctl for device`）。
   2026-11-15 在 macOS 27.0.1 踩到：環境檢查多印一行，後面的字整個往後移，T10 就紅在「不合法的 UTF-8」，而同一份輸出逐行檢查都合法。
-  寫到檔案或管線就正常，真的壞位元組照樣回 1（在邊界前後各試過）
+  寫到檔案或管線就正常，真的壞位元組照樣回 1（在邊界前後各試過；管線是 `iconv … | cat`，55 個長度都回 0、內容相同，壞位元組回 1）
 - **只跑一組**：`TEST_ONLY=T5 /bin/bash tests/test-install.sh`（原有的檢查與 T1 照跑；值不是 T2–T10 其中一個就 exit 2，
   免得打錯字時一組都沒跑卻 rc=0 —— 新增一組時那個 `case` 要跟著加）。變異對照（2026-11-14，
   把安裝腳本的一行改壞、只跑那一組；記「哪個變異 → 紅在哪個斷言」）：啟用寫成 `false` → T3「沒有啟用」；
@@ -84,8 +84,14 @@
   jq 不要求剛好一個頂層物件 → T2 `acw.a-multi`；環境變數不擋開頭的 0 → T10「環境變數是 0400000」；不擋長度 → T10「輸出裡有 shell 錯誤」；
   ffmpeg 那一行改回 `└──` → T10「ffmpeg 那一行應該以」；缺 jq 與 python3 時有字樣也回 `none` → T10「應該回 unknown」；解析失敗講成沒設 → T10「檔案壞掉」；
   環境變數有效也照讀檔 → T10「環境變數是 400000」。這台機器有裝 ffmpeg，「沒裝 ffmpeg」那個分支的樹狀符號只有沒裝的環境（ubuntu 容器）跑得到。
+  同一天審查（`docs/reviews/2026-11-15-speed-cost/S1-a.md`）找到兩臂結論不同的輸入，補了四列，在修正前的程式碼上各紅各的：
+  jq 沒先換成浮點數就比大小 → T2 `acw.a-top-edge-lo`、`acw.a-top-edge-hi`（jq 那一臂不是 `all`）；python3 遇到不合法的 UTF-8 位元組就報錯 → T2 `acw.a-badutf8`；
+  python3 沒放寬整數位數上限 → T2 `acw.a-bigint`（後兩列是 python3 那一臂不是 `all`）。
   ⚠️ T2 只守它列的那幾類輸入（不存在、空檔、只有空白、壞 JSON、頂層型別不對、不只一個 JSON 值、BOM、鍵是 null 或型別不對、登記項格式不對；
-  `acw` 那幾列另有：數字在範圍外、不是整數、字串、布林、`NaN`、`Infinity`、只設在個別模型、`modelSettings` 或某個模型的值不是物件）。
+  `acw` 那幾列另有：數字在範圍外、不是整數、字串、布林、`NaN`、`Infinity`、只設在個別模型、`modelSettings` 或某個模型的值不是物件、
+  字面值比浮點數精確而四捨五入後落在邊界上、別處有不合法的 UTF-8 位元組、別處有幾千位的整數）。
+  最後三類只有 `acw` 有列：其他幾支（`plugin_enabled_state`、`mcp_scope`、登記與移除）讀檔的寫法相同，這三類沒有測過。
+  `acw` 已知沒對齊、也沒列的：小寫的 `nan`（jq 收、python3 不收）、幾千層的巢狀（兩邊的深度上限不同）。
   沒列的照樣可能不一致 —— 審查時補的兩類就是第一版沒想到的；jq 與 python3 對大整數、NaN 的**寫回**格式沒比過（`acw` 只讀不寫；
   讀的時候兩邊都把 `NaN`、`Infinity` 當數字，jq 1.7、1.7.1、1.8.1 實測）
 - **T2 的 `j-*` 那幾列改的是 marketplace 裡的 `plugin.json`**（`T2_PLUGIN_JSON`）：`j-noversion` 走「`plugin.json` 沒有 version、改讀 `installed_plugins.json`」那條路 ——

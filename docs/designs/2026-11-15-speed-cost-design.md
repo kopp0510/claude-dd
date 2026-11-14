@@ -57,7 +57,7 @@
 - F1 使用者的 `~/.claude/settings.json`（用 jq 讀）：最上層沒有 `autoCompactWindow`；`modelSettings` 裡 `claude-opus-5-5`、`claude-fable-5-1`、`claude-opus-4-8` 各有 `autoCompactWindow: 400000`；`claude-fable-5-2` 原本只有 `effortLevel`，使用者打 `/autocompact 400000` 之後多了 `autoCompactWindow: 400000`（指令回覆「Auto-compact window for Fable 5.2 set to 400k tokens」）
 - F2 同一個 session 的紀錄檔：模型在 `2026-11-14T10:35:55Z` 從 `claude-opus-5-5` 換成 `claude-fable-5-2`。`compact_boundary` 紀錄：換之前 12 次 `auto`，`preTokens` 366,594–385,382；換之後一次 `auto` 是 969,715
 - F3 量的那件工作（`2026-11-14T14:16:04Z`→`16:04:35Z`，安裝腳本補強兩段）：主對話 124 次請求；每次請求的 input+cache_read+cache_creation 從 244,546 長到約 76 萬；cache_read 合計 63,481,446；output 合計 321,419，其中 `output_tokens_details.thinking_tokens` 合計 136,430。有兩次請求 `usage.iterations` 長度是 3（叫 advisor），數字是 601,180 與 1,498,565，不是 context 大小
-- F4 同一段時間的時間分配（相鄰事件間隔，合計 104.0 分）：等模型 55.6 分、跑 Bash 22.9 分、等 agent 交回 21.9 分（其中兩次各 478 秒與 458 秒，是計畫審查的兩輪）、AskUserQuestion 3.2 分
+- F4 同一段時間的時間分配（相鄰事件間隔，合計 104.0 分）：等模型 55.6 分、跑 Bash 22.5 分、等 agent 交回 21.9 分（其中兩次各 478 秒與 458 秒，是計畫審查的兩輪）、AskUserQuestion 3.2 分
 - F5 那段時間開始的 subagent 紀錄檔 17 份，每份紀錄的 `effort` 欄位都是 `"medium"`（opus 9 份、haiku 8 份）。同一個 session 更早、主對話還是 opus-5-5 時，有 14 份 opus 的 subagent 是 `"xhigh"`
 - F6 那兩輪計畫審查：裁決者（opus）整發 499 秒與 474 秒；它派的 haiku 審查者各自 138、164、140、306 秒（第 1 輪 4 個）與 230、198、345 秒（第 2 輪 3 個）；haiku 審查者的輸出 22,784–66,995 token，其中思考 16,577–57,381。步驟 4 的 opus 審查者 6 個：184–281 秒，輸出 16,147–25,517、思考 9,225–18,167
 - F7 `request 等待秒數` 對 context 大小：fable-5-2、單次迭代、非重建快取的 353 次請求，每秒輸出 token 在 context 0–25 萬是 96、70–100 萬是 98；輸出少於 400 token 的請求等待中位數 1.9–3.7 秒。也就是 context 大小沒有讓請求明顯變慢
@@ -122,6 +122,15 @@ jq 與 python3 兩條路徑照 `plugin_enabled_state` 的寫法（jq 用 `-s` �
 整段的驗收另外加一條：macOS 上用 `/bin/bash tests/test-install.sh`（bash 3.2）跑一次 rc=0（本機照 ci.yml 逐 step 跑只等於 ubuntu 那個 job）。
 
 開工前已查完（plan-review 第 1 輪列的外部查證，2026-11-15 做完，細節在事實 F15、F16）：官方文件原文逐字抓回；實測一次「只給最上層的鍵、該模型沒有個別設定」確實會提早自動壓縮。
+
+步驟 3、4 的結果（2026-11-15；報告在 `docs/reviews/2026-11-15-speed-cost/S1-a.md`、`S1-b.md`、`S1-c.md`、`S1-judge.md`）：
+- 步驟 3 只動了 `tests/test-install.sh` 的寫法（T10 三處），安裝腳本沒改
+- 步驟 4 派 3 個審查者，Critical 0、Important 6、Smell 6，沒有駁回的。改了的：jq 與 python3 對三類輸入結論不同（字面值比浮點數精確、不合法的 UTF-8 位元組、幾千位的整數）；
+  「都沒設」那一行改成寫明只查了哪裡；`outofrange` 拿掉沒查證過的第二行；README、CHANGELOG、量測檔的幾句（版本條件 v2.1.288、設定檔的讀取時點、日期、兩種算法分開寫）
+- **等使用者決定**：S1-1 加了清單以外的測試而沒有先問（違反進度表下方那條規則）。多出來的是 T2 的 `a-top-min`、`a-top-max`、`a-top-nan`、`a-top-inf`、`a-pm-nan`、`a-top-null-pm`、`a-pm-mixed`；
+  T10 的「沒有 settings.json」「環境變數是一長串數字」；`nojson.sh` 的 n3 與 `line` 模式；以及審查修正補的 `a-top-edge-lo`、`a-top-edge-hi`、`a-badutf8`、`a-bigint`。
+  先留著；使用者選不留就另開一個 commit 拿掉
+- 沒查的外部事實（句子已改成不依賴它們）：Claude Code 是不是用嚴格的 JSON 解析 settings.json；最上層的值在範圍外時整份設定會不會失效；專案層與 managed 的設定檔能不能設這個鍵
 
 README 要寫的內容（兩份同義）：2026-11-15 量的一件兩段工作（一個 session、n=1）裡，主對話 124 次請求、每次帶的 context 從 24.5 萬長到 76 萬 token；那個模型沒設自動壓縮視窗；設了 40 萬的那個模型在同一個 session 稍早是 36.7–38.5 萬就壓縮。不寫金額、不寫省幾成。指到量測檔。
 
