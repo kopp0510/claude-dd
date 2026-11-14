@@ -349,6 +349,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **用 auto mode 跑 `claude -p` 時，受測 session 自己到 `/tmp` 開副本做實驗會被擋**，`permission_denials` 不為 0：擋它的是 auto mode 的分類器
   （理由字串 `[Shared Scratch Sweep]`），不是目錄白名單，`--add-dir /tmp /private/tmp` 照樣擋（2026-10-30 同一次實測，denial 2 → 3；本機沒重現）。
   `docs/measurements/2026-10-29-adhd-style/run.sh` 用的是 `--permission-mode dontAsk`，它會不會經過這個分類器沒驗證；判準要求 denials=0 時，先決定用哪個 mode 再跑。
+- **`commands/*.md` 的安全檢查不可以只靠 `scripts/` 的新行為**：`--commands-only` 只跑 `create_commands`、不跑 `create_scripts`
+  （`install-dd-pipeline.sh` 的 `if [ "$COMMANDS_ONLY" = false ]` 那段），使用者手上會是新指令配舊腳本。
+  2026-11-14 dd-init 把 `CLAUDE.md.dd-upgrade` 交給升級腳本的 exit 6 擋，舊腳本照樣寫出；指令文字要自己先查
+- **subagent 沙盒量不到主對話才有的狀態**：主對話的 Bash 會把 `cd` 留到下一次呼叫，subagent 每次重設 cwd ——
+  給主對話照做的指令（SKILL.md、`commands/*.md`）裡的 `cd` 一律寫成 `(cd … && …)`，沙盒臂全綠不代表沒事（2026-11-14 dd-init 的父目錄檢查）
 
 ## 第三方 Skill / Agent 收編檢查清單（vendor intake）
 
