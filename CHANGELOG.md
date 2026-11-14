@@ -25,6 +25,16 @@
   `tests/test-dd-init-upgrade.sh` 加四則情境並核檔案狀態（外部檔不變、symlink 還在、懸空 symlink 指的檔沒被建立、既有一般檔不被蓋掉）。
 - **`/dd-init` Phase 1「用升級腳本升級」第 6 步處理 `--apply` 的非 0 exit**：不升級、照實告訴使用者；exit 6 時 `ls -l CLAUDE.md.dd-upgrade`
   給使用者看它是什麼、問要不要刪掉重跑，不自己刪。
+- **`/dd-init` 寫檔前先看目標是不是 symlink**：新小節「寫檔前：先看目標是不是 symlink」—— Phase 1 的 `CLAUDE.md`（判模式之前；懸空 symlink 算 symlink）、
+  Phase 2 的 `.screenshots`／`.gitignore`、Phase 3 husky v9 的 `.husky/pre-commit`，寫之前檢查 `[ -L ]` 與父目錄解析後還在專案裡；
+  不成立就給使用者看 `ls -l`、寫出照寫的後果再問（升級的 `mv` 會拆掉連結、git 不讀 symlink 的 `.gitignore`）。
+  Phase 3 其他掛載點由第 2 步擋：「不在 repo 裡」改成看指令**印出來的路徑**（`git rev-parse --git-path` 會解析 symlink），不看 `.git/hooks/pre-commit` 這個名字；
+  第 5 步「掛載點是 symlink」那條註明是改完之後的提醒，不是不問的理由。
+  Claude Code 2.1.325 的 Write／Edit 遇到 symlink 會拒絕並建議改寫連結目標，這不算保護：舊文字下有一臂照建議對連結目標用 Edit、一臂改用 heredoc，都改到了專案外的檔。
+  所以還沒問、或答「不要」時不照那個建議寫，也不用 Bash 繞過；答「要」之後才對連結目標的路徑寫（例如 `CLAUDE.md` → `AGENTS.md` 的專案）。
+  驗證：subagent（sonnet）照舊／新兩版文字在拋棄式 repo 做。沙盒臂 B C C2 D E F G G2 I 與對照臂 K1–K3；docker 臂用真工具
+  （pre-commit 4.6.2、husky 8.0.3／9.1.7，容器 git 2.39.5）各一臂 symlink、一臂對照，對照臂在容器裡實跑 commit 被 gate 擋。
+  舊文字下紅的六臂（B C D G G2 與 husky v9）新文字下各 3/3 停下來問、專案外的檔沒動，定稿再各 1/1；答「要」的一臂 3/3 蓋章進連結目標、連結還在；fixture、判定腳本與逐臂結果在 `docs/measurements/2026-11-14-dd-init-symlink/`。
 
 ## 1.6.14 — 2026-10-30
 
