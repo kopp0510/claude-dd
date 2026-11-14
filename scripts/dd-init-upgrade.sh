@@ -8,9 +8,11 @@
 #   dd-init-upgrade.sh --list
 # --template 預設 ~/.claude/commands/dd-init.md（取其中 ```markdown 到下一個 ``` 之間的蓋章區塊，同 ci.yml 的 stamp()）。
 # 三個模式都不改原檔：--plan 只印分類結果，--apply 把合併後的完整檔寫到輸出路徑，取代原檔由 /dd-init Phase 1 在使用者同意後做。
+# --apply 也不覆寫已存在的輸出路徑。
 #
 # exit：0 正常；1 用法錯或讀不到範本；2 找不到 dd-loop-version 標記；3 可刪的行扣掉標題與標記是 0
-#       （清單過期或區塊被整份改寫，不升級）；4 一檔有兩個以上標記；5 --apply 自檢失敗（輸出的標記不是剛好一個，不寫檔）
+#       （清單過期或區塊被整份改寫，不升級）；4 一檔有兩個以上標記；5 --apply 自檢失敗（輸出的標記不是剛好一個，不寫檔）；
+#       6 --apply 的輸出路徑已經存在（含 symlink），不寫檔
 #
 # 判法：區塊裡的行去前後空白後，逐字等於下方清單某一行 → 範本原文；不等於 → 在地內容。標記行一律算範本。
 # 圍欄（``` 開到 ``` 關）整塊算一個單位，裡面每一行都在清單裡才算範本。
@@ -213,6 +215,10 @@ done
 if [ "$MODE" = list ]; then list_lines; exit 0; fi
 [ -f "$TARGET" ] || { echo "❌ 讀不到 ${TARGET}" >&2; exit 1; }
 [ -f "$TEMPLATE" ] || { echo "❌ 讀不到範本 ${TEMPLATE}（先到 claude-dd repo 跑 ./install-dd-pipeline.sh --force，或用 --template 指定）" >&2; exit 1; }
+# awk 的 print > out 會跟著 symlink 寫到它指的地方（clone 帶進來的 symlink 可以指到專案外），所以輸出路徑已經存在就不寫
+if [ "$MODE" = apply ] && { [ -e "$OUTFILE" ] || [ -L "$OUTFILE" ]; }; then
+  echo "❌ 輸出路徑 ${OUTFILE} 已經存在（一般檔、目錄或 symlink 都算），不覆寫；確認不需要後自己刪掉再跑" >&2; exit 6
+fi
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
