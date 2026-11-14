@@ -129,12 +129,14 @@ S1-b 的審查結果：Critical 0、Important 5、Smell 1。範圍是 58ae9b0..9
 ## 處置
 
 - Important 1（「只留先跑它」與 `--commands-only` 那條矛盾）採納：規則補上界線 —— 只適用新開的腳本（`--commands-only` 更新的人手上沒有它，跑起來非 0 會停）；
-  把新檢查加進既有腳本不算，指令文字仍要自己先查。「新腳本在舊環境會非 0」是照 shell 的行為推論的，沒有實跑
-- Important 2（「不准寫檔」與「報告寫進檔」）採納：補一句「scratchpad 的報告檔不算上面說的寫檔，不准寫的是被測的專案」
+  把新檢查加進既有腳本不算，指令文字仍要自己先查。「新腳本在舊環境會非 0、照樣停下」當時是推論；後來實跑了，成立（設計文件「後續驗證」第 1 項）
+- Important 2（「不准寫檔」與「報告寫進檔」）採納：補一句「scratchpad 的報告檔不算上面說的寫檔，不准寫的是被測的專案」。
+  後來 S1.5 把整段改寫成不寫報告檔的版本（測試查出 subagent 的 Write 會被系統擋下），這一句跟著拿掉
 - Important 3（「清單沒有東西會用到」與 security-audit 第 8 步相反）採納，處置是**撤回 S1-3**：`skills/security-audit/CLAUDE.md` 第 8 步確實拿「本檔引用的原句」判斷要不要重跑，
   那些原句就在乾跑發現那份清單裡，所以那段的理由不成立。收編很少發生、根目錄 CLAUDE.md 每個 session 都載入，不改寫、直接拿掉那一段與 CHANGELOG 條目（設計文件 S1-3 記了原因）
 - Important 4（「結論對得上」可能變成核對自述）採納：改寫成「那一行結論與報告檔都是 agent 自述，結果照樣用指令核對；主對話先確認報告檔在，要看細節才分段讀」
 - Important 5（測試怎麼進 CI 沒交代）採納：`grep -n 'tests/test-' .github/workflows/ci.yml` 確認 ShellCheck 清單與兩個 job 的 `run:` 都逐檔寫死。規則補上：新腳本照「新增 Script 步驟」納管；
   測試加進既有的 `tests/test-*.sh`，新開測試檔要自己接進 `ci.yml` 與本檔「目錄結構」`tests/` 那行
 - Smell 1（「10 條」用數字）：那一段隨 S1-3 撤回
-- 需要外部查證（哪些 agent 類型沒有寫檔工具）：沒有實派驗證；規則補了「派有寫檔工具的類型，例如 general-purpose」。這個 session 的 agent 清單寫著 Explore、Plan 沒有 Edit／Write
+- 需要外部查證（哪些 agent 類型沒有寫檔工具）：當時沒有實派，規則補了「派有寫檔工具的類型，例如 general-purpose」。後來實派了 Explore、Plan 各一個，都交回「寫不了檔」；
+  同一次也查出 general-purpose 的 Write 寫報告檔一樣會被擋（設計文件「後續驗證」第 2、3 項），所以 S1.5 把那段改寫成不寫檔的版本
