@@ -22,7 +22,7 @@
 ## 假設
 
 - A1：S1-1 的修法是「輸出路徑已存在（一般檔、目錄、symlink、懸空 symlink）就 exit 6、不寫」，不改成「寫暫存檔再 mv 取代」（決策題 Q1，使用者選了這個）
-- A2：腳本層：TARGET（`CLAUDE.md` 本身）是 symlink 時 `dd-init-upgrade.sh` 只讀它，不在 S1-1 範圍；`/dd-init` 層：`CLAUDE.md` 是 symlink 時，建立（Write）、補充（Edit）會寫穿，升級的 `--plan`／`--apply` 跟著連結讀、第 8 步 `mv` 會用一般檔取代連結本身（rename 取代的是目錄項目，不寫穿；但會拆掉 `CLAUDE.md` → `AGENTS.md` 這類連結，連結目標的內容也會在 Phase 5 進 repo）。三種模式都由 S1-3 在 Phase 1 判斷模式之前的 `[ -L CLAUDE.md ]` 檢查處理
+- A2：腳本層：TARGET（`CLAUDE.md` 本身）是 symlink 時 `dd-init-upgrade.sh` 只讀它，不在 S1-1 範圍；`/dd-init` 層：`CLAUDE.md` 是 symlink 時，建立（Write）、補充（Edit）對連結本身的路徑會被工具拒絕（見 A21 ①），但工具建議改寫連結目標的路徑，照做、或改用 `>>`、heredoc，就寫到連結目標，升級的 `--plan`／`--apply` 跟著連結讀、第 8 步 `mv` 會用一般檔取代連結本身（rename 取代的是目錄項目，不寫穿；但會拆掉 `CLAUDE.md` → `AGENTS.md` 這類連結，連結目標的內容也會在 Phase 5 進 repo）。三種模式都由 S1-3 在 Phase 1 判斷模式之前的 `[ -L CLAUDE.md ]` 檢查處理
 - A3：檢查與寫檔之間的 TOCTOU 不處理：威脅是「clone 帶進來的 symlink」，事先存在、不是並行建立
 - A4：`commands/dd-init.md` 要改的地方（Phase 1 第 6 步、Phase 1 之前新加的寫檔前檢查、Phase 2 的指令區塊、Phase 3 的掛載點）都在蓋章區塊外（區塊用 ``grep -n '^```' commands/dd-init.md | head -2`` 夾出），不跳 `dd-loop-rev`
 - A5：security-audit 的上游文字不改，只加兩處：frontmatter `name:` 下一行加 `disable-model-invocation: true`；frontmatter 結束的 `---` 後加一行 vendored 說明，寫法照 `skills/writing-great-skills/SKILL.md` 裡 `> Vendored from` 開頭那行（用字串定位，不寫行號）
@@ -32,7 +32,7 @@
 - A9：`agents/security-auditor.md` 的 description「不適用於自動化全面掃描、SecOps 管線建置或威脅建模(不在部署範圍)」收編後「全面稽核」有了 `/security-audit`，在 S2-2 改成指過去；agent 本文「不做自動化全面掃描」講的是 agent 自己，不改
 - A10：README「指令一覽」不加 `/security-audit`：前例 `writing-great-skills`（同為 user-invoked）也沒列；在 Promoted Skills 表格那列寫明用 `/security-audit` 叫
 - A11：S2 步驟 5 的 `claude -p` 觸發實測，結果放新目錄 `docs/measurements/2026-11-14-security-audit-trigger/`（prompt、check.sh、results.txt、CLAUDE.md；只抽判定欄位，原始 jsonl 不進 repo），由步驟 6 的 commit 送；試跑那個目錄的 `results.txt` 不重跑覆蓋
-- A12：收編清單逐項結論：#1 MIT（Cloudflare），放 `LICENSE.txt`，上游 frontmatter 沒有 license 欄位；#2 上游沒有 hooks；#3 試跑實跑（quick，輸出目錄是 prompt 指定的，見試跑 `real.prompt.txt`）＋兩支驗證器 65 則測試；「路徑算式、目錄命名」要實跑對照，所以預設輸出路徑 `~/security-audit-skill/<repo-name>/run-<N>` 另外在 S2 步驟 5 用 `claude -p` 實跑一次對照（D5b）；#4 Node 本來就是安裝腳本的必要依賴（F5c），不新增 runtime；#5 `grep` 過沒有 `~/.claude`、`$<數字>`，預設輸出路徑在 target 外；#6 skill `security-audit` 與 agent `security-auditor` 名稱不同、不撞，功能互補（全面稽核 vs 逐項手動審查），處置是 A9 的指路；skill `review`（description「跨維度綜合審查包裝器，調用 workflow-review 命令同時執行安全+效能+配置審查」）與 `/workflow-review:review` 審的是變更或合併前的多維度審查，security-audit 審整個 codebase 的信任邊界，不重疊；S2 不改 `review`。S2 步驟 5 反向那發若叫起 `review`，另開一個小任務（先問使用者，照進度表規則補條目）：在它的 description 加一句指路、照「新增 Skill 步驟」第 5 步跑兩發觸發重測（該叫的、不該叫的各一），並寫明「只動 description、沒動本文步驟，第 3 步乾跑不另跑」；#7 S2-1 同批納管
+- A12：收編清單逐項結論：#1 MIT（Cloudflare），放 `LICENSE.txt`，上游 frontmatter 沒有 license 欄位；#2 上游沒有 hooks；#3 試跑實跑（quick，輸出目錄是 prompt 指定的，見試跑 `real.prompt.txt`）＋兩支驗證器 65 則測試；「路徑算式、目錄命名」要實跑對照，所以預設輸出路徑 `~/security-audit-skill/<repo-name>/run-<N>` 另外在 S2 步驟 5 用 `claude -p` 實跑一次對照（D5b）；#4 Node 本來就是安裝腳本的必要依賴（README 前置需求段：Claude Code CLI、Node.js、Git、Bash 缺一安裝中止），不新增 runtime；#5 `grep` 過沒有 `~/.claude`、`$<數字>`，預設輸出路徑在 target 外；#6 skill `security-audit` 與 agent `security-auditor` 名稱不同、不撞，功能互補（全面稽核 vs 逐項手動審查），處置是 A9 的指路；skill `review`（description「跨維度綜合審查包裝器，調用 workflow-review 命令同時執行安全+效能+配置審查」）與 `/workflow-review:review` 審的是變更或合併前的多維度審查，security-audit 審整個 codebase 的信任邊界，不重疊；S2 不改 `review`。S2 步驟 5 反向那發若叫起 `review`，另開一個小任務（先問使用者，照進度表規則補條目）：在它的 description 加一句指路、照「新增 Skill 步驟」第 5 步跑兩發觸發重測（該叫的、不該叫的各一），並寫明「只動 description、沒動本文步驟，第 3 步乾跑不另跑」；#7 S2-1 同批納管
 - A13：設計文件與根 CLAUDE.md 指路在 task-planner 步驟 5 寫到磁碟，但**不單獨 commit**，跟 S1 的最後一個修正 S1-3 同一個 commit 送 —— 文件裡有三處寫出點的描述，U4 規定修好之前不進 repo。S1-1、S1-2 commit 時只 `git add` 自己的檔。這偏離 task-planner 步驟 5 的完成條件（「`git log -1` 看得到那個 commit」）與「開工標記跟第一個小任務一起送」；形狀同它「還沒有 git repo 時，文件與指路跟第一個小任務一起 commit」那條。驗收：S1-3 之前沒有任何 commit 含這份文件
 - A14：會進 repo 的紀錄，寫進去之前先過一次。判準：原文描述了一條能讓寫入落到專案外、而 S1 沒修的路徑。命中時預設處置：在 S1 補一個小任務修掉（照「進度表」規則先問使用者、補小任務條目），再落地；修不了才停下問。要過的有：
   - 本計畫各輪 plan-review 報告留在 scratchpad，不進 repo
@@ -45,13 +45,13 @@
 - A18：S1 全部完成（S1-3 commit）之前不 push；交進度時提醒使用者（U3）。S1-1、S1-2 的 commit 訊息與 CHANGELOG 只寫各自已修的那一處
 - A19：沙盒臂與 docker 臂的 subagent 用 sonnet（跟乾跑一致；它代表的是「照文字做的模型」，不是使用者實際用的模型，所以宣稱只到「這份文字下 sonnet 會停」）。subagent 沒有可以回答的使用者：`commands/dd-init.md` 要它問使用者的地方，它把問句原文寫進回報，symlink 問句一律當成答「不要」、其他問句照該臂 prompt 給的答案（照 `docs/measurements/2026-10-30-dd-init-upgrade/run.sh` 的寫法），然後往下做。一臂可以因此走過不只一個寫檔終點
 - A20：S1-3 的各臂 fixture 與斷言寫成腳本放 `docs/measurements/2026-11-14-dd-init-symlink/`（`setup.sh` 建 fixture、`check.sh` 用指令核對、`results.txt` 記每臂在舊文字與新文字下的結果、用到的工具版本、CLAUDE.md），跟 S1-3 一起 commit。subagent 的回報原文留 scratchpad，只抽判定要用的句子進 `results.txt`，照根目錄 CLAUDE.md 的去識別規則掃過（`-Users-`、`-private-tmp-`）
-- A21（需要外部查證，小事）：①Claude Code 的 Write／Edit 遇到 symlink 是寫穿還是取代連結 —— 已查（S1-3 舊文字基準，Claude Code 2.1.325）：兩個都不寫，拒絕並建議改寫連結目標（「Refusing to write …: it is a symbolic link. Write to the link's target path instead: …」）。這不是保護：舊文字下 H3 照建議對連結目標的路徑用 Edit、G 改用 heredoc，都改到了專案外的檔（`docs/measurements/2026-11-14-dd-init-symlink/results.txt`）②`pre-commit install`、`npm install`（husky v8／v9）遇到已經是 symlink 的掛載點怎麼處理 —— H1–H3 的 fixture 一律「先 install、後把掛載點換成 symlink」，實跑記錄；另一種順序不測 ③部署後的 `~/.claude/skills/security-audit/CLAUDE.md` 會不會在 skill 被叫起時當成巢狀記憶載入 —— 沒查；前例 `skills/self-improving-agent/CLAUDE.md` 一樣部署，所以那份 CLAUDE.md 只寫給維護者看、被稽核 session 讀到也無害的內容 ④dontAsk 會不會經過 auto mode 分類器 —— 擋下的話 `permission_denials` 不為空，看得到
+- A21（需要外部查證，小事）：①Claude Code 的 Write／Edit 遇到 symlink 是寫穿還是取代連結 —— 已查（S1-3 舊文字基準，Claude Code 2.1.325）：兩個都不寫，拒絕並建議改寫連結目標（「Refusing to write …: it is a symbolic link. Write to the link's target path instead: …」）；指向存在的檔與懸空的連結都拒絕（2026-11-14 主對話另測）。這不是保護：舊文字下 H3 直接對連結目標的路徑用 Edit、G 改用 heredoc，都改到了專案外的檔（`docs/measurements/2026-11-14-dd-init-symlink/results.txt`）②`pre-commit install`、`npm install`（husky v8／v9）遇到已經是 symlink 的掛載點怎麼處理 —— H1–H3 的 fixture 一律「先 install、後把掛載點換成 symlink」，實跑記錄；另一種順序不測 ③部署後的 `~/.claude/skills/security-audit/CLAUDE.md` 會不會在 skill 被叫起時當成巢狀記憶載入 —— 沒查；前例 `skills/self-improving-agent/CLAUDE.md` 一樣部署，所以那份 CLAUDE.md 只寫給維護者看、被稽核 session 讀到也無害的內容 ④dontAsk 會不會經過 auto mode 分類器 —— 擋下的話 `permission_denials` 不為空，看得到
 
 ## 進度表
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | `/dd-init` 寫檔不跟 symlink 寫到專案外 | IN_PROGRESS | — | 拋棄式目錄裡 `CLAUDE.md.dd-upgrade` 是指向專案外檔案的 symlink 時 `--apply` exit 6、專案外檔案 bytes 不變；沒有既存輸出時照常 exit 0；`bash` 與 `/bin/bash`（3.2）跑 `tests/test-dd-init-upgrade.sh` 全綠；沙盒臂 A、B、C、C2、D、E、F、G、G2、I（subagent 照新版 `commands/dd-init.md` 做）遇到 symlink（升級輸出檔、`.gitignore`、`.screenshots`、`CLAUDE.md` 的建立／補充／升級、Phase 3 掛載點的各寫檔分支、掛載點的父目錄）都停下問、專案外假檔的 sha 與權限沒變；對照臂 K1–K3（不放 symlink）不跳提問、照常寫入；docker 臂 H1–H3：pre-commit、husky v8、husky v9 三個真工具各一臂 symlink、各一臂不放 symlink 的對照（H2、H3 對照：gate 照常掛上、`npm install` 之後 gate 還在；H1 對照：照 Phase 3 pre-commit 分支刪掉舊呼叫、交 YAML，代使用者加進設定並 `pre-commit install` 後 commit 時 gate 有跑） | 9584605.. |
+| S1 | `/dd-init` 寫檔不跟 symlink 寫到專案外 | IN_PROGRESS | — | 拋棄式目錄裡 `CLAUDE.md.dd-upgrade` 是指向專案外檔案的 symlink 時 `--apply` exit 6、專案外檔案 bytes 不變；沒有既存輸出時照常 exit 0；`bash` 與 `/bin/bash`（3.2）跑 `tests/test-dd-init-upgrade.sh` 全綠；沙盒臂 A、AO、B、C、C2、D、E、F、G、G2、I、O、OI（subagent 照新版 `commands/dd-init.md` 做；AO 用舊版升級腳本，O、OI 用 git 2.30.6）遇到 symlink（升級輸出檔、`.gitignore`、`.screenshots`、`CLAUDE.md` 的建立／補充／升級、Phase 3 掛載點的各寫檔分支、掛載點的父目錄）都停下問、專案外假檔的 sha 與權限沒變；答「要」的臂 Y、Y5、YD（`CLAUDE.md` 指向專案裡的 `AGENTS.md`）寫進 `AGENTS.md`、連結還在，Y5、YD 的 Phase 5 commit 的是 `AGENTS.md`；對照臂 K1–K3（不放 symlink）不跳提問、照常寫入；docker 臂 H1–H3：pre-commit、husky v8、husky v9 三個真工具各一臂 symlink、各一臂不放 symlink 的對照（H2、H3 對照：gate 照常掛上、`npm install` 之後 gate 還在；H1 對照：照 Phase 3 pre-commit 分支刪掉舊呼叫、交 YAML，代使用者加進設定並 `pre-commit install` 後 commit 時 gate 有跑） | 9584605.. |
 | S2 | 收編 cloudflare/security-audit-skill 為 user-invoked promoted skill | TODO | S1 | `./install-dd-pipeline.sh --force` 後 `diff -rq skills/security-audit ~/.claude/skills/security-audit` 無差異；全新 `claude -p` session 用 `/security-audit` 叫得起來（回覆貼出只存在於 claude-dd 這一版、上游沒有的標記行，不存在的 slash 名稱貼不出）；自然語言的安全稽核需求不會自己叫起它（拿掉 dmi 的對照組會叫起來）；預設輸出路徑解析成 harness 先算好的下一個未用編號（目前是 `~/security-audit-skill/claude-dd/run-2`）；本機跑 CI 的相關 step 與 `tests/test-install.sh` 全綠 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -101,7 +101,7 @@
   - 做法：
     1. 同類掃描，逐分支讀、不只靠 grep：`grep -nE` 列出寫檔動作（`>`、`>>`、`mkdir`、`cp`、`mv`、`chmod`、`tee`、**Write**、**Edit**、`刪掉`、`插入`、`搬`、`換成`），再把 Phase 1 每一種模式與 Phase 3 第 3、4 步的每一條分支從頭讀一遍，列出每條的寫檔終點，逐筆標「要檢查」或「不用（理由）」。規劃時已讀到的清單：
        - Phase 1：`CLAUDE.md` 的建立（Write）、補充（Edit）、升級（8step 舊 rev，以及 6step／7step／手寫版那支；`--plan`／`--apply` 讀、第 8 步 `mv` 取代連結本身）→ 要檢查，Phase 0 第 3 步判模式時先跑一次 `[ -L CLAUDE.md ]`（懸空 symlink 會被 `[ -e ]` 判成不存在 → 建立模式而寫穿）；升級輸出檔 → S1-1／S1-2 已處理；第 8 步 `cp` 的目標帶秒級時間戳 → 不用
-       - Phase 2：`.screenshots`（`mkdir -p`；之後截圖會存進去）、`.gitignore`（`>>`）→ 要檢查
+       - Phase 2：`.screenshots`（`mkdir -p` 對指向存在目錄的連結不做事、對懸空的會失敗；之後的截圖會存進連結目標）、`.gitignore`（`>>`）→ 要檢查
        - Phase 3 第 3 步：pre-commit 套件分支「hook 檔裡的刪掉」→ 要檢查；lefthook 分支、其他工具產生的檔 → 不寫檔，不用；「不存在 → Write」→ 要檢查（懸空 symlink 會被當成不存在而寫穿）；「已存在且未含 → Edit 插入」（含 husky v8）→ 要檢查；「已含 → 搬位置／換寫法」→ 要檢查；husky v9 的 `.husky/pre-commit` → 要檢查
        - Phase 3 第 4 步 `chmod +x <掛載點>`（含「已含、位置對、只差 chmod」）→ 要檢查（會改到連結目標的權限）
        - Phase 5 `git add .gitignore` → 不用（只 stage 連結本身）
@@ -124,7 +124,7 @@
     9. 沙盒臂 G：同 F，但假檔已含接在檔尾的舊版 gate 呼叫；做 Phase 3（「已含 → 搬位置」）
     10. 沙盒臂 G2：同 F，但假檔已含位置正確的 gate 呼叫、權限 644；做 Phase 3（「已含、位置對、只差 chmod」）
     11. 沙盒臂 I（父目錄檢查）：`core.hooksPath` 設成 `.githooks`，`.githooks` 是指向 repo 外目錄的 symlink、裡面沒有 `pre-commit`；做 Phase 3。掛載點字串在 toplevel 底下（第 2 步不會問），只有新的父目錄檢查會問。核對外部目錄裡沒有多出檔
-        - ⚠️ 這條前提實跑後不成立：`git rev-parse --git-path` 會解析 symlink，印出來的是 repo 外的路徑，第 2 步就會問（舊文字下 I 也是綠的）。I 照跑，結果只宣稱「新文字下會停」
+        - ⚠️ 這條前提實跑後不成立：`git rev-parse --path-format=absolute --git-path` 會解析 symlink（只寫 `--git-path` 印的是沒解析的相對路徑），印出來的是 repo 外的路徑，第 2 步就會問（舊文字下 I 也是綠的）。I 照跑，結果只宣稱「新文字下會停」
     12. 對照臂（不放 symlink；斷言不跳 symlink 問句、照常寫入）：K1 git repo、沒有 `CLAUDE.md`、`package.json` 帶 react，做 Phase 0–2（建立模式 + Phase 2）；K2 非 git 目錄、`CLAUDE.md` 是一般檔且沒有 `## 開發流程`、`package.json` 帶 react，做 Phase 0–2（補充模式 + Phase 2）；K3 git repo、沒有 hook 檔，做 Phase 3，gate 寫進 `.git/hooks/pre-commit` 且可執行
     13. docker 臂 H1／H2／H3：
         - 機制：拋棄式 repo 與 repo 外的假檔用**相同的絕對路徑** bind mount 進容器；容器裡也看得到 gate 腳本（`~/.claude/scripts/check-claude-md.sh` 以相同路徑掛進去，否則 `dd-init.md` Phase 3 開頭會整段跳過）；主機上的 subagent 用自己的工具讀寫檔，`pre-commit install`、`npm install`、`git commit` 走 `docker exec`。跑之前從主機與容器各 `readlink` 一次、各取一次假檔 sha，確認兩邊解析到同一個檔
@@ -140,11 +140,12 @@
     - 舊第 2 步**沒有**擋住指到 repo 外的掛載點：舊文字下 G、G2 的 subagent 看到 repo 外的路徑仍然照寫（G2 引第 5 步那條提醒當不問的理由），所以第 5 步最後那條補了「這條是改完之後的提醒，不是不問的理由」
     - 量測 prompt：第 1、2 輪的 prompt 有「只在 {REPO} 裡動作」，它自己就擋住寫到專案外，G、G2 在那兩輪是綠的；只有第 3 輪（`prompt.txt`，不帶這句）算舊文字基準
     - 結果（新文字第一版）：舊文字下紅的 B、C、D、G、G2、H3 各 3/3 綠；舊文字下就綠的 C2、E、F、I、H1、H2 各 1/1；對照臂 K1–K3、H1K–H3K 各 1/1（含容器裡 commit 被 gate 擋）；A 1 次，只紅在問句沒逐字貼 `ls -l`
-    - 第一版新小節結尾寫「不要照那個建議改寫目標」沒有限定條件，答「要」（A16 為 `CLAUDE.md` → `AGENTS.md` 這類專案留的路）的人照不了。定稿補「使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫」，加一臂 Y（`CLAUDE.md` 指向專案裡的 `AGENTS.md`、答「要」）
-    - 結果（定稿）：B、C、D、G、G2、H3 各再 1/1；A 2/2；Y 3/3（蓋章寫進 `AGENTS.md`、連結還在）。逐臂見 `results.txt`
+    - 第一版新小節結尾寫「不要照那個建議改寫目標」沒有限定條件，答「要」（A16 為 `CLAUDE.md` → `AGENTS.md` 這類專案留的路）的人照不了。第二版（a0aa58a，S1-3 的 commit）補「使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫」，加一臂 Y（`CLAUDE.md` 指向專案裡的 `AGENTS.md`、答「要」）
+    - 結果（第二版）：B、C、D、G、G2、H3 各再 1/1；A 2/2；Y 3/3（蓋章寫進 `AGENTS.md`、連結還在）。逐臂見 `results.txt`
   - commit：`fix: dd-init 寫檔前先看目標是不是 symlink（S1-3）`
 
-- S1 整段步驟 3–8：範圍從表上 S1 的起點算。步驟 4 的報告照 A14 先過一次再落地。步驟 5 重跑上面的測試、變異、沙盒臂 A、B、C、C2、D、E、F、G、G2、I、對照臂 K1–K3 與 docker 臂 H1–H3（新文字那一輪，舊文字基準不重跑）；commit 後跑 `./install-dd-pipeline.sh --force` 部署（部署版 `scripts/dd-init-upgrade.sh`、`commands/dd-init.md` 目前與 repo HEAD 逐字相同，見 F6）
+- S1 整段步驟 3–8：範圍從表上 S1 的起點算。步驟 4 的報告照 A14 先過一次再落地。步驟 5 重跑上面的測試、變異與沙盒臂（舊文字基準不重跑）；步驟 4 加了臂 AO、Y5、YD、O、OI，舊文字或第二版下紅過的臂各 3 次、其他 1 次；commit 後跑 `./install-dd-pipeline.sh --force` 部署（規劃時 `cmp` 過，部署版與當時的 repo 逐字相同；S1 的 commit 都還沒部署，2026-11-14 部署版的 `scripts/dd-init-upgrade.sh`、`commands/dd-init.md` 與 HEAD 不同）
+  - 實作紀錄（步驟 3–5）：步驟 4 的發現與處置見 `docs/reviews/2026-11-14-security-audit-intake/S1-judge.md`；`commands/dd-init.md` 改成第三版之二，各版的臂與結果見 `docs/measurements/2026-11-14-dd-init-symlink/results.txt`
 
 ### S2：收編 security-audit
 
@@ -152,9 +153,9 @@
 
 - **S2-1 加 skill 檔、乾跑、部署陣列、同步數字與授權**
   - 檔案：
-    - `skills/security-audit/`：上游 `skills/security-audit/` 底下所有檔原樣複製（清單見 F3），`SKILL.md` 照 A5 加兩處
+    - `skills/security-audit/`：上游 `skills/security-audit/` 底下所有檔原樣複製（上游 c1c8a8c 的 AI-AND-LLM.md、ATTACK-CLASSES.md、CLIENT-SIDE.md、CLOUD-AND-DEPLOYMENT.md、DATA-ISOLATION-AND-LIFECYCLE.md、DESKTOP-MOBILE-AND-LOCAL-IPC.md、HUNTING.md、MEMORY-SAFETY-AND-BINARY.md、PROTOCOLS-RPC-AND-MESSAGING.md、RECONNAISSANCE.md、report-schema.json、RESOURCE-EXHAUSTION-AND-AVAILABILITY.md、SKILL.md、SUPPLY-CHAIN-AND-RELEASE.md、validate-coverage-ledger.cjs、validate-coverage-ledger.test.cjs、validate-findings.cjs、validate-findings.test.cjs、VALIDATION-AND-REPORTING.md、WEB-PROTOCOL-AND-AUTH.md；照抄前 `ls` 上游目錄重核一次），`SKILL.md` 照 A5 加兩處
     - `skills/security-audit/LICENSE.txt`：上游 `LICENSE`（MIT，Cloudflare）原文
-    - `skills/security-audit/CLAUDE.md`：gate 要求（目錄有 `.cjs`，`CODE_EXT` 含 `cjs`，見 F4）；寫上游 repo 與 commit `c1c8a8c`、本 repo 的兩處改動、怎麼從上游更新、兩支驗證器的測試怎麼跑、A6 的分支清單與每條的標記、乾跑發現（含試跑那筆：session 因 US$15 上限把獵人從 2 減成 1，`run-metadata.json` 的 `plan_revision` 有記，不是靜默；但 SKILL.md「Cost budget」的預算只算 agent 次數，美元上限不在它的模型裡，`-p` 底下也沒有使用者可以接它的提議）
+    - `skills/security-audit/CLAUDE.md`：gate 要求（目錄有 `.cjs`，`scripts/check-claude-md.sh` 的 `CODE_EXT` 含 `cjs`）；寫上游 repo 與 commit `c1c8a8c`、本 repo 的兩處改動、怎麼從上游更新、兩支驗證器的測試怎麼跑、A6 的分支清單與每條的標記、乾跑發現（含試跑那筆：session 因 US$15 上限把獵人從 2 減成 1，`run-metadata.json` 的 `plan_revision` 有記，不是靜默；但 SKILL.md「Cost budget」的預算只算 agent 次數，美元上限不在它的模型裡，`-p` 底下也沒有使用者可以接它的提議）
     - `install-dd-pipeline.sh` `PROMOTED_SKILLS`：加 `"security-audit"   # user-invoked（disable-model-invocation）；vendored 自 cloudflare/security-audit-skill`（依字母序放在 `self-improving-agent` 之前）
     - `README.md`：`Install 13 promoted Skills` → 14、`## Promoted Skills (13, …)` → 14、表格加一列（說明、vendored 自哪、user-invoked、用 `/security-audit` 叫）、授權表加一列
     - `README.zh-TW.md`：`安裝 13 個 promoted Skills` → 14、`## Promoted Skills（預設部署，13 個）` → 14、表格加一列、授權表加一列

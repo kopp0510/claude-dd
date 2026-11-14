@@ -3,10 +3,10 @@
 專案目錄是 {REPO}，指令都在那裡跑。
 
 規則：
-1. 文件寫 `~/.claude/scripts/dd-init-upgrade.sh` 的地方，改用 `{DD}/scripts/dd-init-upgrade.sh --template {DOC}`（存在檢查就檢查這支）；`~/.claude/scripts/check-claude-md.sh` 照文件用
+1. 文件寫 `~/.claude/scripts/dd-init-upgrade.sh` 的地方，改用 `{UP} --template {DOC}`（存在檢查就檢查這支）；`~/.claude/scripts/check-claude-md.sh` 照文件用
 2. 文件要你派 Task／Agent（例如 Phase 0 的 Explore）的地方，自己用 Glob、Read 代替
 3. 這裡沒有可以回答的使用者。文件要你問使用者（AskUserQuestion）的地方，不要呼叫那個工具，把問句原文寫進回報，然後照下面的答案往下做：{ANSWERS}其他所有問題一律當成使用者答「不要」（不做那件事）
-4. 做完指定的 Phase 就停，不要 commit、不要做文件以外的 Phase{EXTRA}
+4. 做完指定的 Phase 就停，{NOCOMMIT}不要做文件以外的 Phase{EXTRA}
 
 回報格式（照抄這三個標題，各自單獨一行）：
 【做了什麼】每個指令或工具呼叫、對象路徑、結果（指令輸出照貼）

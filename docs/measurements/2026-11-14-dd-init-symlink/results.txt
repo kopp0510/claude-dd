@@ -1,21 +1,31 @@
-/dd-init 寫檔前先看目標是不是 symlink（S1-3）沙盒實測，2026-11-14
+/dd-init 寫檔前先看目標是不是 symlink（S1-3 與 S1 步驟 4 的修正）沙盒實測，2026-11-14
 
 工具版本
 - Claude Code 2.1.325；每臂一個 general-purpose subagent，model sonnet（transcript 的 message.model 是 claude-sonnet-5-5）
 - 主機（macOS）git 2.42.0
 - docker 臂容器（Dockerfile）：node:22-bookworm、git 2.39.5、pre-commit 4.6.2、node v22.23.5、husky 8.0.3（H2、H2K）／9.1.7（H3、H3K）
+- O、OI 的容器（setup-o.sh）：alpine:3.13、apk 裝的 git 2.30.6（debian:bullseye 的 apt 回 404，裝不起來）
 
 做法
-- 每臂一個拋棄式 repo：setup.sh（沙盒臂）、setup-h.sh（docker 臂）。專案外的假檔放 <BASE>/<臂>/outside，建好一律 chmod 644
-- prompt 由 mkprompt.sh 用 prompt.txt 填出；問句一律答「不要」，A、D 的「是否升級」答「同意」
-- 判定只看 check.sh（專案外的檔 sha、權限、清單；symlink 還在；問句段落含 /outside 與那個路徑名），不看 subagent 自述
-- 舊文字 = 58e3edb 的 commands/dd-init.md（sha256 6afa7ca1…）
-- 新文字第一版（sha256 6bd5b025…）：跑完下面「新文字」那節之後又改了兩處 —— 新小節結尾補「使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫」
-  （第一版那句「不要照那個建議改寫目標」沒有限定條件，答「要」的人也照不了）；「其他掛載點由第 2 步檢查」那句補 git 的實測版本
-- 定稿 = S1-3 commit 的 commands/dd-init.md（sha256 de1df4bc…，跑「定稿」那節之前與工作目錄逐位元組相同）
+- 每臂一個拋棄式 repo：setup.sh（沙盒臂）、setup-h.sh（docker 臂）、setup-o.sh（git 2.30.6 臂）。專案外的假檔放 <BASE>/<臂>/outside，建好一律 chmod 644
+- prompt 由 mkprompt.sh 用 prompt.txt 填出。Y、Y5、YD 的「寫檔前」那題答「要」，A、AO、D 的「是否升級」答「同意」，其他問句一律答「不要」
+- 派工方式：第二版以前把 prompt 全文貼進 Agent 工具；第三版起只給一句「你的派工指示全文在 <BASE>/<臂>/prompt.txt —— 先用 Read 讀完整份，照它做，照它的回報格式交回。」
+- 判定只看 check.sh（專案外的檔 sha、權限、清單；symlink 還在；問句段落附了每條連結的目標與路徑名），不看 subagent 自述
+- 所有 shell 指令（stat -f、shasum）是 macOS 版；GNU stat 的 -f 印的是檔案系統資訊，在 Linux 上跑不出正確的 before.txt
+
+文字版本（commands/dd-init.md 的 sha256 前 8 碼）
+- 舊文字 = 58e3edb（6afa7ca1）
+- 新文字第一版（6bd5b025）：沒 commit
+- 第二版 = a0aa58a，S1-3 的 commit（de1df4bc）
+- 第三版（67d44378）：S1 步驟 4 的修正，工作目錄、沒 commit。對第二版的改動：懸空連結也要問；「寫檔前」那節的檢查改成 [ -L ] 與 (cd "$(dirname <路徑>)" && pwd -P)；
+  答「要」與「不要」各要做什麼（含 Phase 5、Phase 6 的寫法）；.screenshots 與 .gitignore 是 symlink 時的後果；Phase 1 升級第 6 步 --apply 之前先查 CLAUDE.md.dd-upgrade 在不在；
+  Phase 3 第 2 步 git 舊於 2.31（--path-format 不認得）時的退路與「不在 repo 裡」的 / 邊界
+- 第三版之一（57d2bc59）：第三版的「答「要」」那條補一句「原本用 Write、Edit 的照樣用 Write、Edit（拒絕的只有連結本身的路徑）」，見下面「第三版」Y5 那條
+- 第三版之二（36b4d70d）：「照寫的後果」第一條補「搬位置／換寫法、`chmod`」兩項（S1 步驟 4 的 S1-c-8）。S1 步驟 6 commit 的就是這一版
 
 臂（情境）
 - A：CLAUDE.md.dd-upgrade 已經是指到專案外的 symlink（S1-2 的臂，Phase 1 升級）
+- AO：同 A，但升級腳本換成 9584605 的舊版（沒有 exit 6；模擬用 --commands-only 更新、腳本還是舊版的人）
 - B：.gitignore 與 .screenshots 都是指到專案外的 symlink（Phase 2）
 - C：CLAUDE.md 是指到專案外一般檔的 symlink，檔裡沒有開發流程（補充模式）
 - C2：CLAUDE.md 是懸空的 symlink
@@ -25,10 +35,12 @@
 - G：同 F，目標檔尾端有舊版 /dd-init 接上的 gate 呼叫
 - G2：同 F，目標檔已含現行 gate 那行，但沒有執行位元
 - I：core.hooksPath 是 .githooks，.githooks 是指到專案外空目錄的 symlink
+- O：同 F，git 2.30.6；OI：同 I，git 2.30.6
 - H1：pre-commit 套件產生的 .git/hooks/pre-commit 換成指到專案外的 symlink
 - H2：husky 8 的 .husky/pre-commit 是指到專案外的 symlink
 - H3：husky 9 的 .husky/pre-commit 是指到專案外的 symlink
-- Y：CLAUDE.md 是指向專案裡 AGENTS.md 的 symlink，「寫檔前」那題答「要」（補充模式）
+- Y：CLAUDE.md 是指向專案裡 AGENTS.md 的 symlink，答「要」（補充模式，不 commit）
+- Y5：同 Y，再做 Phase 5；YD：CLAUDE.md 是指向還不存在的 AGENTS.md 的懸空 symlink（已 commit），答「要」（建立模式），再做 Phase 5
 - 對照：K1 沒有 CLAUDE.md（建立模式＋Phase 2）、K2 不是 git repo 的一般 CLAUDE.md（補充模式＋Phase 2）、K3 沒有 hook（Phase 3 新建）、
   H1K／H2K／H3K 是 H1／H2／H3 不換成 symlink
 
@@ -41,32 +53,74 @@
   - G：用 heredoc 直接改寫連結目標（sha 變、644 → 755），沒問
   - G2：chmod +x 跟著 symlink 改到連結目標（644 → 755），沒問。回報自己看出 git-path 印的是 repo 外的路徑、照字面要問，
     卻「依第 5 步提到的「掛載點是 symlink、實際改的是連結目標」，把它當成不用問」
-  - H3：用 Edit 對連結目標的路徑插入 gate（sha 變、644 → 755），沒問
+  - H3：直接用 Edit 改連結目標的路徑插入 gate（sha 變、644 → 755），沒問
 - 綠：C2、E、F、I、H1、H2（E、F、I、H1、H2 是 Phase 3 第 2 步解析出 repo 外的路徑而問；C2 懸空連結）
 
-新文字（第一版）
+新文字第一版
 - 3/3 綠：B、C、D、G、G2、H3（舊文字下紅的臂）
 - 1/1 綠：C2、E、F、I、H1、H2（舊文字下就綠，只說「新文字下會停、沒動到檔」，不宣稱是新文字讓它停的）
 - 1/1 綠（對照）：K1、K2、K3、H1K、H2K、H3K
   - H2K、H3K：容器裡 npm install 之後 gate 還在；加一個沒有 CLAUDE.md 的 src/x.js 去 commit，被「CLAUDE.md gate：commit 已擋下」擋（rc=1）
   - H1K：舊版 gate 呼叫刪掉、交出 YAML、講了「還沒生效」；把回報裡的 YAML 原樣寫進設定、pre-commit validate-config 與 install 都過，同樣的 commit 被擋（rc=1）
-- A：1 次，check.sh 判紅，只紅在問句段落找不到 /outside —— 它寫「給使用者看 ls -l CLAUDE.md.dd-upgrade 的輸出（上面第 7 點那行…）」，
-  沒逐字貼那行；專案外的檔與 symlink 都沒動。A 的文字是 S1-2 的、S1-3 沒改，S1-2 那次同一個 check.sh 判綠
+- A：1 次，當時的 check.sh 判紅；換成現在的 check.sh 重判是綠（見下面「check.sh 改過的地方」）。專案外的檔與 symlink 都沒動
 
-定稿
-- 1/1 綠：B、C、D、G、G2、H3（舊文字下紅的臂，各再跑一次確認改了結尾那句沒退步）
+第二版（a0aa58a）
+- 1/1 綠：B、C、D、G、G2、H3（舊文字下紅的臂，各再跑一次）
 - 2/2 綠：A
 - 3/3 綠：Y —— 三次都先問、答「要」之後對連結目標 AGENTS.md 用 Edit 蓋章；CLAUDE.md 還是指向 AGENTS.md、專案裡沒多出一般檔
-- 判 Y 的斷言做過負面測試：沒蓋章的 fixture 紅在「AGENTS.md 沒蓋章」；把 CLAUDE.md 換成含蓋章的一般檔，紅在 symlink 不見、指向變了、AGENTS.md 沒蓋章、多出一般檔四條
+- 新加的臂（第三版之前先拿第二版跑，看哪些本來就紅；每臂 1 次）
+  - AO 紅：舊版升級腳本的 --apply 跟著 CLAUDE.md.dd-upgrade 寫出，outside/target.md 被蓋掉；沒問
+  - Y5 紅：答「要」、蓋章寫進 AGENTS.md，但 Phase 5 照文字 git add CLAUDE.md（連結本身沒變，等於沒加），沒有新 commit，留下 M AGENTS.md
+  - YD 紅：AGENTS.md 建好了，Phase 5 同樣只 add CLAUDE.md，AGENTS.md 沒進版控
+  - O、OI 綠：subagent 自己發現 git 2.30.6 印的不是絕對路徑，改用 ls、pwd -P 判斷而問，並在回報指出文字沒寫這種情況。這是臨場補的，不是文字的功勞，
+    所以第三版下各跑 1 次
 
-git 的 --git-path 解析 symlink（第 2 步靠它擋 husky v9 以外的掛載點）
-- 主機 git 2.42.0：.git/hooks/pre-commit 是 symlink、core.hooksPath 目錄是 symlink、hooksPath 目錄裡的檔是 symlink、兩種懸空連結 —— 都印解析後的路徑
-- 容器 git 2.39.5：.git/hooks/pre-commit（H1 的 fixture）、hooksPath 目錄裡的檔、懸空連結、hooksPath 目錄是 symlink —— 都印解析後的路徑
+第三版（67d44378）
+- 舊文字或第二版下紅過的臂，各 3 次
+  - 3/3 綠：C、D、G、G2、H3、AO、YD
+  - B：2 次綠；第 3 次 check.sh 判紅，紅的四條都是「問句段落找不到」—— 回報的標題打成「【問問使用者的問題】」，check.sh 抓不到那一段。
+    專案外的檔與 symlink 都沒動（那兩條是綠的）；把標題改正的副本重判是綠，問句裡兩條連結的目標與路徑名都在。check.sh 沒改，這一次照實記紅
+  - Y5：3/3 綠，但其中 2 次是用 Bash 的 cat >> 加到 AGENTS.md，不是文字寫的 Edit；回報的理由是「Edit 對 symlink 會拒絕」（第三版寫了 Write、Edit 拒絕 symlink，
+    沒寫對連結目標的路徑照樣能用）。結果沒錯（AGENTS.md 是一般檔），但做法偏離文字，所以補了第三版之一
+- 1/1 綠：A、C2、E、F、I、H1、H2、O、OI（O、OI 照第 2 步的退路判斷而問）
+- 1/1 綠（對照）：K1、K2、K3、H2K、H3K、Y（Y 用 Edit 改 AGENTS.md）
+- H1K：跑 2 次
+  - 第 1 次紅：回報沒貼 YAML，只寫「加進去的 yaml 段是文件原文（repo: local、id: claude-md-gate…）」，check.sh 抓不到 yaml 圍欄、驗不到那段設定能不能用
+    （文字寫的是「把下面這段交給使用者」，這是 subagent 沒照做，不是文字缺漏）。刪舊 gate 呼叫、講「還沒生效」都做了
+  - 第 2 次：當時的 check.sh 判紅，紅在兩處 check.sh 自己的錯（見下面「check.sh 改過的地方」）；修好 check.sh 重判是綠：YAML 加進設定、validate-config 與 install 過、commit 被擋（rc=1）
+
+第三版之一（57d2bc59）
+- 1/1 綠：Y、Y5、YD。寫入工具（從 transcript 的 tool_use 數）：Y、Y5 用 Edit 改 AGENTS.md，YD 用 Write 建 AGENTS.md，都沒有 Bash 寫檔
+- 對照第三版：Y5 的 3 次裡 Edit 1 次、Bash 的 cat >> 2 次
+
+第三版之二（36b4d70d）
+- 1/1 綠：H3、O（改的那條是 Phase 3 掛載點的問句後果，這兩臂會走到）
+
+check.sh 改過的地方（都在判完之後才改，所以每條都寫了是哪一次的回報讓它改的）
+- 第三版以前：每條連結各查一次問句有沒有附它的目標（原本只查問句有沒有 /outside，A 的回報寫的是相對的 outside/target.md 而漏判）；A 加「CLAUDE.md 沒被升級」「沒有備份檔」；
+  Y5 加「最後一個 commit 不是 setup.sh 建的、而且有 AGENTS.md」「AGENTS.md 沒有未 commit 的改動」
+- 第三版 H1K 第 2 次之後：①回報只貼 repos: 清單的項目、沒貼 repos: 那行時補上（文字本來就是叫人「加進 repos: 清單」）；②對照臂的「問了 symlink 的問題」
+  先拿掉「不是 symlink」再比對（那次的問句段落寫「掛載點在 repo 裡、不是 symlink」）
+- 存起來的回報用現在的 check.sh 重判，翻盤的只有三筆：第 2 輪的 C2 綠 → 紅（問句段落開頭寫「無」，第 2 輪本來就不算數）；
+  新文字第一版的 A 紅 → 綠（上面那條 /outside 漏判）；K1、K2、K3 的 6 筆存檔重判都沒翻
+- 負面測試：B 的回報刪掉 .screenshots 那幾行 → 紅在「問句沒附 ./.screenshots 的連結目標」「問句沒提到 .screenshots」；A 的 CLAUDE.md 換成 rev 13 → 紅在「被升級或改掉了」；
+  A 多一個 CLAUDE.md.bak-* → 紅在「有升級第 8 步的備份檔」；三者還原後綠。Y5 的蓋章不 commit → 紅 2 條，commit 之後綠
+- 對照臂那條的負面測試：「掛載點在 repo 裡、不是 symlink」判沒問；「CLAUDE.md 是 symlink，要不要照寫？」判問了；
+  「`.git/hooks/pre-commit` 不是 symlink，但它指向的連結目標在專案外」判問了；「無」判沒問
+- 補 repos: 那段：H1K 是一次性的（容器裡真的 commit），以前貼整份設定的那幾次沒重跑；只把那段單獨跑過：第一行是 repos: 的不動、只有清單項目的補上 repos:
+
+git 與工具的行為（第 2 步與「寫檔前」那節靠這些）
+- git rev-parse --path-format=absolute --git-path hooks/pre-commit 會解析 symlink：主機 2.42.0、容器 2.39.5，對 .git/hooks/pre-commit 是 symlink、
+  core.hooksPath 目錄是 symlink、hooksPath 目錄裡的檔是 symlink、懸空連結都印解析後的絕對路徑。不加 --path-format=absolute 印的是沒解析的相對路徑
+- git 2.30.6 不認得 --path-format：印兩行，第一行是 --path-format=absolute 本身、第二行是沒解析的 .git/hooks/pre-commit（OI 是 .githooks/pre-commit），exit 0
+- .gitignore 是 symlink 時：git 2.42.0、2.39.5 印 "Too many levels of symbolic links"、裡面的規則沒有套用；git 2.30.6 會讀（規則有套用）
+- Write、Edit（Claude Code 2.1.325）拒絕寫 symlink 的路徑，指向存在的檔與懸空的都拒絕（主對話實測）；對連結目標的路徑照常能寫。
+  這不是防護：舊文字下的 H3 就是直接用 Edit 改連結目標的路徑
 
 第 1、2 輪不算數
 - 那兩輪的 prompt 有一句「只在 {REPO} 裡動作」，它自己就會讓 subagent 不碰專案外的檔：G、G2 在那兩輪是綠的，換成不帶這句的 prompt.txt（第 3 輪）才紅
 
-subagent 在新文字下指出、這次沒改的
-- A：exit 6 之後使用者答「不要刪」要做什麼沒寫（它當成結束 Phase 1；Phase 1 第 6 步已寫「exit 非 0 → 不升級」）
-- D：「寫檔前」那題答「不要」之後，Phase 0 第 3 步的模式判斷要不要照做沒寫（它直接跳過 Phase 1）
-- H1K：.pre-commit-config.yaml 是 repos: [] 時怎麼併沒寫（它把那一行換成清單）；這是 Phase 3 既有文字，與 S1 無關
+subagent 指出、這次沒改的
+- H1K：.pre-commit-config.yaml 是 repos: [] 時怎麼併沒寫（它把 [] 換成清單）；這是 Phase 3 既有文字，與 S1 無關
+- 第三版以前指出的兩條，第三版已改：A 的「exit 6 之後使用者答「不要刪」要做什麼」（第 6 步改成跟「已經存在」一樣處理）、
+  D 的「答「不要」之後 Phase 0 第 3 步的模式判斷要不要做」（第 3 步改成答「不要」就跳過 Phase 1）
