@@ -125,6 +125,8 @@
   - `plain` 的說明把 BSD sed 遇到壞位元組的行為寫錯（不是整個不印，是印到那一行就失敗）→ 改掉
 - 步驟 5：修完重跑，macOS（`/bin/bash` 3.2）與 Ubuntu 24.04 容器整支 `tests/test-install.sh` 都過（T2 是 109 例），14 個變異都紅在各自的斷言上，本機照 ci.yml 逐 step 跑 20 個全過。
   同一個 Ubuntu 容器另外跑了 `tests/test-gate.sh`、`tests/test-dd-init-upgrade.sh` 與兩支 hook 測試，都過
+- 收尾時補的（兩段都標 DONE 之後，不含邏輯改動，只走步驟 1、2）：T2 加兩列守「`plugin.json` 沒有 version、改讀 `installed_plugins.json`」那條路（官方 skill-creator 走的就是它，原本的案例都走不到；加上去就是綠的，另用變異確認會紅）；
+  「先登記、再啟用」那段註解拿掉一句沒驗證過的話（「登記了但沒啟用不會讓 Claude Code 載入東西」）
 - 步驟 7：沒有另外要寫的 —— 這一段踩到的坑（`函式 || rc=$?` 讓 `set -e` 失效、不加 `-s` 的 `jq -e`、BSD sed 遇到壞位元組、變數緊貼全形字）已經隨 gate 要求的同批更新寫進 `tests/CLAUDE.md` 與根目錄 CLAUDE.md
 - 步驟 8：範圍是根目錄 CLAUDE.md 與 `tests/CLAUDE.md` 這一段動到的段落。逐項實跑核對（識別符都在、表格沒斷、文件寫的那條 docker 指令照抄跑過 rc=0），沒有要改的
 - 已知、這次沒處理：

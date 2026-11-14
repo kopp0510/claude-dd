@@ -872,7 +872,8 @@ print(value if isinstance(value, str) else "")
 
         # 先登記、再啟用：登記（installed_plugins.json）失敗就跳過，settings.json 不動 —— 反過來做的話，
         # 登記失敗時 settings.json 已經寫成啟用，留下「啟用了一個沒登記的 plugin」，完成訊息卻說沒啟用。
-        # 啟用失敗時留下的是「登記了但沒啟用」，那個狀態不會讓 Claude Code 去載入東西。
+        # 啟用失敗時留下的是「登記了但沒啟用」；Claude Code 怎麼看待這兩種半套狀態都沒有實測過，
+        # 這個順序只保證完成訊息與 settings.json 講的是同一件事
         # 更新 installed_plugins.json — 登記 Plugin（讀寫失敗時跳過該 plugin，不在 set -e 下中止安裝）
         mkdir -p "$(dirname "$installed_file")"
         local install_path="$CLAUDE_DIR/plugins/cache/$PLUGINS_MARKETPLACE/$plugin/$version"

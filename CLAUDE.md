@@ -265,7 +265,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   **有沒有 `version` 欄位** — 官方 `skill-creator` 就沒有（marketplace 與 cache 兩份都沒有）。
   缺 version 時 `install_plugins()` 改讀 `installed_plugins.json` 裡 Claude Code 自己記的值
   （它填內容雜湊，如 `85cce0381e78`）；**不可自行編版本號**，`installPath` 是用它組出
-  cache 路徑，編錯會指向不存在的目錄。兩處讀取都要**型別護欄（只接受 JSON 字串）** —
+  cache 路徑，編錯會指向不存在的目錄（這條 fallback 由 `tests/test-install.sh` T2 的 `j-noversion` 那一列守）。兩處讀取都要**型別護欄（只接受 JSON 字串）** —
   少了它 `"version": null` 會讓 jq 印 `null`、python3 印 `None`，後者繞過守衛，
   正是本檔上一條「兩路徑須逐項等價」的典型破口。代價是這類 plugin 必須先手動
   `claude plugin install <name>@claude-plugins-official` 過一次，安裝腳本才登記得起來 —

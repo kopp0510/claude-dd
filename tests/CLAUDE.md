@@ -77,6 +77,8 @@
   （見 `docs/designs/2026-11-14-installer-hardening-design.md` 與 `docs/reviews/2026-11-14-installer-hardening/`）。
   ⚠️ T2 只守它列的那幾類輸入（不存在、空檔、只有空白、壞 JSON、頂層型別不對、不只一個 JSON 值、BOM、鍵是 null 或型別不對、登記項格式不對）。
   沒列的照樣可能不一致 —— 審查時補的兩類就是第一版沒想到的；jq 與 python3 對大整數、NaN 的寫回格式沒比過
+- **T2 的 `j-*` 那幾列改的是 marketplace 裡的 `plugin.json`**（`T2_PLUGIN_JSON`）：`j-noversion` 走「`plugin.json` 沒有 version、改讀 `installed_plugins.json`」那條路 ——
+  官方 skill-creator 就是這樣，使用者的機器實際走的是它；其他列的 `plugin.json` 都有 version，走不到。把 jq 那條 fallback 改成讀錯欄位 → 這一列紅（jq 那一臂印「取不到版本」）
 - **`t2_canon` 只把長得像時間戳的 `installedAt`／`lastUpdated` 換成 `TS`**：fixture 裡的 `"A"` 要留著，
   否則「更新既有登記的三個欄位」與「整筆新建」正規化後長得一樣，`p-entry-valid` 就分不出來（審查抓到的：第一版兩種結果都綠）
 - **T1 只有在 GNU 的 `cp` 上才會紅**（macOS 的 `cp -r` 本來就跟著連結）。它用 `# --- T1 開始`／`# --- T1 結束` 夾住、寫成自足的，
