@@ -1,0 +1,254 @@
+你是計畫審查的裁決者，這是第 1 輪。你的工作分兩半：先派審查者去攻擊這份計畫，再反過來查證他們的每一條批評。
+全程唯讀：只能讀檔、grep、看 git 紀錄；不改檔、不 commit、不跑測試、不為了查證另外派 agent。
+
+審查範圍：整份計畫
+
+<<<計畫開始>>>
+# 計畫草稿：安裝腳本補強與 README 揭露（兩個功能段落）
+
+設計文件會建在 `docs/designs/2026-11-14-installer-hardening-design.md`（新檔，四節：來源、假設、進度表、段落與小任務）。
+專案裡現在沒有進行中的進度紀錄：根目錄 CLAUDE.md 沒有「進度以…為準」那句，`docs/designs/` 既有的 7 份設計文件都不動。
+
+## 進度表草稿
+
+| ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
+|---|---|---|---|---|---|
+| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | TODO | — | `tests/test-install.sh` 全過（含新加的各組）；debian 容器裡 symlink 備份的重現從「備份讀出新內容」變成「備份讀出原內容」；等價表探針 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | |
+| S2 | 兩份 README：陌生人裝之前該知道的事 | TODO | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；新寫的每一句對得上它引的程式碼或量測檔（逐句核對表附在回報） | |
+
+S2 依賴 S1：README 要寫的是 S1 改完之後的安裝行為（備份、完成訊息）。
+
+## S1 的小任務
+
+**S1-1 修 symlink 備份**
+- 檔案：`install-dd-pipeline.sh` 的 `backup_before_overwrite`；`tests/test-install.sh`
+- 做法：目標本身是 symlink（`[ -L "$target" ]`）時用 `cp -RL` 備份它指到的內容，其餘維持 `cp -r`。不對所有情況都加 `-L`：GNU `cp -RL` 遇到懸空連結回 1，腳本有 `set -e`
+- 驗證：
+  - 測試（新加 T1）：沙盒 HOME 裡 `~/.claude/CLAUDE.md` 是指向另一個檔的 symlink、內容與模板不同，跑 `--force`，斷言備份目錄裡那份是一般檔、內容等於原本的內容
+  - macOS 的 `cp -r` 本來就會跟著連結，T1 在本機修之前就是綠的。紅與綠都要在 GNU 上取：`docker run --rm -v <repo>:/repo:ro debian:bullseye` 裡 source 安裝腳本、呼叫 `backup_before_overwrite` 再照呼叫點 `cp "$source" "$target"`，修之前備份讀出新內容、修之後讀出原內容
+- commit：`fix: 備份 symlink 目標時備份它指到的內容（S1-1）`
+
+**S1-2 jq 與 python3 兩條路徑逐項等價**
+- 檔案：`install-dd-pipeline.sh` 的 `jq_inplace`、`py_inplace`、`install_plugins`（settings 那句 python、`jq_register`、`py_register`）、`uninstall`（兩句 python）、`mcp_scope`（jq 那段）；`tests/test-install.sh`
+- 每一類定案的結論（先定結論再改碼）：
+  - 檔案是空的、只有空白、或頂層不是物件 → 兩條路徑都算失敗、不改檔（安裝印「更新失敗…跳過」、移除印「解析失敗，請手動移除」、`mcp_scope` 回 `unparseable`）
+  - `enabledPlugins` 或 `plugins` 的值是 `null` → 當成沒有這個鍵：安裝照常寫入，移除不做事也不報錯
+  - `plugins[<key>]` 的第一筆不是物件（例如 `[null]`）→ 兩條路徑都算失敗、不改檔
+- 做法：`jq_inplace` 開頭加 `jq -e 'type == "object"'` 的檢查（空輸入時 jq -e 回 4）；`py_inplace` 載入後加同樣的型別檢查；python 三句改成 `None` 當空物件、其他型別照舊報錯；`jq_register` 對「第一筆不是物件」報錯；`mcp_scope` 的 jq filter 頂層不是物件時報錯（落到既有的 `unparseable`）
+- 驗證（新加 T2）：把探針的案例表搬進 `tests/test-install.sh`。每個案例各開一個沙盒 HOME、在子 shell 裡 source 安裝腳本後呼叫真的 `install_plugins`／`uninstall`／`plugin_enabled_state`／`mcp_scope`；python3 那條靠重新定義 `command_exists`（對 `jq` 回 1）走到。斷言：兩條路徑印出的結論行與改完的 JSON（時間戳換掉後）相同；另外對上面三類各挑代表案例斷言結論本身（防兩條一起錯）。先加測試、確認在現行程式碼上紅在那 16 例，再改碼轉綠
+- commit：`fix: 設定檔是空的、頂層不是物件或鍵是 null 時，jq 與 python3 兩條路徑結論一致（S1-2）`
+
+**S1-3 沒測到的路徑補測試**（預期不改安裝腳本；測出缺陷就在這個小任務修，超出「一兩行」的先停下來問）
+- 檔案：`tests/test-install.sh`
+- 新加的測試：T3（plugin 登記端到端）、T4（`--check` 對 `~/.claude.json` 的三種輸出）、T5（改過的部署檔重裝時先備份再換回）、T6（全域 CLAUDE.md 三種情境）、T7（hook 相對路徑中止）。內容見下方測試清單
+- 這些路徑的假 marketplace、假 `~/.claude.json` 都放在**新開的**沙盒 HOME，不動現有那個 `SANDBOX`（它的「無備份產生」斷言靠 plugin 步驟被跳過才成立）
+- 驗證：被測行為沒有改，沒有「先紅」可取；改成每一組各做一次變異（把安裝腳本對應的那一行改壞），確認那一組變紅、而且紅在斷言而不是載入失敗，再還原
+- commit：`test: 安裝腳本的 plugin 登記、MCP 檢查、覆蓋前備份、全域 CLAUDE.md 與 hook 驗證補上測試（S1-3）`
+
+**S1-4 兩個小修**
+- 檔案：`install-dd-pipeline.sh` 的 `create_commands`（清舊指令檔那段）、`install_plugins`、`show_completion`；`tests/test-install.sh`
+- 做法：
+  - 清 `deprecated_dd` 那 5 個舊指令檔之前先 `backup_before_overwrite "commands"`
+  - `install_plugins` 把這次真的啟用成功的 plugin 記進一個陣列；`show_completion` 的 plugin 那段只列這些，一個都沒有時印「這次沒有啟用任何官方 Plugin，原因見上方步驟 5」；`--commands-only` 時不印 plugin 與 agent 兩段（那次兩者都沒跑）。「開發：實作+測試 → …」那行不動（CI「迴圈步數第五方」讀它）
+- 驗證：新加 T8、T9，先寫、確認在現行程式碼上紅，再改
+- commit：`fix: 清舊指令檔前先備份；完成訊息只報這次真的做了的（S1-4）`
+
+**S1 的文件同步**（跟最後一個小任務或步驟 6 一起 commit）
+- `tests/test-install.sh` 檔頭說明、`tests/CLAUDE.md` 的 `test-install.sh` 那一列
+- 根目錄 `CLAUDE.md`（安裝腳本在根目錄，gate 會要求同批更新）：只補這次留下的坑，不改既有規則
+- `DD_PIPELINE_ARCHITECTURE.md`「安裝行為保證」：可回復那條補上 symlink；CI 防線表 `test-install.sh` 那一列補上新涵蓋的範圍
+- `CHANGELOG.md` 的 `## 未發布`
+- 改到的識別符各跑一次 `git grep`，核對提到它的敘述還成立（`jq_inplace`、`py_inplace` 檔頭的「原檔不動」「保留 inode / symlink」等）
+
+## S2 的小任務
+
+**開工前提**（每一項查完把結果寫進設計文件，README 只寫查得到的）
+1. 「翻譯全域模板就能換語言」那句：中文還寫死在哪些地方（`commands/dd-init.md` 蓋章區塊與 commit 訊息、`scripts/dd-init-upgrade.sh` 的比對清單、`scripts/check-claude-md.sh` 的訊息、各 `SKILL.md` 的 description）—— 逐處 grep
+2. 「don't install the gate」實際怎麼做：讀 `commands/dd-init.md` Phase 3、`skills/gate-guard/hooks/CLAUDE.md`、全域模板提到巢狀 CLAUDE.md 的地方
+3. `skills/self-improving-agent/hooks/hooks.json` 掛了什麼、什麼時候會插提醒
+4. 全域模板 §1.1 對回應語言與 commit 語言的規定；`/dd-init` Phase 5 的 commit 訊息
+5. 迴圈成本的數字：`docs/measurements/2026-10-23-reviewer-real-sessions.md`、`skills/dd-loop/SKILL.md` 引的那組，連同日期與樣本數
+
+**S2-1 README.md 與 README.zh-TW.md 同批改**
+- 檔案：`README.md`、`README.zh-TW.md`、`CHANGELOG.md`（`## 未發布`）；`DD_PIPELINE_ARCHITECTURE.md` 有同一句時一起改
+- 要寫的（每一項都只寫查得到的事實）：
+  1. 安裝選項：`--uninstall` 那行與下面補一句——它不動全域 `CLAUDE.md`、`~/.claude/backups/`、各專案的 hook 與蓋章區塊；會把 `OFFICIAL_PLUGINS` 列的官方 plugin 從 `settings.json` 的 `enabledPlugins` 與 `installed_plugins.json` 拿掉（你自己裝的也一樣）
+  2. 不帶 `--force` 的行為：同名的 skill、agent、指令、腳本、輸出風格內容不同時也會換成 repo 版，舊的備份到 `~/.claude/backups/pre-install-<時間>/`；`--force` 多的是全域 `CLAUDE.md` 不問直接蓋
+  3. 會就地改的兩個設定檔（`~/.claude/settings.json` 的 `enabledPlugins`、`~/.claude/plugins/installed_plugins.json`），不備份
+  4. 裝了全域模板之後 Claude 會用繁體中文回覆與寫 commit；`/dd-init` 會在專案裡 commit 一筆中文訊息
+  5. 全域會掛的 hook：除了已經寫的 gate-guard，補上 self-improving-agent 的那一個
+  6. 迴圈的時間與費用：步驟 4 每段至少 3 個 opus 審查者，附量測日期、樣本數與檔名
+  7. CI 跑在哪些平台（ubuntu-latest、macos-latest 的 bash 3.2）；Windows 沒有測過
+  8. 前置需求補 claude-md-management 的安裝指令；「翻譯模板就能換語言」與「don't install the gate」兩句照開工前提查到的改寫
+- 不用圍欄內的編號清單，不增減 flag 行（避開「迴圈步數四方一致」「安裝 flag 三方對照」的誤判）
+- 驗證：沒有程式碼，不寫測試。本機重跑 ci.yml 全部 step；另做逐句核對表（新寫的每一句 ↔ 它依據的程式碼行或量測檔原文），兩份 README 的同一段並排核對意思一致
+- commit：`docs: README 補上裝之前該知道的事（移除範圍、覆蓋行為、設定檔、語言、hook、成本、平台）（S2-1）`
+
+## 要新增的測試清單（全部加在既有的 `tests/test-install.sh`，CI 的 ubuntu 與 macOS 兩個 job 本來就跑它）
+
+- T1 全域 `CLAUDE.md` 是 symlink、帶 `--force` 覆蓋後，備份裡是原本的內容
+- T2 jq 與 python3 等價表：對 `install_plugins`、`uninstall`、`plugin_enabled_state`、`mcp_scope` 餵同一批假設定檔（不存在、空檔、只有空白、壞掉的 JSON、頂層是 null／陣列／字串／數字、鍵是 null／字串／陣列、正常內容、登記項格式不對），兩條路徑的結論與改完的檔案要相同；三類定案的結論各有代表案例直接斷言
+- T3 plugin 登記端到端：有假 marketplace 時，`settings.json` 加上 `enabledPlugins` 且原有的其他鍵還在；`installed_plugins.json` 有登記；重跑後除了時間戳內容不變；`--uninstall --yes` 拿掉這兩處、其他鍵還在
+- T4 `--check` 對 `~/.claude.json`：playwright 在根層 `mcpServers` → ✅；只在某個專案底下 → 「僅 N 個專案設定」；檔案壞掉 → 「無法判定」
+- T5 部署後改掉一個 skill 檔、一個 agent、`dd-init.md`、一支腳本、`adhd.md`，重裝後五個都換回 repo 版、改過的版本都在備份目錄
+- T6 全域 `CLAUDE.md`：內容相同 → 不動、不產生備份；不同、不帶 `--force`、非互動 → 保留本機版；不同、帶 `--force` → 備份後換成模板
+- T7 skill 的 `hooks.json` 用相對路徑時 `validate_skill_hooks` 以 exit 1 中止（`SCRIPT_DIR` 指到假目錄、在子 shell 裡跑）
+- T8 `~/.claude/commands/dd-help.md` 存在時，安裝後它被清掉、備份目錄裡有它
+- T9 完成訊息：`--commands-only` 不出現「已啟用的 Plugin」「已安裝的內建 Agents」；沒有任何 plugin 啟用成功時不出現「已啟用的 Plugin」；有假 marketplace 時列出啟用成功的那幾個
+
+測不到、照實記下的：全域 `CLAUDE.md` 的互動選單（o／k／s）。`ask` 用 `[ -t 0 ]` 判斷，管線餵 stdin 一律走預設值，要真的終端機才走得到。
+
+## 假設
+
+- A1 範圍是上一則評分的弱項 4（安裝腳本）與弱項 5（README）。弱項 1–3 這次不動：速度與費用要動審查者數量這類規則，得先做對照實驗；行為回歸要另開一套會花錢的測試機制；文件只增不減依使用者先前的指示要逐條判必要性、交他選
+- A2 `settings.json` 與 `installed_plugins.json` 不加備份：`settings.json` 可能放 token，備份等於多留一份；而且登記每次都會改 `lastUpdated`，加了備份會每跑一次多一個備份目錄。改在 README 講明這兩個檔會被就地改
+- A3 `--uninstall` 取消登記官方 plugin 的行為不改（移除前的提示本來就列了），只改 README 的說法
+- A4 不改 `plugin_enabled_state` 對「頂層不是物件」回 `none` 的既有設計（兩條路徑本來就一致，註解寫明是刻意的）
+- A5 測試加在既有的 `tests/test-install.sh`，不另開檔（另開要同步兩個 CI job、ShellCheck 清單、目錄結構那行）
+- A6 不動 `commands/dd-init.md` 的蓋章區塊，所以不跳 `dd-loop-rev`；不發版、不 push
+- A7 兩件留給使用者：兩個 agent 備份檔的上游授權（要外部查證）、README「only components with an evidenced usage record are kept」這句的措辭
+<<<計畫結束>>>
+
+<<<事實開始>>>
+審查範圍：整份計畫。
+
+## 使用者講過的話（逐字，依序）
+
+- 「你認為現在這份repo 分數多少? 可以做到什麼事情? 請你嚴格仔細檢查, 弱項在哪 強項在哪」
+- （我交出評分：約 60 分，列了 5 個弱項，結尾寫「下一步：挑一個弱項叫我修。我建議先修第 4 項，範圍最小，而且能用測試證明修好了。」之後）「請你優化改善」
+
+評分裡的 5 個弱項（使用者看到的標題）：1 慢、貴；2 核心流程靠文字，沒有自動回歸；3 文件比程式重，而且只增不減；4 安裝腳本碰設定檔的那一半沒測；5 陌生人上手差。
+使用者沒有指定要改哪幾項。這份計畫選 4 與 5，是我的選擇（計畫的假設 A1）。
+
+使用者先前在這個 repo 講定的事（使用者決定）：
+- push 由使用者自己按；不發版
+- 不要再提議把全域 CLAUDE.md 拆成 skill 或縮短；精煉規則文件要逐條判必要性、分三類交他選
+- 全域 §3.5：不主動新增測試；使用者要求或修 bug 時例外。task-planner 步驟 4 的「測試清單題」選定的清單就是使用者要求加的測試
+
+## 今天實跑的結果（repo 在 HEAD b1935bb，本機 macOS）
+
+- F1 本機照 `.github/workflows/ci.yml` 逐 step 跑：20 個 step 全部 exit 0。`tests/test-gate.sh`、`tests/test-dd-init-upgrade.sh`、`tests/test-install.sh` 各自 rc=0
+- F2 `tests/test-install.sh`（87 行）每一次安裝都是 `HOME=<沙盒> ./install-dd-pipeline.sh … < /dev/null`；`grep -c -E 'settings\.json|\.claude\.json|installed_plugins' tests/test-install.sh` 回 0。沙盒裡沒有 `plugins/marketplaces/…/plugin.json`，所以 `install_plugins` 對每個 plugin 都走「Plugin 檔案不存在」那個 `continue`
+- F3 `install-dd-pipeline.sh` 的 `ask()`：`if [ -t 0 ]; then read … else REPLY="$default"`。stdin 不是終端機時一律採用預設值
+- F4 `backup_before_overwrite` 的複製那行是 `cp -r "$target" "$BACKUP_ROOT/$category/"`，前面有 `[ -e "$target" ] || return 0`。它的 9 個呼叫點裡，接著用 `cp "$source" "$target"` 寫入的有 7 個（agents、`dd-*.md` 指令、scripts、output-styles、全域 CLAUDE.md 的 3 處）；接著 `rm -rf` 再 `cp -r` 的有 2 個（skills、命名空間指令目錄）
+- F5 debian:bullseye 容器（GNU coreutils 8.32）實跑：`cp -r link.md b/` 複製出來的是連結本身；之後 `cp src link.md`，再讀備份得到的是新內容。`cp -RL link.md b2/` 複製出一般檔。對懸空連結 `cp -RL` 回 1（「cannot stat」）。本機 macOS：`cp -r` 與 `cp -RL` 都複製出一般檔；對懸空連結 `cp -RL` 印錯誤但回 0
+- F6 等價探針（腳本在 scratchpad，不在 repo）：每個案例開一個沙盒 HOME、放假的 marketplace（兩個官方 plugin 的 `plugin.json` 都有 `"version":"1.2.3"`），在子 shell 裡 `source ./install-dd-pipeline.sh` 後呼叫真的函式；python3 那條靠重新定義 `command_exists`（對 `jq` 回 1）。92 個案例（settings.json 15 種 × install／uninstall／plugin_enabled_state，installed_plugins.json 16 種 × install／uninstall，`.claude.json` 15 種 × mcp_scope），比對印出的結論行與改完的 JSON（時間戳換成固定字）。結果：一致 76、不一致 16
+  - settings.json 是空檔、只有空白：install 時 jq 那條印「✅ 已啟用」而檔案仍是 0 bytes，python3 那條印「settings.json 更新失敗（檔案可能損毀），跳過」；uninstall 時 jq 那條不印東西，python3 那條印「解析失敗，請手動移除」
+  - settings.json 內容是 `null`：install 時 jq 那條把檔案寫成 `{"enabledPlugins":{…}}` 並印「已啟用」，python3 那條印更新失敗、檔案不動；uninstall 同上面的差別
+  - `{"enabledPlugins":null}`：install 時 jq 成功、python3 印更新失敗；uninstall 時 jq 不印、python3 印解析失敗
+  - installed_plugins.json 是空檔、`null`、`{"plugins":null}`：與上面三類對應的差別（install 與 uninstall 都是）
+  - `{"plugins":{"<key>":[null]}}`：install 時 jq 把那筆寫成只有 `version`、`lastUpdated`、`installPath` 三個欄位的物件並印「已啟用」，python3 印更新失敗
+  - `~/.claude.json` 內容是 `null`：`mcp_scope` 的 jq 那條回 `none`，python3 那條回 `unparseable`
+  - 頂層是陣列、字串、數字，或鍵的值是字串、陣列：兩條路徑一致（都失敗）。`plugin_enabled_state` 15 例全部一致
+- F7 探針第一版把 `$site｜` 寫在全形字前面，bash 3.2 把變數名吃掉、輸出變成壞的位元組序列；改成 `${site}` 才對（根目錄 CLAUDE.md 與 `scripts/CLAUDE.md` 已有這條慣例）
+- F8 `install_plugins` 每次執行都會對 settings.json 做 `.enabledPlugins[$key] = true`、對 installed_plugins.json 更新 `lastUpdated`（讀 `jq_register`／`py_register`）；這兩個檔都沒有經過 `backup_before_overwrite`
+- F9 `create_commands` 開頭：`local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status" "dd-stop")`，迴圈裡 `rm "$COMMANDS_DIR/$old.md"`，前面沒有備份
+- F10 `show_completion` 無條件印「📌 已安裝的內建 Agents（N 個）」與「📌 已啟用的 Plugin（${#OFFICIAL_PLUGINS[@]} 個）」；`main()` 在 `--commands-only` 時不跑 `install_builtin_agents`、`install_plugins`，但照樣跑 `show_completion`。`git grep` 這兩個字串，repo 裡只有安裝腳本自己有
+- F11 `uninstall()`：移除 `ALL_DD_COMMANDS`、`ALL_NS_COMMANDS`、`$TEMPLATES_DIR`、`DD_SCRIPTS`、`DD_OUTPUT_STYLES`、`ALL_SKILLS`、`ALL_AGENTS` 列的項目，並對 `OFFICIAL_PLUGINS` 的每個 key 從 settings.json 與 installed_plugins.json 刪掉。整個函式沒有出現 `CLAUDE.md` 與 `backups`。移除前印的清單最後一行是「└── 官方 Plugins 設定（claude-md-management、skill-creator）」
+- F12 `install_builtin_skills` 在內容不同時：`backup_before_overwrite "skills" "$target"`、`rm -rf "$target"`、`cp -r "$source" "$target"`，不看 `$FORCE`（`$FORCE` 只影響印出的字樣）
+- F13 `validate_skill_hooks` 用 `find "$SCRIPT_DIR/skills" -name hooks.json` 找檔，發現相對路徑時 `exit 1`
+- F14 `.github/workflows/ci.yml` 兩個 job：`lint`（`runs-on: ubuntu-latest`，20 個 step）與 macOS 那個（`runs-on: macos-latest`，含「確認 /bin/bash 是 3.2」）。兩個 job 都有「Sandbox 端到端安裝測試」跑 `tests/test-install.sh`。ShellCheck 的檔案清單是逐檔寫死的
+- F15 公開版（origin/main）停在 2026-10-30 的 9584605，GitHub 上最後 5 次 CI 都是 success。本機比它多 34 個 commit，ubuntu 那個 job 沒有跑過這 34 個
+- F16 `README.md` 現有的句子（逐字）：
+  - 第 19 行結尾：`The rule text, skill definitions and installer output are in Traditional Chinese; the mechanisms are language-independent, and translating the global template is the one change needed to adopt it in another language.`
+  - 第 67 行：`./install-dd-pipeline.sh --force             # reinstall, overwriting existing files`
+  - 第 70 行：`./install-dd-pipeline.sh --uninstall         # remove what this repo deployed`
+  - 第 156 行：`If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 8-step loop works without it.`
+  - 第 38 行有 `claude plugin install skill-creator@claude-plugins-official`，沒有 claude-md-management 的對應指令；安裝腳本對任何官方 plugin 取不到版本時印的是 `claude plugin install ${plugin}@${PLUGINS_MARKETPLACE}`
+  - `grep -c -i -E 'windows|linux|wsl' README.md` 回 0；README 有一節「What it costs, what's already mitigated, and what's left」講 gate 與巢狀檔的代價，沒有講步驟 4 審查者的時間或費用
+- F17 量測檔（repo 內）：`docs/measurements/2026-10-23-reviewer-real-sessions.md` 的當天輸出「code-reviewer 次數=311 中位=11.8 分 第90百分位=27.7 分」（來源是那台機器約 30 天內的 session 紀錄）；`skills/dd-loop/SKILL.md`：「2026-10-24 實測主對話（Opus）直接派平均 269s、5.13 美元、命中 4/6，另派 Opus 裁決者 350s、3.83 美元、命中 3/6」
+- F18 `DD_PIPELINE_ARCHITECTURE.md`「安裝行為保證」有「可回復：覆蓋差異檔前備份到 `~/.claude/backups/pre-install-<時間>/`」與「JSON 就地改寫保留 inode / symlink / 權限」兩句
+- F19 `tests/CLAUDE.md` 第 10 行那一列描述 `test-install.sh` 涵蓋什麼；`tests/` 與根目錄都有 CLAUDE.md，pre-commit gate 會要求改到 `.sh` 的目錄同批更新它
+- F20 兩個獨立審查者（今天派的，一個讀完整支安裝腳本、一個照英文 README 查核）的報告我有；其中我自己重跑或重讀過的：jq 對空檔 exit 0 且不輸出、uninstall 的範圍（F11）、不帶 `--force` 的覆蓋（F12）、舊指令檔直接刪（F9）、完成訊息（F10）。**沒有重跑、只有審查者回報的**：「翻譯模板就能換語言」那句漏掉的四處中文、「don't install the gate」在 repo 裡沒有對應做法、self-improving-agent 的 hook 行為 —— 計畫把這三項列在 S2 的開工前提
+
+## 環境
+
+- 這個環境沒有 TodoWrite／TaskCreate，進度用設計文件的進度表記（全域 §4.4）
+- 本機有 docker，映像檔有 `debian:bullseye`、`bash:5`、`alpine:3.13`；debian 那個映像檔裡沒有 node、jq、python3
+<<<事實結束>>>
+
+專案根目錄：{ROOT}。專案規則在根目錄與各層的 CLAUDE.md。
+
+【第一步：派審查者】
+用 Agent 工具平行派審查者（同一則訊息裡一次派完）：subagent_type "general-purpose"、model "haiku"、effort "{EFFORT}"（每個審查者都要帶這個 effort 參數，重派、補派的也一樣）。
+- 數量你決定，**最少 3 個、沒有上限**。計畫越大、牽涉越廣就派越多
+- 每個審查者給代號「輪1-R1」「輪1-R2」…，並給一個方向：可以分工（例如「前提成不成立」「漏掉的同步點」「範圍與驗證」），
+  也可以派幾個都做「全面」
+- 每個審查者的 prompt 用下面的「審查者範本」：填入《代號》《方向》，《計畫與事實》貼上面兩組標記之間的內容（連標記一起），
+  《根目錄》貼專案根目錄
+- 審查者互相看不到對方
+
+**每次派出審查者（含之後的重派、補派）就結束這一輪。** 審查者完成時，它們的報告會以訊息送回給你，你會被喚醒；
+**這一批全部回報之前不要寫最終報告、不要開始判**。
+
+【審查者範本】
+你是計畫審查者《代號》。你唯一的職責：找漏洞、猛烈批評，證明這份計畫有重大缺失。
+不寫優點、不寫「整體不錯」、不客套。
+
+《計畫與事實》
+專案根目錄：《根目錄》（規則在根目錄與各層 CLAUDE.md）
+你的方向：《方向》
+審查範圍以事實開頭寫的為準（沒寫就是整份計畫）；範圍外的段落只是背景，不要把它們沒做的事算成這份計畫做少了。
+
+要查的：
+1. 計畫的前提成不成立 —— 它說某檔有某段、某函式這樣運作、某數字是多少，你自己 grep / 讀檔確認
+2. 有沒有漏掉專案文件規定要一起改的地方 —— 在**各層** CLAUDE.md 搜「新增」「同時改」「同批」「要一起」「同步」「手動同步」，
+   讀到的規則逐條對計畫
+3. 範圍對不對：做多了、做少了、順序錯了
+4. 驗證方式抓不抓得到錯：計畫說的驗證，在它該抓的錯真的發生時會不會變紅
+
+規則：
+- 只能讀檔、grep、看 git 紀錄。測試、build、安裝、上網、開容器都不要跑，需要的寫進「需要外部查證」交回
+- **每條批評都要附證據**：`路徑:行號範圍`，需要原文就在下一行縮排貼出來；或 grep 指令與結果。沒證據的批評不要寫
+- 計畫已經安排好要處理的事（寫在開工前提、驗證步驟、後面的段落裡），不算缺失
+- 每條標嚴重度。**三個都符合才是重大**：
+  ①常走的路：照這份計畫做時大多數情況會經過（「沒跑成」「第 3 輪還不過」這種例外流程不算）；金額、權限、刪資料不管多少見都算
+  ②照做會壞、會錯，或會跳過使用者的決定
+  ③錯了不會報錯，後面的關卡（code-review、測試、gate；之後再跑的 plan-review 不算）也抓不到。那些關卡是照計畫檢查的，
+  所以「計畫要求做錯的事」通常符合 ③；「計畫漏寫、但做的時候一定會撞到而報錯」不符合。③ 寫理由即可，不必附行號
+  其他都是小事
+- 真的找不到重大缺失就照實寫，**不要為了交差硬湊**；但「我查了什麼」一定要寫
+- 你所在的環境若規定用某個工具交回報告（例如 SubagentHandback），就用那個工具交
+
+輸出格式（照抄這些標題）：
+【我查了什麼】讀過的檔、跑過的 grep（指令照貼），沒有批評時也要寫
+【批評】每條：《代號》-<序號>｜嚴重度｜內容｜證據
+【需要外部查證】每條：《代號》-<序號>｜嚴重度｜內容｜為什麼需要
+（審查者範本到此結束）
+
+【第二步：查證】
+這一批全部回來之後，先做**讀檔檢查**：只看「有沒有真的讀檔」，不看找到的是大事還是小事。
+每個審查者至少抽一處它引用的 `路徑:行`，自己讀那幾行，確認內容對得上。對得上就算過 —— 只找到小事、甚至沒找到問題，都算過。
+對不上、或完全沒有引用任何檔案行，就是沒過。
+
+每個代號的位置**最多重派一次**（回錯誤或沒過讀檔檢查都算這一次），重派的代號加「b」（例如輪1-R2b），
+並在 prompt 開頭告訴它上次為什麼不算。重派還是不行，它不算有效審查者。
+有效審查者少於 3 個：補派新代號補到 3 個（補派只做一次，補派的人沒過就不再派）；
+補完還是少於 3 個，結論寫 `無法判定（有效審查者不足 3 個）`。重派、補派之後一樣結束這一輪等它們回來。
+
+再對**每一條**批評做對抗驗證：預設「這條批評可能是錯的」，自己讀檔、grep 判定。不表決 ——
+三個審查者都說對、讀檔證明是錯的，就是錯的。每條分到一類：
+- **採納**：查證屬實。再分「重大」與「小事」—— 照審查者範本那條三個條件自己重判，不照審查者標的；小事照樣要改，但不擋通過
+- **駁回**：查證不屬實、證據不支持、或計畫已經安排處理。一句話寫理由
+  - 前幾輪已駁回的批評被重提：沒有新證據就駁回，理由寫「同輪N-…，無新證據」
+  - 批評衝著標了「使用者決定」的事：駁回，理由寫「使用者決定」。只有在它拿出證據證明那個決定建立在錯的事實上時，
+    改分到「需使用者決定」並附上證據
+- **需使用者決定**：程式碼、測試、文件都沒寫明該怎樣，只有使用者能選（例如金額怎麼算、權限給誰）。
+  寫出選項與你的建議答案；它擋住某條重大缺失的改法時，寫出是哪一條。**除了這類，其他都由你決定，不要推給使用者**
+- 審查者交回的「需要外部查證」：你用讀檔、grep 能查就查完再分類；查不了的照列在「需要外部查證」，嚴重度一樣照三個條件自己重判（假設它查出來是真的）
+- 審查範圍寫了「範圍外的新發現一律算小事」時，範圍外的採納與需要外部查證一律標小事、不計入結論的 N
+
+**結論**（三選一，照這個字面寫）：
+- `通過`：讀檔檢查過了，沒有採納的重大缺失，「需要外部查證」裡也沒有重大的
+- `不通過（N 條重大）`：N = 採納的重大缺失 + 需要外部查證裡重大的條數
+- `無法判定（<原因>）`：有效審查者不足 3 個
+
+【最終報告格式】照抄下面這些標題。你所在的環境若規定用某個工具交回報告（例如 SubagentHandback），就用那個工具交這份報告。
+【派工】派了幾個（代號、方向；重派、補派各幾個）、為什麼派這麼多
+【讀檔檢查】每個審查者：過／沒過（抽查了哪一處）；重派、補派了哪些
+【採納（重大）】每條：來源代號（例如 輪1-R2-3）｜內容｜查證：path:行 或 grep 結果｜計畫要怎麼改
+【採納（小事）】每條：來源代號｜內容｜計畫要怎麼改
+【駁回】每條：來源代號｜內容｜一句理由
+【需使用者決定】每條：來源代號｜問題｜選項｜建議答案｜為什麼文件沒寫明｜卡住哪條重大（沒有就寫「無」）
+【需要外部查證】每條：來源代號｜嚴重度｜內容
+【結論】通過 ／ 不通過（N 條重大） ／ 無法判定（<原因>）

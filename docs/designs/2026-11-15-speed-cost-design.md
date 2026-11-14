@@ -29,7 +29,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7..fd96d69 |
-| S2 | 審查者思考強度實驗（medium 對 low） | TODO | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I stats.py` 能從存下的 stats 重算出表 | |
+| S2 | 審查者思考強度實驗（medium 對 low） | IN_PROGRESS | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I stats.py` 能從存下的 stats 重算出表 | 58fc4ba.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -94,9 +94,9 @@ ffmpeg 現在是樹的最後一行（有裝、沒裝兩個分支都印 `└─�
 | `envodd` | 那個環境變數非空，但不是上面那種值（例如 `5`、`200k`、`abc`） | ⚠ 環境變數的值不是 100000–1000000 的純數字，Claude Code 會不會採用無從判定 |
 | `unparseable` | 設定檔壞掉、空檔、頂層不是剛好一個物件 | ⚠ settings.json 無法解析，無從判定 |
 | `all` | 最上層 `autoCompactWindow` 是有效值（個別模型另外有沒有值都回這個） | ✅ 最上層已設；有個別設定的模型以個別值為準 |
-| `outofrange` | 最上層有 `autoCompactWindow` 這個鍵、值不是 `null`、也不是有效值（範圍外的數字、非整數、字串、布林…；個別模型另外有沒有值都回這個） | ⚠ 最上層的值不是 100000–1000000 之間的整數，實際用多少無從判定；有個別設定的模型以個別值為準 |
+| `outofrange` | 最上層有 `autoCompactWindow` 這個鍵、值不是 `null`、也不是有效值（範圍外的數字、非整數、字串、布林…；個別模型另外有沒有值都回這個） | ⚠ 最上層的值不是 100000–1000000 之間的整數，實際用多少無從判定（步驟 4 之後拿掉了原本的第二句「有個別設定的模型以個別值為準」：最上層的值無效時整份設定會不會失效沒查證） |
 | `permodel` | 最上層沒有這個鍵（或值是 `null`），但 `modelSettings.<模型>.autoCompactWindow` 至少一個是有效值 | ⚠ 只設在個別模型，沒設過的模型不適用；在 settings.json 最上層加 `"autoCompactWindow"`，沒有個別設定的模型也會套用 |
-| `none` | 檔案不存在，或是物件但兩處都沒有有效值 | ⚠（可選）沒設，Claude Code 用它替各模型調的預設視窗；想提早壓縮：`/autocompact <token 數>`（只存給當下的模型）或在 settings.json 最上層加 `"autoCompactWindow"`（每個模型） |
+| `none` | 檔案不存在，或是物件但兩處都沒有有效值 | ⚠（可選）~/.claude/settings.json 與這個 shell 的環境變數都沒有有效的設定（其他設定檔沒查）；都沒設時 Claude Code 用它替各模型調的預設視窗。想提早壓縮：`/autocompact <token 數>`（v2.1.288 起只存給當下的模型）或在 settings.json 最上層加 `"autoCompactWindow"`（每個模型）。步驟 4 之後改成這樣寫 |
 | `unknown` | 沒有 jq 也沒有 python3，而檔案裡有 `"autoCompactWindow"` 字樣（沒有字樣回 `none`） | ⚠ 缺 jq 與 python3，疑似有設但無從判定 |
 
 印出的句子只寫事實 F15 的官方原文撐得住的說法（最上層對每個模型、`/autocompact` 存給當下的模型、個別值優先、範圍 100000–1000000、沒設時用替模型調的預設）。「幾萬才壓縮」這類數字不進安裝輸出；量測檔與 README 要提就寫成有出處的單次紀錄（「2026-11-14 在 claude-fable-5-2 量到一次 969,715 才自動壓縮」），不推到別的模型。最上層與個別模型的值不同時實際用哪個，沒有實測，句子照官方原文寫。
@@ -184,6 +184,15 @@ README 要寫的內容（兩份同義）：2026-11-15 量的一件兩段工作�
 - **S2-1 實驗輸入與判準**。檔案：上面那個新目錄的腳本與說明、結果文件的「方法、正確答案、判準」三節。驗證（不寫測試，理由：一次性的量測腳本）：開工前提 1 的那一發；`prepare.py` 產出的 prompt 沒有殘留佔位字串（腳本自己 assert）；`stats.py` 對開工前提那一發的紀錄跑得出一列。commit：`docs: 審查者思考強度實驗的輸入與判準（S2-1）`
 - **S2-2 跑甲部分並寫結果**。驗證：4 發的操作檢查欄都符合該臂；洩題檢查 0 筆；表上每個數字能用 `stats.py` 重算。commit：`docs: 計畫審查審查者 medium 對 low 的結果（S2-2）`
 - **S2-3 跑乙部分、寫結果與結論**。驗證同上（8 發；預算不夠時照開工前提 3 少跑，少跑了哪幾發寫明）。commit：`docs: 步驟 4 審查者 medium 對 low 的結果與結論（S2-3）`
+
+S2 開工前提的結果（2026-11-15；細節與表在 `docs/measurements/2026-11-15-reviewer-effort.md`「開工前提的結果」）：
+- 前提 1：三發探針（第 1 層、第 2 層、有定義檔的 `code-reviewer`）帶 `effort: "low"` 的 subagent，紀錄檔的 `effort` 欄位都是 `low`，`permission_denials` 都是空的。往下做
+- 前提 2：照做，兩臂都明寫。另外查了「medium 是不是現在實際在跑的」：互動式 session 那次 `code-reviewer` 19 個、第 2 層 haiku 25 個全部 `medium`；
+  `claude -p` 裡不帶參數的 `code-reviewer` 是 `xhigh`（n=1，原因沒驗證）。結論只講「明寫 medium 對明寫 low」
+- 前提 4：四份部署檔對 `b1935bb` 的對應檔 `diff -q` 都相同，無污染
+- 跟上面寫的不一樣的兩處（跑之前改、兩臂相同）：乙的審查者任務說明由 `prepare.py` 先寫成檔，父 session 只給一句「先讀哪個檔」（原本寫由 haiku 父 session 自己組 prompt，兩臂的 prompt 會隨它的轉述而不同）；
+  父 session 最後只回一行，不貼報告（報告本來就從紀錄檔讀）
+- 探針費用 0.50 美元，算進 30 美元的累計
 
 ### 要新增的測試清單（全部在 `tests/test-install.sh`）
 
