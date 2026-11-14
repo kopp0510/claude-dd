@@ -338,7 +338,7 @@ autocompact_state() {
 
     if command_exists "jq"; then
         # -s 與「剛好一個頂層物件」的理由同 plugin_enabled_state。
-        # `. * 1`：jq 1.7 起拿數字字面值的原樣比大小，先算一次換成浮點數，結論才跟 python3 的 float 一樣（jq 1.7.1、1.8.1 實測）
+        # `. * 1`：jq 拿數字字面值的原樣比大小，先算一次換成浮點數，結論才跟 python3 的 float 一樣（jq 1.7、1.7.1、1.8.1 實測）
         out=$(jq -r -s '
             def valid: type == "number" and ((. * 1) as $n | $n >= 100000 and $n <= 1000000 and $n == ($n | floor));
             if length != 1 or (.[0] | type) != "object" then error("not a single top-level object")
