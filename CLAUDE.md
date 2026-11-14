@@ -57,11 +57,12 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    乾跑報告說上游「沒寫」的，寫進文件前拿 skill 目錄的每一份 `.md` 找反例：原句 `grep -F` 得到只證明引文存在，不證明缺口是真的
    （2026-11-14 security-audit 有 4 條其實寫在別處，步驟 4 的審查才抓到）。照判準列的分支清單也會漏（同一次漏 5 條），
    列完再拿判準逐段掃一次；條件句的做法寫在配套檔時也要跟過去讀（`skills/security-audit/CLAUDE.md` 分支表的 D17 出處是 Cost budget，另見 RECONNAISSANCE.md）。
-   一次派好幾個沙盒臂或乾跑時，派工 prompt 要它交回短的：第一行結論，接著最多 5 行判定要用的事實（跑了哪條指令與 exit code、建了或沒建哪個檔），
-   過程不要整份貼回來 —— 交回的訊息會整份進主對話的 context（量測見 `docs/measurements/2026-11-14-session-cost.md`）。
-   不要叫 subagent 把報告寫成檔：它的 Write 會被擋下（`Subagents should return findings as text, not write report files`，2026-11-14 五個沙盒臂都被擋），
-   被擋之後有的 agent 交回的那一行照樣附了一個不存在的報告路徑。交回的內容是 agent 自述，結果照樣用指令核對；
-   要看過程細節，用 `jq` 從那個 agent 的紀錄檔（派出時印的 `output_file`）抽要看的那幾段，不要整份讀
+   一次派好幾個沙盒臂或乾跑時，派工 prompt 要它交回短的，過程（讀了什麼、怎麼推的）不要整份貼回來 —— 交回的訊息會整份進主對話的 context
+   （量測見 `docs/measurements/2026-11-14-session-cost.md`）。沙盒臂：第一行結論，接著最多 5 行判定要用的事實（跑了哪條指令與 exit code、建了或沒建哪個檔）。
+   乾跑：上面要它逐條引的原句照樣引，那是要的內容、不算過程。交回的內容是 agent 自述，結果照樣用指令核對。
+   不要叫 subagent 把**報告**寫成檔：2026-11-14 五個沙盒臂（sonnet、fable、opus）用 Write 寫 `report.md` 都被擋下（`Subagents should return findings as text, not write report files`），
+   同一天稍早兩個 haiku 臂寫別的檔名成功過，差在哪沒有查。這只講報告檔：被測的指令本來用 Write、Edit 寫的檔照樣讓它用；
+   要動檔的臂派 general-purpose（Explore、Plan 沒有 Edit、Write）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
    在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
