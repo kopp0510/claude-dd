@@ -57,7 +57,9 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 4. 把 `--plan` 的輸出**整份**原樣列給使用者（每一節都列，含「疑似改寫過的步驟行」「保留的圍欄裡有部分行在清單中」），連同上面那串差異，
    用 **AskUserQuestion** 詢問是否升級。第 3 步有還沒 commit 的修改，就在問題裡說明：它們會跟著留在檔裡，Phase 5 的 commit 會一起送進去
 5. 如果使用者拒絕，保留原樣，結束 Phase 1
-6. 同意 → 跑 `~/.claude/scripts/dd-init-upgrade.sh --apply CLAUDE.md CLAUDE.md.dd-upgrade`（輸出放專案根目錄、固定檔名：Bash 每次呼叫不保留變數，第 7、8 步才找得到它）
+6. 同意 → 跑 `~/.claude/scripts/dd-init-upgrade.sh --apply CLAUDE.md CLAUDE.md.dd-upgrade`（輸出放專案根目錄、固定檔名：Bash 每次呼叫不保留變數，第 7、8 步才找得到它）。
+   exit 非 0 → 不升級，把它印的原因照實告訴使用者。exit 6 是 `CLAUDE.md.dd-upgrade` 已經存在（上次升級沒做完留下的，或不是你建的 symlink）：
+   跑 `ls -l CLAUDE.md.dd-upgrade` 給使用者看它是什麼，問要不要刪掉重跑，不要自己刪
 7. 在 `CLAUDE.md.dd-upgrade` 裡：
    1. 照 Phase 0 結果處理步驟 5 的兩行 `<依偵測結果填入…>`：該填的填成具體指令；不適用的那行刪掉（沒有前端時，playwright 那行連同底下的截圖子項一起刪）；
       `--plan` 的「步驟 5 既有的驗證指令行」已經有同一類指令的，刪掉那一行佔位（那一節也可能列到被改寫過的步驟行，不是驗證指令的不算）；
