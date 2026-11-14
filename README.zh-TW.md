@@ -17,7 +17,7 @@
 
 **適合誰**：每天用 Claude Code、一直在重打同樣的糾正、希望換台機器後這些還在，而且寧可被擋下 commit 也不要文件跟程式碼對不上的個人或小團隊。
 
-**不適合誰**：想要輕量設定的人（gate 會擋你，有時得為一個小改動補寫 `CLAUDE.md`）、還沒有「文件過期是真問題」共識的團隊。另外規則本文、skill 定義與安裝腳本輸出都是繁體中文，要給英語系團隊用得先翻譯全域模板（機制本身與語言無關）。
+**不適合誰**：想要輕量設定的人（gate 會擋你，有時得為一個小改動補寫 `CLAUDE.md`）、還沒有「文件過期是真問題」共識的團隊。另外規則本文、skill 定義與安裝腳本輸出都是繁體中文。機制本身與語言無關，但要給別的語言用，要翻的不只全域模板：`/dd-init` 蓋進專案的那個區塊（與它用的 commit 訊息）、靠逐行比對認出那個區塊的升級腳本、gate 的訊息，以及大部分 skill 的 description（它們兼當觸發詞）也都是中文。
 
 ## 特色
 
@@ -36,7 +36,7 @@
 - **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過、MCP 檢查退化成字串比對，而安裝照樣成功
 - 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
 - 可選：給 `/security-audit` 用的 OS 層沙盒（上游要求它斷外網、只給白名單環境變數、限制資源、只准寫指定的 scratch 路徑）。沒有它時 full audit 不執行目標程式碼，要實跑才能確認的線索停在 `needs_validation`。Claude Code 自帶的 sandbox 能不能滿足這四項沒驗證
-- claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 要先自己裝過一次：`claude plugin install skill-creator@claude-plugins-official`
+- claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 要先自己裝過一次：`claude plugin install skill-creator@claude-plugins-official`。claude-md-management 也不在磁碟上的話，同一種寫法：`claude plugin install claude-md-management@claude-plugins-official`
 
 ### 首次安裝
 
@@ -54,23 +54,35 @@ cd claude-dd
 2. 安裝 14 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
-5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令
+5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令；`installed_plugins.json` 或 `settings.json` 更新不了時（檔案是空的、壞掉、或內容不是剛好一個物件）印警告後跳過。先登記、再啟用，所以登記失敗不會留下一個已啟用的 plugin
 6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
 另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）與 `dd-init-upgrade.sh`（`/dd-init` 升級舊蓋章區塊時分出範本行與自己加的內容）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
+
+### 安裝會改到什麼
+
+跑之前值得先知道的事：
+
+- **同名的檔會被換掉，帶不帶 `--force` 都一樣。** `~/.claude/` 底下已經有跟這個 repo 同名、內容不同的 skill、agent、指令、腳本或輸出風格時，會換成 repo 的版本；舊的先備份到 `~/.claude/backups/pre-install-<時間>/`，結束時印出位置。`--force` 多做的是全域 `CLAUDE.md`：不問直接覆蓋。
+- **兩個設定檔是就地改寫、不備份**：`~/.claude/settings.json` 的 `enabledPlugins`，以及 `~/.claude/plugins/installed_plugins.json` 裡兩個官方 plugin 的登記。只改這幾個鍵，但整個檔會重新輸出，排版可能跟原本不同。
+- **全域模板會改變 Claude 用的語言。** 模板一旦寫入（全新機器在第 7 步答 `y`；本機已有不同版本時選 `o`，或選 `s` 之後答 `y`；或帶 `--force`），它要求 Claude 用繁體中文回覆，commit 訊息也用繁體中文（專案另有規定時照專案）。`/dd-init` 也會用一筆中文訊息的 commit 把它的改動送進你的專案。
+- **有兩個 hook 會變成全域的**，因為它們跟著 skill 一起裝：`gate-guard`（每次 Bash 呼叫之前；見下方 gate 的規則）與 `self-improving-agent` 的錯誤擷取（每次 Bash 呼叫之後 —— 它比對的是指令輸出的文字、不是結束碼，所以成功的指令只要印了 `error:` 或 `failed`，也會被插一段提醒進對話）。
+- **在哪些環境跑過**：CI 在 `ubuntu-latest` 與 `macos-latest`（系統的 `/bin/bash` 3.2）上跑測試。Windows 沒有測過。Claude Code 比 2.1.154 舊時安裝腳本會警告、照樣繼續。
 
 ### 安裝選項
 
 ```bash
 ./install-dd-pipeline.sh --help              # 顯示幫助
 ./install-dd-pipeline.sh --check             # 只檢查環境（不安裝）
-./install-dd-pipeline.sh --force             # 強制重新安裝（覆蓋現有檔案）
+./install-dd-pipeline.sh --force             # 全域 CLAUDE.md 也不問直接覆蓋（其餘檔案本來就會更新）
 ./install-dd-pipeline.sh --commands-only     # 只安裝 Commands
 ./install-dd-pipeline.sh --update            # 更新 skills/agents
-./install-dd-pipeline.sh --uninstall         # 解除安裝（本 repo 部署過的項目）
+./install-dd-pipeline.sh --uninstall         # 解除安裝（本 repo 部署過的項目；留下什麼見下方）
 ./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
+
+`--uninstall` 移除這個 repo 部署的 skill、agent、指令、腳本與輸出風格，跟著 skill 一起裝的兩個全域 hook 也一併移除。它不動你的全域 `CLAUDE.md`、`~/.claude/backups/`，也不動 `/dd-init` 放進各專案的東西（蓋章區塊與 pre-commit hook）。那些 hook 還在，但它們呼叫的 gate 腳本已經刪掉，之後每次 commit 只印一行警告、不再檢查就放行。另外它會把 claude-md-management 與 skill-creator 從 `settings.json` 的 `enabledPlugins` 與 `installed_plugins.json` 拿掉，就算是你在裝這個 repo 之前自己裝的也一樣；其他 plugin 不動。這一步要有 `jq` 或 `python3`、而且檔案解析得了，否則只印出要你手動移除什麼。
 
 ## 升級
 
@@ -120,6 +132,15 @@ git pull && ./install-dd-pipeline.sh --force
 
 ![claude-dd 使用流程](diagrams/claude-dd-usage-flow.zh-TW.gif)
 
+### 審查那一步要花多少
+
+步驟 4 是最貴的一步。該段有人工寫的程式碼時，主對話至少派 3 個審查者，本 repo 部署的 `agents/code-reviewer.md` 定義的 model 是 opus；diff 全是資料、設定、註解或文件，或已被機械檢查完全覆蓋時不派。手上有兩組量測，量的不是同一件事，也都不是「每段要花多少」：
+
+- **單個審查者的耗時**：2026-10-23 從維護者自己的 session 紀錄（約前 30 天）取出 311 次審查者執行，中位 11.8 分、第 90 百分位 27.7 分。這是 wall time：含模型思考與工具執行；被喚醒續跑過的審查，中間閒置的時間也算在裡面。
+- **一整次審查的費用**：只有 2026-10-24 一次小樣本的對照 —— 現行做法（主對話直接派 opus 審查者）4 發平均 269 秒、每發 5.13 美元。拿來比的另一種做法同時差了三件事，所以只看得出方向，不能拿來估預算。
+
+兩組都在 `docs/measurements/2026-10-23-reviewer-real-sessions.md`，方法與限制寫在裡面。
+
 ### CLAUDE.md 維護規則（pre-commit gate 強制）
 
 - 每個含程式碼的資料夾都要有 CLAUDE.md；改碼時同批更新。逐層堆疊更新上層是 §3.9 的規則，**gate 不檢查** —— 它只看改到程式碼的那一層，上層過期不會有任何訊號
@@ -164,7 +185,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
   *對策*：要改那個目錄的程式碼就得先讀檔，一讀就重新載入。
   *殘餘*：只剩 compact 後完全沒讀檔就憑記憶改碼這種情況。
 
-如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要裝 gate。8 步迴圈沒有它一樣能跑。
+如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要掛 gate：gate 只在 `/dd-init` 掛過 hook 的專案才會跑，那個專案不要跑 `/dd-init` 就好。8 步迴圈照樣由全域模板 §3.9 帶著走。有兩件事不管怎樣都還在：`gate-guard` 在每個專案都會擋 Claude 用 `--no-verify` commit；§3.9 仍會要求更新巢狀 `CLAUDE.md`（只是文字，沒有東西強制）。
 
 ## 指令一覽
 

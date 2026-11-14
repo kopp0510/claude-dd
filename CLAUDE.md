@@ -7,7 +7,7 @@
 ## 安裝 / 更新
 
 ```bash
-./install-dd-pipeline.sh                    # 首次安裝
+./install-dd-pipeline.sh                    # 首次安裝；重跑時差異檔一樣會覆蓋（先備份），只有全域 CLAUDE.md 會先問
 ./install-dd-pipeline.sh --force            # 更新：差異檔覆蓋（內容相同不重寫）；全域 CLAUDE.md 跳過詢問直接覆蓋（先備份）
 ./install-dd-pipeline.sh --check            # 只檢查環境
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）
