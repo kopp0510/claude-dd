@@ -361,6 +361,11 @@ T2_PLUGIN_JSON='{"version":"9.9.9"} {}'
 t2_case install   j-multi         "@absent" "@absent" "@absent" "${OFFICIAL_PLUGINS[0]}: .*都取不到版本字串" "${OFFICIAL_PLUGINS[0]} \\(v"
 T2_PLUGIN_JSON="${T2_BOM}{\"version\":\"1.2.3\"}"
 t2_case install   j-bom           "@absent" "@absent" "@absent" "${OFFICIAL_PLUGINS[0]} \\(v1\\.2\\.3\\): .*已啟用"
+# plugin.json 沒有 version（官方 skill-creator 就是這樣）→ 改讀 installed_plugins.json 裡 Claude Code 自己記的值；
+# 那份不只一個 JSON 值時讀不到、照樣算沒有版本
+T2_PLUGIN_JSON='{"name":"no-version-here"}'
+t2_case install   j-noversion     "@absent" "{\"plugins\":{\"$T2_KEY\":[{\"version\":\"85cce0381e78\",\"installPath\":\"/old\",\"installedAt\":\"A\",\"lastUpdated\":\"B\"}]}}" "@absent" "${OFFICIAL_PLUGINS[0]} \\(v85cce0381e78\\): .*已啟用${NL}/cache/[^\"]+/85cce0381e78\"" '取不到版本'
+t2_case install   j-nover-multi   "@absent" "{\"plugins\":{\"$T2_KEY\":[{\"version\":\"85cce0381e78\"}]}} {}" "@absent" "${OFFICIAL_PLUGINS[0]}: .*都取不到版本字串" "${OFFICIAL_PLUGINS[0]} \\(v"
 T2_PLUGIN_JSON=""
 
 # ~/.claude.json 的各種內容 × mcp_scope。解析不了、頂層不是物件、或不只一個 JSON 值 → unparseable（無從判定），不可以講成 none（確定沒有）
