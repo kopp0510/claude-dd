@@ -85,3 +85,26 @@ HOME="$UN_SANDBOX" ./install-dd-pipeline.sh --uninstall --yes < /dev/null
 [ ! -e "$UN_SANDBOX/.claude/output-styles/adhd.md" ]
 [ -f "$UN_SANDBOX/.claude/output-styles/mine.md" ]
 echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"
+
+# ---------------------------------------------------------------------------
+# 以下各組（T1–T9）在 2026-11-14 補上：碰設定檔、備份與完成訊息的路徑。
+# 斷言失敗時一律印出「組名＋斷言名」再 exit 1 —— 上面那些裸 [ … ] 在 set -e 下失敗不印任何字。
+# ---------------------------------------------------------------------------
+
+# --- T1 開始（這一段自足：GNU 容器裡用 sed 把這兩行註解之間抽出來單獨跑，見 tests/CLAUDE.md）
+# 全域 CLAUDE.md 是指向別處的 symlink（dotfiles 管理的常見擺法）時，--force 覆蓋前備份的要是它指到的內容。
+# GNU 的 cp -r 只複製連結本身，接著 cp 寫穿連結，備份讀出來就變成新內容；macOS 的 cp -r 會跟著連結，所以這組在 macOS 本來就綠。
+T1_HOME=$(mktemp -d "${WORK:-${TMPDIR:-/tmp}}/t1.XXXXXX")
+mkdir -p "$T1_HOME/.claude" "$T1_HOME/dotfiles"
+printf '我自己的全域規則\n' > "$T1_HOME/dotfiles/CLAUDE.md"
+ln -s "$T1_HOME/dotfiles/CLAUDE.md" "$T1_HOME/.claude/CLAUDE.md"
+HOME="$T1_HOME" ./install-dd-pipeline.sh --force < /dev/null > "$T1_HOME/out.txt" 2>&1 \
+    || { echo "❌ T1：--force 安裝失敗"; cat "$T1_HOME/out.txt"; exit 1; }
+t1_bak=$(find "$T1_HOME/.claude/backups" -path '*/global/CLAUDE.md' 2>/dev/null | head -1)
+[ -n "$t1_bak" ] || { echo "❌ T1：找不到全域 CLAUDE.md 的備份"; exit 1; }
+[ "$(cat "$t1_bak")" = "我自己的全域規則" ] \
+    || { echo "❌ T1：備份的內容不是原本的內容（備份第一行：$(head -1 "$t1_bak")）"; exit 1; }
+cmp -s templates/global/CLAUDE.md "$T1_HOME/.claude/CLAUDE.md" \
+    || { echo "❌ T1：--force 之後全域 CLAUDE.md 不是模板內容"; exit 1; }
+echo "✅ T1 全域 CLAUDE.md 是 symlink 時，--force 覆蓋前備份的是它指到的內容"
+# --- T1 結束

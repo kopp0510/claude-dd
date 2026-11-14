@@ -24,7 +24,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | TODO | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | |
+| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | IN_PROGRESS | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | 28663da.. |
 | S2 | 兩份 README：陌生人裝之前該知道的事 | TODO | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
