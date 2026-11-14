@@ -1,5 +1,6 @@
 #!/bin/bash
-# /dd-init 寫檔不跟 symlink 的沙盒臂 fixture（Y 是答「要」的臂：CLAUDE.md 指向專案裡的 AGENTS.md）。用法：setup.sh <臂> <BASE> <claude-dd repo 根目錄>
+# /dd-init 寫檔不跟 symlink 的沙盒臂 fixture（Y、Y5、YD 是答「要」的臂：CLAUDE.md 指向專案裡的 AGENTS.md，YD 的 AGENTS.md 還不存在；
+# AO 同 A，另放 9584605 那版沒有 exit 6 的升級腳本 <BASE>/AO/old-upgrade.sh）。用法：setup.sh <臂> <BASE> <claude-dd repo 根目錄>
 # 建 <BASE>/<臂>/repo（拋棄式專案）與 <BASE>/<臂>/outside（專案外的假檔，建好就 chmod 644），
 # 最後在 <BASE>/<臂>/before.txt 記下專案外每個檔的 sha 與權限，給 check.sh 比對。
 set -eu
@@ -9,20 +10,22 @@ D="$BASE/$ARM"; R="$D/repo"; X="$D/outside"
 mkdir -p "$R" "$X"
 gitinit() { git -C "$R" init -q; git -C "$R" config user.email t@example.invalid; git -C "$R" config user.name t; }
 commit() { git -C "$R" add -A; git -C "$R" commit -q -m fixture; }
-old_block() { { printf '# 專案\n\n專案自己的說明。\n\n'; git -C "$DD" show v1.6.4:commands/dd-init.md | awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f'; }; }
+project_intro() { printf '# 專案\n\n專案自己的說明。\n'; }
+old_block() { project_intro; echo; git -C "$DD" show v1.6.4:commands/dd-init.md | awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f'; }
 pkg_react() { printf '{\n  "name": "fixture",\n  "dependencies": { "react": "^18.3.1" }\n}\n' > "$R/package.json"; }
 pkg_plain() { printf '{\n  "name": "fixture",\n  "bin": { "fixture": "cli.js" }\n}\n' > "$R/package.json"; printf '#!/usr/bin/env node\nconsole.log("hi")\n' > "$R/cli.js"; }
 GATE='if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]; then "$HOME/.claude/scripts/check-claude-md.sh" || exit 1; else echo "⚠️ CLAUDE.md gate 沒執行：找不到 ~/.claude/scripts/check-claude-md.sh，這次 commit 沒檢查改到程式碼的目錄有沒有同批更新 CLAUDE.md（沒裝 claude-dd 的協作者可忽略；要恢復檢查請重新安裝 claude-dd）" >&2; fi'
 NOTE='# CLAUDE.md gate — 由 /dd-init 安裝；規則：改碼目錄需有 CLAUDE.md 且同批更新'
 
 case "$ARM" in
-  A)  gitinit; pkg_plain; old_block > "$R/CLAUDE.md"; commit
-      printf '專案外的檔\n' > "$X/target.md"; ln -s "$X/target.md" "$R/CLAUDE.md.dd-upgrade" ;;
+  A|AO) gitinit; pkg_plain; old_block > "$R/CLAUDE.md"; commit
+      printf '專案外的檔\n' > "$X/target.md"; ln -s "$X/target.md" "$R/CLAUDE.md.dd-upgrade"
+      [ "$ARM" = A ] || { git -C "$DD" show 9584605:scripts/dd-init-upgrade.sh > "$D/old-upgrade.sh"; chmod +x "$D/old-upgrade.sh"; } ;;
   B)  gitinit; pkg_react; commit
       printf 'node_modules/\n' > "$X/gitignore"; mkdir "$X/shots"
       ln -s "$X/gitignore" "$R/.gitignore"; ln -s "$X/shots" "$R/.screenshots" ;;
   C)  gitinit; pkg_plain; commit
-      printf '# 專案\n\n專案自己的說明。\n' > "$X/claude.md"; ln -s "$X/claude.md" "$R/CLAUDE.md" ;;
+      project_intro > "$X/claude.md"; ln -s "$X/claude.md" "$R/CLAUDE.md" ;;
   C2) gitinit; pkg_plain; commit; ln -s "$X/nope.md" "$R/CLAUDE.md" ;;
   D)  gitinit; pkg_plain; commit; old_block > "$X/claude.md"; ln -s "$X/claude.md" "$R/CLAUDE.md" ;;
   E)  gitinit; pkg_plain; commit; rm -f "$R/.git/hooks/pre-commit"; ln -s "$X/nope-hook" "$R/.git/hooks/pre-commit" ;;
@@ -32,9 +35,10 @@ case "$ARM" in
   G2) gitinit; pkg_plain; commit
       printf '#!/bin/sh\n%s\n%s\necho hi\n' "$NOTE" "$GATE" > "$X/hook"; ln -s "$X/hook" "$R/.git/hooks/pre-commit" ;;
   I)  gitinit; pkg_plain; commit; mkdir "$X/hooksdir"; ln -s "$X/hooksdir" "$R/.githooks"; git -C "$R" config core.hooksPath .githooks ;;
-  Y)  gitinit; pkg_plain; printf '# 專案\n\n專案自己的說明。\n' > "$R/AGENTS.md"; ln -s AGENTS.md "$R/CLAUDE.md" ;;   # 連結在專案裡，答「要」
+  Y|Y5) gitinit; pkg_plain; project_intro > "$R/AGENTS.md"; ln -s AGENTS.md "$R/CLAUDE.md" ;;   # 連結在專案裡，答「要」
+  YD) gitinit; pkg_plain; commit; ln -s AGENTS.md "$R/CLAUDE.md" ;;   # 懸空、連結目標在專案裡，答「要」
   K1) gitinit; pkg_react; commit ;;
-  K2) pkg_react; printf '# 專案\n\n專案自己的說明。\n' > "$R/CLAUDE.md" ;;
+  K2) pkg_react; project_intro > "$R/CLAUDE.md" ;;
   K3) gitinit; pkg_plain; commit; rm -f "$R/.git/hooks/pre-commit" ;;
   *)  echo "❌ 不認得的臂：${ARM}" >&2; exit 1 ;;
 esac

@@ -28,7 +28,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
    - 根目錄或第一層子目錄的 `package.json`，其 `dependencies` 或 `devDependencies` 有 `react`；新專案則是使用者回答用 React → React 專案（Phase 1 要加 React 那段）
 
 3. **檢查 CLAUDE.md 是否存在**（判斷之前先照下面「寫檔前：先看目標是不是 symlink」那節檢查 `CLAUDE.md`；
-   懸空的 symlink 算 symlink、不算不存在；使用者答「不要」就跳過 Phase 1）：
+   懸空的 symlink 也要問、不能當成不存在；使用者答「不要」就跳過 Phase 1，答「要」就拿連結目標判斷存不存在）：
    - 存在 → 補充模式（加在哪、要不要升級，照 Phase 1 的判斷）
    - 不存在 → 建立模式（現有專案先派 **Task**（subagent_type: `Explore`）分析技術棧與目錄結構，新專案用 **AskUserQuestion** 問專案類型/技術棧/名稱）
 
@@ -37,36 +37,46 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 專案可能是 clone 來的，裡面事先放好的 symlink 會讓 Phase 1–3 的寫入落到專案外，或拆掉專案刻意建的連結
 （例如 `CLAUDE.md` 指向 `AGENTS.md`）。下面每個「要檢查的路徑」，寫之前用 Bash 檢查兩件事：
 
-- `[ -L <路徑> ]`：路徑本身是不是 symlink。懸空的 symlink（指向不存在的檔）也要抓到 —— `[ -e ]` 與 Glob 都把它當成不存在，
-  Phase 0 第 3 步就會走建立模式，Write 跟著連結在專案外建檔
-- 父目錄解析後還在專案裡：`cd "$(dirname <路徑>)" && pwd -P` 的輸出等於專案根目錄、或以「專案根目錄 + `/`」開頭。
+- `[ -L <路徑> ] && echo 是 symlink || echo 不是 symlink`：路徑本身是不是 symlink。懸空的 symlink（指向不存在的檔）也要抓到 ——
+  `[ -e ]` 與 Glob 都把它當成不存在，Phase 0 第 3 步就會走建立模式
+- 父目錄解析後還在專案裡：`(cd "$(dirname <路徑>)" && pwd -P)` 的輸出等於專案根目錄、或以「專案根目錄 + `/`」開頭。
+  括號不能省：主對話的 Bash 會把 `cd` 留到下一次呼叫，之後用相對路徑的指令就跑錯目錄。
   專案根目錄在 git repo 裡是 `git rev-parse --show-toplevel`，不在 git repo 裡（Phase 1、2 也支援空目錄的新專案）是專案根目錄的 `pwd -P`
 
 要檢查的路徑：
 
-- Phase 1：`CLAUDE.md`，建立、補充、兩種升級都算，在 Phase 0 第 3 步判斷模式之前檢查。
-  升級的輸出檔 `CLAUDE.md.dd-upgrade` 由升級腳本自己擋（已經存在就 exit 6）；第 8 步的備份檔名帶秒級時間戳，不用檢查
+- Phase 1：`CLAUDE.md`，建立、補充、各種升級都算，在 Phase 0 第 3 步判斷模式之前檢查。
+  升級的輸出檔 `CLAUDE.md.dd-upgrade` 由「用升級腳本升級」第 6 步在跑 `--apply` 之前先看（新版升級腳本自己也會擋：已經存在就 exit 6；舊版不會）；
+  第 8 步的備份檔名帶秒級時間戳，不用檢查
 - Phase 2：`.screenshots`、`.gitignore`
-- Phase 3：husky v9 換成的 `.husky/pre-commit`。其他掛載點由 Phase 3 第 2 步檢查：`git rev-parse --git-path` 印的是解析過 symlink 的路徑，
+- Phase 3：husky v9 換成的 `.husky/pre-commit`；git 舊於 2.31 時的掛載點（見 Phase 3 第 2 步）。其他掛載點由 Phase 3 第 2 步檢查：
+  `git rev-parse --path-format=absolute --git-path` 印的是解析過 symlink 的路徑（解析靠的是 `--path-format=absolute`；只寫 `--git-path` 印的是沒解析的相對路徑），
   連結指到 repo 外時，印出來的路徑就在 repo 外（2026-11-14 git 2.42.0、2.39.5 實測：`.git/hooks/pre-commit`、`core.hooksPath` 目錄、目錄裡的檔、懸空連結都是）
 
 任一條不成立就先不寫：
 
-- `ls -l <路徑>`（父目錄那條不成立就 `ls -ld <父目錄>`）的輸出給使用者看，用 **AskUserQuestion** 問要不要照寫。問句寫出照寫的後果：
-  - 建立、補充（Edit）、`>>`、`mkdir`、插入：改到的是連結目標；目標在專案外，就是改專案外的檔
-  - 升級（第 8 步的 `mv`）：用一般檔取代連結本身。連結被拆掉、連結目標不會更新，連結目標原本的內容會在 Phase 5 以一般檔進 repo。
+- `ls -ld <路徑>`（父目錄那條不成立就 `ls -ld <父目錄>`）的輸出給使用者看，用 **AskUserQuestion** 問要不要照寫。問句寫出照寫的後果：
+  - 建立、補充（Edit）、`>>`、插入、搬位置／換寫法、`chmod`、6step／7step／手寫版的升級（Edit 原地改）：改到的是連結目標；目標在專案外，就是改專案外的檔
+  - 用升級腳本升級（第 8 步的 `mv`）：用一般檔取代連結本身。連結被拆掉、連結目標不會更新，連結目標原本的內容會在 Phase 5 以一般檔進 repo。
     建議改成對連結目標所在的專案跑 `/dd-init`
-  - `.gitignore`：git 不讀 symlink 的 `.gitignore`（2026-11-14 git 2.42.0 實測：`git status` 印 `Too many levels of symbolic links`，
-    裡面的規則沒有套用），照寫也擋不住截圖進版控
+  - `.screenshots`：`mkdir -p` 對已經存在的連結不做事（懸空的會失敗），後果在之後 —— 蓋章區塊要之後的 session 把截圖一律存進 `.screenshots/`，
+    截圖就存進連結目標
+  - `.gitignore`：新版 git 不讀 symlink 的 `.gitignore`（2026-11-14 實測：git 2.42.0、2.39.5 印 `Too many levels of symbolic links`、
+    裡面的規則沒有套用；git 2.30.6 會讀），照寫也擋不住截圖進版控
+- 答「要」：對連結目標的路徑照原本的步驟寫，原本用 Write、Edit 的照樣用 Write、Edit（拒絕的只有連結本身的路徑）；升級照第 8 步的 `mv`，它取代的是連結本身，問句已講過。連結目標還不存在（懸空的 `CLAUDE.md`）
+  就照建立模式，對連結目標的路徑用 Write。Phase 5 要 commit 的是連結目標：目標在專案裡，Phase 5 指令區塊裡的那個路徑換成目標（相對專案根目錄的路徑）；
+  目標在專案外，那個路徑從 Phase 5 拿掉，告知使用者這次改的是專案外的檔、不會進這個 repo。
+  用升級腳本升級的例外：第 8 步的 `mv` 之後 `CLAUDE.md` 已經是一般檔，Phase 5 照原樣 commit 它
 - 答「不要」：
   - Phase 1 → `CLAUDE.md` 這次不蓋章，告知使用者；Phase 5 指令區塊裡的 `CLAUDE.md` 拿掉（拿掉後沒有要 commit 的檔就跳過 Phase 5）；Phase 2、3 照常
-  - Phase 2 → 只跳過那個路徑對應的那一行，另一行照做；告知使用者
+  - Phase 2 → 只跳過那個路徑對應的那一行，另一行照做；告知使用者。`.screenshots` 答「不要」擋不住之後的截圖：一併告知使用者，
+    要擋就自己把這個連結換成專案裡的目錄、再重跑 `/dd-init`（不要替他刪）
   - Phase 3 → 算第 5 步的「使用者選擇不裝」
 - Phase 1 的這一題排在升級的「是否升級」之前；Phase 3 第 2 步已經為同一個掛載點問過、使用者答「要」的，這裡不再問
 
-Write、Edit 遇到 symlink 會拒絕，並建議改寫連結目標的路徑（2026-11-14 Claude Code 2.1.325 實測）。還沒問、或使用者答「不要」時，
+Write、Edit 遇到 symlink（含懸空的）會拒絕，並建議改寫連結目標的路徑（2026-11-14 Claude Code 2.1.325 實測）。還沒問、或使用者答「不要」時，
 不要照那個建議改寫目標，也不要改用 Bash（`cat >`、`sed -i`、heredoc）繞過 —— 這個拒絕不是防護：直接拿連結目標的路徑呼叫 Write、Edit，
-或用 Bash 寫，都不會被擋。使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫（升級照第 8 步的 `mv`，它取代的是連結本身，問句已講過）
+或用 Bash 寫，都不會被擋
 
 ### Phase 1: 蓋章開發迴圈到專案 CLAUDE.md
 
@@ -94,9 +104,11 @@ Write、Edit 遇到 symlink 會拒絕，並建議改寫連結目標的路徑（2
 4. 把 `--plan` 的輸出**整份**原樣列給使用者（每一節都列，含「疑似改寫過的步驟行」「保留的圍欄裡有部分行在清單中」），連同上面那串差異，
    用 **AskUserQuestion** 詢問是否升級。第 3 步有還沒 commit 的修改，就在問題裡說明：它們會跟著留在檔裡，Phase 5 的 commit 會一起送進去
 5. 如果使用者拒絕，保留原樣，結束 Phase 1
-6. 同意 → 跑 `~/.claude/scripts/dd-init-upgrade.sh --apply CLAUDE.md CLAUDE.md.dd-upgrade`（輸出放專案根目錄、固定檔名：Bash 每次呼叫不保留變數，第 7、8 步才找得到它）。
-   exit 非 0 → 不升級，把它印的原因照實告訴使用者。exit 6 是 `CLAUDE.md.dd-upgrade` 已經存在（上次升級沒做完留下的，或不是你建的 symlink）：
-   跑 `ls -l CLAUDE.md.dd-upgrade` 給使用者看它是什麼，問要不要刪掉重跑，不要自己刪
+6. 同意 → 先看輸出檔在不在：`{ [ -e CLAUDE.md.dd-upgrade ] || [ -L CLAUDE.md.dd-upgrade ]; } && echo 已經存在 || echo 不存在`。
+   已經存在（上次升級沒做完留下的，或不是你建的 symlink）→ 不升級：跑 `ls -ld CLAUDE.md.dd-upgrade` 給使用者看它是什麼，問要不要刪掉重跑，不要自己刪。
+   這一步不能省：舊版升級腳本不會自己擋（用 `--commands-only` 更新的人手上可能是舊版腳本）。
+   不存在 → 跑 `~/.claude/scripts/dd-init-upgrade.sh --apply CLAUDE.md CLAUDE.md.dd-upgrade`（輸出放專案根目錄、固定檔名：Bash 每次呼叫不保留變數，第 7、8 步才找得到它）。
+   exit 非 0 → 不升級，把它印的原因照實告訴使用者；exit 6 一樣是輸出檔已經存在，照上面處理
 7. 在 `CLAUDE.md.dd-upgrade` 裡：
    1. 照 Phase 0 結果處理步驟 5 的兩行 `<依偵測結果填入…>`：該填的填成具體指令；不適用的那行刪掉（沒有前端時，playwright 那行連同底下的截圖子項一起刪）；
       `--plan` 的「步驟 5 既有的驗證指令行」已經有同一類指令的，刪掉那一行佔位（那一節也可能列到被改寫過的步驟行，不是驗證指令的不算）；
@@ -196,15 +208,19 @@ if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]; then "$HOME/.claude/script
    （不認得段落起點參數：沒有 staged 時什麼都不印，有 staged 程式碼時照常擋 commit），
    提示到 claude-dd repo 跑 `git pull && ./install-dd-pipeline.sh --force` 更新，掛載照常進行
 2. 找掛載點：`git rev-parse --path-format=absolute --git-path hooks/pre-commit`（git 2.31 起；在子目錄跑也回絕對路徑，
-   有設 `core.hooksPath` 時回該目錄下的 `pre-commit`）。以下情況先處理：
+   有設 `core.hooksPath` 時回該目錄下的 `pre-commit`；它會解析 symlink，下面「不在 repo 裡」那條靠的就是這點）。
+   印出來的要剛好一行、以 `/` 開頭；不是的話是 git 舊於 2.31（2026-11-14 git 2.30.6 實測：先印 `--path-format=absolute` 這個字串、
+   下一行印沒解析的 `.git/hooks/pre-commit`，exit 0）—— 改用 `git rev-parse --git-path hooks/pre-commit` 印的相對路徑當掛載點，
+   它沒有解析 symlink，寫之前照「寫檔前：先看目標是不是 symlink」那節檢查它。以下情況先處理：
    - `core.hooksPath` 是 `/dev/null` → 使用者刻意關掉了所有 hook：告知 gate 不會生效，跳過本 Phase
    - `core.hooksPath` 以 `.husky/_` 結尾（husky v9）→ 掛載點改成 repo 根目錄的 `.husky/pre-commit`：
      `.husky/_/` 底下是 husky 產生、每次 `npm install` 都會重寫的檔，使用者寫的 hook 在 `.husky/pre-commit`。
      這個路徑沒有被解析過，照「寫檔前：先看目標是不是 symlink」那節檢查
    - 掛載點不在 repo 裡，或 `git config --show-scope --get core.hooksPath` 印的是 `global` → 先問使用者要不要裝在那裡，
-     不要就跳過本 Phase 並告知 gate 沒裝。「不在 repo 裡」看的是上面那行指令**印出來的路徑**在不在 `git rev-parse --show-toplevel` 底下，
-     不是看 `.git/hooks/pre-commit` 這個名字：那行指令會解析 symlink，所以 `.git/hooks/pre-commit` 或 `core.hooksPath` 目錄是指到 repo 外的 symlink 時，
-     印出來的就是 repo 外的路徑，一樣要問（那可能是多個 repo 共用的檔或目錄）。問句附上印出來的路徑，掛載點是 symlink 時一併附 `ls -l` 的結果
+     不要就跳過本 Phase 並告知 gate 沒裝。「不在 repo 裡」看的是上面那行指令**印出來的路徑**在不在 `git rev-parse --show-toplevel` 底下
+     （等於它、或以它加 `/` 開頭；`/w/app-shared/…` 不在 `/w/app` 底下），不是看 `.git/hooks/pre-commit` 這個名字：那行指令會解析 symlink，
+     所以 `.git/hooks/pre-commit` 或 `core.hooksPath` 目錄是指到 repo 外的 symlink 時，印出來的就是 repo 外的路徑，一樣要問（那可能是多個 repo 共用的檔或目錄）。
+     問句附上印出來的路徑，掛載點是 symlink 時一併附 `ls -ld <沒解析的路徑>`（`.git/hooks/pre-commit`，或 `core.hooksPath` 目錄）的結果
 3. 看掛載點與專案，**依序**找第一個符合的分支：
    - **pre-commit 套件管理 hook**（掛載點的檔有 `File generated by pre-commit`，或 repo 根目錄有 `.pre-commit-config.yaml`）→
      **不要把 gate 加進 hook 檔**：`pre-commit install` 會把它整個重寫。hook 檔、以及旁邊的 `pre-commit.legacy`
@@ -291,7 +307,7 @@ if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]; then "$HOME/.claude/script
 
 ### Phase 5: Git commit
 
-在 git repo 中時：
+在 git repo 中時（「寫檔前：先看目標是不是 symlink」那節答過「要」或「不要」的，先照那節換掉或拿掉下面區塊裡的路徑）：
 
 ```bash
 git add CLAUDE.md
@@ -347,6 +363,9 @@ fi
 每個功能段落走一圈。gate 把關的是「改碼的那一層有沒有 CLAUDE.md、有沒有同批更新」；
 逐層往上堆疊更新是 §3.9 的工作流規則，gate 不檢查，上層過期不會有任何訊號。
 ```
+
+「已設定」只列實際做了的：「寫檔前」那節答「不要」跳過的、Phase 3 使用者選擇不裝的，那一行改寫成沒設定與原因
+（例如 `CLAUDE.md — 沒蓋章：它是指到專案外的 symlink`），不要照抄成已設定。
 
 ---
 
