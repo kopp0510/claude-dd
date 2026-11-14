@@ -27,7 +27,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | DONE | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | 28663da..490f7b6 |
-| S2 | 兩份 README：陌生人裝之前該知道的事 | IN_PROGRESS | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | 00955e2.. |
+| S2 | 兩份 README：陌生人裝之前該知道的事 | DONE | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | 00955e2..3371c33 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -184,6 +184,8 @@
   - 另外三處還寫「只移除本 repo 部署過的項目」→ 架構文件、`--help`、README 註解一起改
   - 別處「缺腳本就跑 `--force`」的提示 → 部分採納：只把 `--force` 的說明寫清楚是例行更新用；`commands/`、`skills/`、`scripts/` 那幾處提示不改（它們要的就是例行更新，而且改它們要另做沙盒乾跑）
 - 步驟 5：`/bin/bash tests/test-install.sh` rc=0，本機照 ci.yml 逐 step 跑 20 個全過
+- 步驟 7：沒有另外要寫的
+- 步驟 8：範圍是根目錄 CLAUDE.md 與 `tests/CLAUDE.md` 這一段動到的三行，逐行對程式碼與測試檔核過，沒有要改的
 - 已知、這次沒處理：
   - `commands/dd-init.md` Phase 4 寫「`--force`（腳本會裝）」，但安裝腳本只登記已經在磁碟上的 plugin、不會下載
   - 四件沒查的外部行為：skill 目錄的 hook 被刪掉後執行中的 session 何時失效；`installPath` 指到不存在的 cache 目錄時 Claude Code 怎麼處理；`gate-guard@skills-dir` 這類鍵會不會被寫進 `settings.json`；skill 目錄的 hook 自動載入要的最低版本
