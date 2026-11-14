@@ -8,7 +8,8 @@ home = os.path.expanduser("~")
 PAT = re.compile(r"scratchpad|/tmp/|/private/|\.\./")
 for run in sys.argv[2:]:
     g = run.split("-")[0]
-    pdir = os.path.join(home, ".claude", "projects", re.sub(r"[^A-Za-z0-9]", "-", os.path.join(w, run)))
+    snap = os.path.join(w, run)
+    pdir = os.path.join(home, ".claude", "projects", re.sub(r"[^A-Za-z0-9]", "-", snap))
     files = [(json.load(open(m)).get("description", "?"), m.replace(".meta.json", ".jsonl")) for m in glob.glob(pdir + "/*/subagents/agent-*.meta.json")]
     files += [("父", s) for s in glob.glob(pdir + "/*.jsonl")]
     n = 0
@@ -20,8 +21,8 @@ for run in sys.argv[2:]:
             for b in c if isinstance(c, list) else []:
                 if not isinstance(b, dict) or b.get("type") != "tool_use" or b.get("name") in ("Agent", "SubagentHandback"): continue
                 j = json.dumps(b.get("input"), ensure_ascii=False).replace(pdir, "<OWN>")
-                for p, tag in ((os.path.join(w, run) + "/", "<SNAP>/"), (os.path.join(w, run) + '"', '<SNAP>"'), (os.path.join(w, run) + " ", "<SNAP> "),
-                               (os.path.join(w, run) + "\\n", "<SNAP>\\n"), (os.path.join(w, "prompts", run + "."), "<PROMPT>."), (os.path.join(w, g) + "/", "<DIFF>/")):
+                for p, tag in ((snap + "/", "<SNAP>/"), (snap + '"', '<SNAP>"'), (snap + " ", "<SNAP> "),
+                               (snap + "\\n", "<SNAP>\\n"), (os.path.join(w, "prompts", run + "."), "<PROMPT>."), (os.path.join(w, g) + "/", "<DIFF>/")):
                     j = j.replace(p, tag)
                 k = PAT.search(j)
                 if not k: continue

@@ -56,8 +56,9 @@ def leaky(w, run, name, i, own):
     roots = {w, os.path.realpath(w)}
     i = i.replace(own, "<OWN>")
     for r in roots:
+        snap = os.path.join(r, run)
         # 結尾帶分隔字元再比：G2/ 不可以吃掉 G2-low-1 的開頭
-        for p, tag in ((os.path.join(r, run) + "/", "<SNAP>/"), (os.path.join(r, run) + '"', '<SNAP>"'), (os.path.join(r, run) + " ", "<SNAP> "),
+        for p, tag in ((snap + "/", "<SNAP>/"), (snap + '"', '<SNAP>"'), (snap + " ", "<SNAP> "),
                        (os.path.join(r, "prompts", run + "."), "<PROMPT>."), (os.path.join(r, g) + "/", "<DIFF>/")):
             i = i.replace(p, tag)
     if any(r in i for r in roots): return True
@@ -74,8 +75,12 @@ def run_stats(w, run, dump):
     snap = os.path.join(w, run)
     pdir = os.path.join(os.path.expanduser("~/.claude/projects"), enc(snap))
     errs, notes = [], []
-    res = [o for o in read_jsonl(os.path.join(w, "logs", run + ".jsonl")) if o.get("type") == "result"]
+    log = os.path.join(w, "logs", run + ".jsonl")
+    res = [o for o in read_jsonl(log) if o.get("type") == "result"]
     if not res: errs.append("父 log 沒有 result")
+    # 步驟 4 審查之後加的：claude -p 把背景 subagent 停掉時 stderr 印這句（run.sh 把 stderr 併進父 log），父 log 照樣有 success 的 result
+    if any("Background tasks still running" in l for l in open(log, encoding="utf-8", errors="replace") if not l.startswith("{")):
+        errs.append("父 log 有「Background tasks still running」：背景 subagent 被停掉")
     for r in res:
         if r.get("permission_denials"): errs.append(f"permission_denials：{json.dumps(r['permission_denials'], ensure_ascii=False)[:300]}")
     last = res[-1] if res else {}
@@ -100,6 +105,8 @@ def run_stats(w, run, dump):
             if a["efforts"] != {"medium"}: errs.append(f"裁決者 effort {sorted(a['efforts'])}，要 medium")
         revs, rev_model = d2, "haiku"
         if len(revs) < 3: errs.append(f"審查者不到 3 個（{len(revs)}）")
+        for a in d1:
+            if "【結論】" not in a["text"]: errs.append("裁決者的報告沒有【結論】（沒寫完或沒交回）")
     else:
         # 乙：第 1 層是 3 個 code-reviewer（定義檔的 opus、該臂的強度），沒有第 2 層
         if len(d1) != 3 or d2: errs.append(f"要剛好 3 個第 1 層、0 個第 2 層，實際 {len(d1)}／{len(d2)}")
@@ -110,12 +117,13 @@ def run_stats(w, run, dump):
         if not a["models"] or not all(rev_model in x for x in a["models"]): errs.append(f"審查者 {a['meta'].get('description')} 模型 {short(a['models'])}，要 {rev_model}")
         if a["efforts"] != {want}: errs.append(f"審查者 {a['meta'].get('description')} effort {sorted(a['efforts'])}，要 {want}")
     sess = glob.glob(os.path.join(pdir, "*.jsonl"))
-    pm = set().union(*[scan(s)["models"] for s in sess] or [set()])
+    sess_scans = [scan(s) for s in sess]
+    pm = set().union(*[x["models"] for x in sess_scans] or [set()])
     if not pm or not all("haiku" in x for x in pm): errs.append(f"父 session 模型 {short(pm)}，要 haiku")
     mu = sorted((last.get("modelUsage") or {}).keys())
     if any(not ("haiku" in k or "opus" in k) for k in mu): errs.append(f"modelUsage 有別的模型：{mu}")
     # 洩題：所有層的工具輸入。命中的要人工逐筆看（真的讀到外面才算），所以全部列出
-    allin = [(a["meta"].get("description", "?"), n, i) for a in agents for n, i in a["inputs"]] + [("父", n, i) for s in sess for n, i in scan(s)["inputs"]]
+    allin = [(a["meta"].get("description", "?"), n, i) for a in agents for n, i in a["inputs"]] + [("父", n, i) for x in sess_scans for n, i in x["inputs"]]
     leaks = [f"{who}｜{n}｜{i[:200]}" for who, n, i in allin if leaky(w, run, n, i, pdir)]
     if leaks: notes.append({"洩題檢查命中（待人工判定）": leaks})
     if dump:
@@ -132,10 +140,10 @@ def run_stats(w, run, dump):
            "rev_tools": [a["tools"] for a in revs], "rev_out": [a["out"] for a in revs], "rev_think": [a["think"] for a in revs],
            "rev_effort": sorted(set().union(*[a["efforts"] for a in revs] or [set()]))}
     if g == "P" and d1:
-        j = d1[0]
+        judge = d1[0]
         # 裁決者整發秒數：裁決者紀錄檔第一筆，到它與所有審查者最後一筆（主對話實際在等的時間）
-        out.update({"judge_s": round(max([j["t1"]] + [a["t1"] for a in revs]) - j["t0"]), "judge_tools": j["tools"],
-                    "judge_out": j["out"], "judge_think": j["think"]})
+        out.update({"judge_s": round(max([judge["t1"]] + [a["t1"] for a in revs]) - judge["t0"]), "judge_tools": judge["tools"],
+                    "judge_out": judge["out"], "judge_think": judge["think"]})
     out["errors"] = errs
     out["notes"] = notes
     return out
