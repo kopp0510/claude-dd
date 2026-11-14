@@ -127,7 +127,7 @@ jq 與 python3 兩條路徑照 `plugin_enabled_state` 的寫法（jq 用 `-s` �
 - 步驟 3 只動了 `tests/test-install.sh` 的寫法（T10 三處），安裝腳本沒改
 - 步驟 4 派 3 個審查者，Critical 0、Important 6、Smell 6，沒有駁回的。改了的：jq 與 python3 對三類輸入結論不同（字面值比浮點數精確、不合法的 UTF-8 位元組、幾千位的整數）；
   「都沒設」那一行改成寫明只查了哪裡；`outofrange` 拿掉沒查證過的第二行；README、CHANGELOG、量測檔的幾句（版本條件 v2.1.288、設定檔的讀取時點、日期、兩種算法分開寫）
-- **等使用者決定**：S1-1 加了清單以外的測試而沒有先問（違反進度表下方那條規則）。多出來的是 T2 的 `a-top-min`、`a-top-max`、`a-top-nan`、`a-top-inf`、`a-pm-nan`、`a-top-null-pm`、`a-pm-mixed`；
+- **使用者 2026-11-15 選「留著」**（原本標「等使用者決定」）：S1-1 加了清單以外的測試而沒有先問（違反進度表下方那條規則）。多出來的是 T2 的 `a-top-min`、`a-top-max`、`a-top-nan`、`a-top-inf`、`a-pm-nan`、`a-top-null-pm`、`a-pm-mixed`；
   T10 的「沒有 settings.json」「環境變數是一長串數字」；`nojson.sh` 的 n3 與 `line` 模式；以及審查修正補的 `a-top-edge-lo`、`a-top-edge-hi`、`a-badutf8`、`a-bigint`。
   先留著；使用者選不留就另開一個 commit 拿掉
 - 步驟 7 沒有另外加：這一段學到的（macOS 的 iconv、jq 的字面值精度、只讀一個檔的檢查要寫明範圍）做的時候就寫進 `tests/CLAUDE.md` 與根目錄 CLAUDE.md 了。步驟 8 審那兩份動到的行，改了一處（「jq 1.7 起」改成列出實測的版本）
@@ -193,6 +193,12 @@ S2 開工前提的結果（2026-11-15；細節與表在 `docs/measurements/2026-
 - 跟上面寫的不一樣的兩處（跑之前改、兩臂相同）：乙的審查者任務說明由 `prepare.py` 先寫成檔，父 session 只給一句「先讀哪個檔」（原本寫由 haiku 父 session 自己組 prompt，兩臂的 prompt 會隨它的轉述而不同）；
   父 session 最後只回一行，不貼報告（報告本來就從紀錄檔讀）
 - 探針費用 0.50 美元，算進 30 美元的累計
+
+S2 跑的結果（細節在量測文件「結果」）：
+- 甲 4 發跑完：分不出（那條重大兩臂 2/2；low 的裁決者整發秒數是 medium 的 80.5%，沒到 75%）
+- 乙只跑 1 發：跑完第一發重估全部跑完約 36–40 美元，超過 30 美元的檢查點；用 AskUserQuestion 問使用者，他選「現在停」（2026-11-15）。乙寫「沒跑完，不下結論」
+- 作廢一發（`claude -p` 在父 session 最後一輪結束 10 分鐘後把背景 subagent 停掉；`run.sh` 補 `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`）、中途結束一發
+- 規則檔沒動；沒有任何一部分達到「建議改」
 
 ### 要新增的測試清單（全部在 `tests/test-install.sh`）
 
