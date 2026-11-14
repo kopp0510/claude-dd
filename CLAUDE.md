@@ -56,7 +56,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    agent 接手做完，結果用指令核對，不看 agent 自述。沙盒實跑會抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏。
    乾跑報告說上游「沒寫」的，寫進文件前拿 skill 目錄的每一份 `.md` 找反例：原句 `grep -F` 得到只證明引文存在，不證明缺口是真的
    （2026-11-14 security-audit 有 4 條其實寫在別處，步驟 4 的審查才抓到）。照判準列的分支清單也會漏（同一次漏 5 條），
-   列完再拿判準逐段掃一次，配套檔裡的條件句也算（`skills/security-audit/CLAUDE.md` 分支表的 D17 就引了 RECONNAISSANCE.md）
+   列完再拿判準逐段掃一次；條件句的做法寫在配套檔時也要跟過去讀（`skills/security-audit/CLAUDE.md` 分支表的 D17 出處是 Cost budget，另見 RECONNAISSANCE.md）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
    在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
