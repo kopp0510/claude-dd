@@ -43,6 +43,20 @@
 
 ### Fixed
 
+- **安裝腳本：目標是指向檔案的 symlink 時，覆蓋前備份的是它指到的內容**：`backup_before_overwrite` 原本一律 `cp -r`，
+  GNU 的 `cp -r` 只複製連結本身，呼叫端接著 `cp` 寫穿連結，備份讀出來就是新內容 —— Linux 上用 dotfiles 把 `~/.claude/CLAUDE.md`
+  （或 agent、指令、腳本、輸出風格的單一檔）連到別處的人，`--force` 之後原內容就沒了。macOS 的 `cp -r` 會跟著連結，所以只在 Linux 發生。
+  在 GNU coreutils 的容器裡重現（修前備份讀出模板、修後讀出原內容）。
+- **安裝腳本：設定檔是空的、頂層不是物件或鍵是 `null` 時，jq 與 python3 兩條路徑結論一致**：同一批 92 個假設定檔案例兩條都跑，
+  原本有 16 個結論不同。空檔與只有空白：jq 那條回報成功（印「已啟用」）而檔案沒寫；頂層是 `null`：jq 那條把整個檔改寫成物件，
+  `mcp_scope` 的 jq 那條回 `none`（確定沒有）；`enabledPlugins`／`plugins` 是 `null`：python3 那條報錯；登記項第一筆是 `null`：jq 那條寫出只有三個欄位的物件。
+  定案：空檔與頂層不是物件一律失敗、不改檔（`mcp_scope` 回 `unparseable`，畫面與兩份 README 的退化表跟著改）；鍵是 `null` 當成沒有這個鍵；
+  登記項第一筆不是物件算失敗。`plugin_enabled_state` 對頂層不是物件回 `none` 的既有設計不動。
+- **安裝腳本：清掉舊版留下的指令檔（`dd-help.md` 等）之前先備份**，跟覆蓋一樣進 `~/.claude/backups/pre-install-<時間>/commands/`。
+- **安裝腳本：完成訊息只報這次真的做了的**：原本無條件印「已安裝的內建 Agents」「已啟用的 Plugin（2 個）」。現在 `--commands-only` 不印這兩段；
+  plugin 只列這次啟用成功的，一個都沒有時印「這次沒有啟用任何官方 Plugin（原因見上方步驟 5）」。
+- **`tests/test-install.sh` 補上 T1–T9**，涵蓋上面四條與原本沒測到的路徑（plugin 登記端到端、`--check` 的 MCP 輸出、覆蓋前備份、
+  全域 CLAUDE.md 三種情境、hook 相對路徑中止）。互動選單（o／k／s）仍測不到：`ask` 用 `[ -t 0 ]` 判斷。可用 `TEST_ONLY=T<n>` 只跑一組。
 - **`dd-init-upgrade.sh --apply` 的輸出路徑已經存在就不寫、exit 6**：awk 的 `print > out` 會跟著 symlink 寫到它指的地方，
   輸出路徑事先是 clone 帶進來、指到專案外的 symlink 時，升級結果會寫到專案外。一般檔、目錄、symlink、懸空 symlink 都算已存在。
   `tests/test-dd-init-upgrade.sh` 加四則情境並核檔案狀態（外部檔不變、symlink 還在、懸空 symlink 指的檔沒被建立、既有一般檔不被蓋掉）。
