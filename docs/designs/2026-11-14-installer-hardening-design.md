@@ -170,6 +170,25 @@
 - S2 的步驟 4 不跳過：diff 雖然全是文件，但每一句都在引別處的行為（`skills/dd-loop/SKILL.md` 的判準是「有沒有引別處」），照樣派至少 3 個審查者，專門拿 README 新句對原始碼與量測檔，派工方向另外加一條「找 README 該揭露卻漏掉的安裝或移除行為」
 - commit：`docs: README 補上裝之前該知道的事（移除範圍、覆蓋行為、設定檔、語言、hook、成本、平台）（S2-1）`
 
+**步驟 3、4 的結果（2026-11-14）**
+
+- 步驟 3 沒有跑：這一段唯一的程式碼改動是 `show_help` 的一行字串
+- 步驟 4：派 3 個審查者（英文 README 對程式碼／中英一致與量測／該寫沒寫的），報告在 `docs/reviews/2026-11-14-installer-hardening/S2-*.md`。0 條 Critical、13 條 Important，去掉重疊是下面這幾件：
+  - `--uninstall` 之後「hook 只警告、放行」只對 v1.3.0 起的 hook 成立，更早的寫法會擋下每次 commit（三份都報；我的核對表只 grep 了現行那一種寫法）→ README 改寫
+  - 沒有 jq 與 python3 時，`uninstall` 的手動清理提示只講 `settings.json` → 改那句訊息，T9 加一個斷言
+  - 「不動全域 CLAUDE.md」沒講後果（它仍會要求呼叫已經被移除的 skill 與腳本）→ README 補上
+  - 要翻譯的範圍漏了 agent 的 description → 補上
+  - 311 次審查者的樣本量在現行派工做法之前，README 沒講 → 補上
+  - 費用那一條漏了量測檔自己的前提（可能偏低、小的固定 diff、4 發）→ 改寫
+  - 安裝會刪掉舊版留下的指令檔，README 沒提 → 補上
+  - 另外三處還寫「只移除本 repo 部署過的項目」→ 架構文件、`--help`、README 註解一起改
+  - 別處「缺腳本就跑 `--force`」的提示 → 部分採納：只把 `--force` 的說明寫清楚是例行更新用；`commands/`、`skills/`、`scripts/` 那幾處提示不改（它們要的就是例行更新，而且改它們要另做沙盒乾跑）
+- 步驟 5：`/bin/bash tests/test-install.sh` rc=0，本機照 ci.yml 逐 step 跑 20 個全過
+- 已知、這次沒處理：
+  - `commands/dd-init.md` Phase 4 寫「`--force`（腳本會裝）」，但安裝腳本只登記已經在磁碟上的 plugin、不會下載
+  - 四件沒查的外部行為：skill 目錄的 hook 被刪掉後執行中的 session 何時失效；`installPath` 指到不存在的 cache 目錄時 Claude Code 怎麼處理；`gate-guard@skills-dir` 這類鍵會不會被寫進 `settings.json`；skill 目錄的 hook 自動載入要的最低版本
+  - 假設 A7 的兩件仍留給使用者：兩個 agent 備份檔的上游授權、README「only components with an evidenced usage record are kept」的措辭
+
 ### 要新增的測試
 
 全部加在既有的 `tests/test-install.sh`（CI 的 ubuntu 與 macOS 兩個 job 本來就跑它）。使用者 2026-11-14 選定「照這份清單加」。

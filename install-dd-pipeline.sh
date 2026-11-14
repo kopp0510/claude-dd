@@ -282,9 +282,9 @@ show_help() {
     echo ""
     echo "選項:"
     echo "  --check             只檢查環境（不安裝）"
-    echo "  --force             全域 CLAUDE.md 也不問直接覆蓋（其餘檔案內容不同時本來就會更新）"
+    echo "  --force             例行更新用：同一般安裝，另外全域 CLAUDE.md 不問直接覆蓋（先備份）"
     echo "  --commands-only     只安裝 DD Commands（不安裝 skills）"
-    echo "  --uninstall         移除 DD Pipeline（本 repo 部署過的項目）"
+    echo "  --uninstall         移除 DD Pipeline（本 repo 部署過的檔案，並取消登記官方 Plugin）"
     echo "  --yes               跳過 --uninstall 的確認詢問（供自動化使用；"
     echo "                      其餘互動詢問於非互動環境一律採預設值）"
     echo "  --update            更新 skills/agents 到最新版"
@@ -1162,7 +1162,7 @@ uninstall() {
         local installed_file="$CLAUDE_DIR/plugins/installed_plugins.json"
 
         if ! command_exists "jq" && ! command_exists "python3"; then
-            echo -e "${YELLOW}${WARN} 缺少 jq 與 python3，跳過 Plugin 設定清理（請手動移除 settings.json 的 enabledPlugins 項目）${NC}"
+            echo -e "${YELLOW}${WARN} 缺少 jq 與 python3，跳過 Plugin 設定清理（請手動移除 settings.json 的 enabledPlugins 與 plugins/installed_plugins.json 裡官方 Plugin 的項目）${NC}"
         else
         for plugin in "${OFFICIAL_PLUGINS[@]}"; do
             local plugin_key="${plugin}@${PLUGINS_MARKETPLACE}"

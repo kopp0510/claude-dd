@@ -572,7 +572,23 @@ HOME="$T9_DIR/d" ./install-dd-pipeline.sh < /dev/null > "$T9_DIR/d.txt" 2>&1 \
 plain "$T9_DIR/d.txt" | grep -q '這次沒有啟用任何官方 Plugin' || { echo "❌ T9：登記全部失敗，完成訊息卻沒有說沒啟用"; exit 1; }
 t9_s=$(t2_canon "$T9_DIR/d/.claude/settings.json")
 if echo "$t9_s" | grep -q ': true'; then echo "❌ T9：登記失敗，settings.json 卻已經寫成啟用（完成訊息說沒啟用）：${t9_s}"; exit 1; fi
-for t9_f in a b c d; do
+# (e) 沒有 jq 也沒有 python3 時 uninstall 清不了 plugin 的登記：提示要把兩個檔都講到（只講 settings.json 的話，照做會漏掉 installed_plugins.json）
+cat > "$T9_DIR/nojson.sh" <<'DRIVE'
+# $1=沙盒 HOME；在 repo 根目錄執行。把 jq 與 python3 都當成不存在
+export HOME="$1"
+# shellcheck source=/dev/null
+source ./install-dd-pipeline.sh
+command_exists() { [ "$1" != jq ] && [ "$1" != python3 ] && command -v "$1" >/dev/null 2>&1; }
+ASSUME_YES=true
+uninstall
+DRIVE
+mkdir -p "$T9_DIR/e/.claude"
+"$BASH" "$T9_DIR/nojson.sh" "$T9_DIR/e" < /dev/null > "$T9_DIR/e.txt" 2>&1 \
+    || { echo "❌ T9：沒有 jq 與 python3 時 uninstall 失敗"; tail -20 "$T9_DIR/e.txt"; exit 1; }
+plain "$T9_DIR/e.txt" | grep -q '缺少 jq 與 python3' || { echo "❌ T9：沒有 jq 與 python3 時 uninstall 沒有印出手動清理的提示"; exit 1; }
+plain "$T9_DIR/e.txt" | grep '缺少 jq 與 python3' | grep -q 'installed_plugins.json' \
+    || { echo "❌ T9：uninstall 的手動清理提示沒有講 installed_plugins.json"; exit 1; }
+for t9_f in a b c d e; do
     utf8_ok "$T9_DIR/$t9_f.txt" || { echo "❌ T9：安裝輸出有不合法的 UTF-8（${t9_f}）"; exit 1; }
 done
 echo "✅ T9 完成訊息：--commands-only 不印 plugin 與 agent 兩段；沒啟用就照實說；只列啟用成功的"
