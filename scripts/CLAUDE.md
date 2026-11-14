@@ -170,6 +170,9 @@
     `CLAUDE.md 維護` 標題）插回新區塊同一處。專案改寫過的步驟行（第 0 欄的 `N. `）本身算在地，但它底下的子項仍錨到步驟 N
   - **標題比對不看 `#` 的個數**（`inL()`）：區塊掛在在地標題底下時，`--apply` 會把新區塊的標題降級（`## CLAUDE.md 維護` → `####`）；
     逐字比對的話下一次升級會把降級後的標題當在地行留下，多一個空標題（S2 步驟 4 實測）
+  - **`--apply` 的輸出路徑已經存在就 exit 6、不寫**（一般檔、目錄、symlink、懸空 symlink 都算；2026-11-14 S1-1）：
+    awk 的 `print > out` 會跟著 symlink 寫到它指的地方，clone 帶進來的 symlink 可以指到專案外
+    （security-audit 試跑找到）。檢查放在建 `WORK` 之前，`--plan` 不受影響
   - 情境測試 `tests/test-dd-init-upgrade.sh`（變異對照見 `tests/CLAUDE.md`）
 - `githooks/pre-commit` — 本 repo 自用（dogfood），轉呼叫上面的 gate。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。

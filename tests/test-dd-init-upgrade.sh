@@ -198,4 +198,20 @@ run "exit 4：兩個標記" 4 --plan "$WORK/twice.md"
 set +e; "$UP" --template "$WORK/bad-tpl.md" --apply "$WORK/v1.6.4.md" "$WORK/bad.out" > "$OUT" 2>&1; got=$?; set -e
 if [ "$got" = 5 ] && [ ! -e "$WORK/bad.out" ]; then ok "exit 5：自檢失敗、沒寫檔"; else ng "exit 5：預期 5 且不寫檔，實際 exit ${got}$([ -e "$WORK/bad.out" ] && echo '、寫了檔')"; fi
 
+# exit 6：--apply 的輸出路徑已經存在就不寫。awk 的 print > out 會跟著 symlink 寫到它指的地方（專案外也一樣）
+mkdir "$WORK/ext"
+printf 'EXTERNAL\n' > "$WORK/ext/target.md"; cp "$WORK/ext/target.md" "$WORK/ext/target.orig"
+ln -s "$WORK/ext/target.md" "$WORK/t1.out"
+run "exit 6：輸出路徑是指向外部檔的 symlink" 6 --apply "$WORK/v1.6.4.md" "$WORK/t1.out"
+cmp -s "$WORK/ext/target.md" "$WORK/ext/target.orig" && ok "symlink 指到的外部檔沒被改" || ng "symlink 指到的外部檔被改了"
+[ -L "$WORK/t1.out" ] && ok "symlink 還在" || ng "symlink 不見了"
+ln -s "$WORK/ext/nope.md" "$WORK/t2.out"
+run "exit 6：輸出路徑是懸空 symlink" 6 --apply "$WORK/v1.6.4.md" "$WORK/t2.out"
+[ ! -e "$WORK/ext/nope.md" ] && ok "懸空 symlink 指的檔沒被建立" || ng "懸空 symlink 指的檔被建立了"
+printf 'OLD\n' > "$WORK/t3.out"
+run "exit 6：輸出路徑是既有一般檔" 6 --apply "$WORK/v1.6.4.md" "$WORK/t3.out"
+[ "$(cat "$WORK/t3.out")" = OLD ] && ok "既有一般檔內容不變" || ng "既有一般檔被蓋掉"
+mkdir "$WORK/t4.out"
+run "exit 6：輸出路徑是既有目錄" 6 --apply "$WORK/v1.6.4.md" "$WORK/t4.out"
+
 exit $fail

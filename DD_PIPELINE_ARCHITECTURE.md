@@ -132,7 +132,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 | 現行蓋章區塊的每一行都在升級清單裡（`commands/dd-init.md` 區塊與區塊外的 React 片段 ↔ `scripts/dd-init-upgrade.sh --list`） | 改了蓋章區塊卻沒更新升級腳本的清單 —— 下次升級時改過的行被當成專案自己的內容留下、新舊並存，不報錯。抽到空區塊、第一行不是 `## 開發流程`、沒有以 `## CLAUDE.md 維護` 的內容結尾（被第 0 欄的 ``` 截斷）時紅燈而不是放過 |
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
 | gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
-| dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個。要 `fetch-depth: 0`（兩個 job 都設了） |
+| dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個；`--apply` 跟著 symlink 寫到專案外。要 `fetch-depth: 0`（兩個 job 都設了） |
 | Sandbox 端到端非互動安裝（`tests/test-install.sh`） | 只有執行期才會出現的安裝 bug |
 | macOS `/bin/bash` 3.2 行為測試（`bash32` job：error-capture、gate-guard、gate 情境、dd-init 升級分類、安裝端到端） | ubuntu 的 bash 5 驗不到的 3.2 不相容（`${x,,}`、`declare -A`、`mapfile`…）。先確認 `/bin/bash` 真的是 3.2，否則直接失敗。這類錯誤常常只印一行、結果照舊，所以 gate-guard 測試看 hook 的 stderr、gate 情境測試比對輸出裡的 shell 錯誤；error-capture 與安裝測試靠 `set -e` 的非 0 中止。公開 repo 的 macOS runner 不計費 |
 
