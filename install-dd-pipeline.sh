@@ -354,7 +354,7 @@ autocompact_state() {
     elif command_exists "python3"; then
         out=$(SETTINGS_FILE="$file" python3 -c '
 import json, os, sys
-# 跟 jq 對齊的兩處：不合法的 UTF-8 位元組換成替代字元照樣解析；幾千位的整數照收（python 3.11 起預設超過 4300 位就報錯）
+# 跟 jq 對齊的兩處：不合法的 UTF-8 位元組換成替代字元照樣解析；幾千位的整數照收（python 預設超過 4300 位就報錯，3.13.2 實測；沒有這個設定的舊版不用放寬）
 if hasattr(sys, "set_int_max_str_digits"):
     sys.set_int_max_str_digits(0)
 try:

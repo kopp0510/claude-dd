@@ -86,7 +86,7 @@
   環境變數有效也照讀檔 → T10「環境變數是 400000」。這台機器有裝 ffmpeg，「沒裝 ffmpeg」那個分支的樹狀符號只有沒裝的環境（ubuntu 容器）跑得到。
   同一天審查（`docs/reviews/2026-11-15-speed-cost/S1-a.md`）找到兩臂結論不同的輸入，補了四列，在修正前的程式碼上各紅各的：
   jq 沒先換成浮點數就比大小 → T2 `acw.a-top-edge-lo`、`acw.a-top-edge-hi`（jq 那一臂不是 `all`；jq 1.7、1.7.1、1.8.1 都是）；python3 遇到不合法的 UTF-8 位元組就報錯 → T2 `acw.a-badutf8`；
-  python3 沒放寬整數位數上限 → T2 `acw.a-bigint`（後兩列是 python3 那一臂不是 `all`）。
+  python3 沒放寬整數位數上限 → T2 `acw.a-bigint`（後兩列是 python3 那一臂不是 `all`；python 3.13.2 跑的）。
   ⚠️ T2 只守它列的那幾類輸入（不存在、空檔、只有空白、壞 JSON、頂層型別不對、不只一個 JSON 值、BOM、鍵是 null 或型別不對、登記項格式不對；
   `acw` 那幾列另有：數字在範圍外、不是整數、字串、布林、`NaN`、`Infinity`、只設在個別模型、`modelSettings` 或某個模型的值不是物件、
   字面值比浮點數精確而四捨五入後落在邊界上、別處有不合法的 UTF-8 位元組、別處有幾千位的整數）。
