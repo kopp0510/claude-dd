@@ -28,7 +28,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 安裝檢查提醒自動壓縮視窗＋文件 | TODO | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | |
+| S1 | 安裝檢查提醒自動壓縮視窗＋文件 | IN_PROGRESS | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7.. |
 | S2 | 審查者思考強度實驗（medium 對 low） | TODO | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I stats.py` 能從存下的 stats 重算出表 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
