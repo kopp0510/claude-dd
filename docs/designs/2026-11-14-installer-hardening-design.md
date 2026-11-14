@@ -26,7 +26,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | IN_PROGRESS | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | 28663da.. |
+| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | DONE | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | 28663da..490f7b6 |
 | S2 | 兩份 README：陌生人裝之前該知道的事 | TODO | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -123,6 +123,10 @@
   - 文件把 T2 寫成「兩條路徑結論相同」的保證 → 改寫成「只守它列的那幾類輸入」
   - T3 的註解與上面 S1-3 寫「不沿用 `SANDBOX` 是因為它的無備份斷言靠 plugin 步驟被跳過才成立」：這個理由是錯的，`install_plugins` 從來不產生備份。真正的理由只是各組用自己的沙盒、不去動原有檢查的狀態；註解已改
   - `plain` 的說明把 BSD sed 遇到壞位元組的行為寫錯（不是整個不印，是印到那一行就失敗）→ 改掉
+- 步驟 5：修完重跑，macOS（`/bin/bash` 3.2）與 Ubuntu 24.04 容器整支 `tests/test-install.sh` 都過（T2 是 109 例），14 個變異都紅在各自的斷言上，本機照 ci.yml 逐 step 跑 20 個全過。
+  同一個 Ubuntu 容器另外跑了 `tests/test-gate.sh`、`tests/test-dd-init-upgrade.sh` 與兩支 hook 測試，都過
+- 步驟 7：沒有另外要寫的 —— 這一段踩到的坑（`函式 || rc=$?` 讓 `set -e` 失效、不加 `-s` 的 `jq -e`、BSD sed 遇到壞位元組、變數緊貼全形字）已經隨 gate 要求的同批更新寫進 `tests/CLAUDE.md` 與根目錄 CLAUDE.md
+- 步驟 8：範圍是根目錄 CLAUDE.md 與 `tests/CLAUDE.md` 這一段動到的段落。逐項實跑核對（識別符都在、表格沒斷、文件寫的那條 docker 指令照抄跑過 rc=0），沒有要改的
 - 已知、這次沒處理：
   - 目標是懸空的 symlink 時，`backup_before_overwrite` 直接返回，呼叫端接著 `cp` —— 審查者指出 GNU 的 `cp` 會拒絕寫穿懸空連結、在 `set -e` 下中止安裝（既有行為，沒有實跑確認）
   - 全域 CLAUDE.md 的互動選單（o／k／s）測不到
