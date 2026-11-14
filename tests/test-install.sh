@@ -89,7 +89,10 @@ echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"
 # ---------------------------------------------------------------------------
 # 以下各組（T1–T9）在 2026-11-14 補上：碰設定檔、備份與完成訊息的路徑。
 # 斷言失敗時一律印出「組名＋斷言名」再 exit 1 —— 上面那些裸 [ … ] 在 set -e 下失敗不印任何字。
+# 本機做變異實驗時可以只跑一組：`TEST_ONLY=T5 tests/test-install.sh`（上面原有的檢查與 T1 照跑，T2 之後只跑指定那組）。
 # ---------------------------------------------------------------------------
+want() { [ -z "${TEST_ONLY:-}" ] || [ "$TEST_ONLY" = "$1" ]; }
+plain() { sed $'s/\x1b\\[[0-9;]*m//g' "$1"; }   # 去掉顏色碼
 
 # --- T1 開始（這一段自足：GNU 容器裡用 sed 把這兩行註解之間抽出來單獨跑，見 tests/CLAUDE.md）
 # 全域 CLAUDE.md 是指向別處的 symlink（dotfiles 管理的常見擺法）時，--force 覆蓋前備份的要是它指到的內容。
@@ -214,6 +217,7 @@ t2_case() {
     fi
 }
 
+if want T2; then
 T2_OK_SETTINGS='^settings: \{"enabledPlugins": \{"[^"]+": true'
 T2_OK_INSTALLED='^installed: \{"plugins": \{"[^"]+": \[\{"installPath": "<HOME>/\.claude/plugins/cache/[^"]+/1\.2\.3"'
 
@@ -326,3 +330,136 @@ if [ -n "$T2_FAILED" ]; then
     exit 1
 fi
 echo "✅ T2 jq 與 python3 兩條路徑在 ${T2_COUNT} 個假設定檔案例上結論相同，定案的結論也都對"
+fi
+
+# --- T3：plugin 登記端到端。新開的沙盒 HOME、裡面有假的 marketplace；
+# 不沿用上面那個 SANDBOX —— 它的「無備份產生」斷言靠 plugin 步驟被跳過才成立
+if want T3; then
+T3_HOME=$(mktemp -d "$WORK/t3.XXXXXX")
+t2_mkhome "$T3_HOME"
+printf '{"theme":"dark","enabledPlugins":{"other@m":false}}\n' > "$T3_HOME/.claude/settings.json"
+HOME="$T3_HOME" ./install-dd-pipeline.sh < /dev/null > "$T3_HOME/out1.txt" 2>&1 \
+    || { echo "❌ T3：第一次安裝失敗"; tail -20 "$T3_HOME/out1.txt"; exit 1; }
+t3_s1=$(t2_canon "$T3_HOME/.claude/settings.json")
+t3_i1=$(t2_canon "$T3_HOME/.claude/plugins/installed_plugins.json")
+echo "$t3_s1" | grep -qF '"theme": "dark"' || { echo "❌ T3：settings.json 原有的 theme 不見了：${t3_s1}"; exit 1; }
+echo "$t3_s1" | grep -qF '"other@m": false' || { echo "❌ T3：settings.json 原有的 other@m 不見了：${t3_s1}"; exit 1; }
+for p in "${OFFICIAL_PLUGINS[@]}"; do
+    echo "$t3_s1" | grep -qF "\"$p@$PLUGINS_MARKETPLACE\": true" \
+        || { echo "❌ T3：settings.json 沒有啟用 ${p}：${t3_s1}"; exit 1; }
+    echo "$t3_i1" | grep -qF "\"installPath\": \"$T3_HOME/.claude/plugins/cache/$PLUGINS_MARKETPLACE/$p/1.2.3\"" \
+        || { echo "❌ T3：installed_plugins.json 沒有 ${p} 的登記：${t3_i1}"; exit 1; }
+    plain "$T3_HOME/out1.txt" | grep -q "$p (v1.2.3): .*已啟用" \
+        || { echo "❌ T3：安裝輸出沒有印 ${p} 已啟用"; exit 1; }
+done
+HOME="$T3_HOME" ./install-dd-pipeline.sh < /dev/null > "$T3_HOME/out2.txt" 2>&1 \
+    || { echo "❌ T3：重跑安裝失敗"; tail -20 "$T3_HOME/out2.txt"; exit 1; }
+[ "$(t2_canon "$T3_HOME/.claude/settings.json")" = "$t3_s1" ] || { echo "❌ T3：重跑後 settings.json 內容變了"; exit 1; }
+[ "$(t2_canon "$T3_HOME/.claude/plugins/installed_plugins.json")" = "$t3_i1" ] \
+    || { echo "❌ T3：重跑後 installed_plugins.json 除了時間戳以外的內容變了"; exit 1; }
+HOME="$T3_HOME" ./install-dd-pipeline.sh --uninstall --yes < /dev/null > "$T3_HOME/out3.txt" 2>&1 \
+    || { echo "❌ T3：uninstall --yes 失敗"; tail -20 "$T3_HOME/out3.txt"; exit 1; }
+t3_s3=$(t2_canon "$T3_HOME/.claude/settings.json")
+t3_i3=$(t2_canon "$T3_HOME/.claude/plugins/installed_plugins.json")
+[ "$t3_s3" = '{"enabledPlugins": {"other@m": false}, "theme": "dark"}' ] \
+    || { echo "❌ T3：uninstall 之後 settings.json 應該只剩原有的鍵，實際：${t3_s3}"; exit 1; }
+[ "$t3_i3" = '{"plugins": {}, "version": 2}' ] \
+    || { echo "❌ T3：uninstall 之後 installed_plugins.json 應該沒有登記，實際：${t3_i3}"; exit 1; }
+echo "✅ T3 plugin 登記端到端：寫入並保留原有的鍵、重跑內容不變、uninstall --yes 拿掉登記"
+fi
+
+# --- T4：--check 對 ~/.claude.json 的幾種內容各印什麼（必要的 MCP 是 REQUIRED_MCP 的第一個）
+if want T4; then
+T4_HOME=$(mktemp -d "$WORK/t4.XXXXXX")
+t4_check() {  # $1=~/.claude.json 的內容 $2=說明 $3=輸出要有的字（固定字串）
+    printf '%s' "$1" > "$T4_HOME/.claude.json"
+    HOME="$T4_HOME" ./install-dd-pipeline.sh --check < /dev/null > "$T4_HOME/out.txt" 2>&1 \
+        || { echo "❌ T4：--check 失敗（${2}）"; tail -20 "$T4_HOME/out.txt"; exit 1; }
+    plain "$T4_HOME/out.txt" | grep -F "${REQUIRED_MCP[0]}" | grep -qF "$3" \
+        || { echo "❌ T4：${2} 時，${REQUIRED_MCP[0]} 那一行應該有「${3}」，實際：$(plain "$T4_HOME/out.txt" | grep -F "${REQUIRED_MCP[0]}" | head -1)"; exit 1; }
+}
+t4_check "{\"mcpServers\":{\"${REQUIRED_MCP[0]}\":{}}}" "設在根層 mcpServers" "${REQUIRED_MCP[0]}: ✅"
+t4_check "{\"projects\":{\"/a\":{\"mcpServers\":{\"${REQUIRED_MCP[0]}\":{}}}}}" "只設在一個專案底下" "僅 1 個專案設定"
+t4_check '{' "檔案壞掉" "無法判定"
+t4_check 'null' "內容是 null" "無法判定"
+t4_check '{}' "檔案正常但沒有設定" "需要手動設定"
+echo "✅ T4 --check 對 ~/.claude.json：全域有、只在專案有、檔案壞掉、沒設定，各印各的"
+fi
+
+# --- T5：部署後被改過的檔，重裝時先備份再換回 repo 版（不帶 --force 也一樣）
+if want T5; then
+T5_HOME=$(mktemp -d "$WORK/t5.XXXXXX")
+HOME="$T5_HOME" ./install-dd-pipeline.sh < /dev/null > "$T5_HOME/out1.txt" 2>&1 \
+    || { echo "❌ T5：第一次安裝失敗"; tail -20 "$T5_HOME/out1.txt"; exit 1; }
+# 每列：部署後的相對路徑｜repo 裡的來源｜備份目錄裡的相對路徑
+T5_FILES="skills/code-simplifier/SKILL.md|skills/code-simplifier/SKILL.md|skills/code-simplifier/SKILL.md
+agents/code-reviewer.md|agents/code-reviewer.md|agents/code-reviewer.md
+commands/dd-init.md|commands/dd-init.md|commands/dd-init.md
+scripts/check-claude-md.sh|scripts/check-claude-md.sh|scripts/check-claude-md.sh
+output-styles/adhd.md|output-styles/adhd.md|output-styles/adhd.md"
+echo "$T5_FILES" | while IFS='|' read -r dep src bak; do
+    [ -f "$T5_HOME/.claude/$dep" ] || { echo "❌ T5：安裝後找不到 ${dep}"; exit 1; }
+    echo "T5 我改過的" >> "$T5_HOME/.claude/$dep"
+done
+HOME="$T5_HOME" ./install-dd-pipeline.sh < /dev/null > "$T5_HOME/out2.txt" 2>&1 \
+    || { echo "❌ T5：重裝失敗"; tail -20 "$T5_HOME/out2.txt"; exit 1; }
+echo "$T5_FILES" | while IFS='|' read -r dep src bak; do
+    cmp -s "$src" "$T5_HOME/.claude/$dep" || { echo "❌ T5：重裝後 ${dep} 沒有換回 repo 版"; exit 1; }
+    t5_bak=$(find "$T5_HOME/.claude/backups" -path "*/$bak" 2>/dev/null | head -1)
+    [ -n "$t5_bak" ] || { echo "❌ T5：${dep} 被換掉之前沒有備份"; exit 1; }
+    grep -q 'T5 我改過的' "$t5_bak" || { echo "❌ T5：${dep} 的備份不是改過的那一版"; exit 1; }
+done
+echo "✅ T5 改過的 skill、agent、指令、腳本、輸出風格：重裝後換回 repo 版，改過的版本在備份裡"
+fi
+
+# --- T6：全域 CLAUDE.md 的三種情境（非互動）
+if want T6; then
+T6_HOME=$(mktemp -d "$WORK/t6.XXXXXX")
+mkdir -p "$T6_HOME/.claude"
+cp templates/global/CLAUDE.md "$T6_HOME/.claude/CLAUDE.md"
+HOME="$T6_HOME" ./install-dd-pipeline.sh < /dev/null > "$T6_HOME/out1.txt" 2>&1 \
+    || { echo "❌ T6：安裝失敗（內容相同）"; tail -20 "$T6_HOME/out1.txt"; exit 1; }
+plain "$T6_HOME/out1.txt" | grep -q '與 repo 版本一致' || { echo "❌ T6：內容相同時沒有印「與 repo 版本一致」"; exit 1; }
+[ ! -d "$T6_HOME/.claude/backups" ] || { echo "❌ T6：內容相同卻產生了備份"; exit 1; }
+printf '我的版本\n' > "$T6_HOME/.claude/CLAUDE.md"
+HOME="$T6_HOME" ./install-dd-pipeline.sh < /dev/null > "$T6_HOME/out2.txt" 2>&1 \
+    || { echo "❌ T6：安裝失敗（內容不同、不帶 --force）"; tail -20 "$T6_HOME/out2.txt"; exit 1; }
+[ "$(cat "$T6_HOME/.claude/CLAUDE.md")" = "我的版本" ] || { echo "❌ T6：不帶 --force、非互動時本機版被改掉了"; exit 1; }
+plain "$T6_HOME/out2.txt" | grep -q '已保留本地版本' || { echo "❌ T6：不帶 --force 時沒有印「已保留本地版本」"; exit 1; }
+[ -z "$(find "$T6_HOME/.claude/backups" -path '*/global/CLAUDE.md' 2>/dev/null)" ] \
+    || { echo "❌ T6：沒有覆蓋卻產生了全域 CLAUDE.md 的備份"; exit 1; }
+HOME="$T6_HOME" ./install-dd-pipeline.sh --force < /dev/null > "$T6_HOME/out3.txt" 2>&1 \
+    || { echo "❌ T6：安裝失敗（--force）"; tail -20 "$T6_HOME/out3.txt"; exit 1; }
+cmp -s templates/global/CLAUDE.md "$T6_HOME/.claude/CLAUDE.md" || { echo "❌ T6：--force 之後不是模板內容"; exit 1; }
+t6_bak=$(find "$T6_HOME/.claude/backups" -path '*/global/CLAUDE.md' 2>/dev/null | head -1)
+[ -n "$t6_bak" ] || { echo "❌ T6：--force 覆蓋前沒有備份"; exit 1; }
+[ "$(cat "$t6_bak")" = "我的版本" ] || { echo "❌ T6：--force 的備份不是本機原本那一版"; exit 1; }
+echo "✅ T6 全域 CLAUDE.md：相同不動、不同且不帶 --force 保留本機版、--force 備份後換成模板"
+fi
+
+# --- T7：skill 的 hooks.json 用相對路徑時，validate_skill_hooks 要以 exit 1 中止
+# 函式裡是 exit 1，所以交給另一個 bash 行程跑；SCRIPT_DIR 指到假的 repo 目錄
+if want T7; then
+T7_DIR=$(mktemp -d "$WORK/t7.XXXXXX")
+cat > "$T7_DIR/drive.sh" <<'DRIVE'
+# $1=沙盒 HOME $2=假的 repo 根目錄
+export HOME="$1"
+# shellcheck source=/dev/null
+source ./install-dd-pipeline.sh
+SCRIPT_DIR="$2"
+validate_skill_hooks
+DRIVE
+mkdir -p "$T7_DIR/home" "$T7_DIR/bad/skills/x/hooks" "$T7_DIR/good/skills/x/hooks"
+printf '{"hooks":{"PostToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"./hooks/x.sh"}]}]}}\n' > "$T7_DIR/bad/skills/x/hooks/hooks.json"
+# shellcheck disable=SC2016  # 要寫進檔案的就是字面的 $HOME
+printf '{"hooks":{"PostToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"$HOME/.claude/skills/x/hooks/x.sh"}]}]}}\n' > "$T7_DIR/good/skills/x/hooks/hooks.json"
+t7_rc=0
+"$BASH" "$T7_DIR/drive.sh" "$T7_DIR/home" "$T7_DIR/bad" < /dev/null > "$T7_DIR/bad.out" 2>&1 || t7_rc=$?
+[ "$t7_rc" -eq 1 ] || { echo "❌ T7：相對路徑的 hook 應該讓它 exit 1，實際 rc=${t7_rc}"; exit 1; }
+plain "$T7_DIR/bad.out" | grep -q '相對路徑 hook' || { echo "❌ T7：沒有印出是哪個相對路徑 hook"; exit 1; }
+t7_rc=0
+"$BASH" "$T7_DIR/drive.sh" "$T7_DIR/home" "$T7_DIR/good" < /dev/null > "$T7_DIR/good.out" 2>&1 || t7_rc=$?
+[ "$t7_rc" -eq 0 ] || { echo "❌ T7：合法路徑的 hook 不該被擋，實際 rc=${t7_rc}"; cat "$T7_DIR/good.out"; exit 1; }
+[ -z "$(ls -A "$T7_DIR/home")" ] || { echo "❌ T7：驗證 hook 路徑時寫了東西進 HOME"; exit 1; }
+echo "✅ T7 hooks.json 用相對路徑 → validate_skill_hooks 以 exit 1 中止；合法路徑放行"
+fi
