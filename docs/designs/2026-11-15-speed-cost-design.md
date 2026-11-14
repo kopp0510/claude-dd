@@ -28,7 +28,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 安裝檢查提醒自動壓縮視窗＋文件 | IN_PROGRESS | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7.. |
+| S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7..fd96d69 |
 | S2 | 審查者思考強度實驗（medium 對 low） | TODO | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I stats.py` 能從存下的 stats 重算出表 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -130,6 +130,7 @@ jq 與 python3 兩條路徑照 `plugin_enabled_state` 的寫法（jq 用 `-s` �
 - **等使用者決定**：S1-1 加了清單以外的測試而沒有先問（違反進度表下方那條規則）。多出來的是 T2 的 `a-top-min`、`a-top-max`、`a-top-nan`、`a-top-inf`、`a-pm-nan`、`a-top-null-pm`、`a-pm-mixed`；
   T10 的「沒有 settings.json」「環境變數是一長串數字」；`nojson.sh` 的 n3 與 `line` 模式；以及審查修正補的 `a-top-edge-lo`、`a-top-edge-hi`、`a-badutf8`、`a-bigint`。
   先留著；使用者選不留就另開一個 commit 拿掉
+- 步驟 7 沒有另外加：這一段學到的（macOS 的 iconv、jq 的字面值精度、只讀一個檔的檢查要寫明範圍）做的時候就寫進 `tests/CLAUDE.md` 與根目錄 CLAUDE.md 了。步驟 8 審那兩份動到的行，改了一處（「jq 1.7 起」改成列出實測的版本）
 - 沒查的外部事實（句子已改成不依賴它們）：Claude Code 是不是用嚴格的 JSON 解析 settings.json；最上層的值在範圍外時整份設定會不會失效；專案層與 managed 的設定檔能不能設這個鍵
 
 README 要寫的內容（兩份同義）：2026-11-15 量的一件兩段工作（一個 session、n=1）裡，主對話 124 次請求、每次帶的 context 從 24.5 萬長到 76 萬 token；那個模型沒設自動壓縮視窗；設了 40 萬的那個模型在同一個 session 稍早是 36.7–38.5 萬就壓縮。不寫金額、不寫省幾成。指到量測檔。
