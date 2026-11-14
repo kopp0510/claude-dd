@@ -17,10 +17,11 @@
 - `deid.py` —— 把 `stats.py --dump` 存下的報告去識別後複製進 `out/reports/`；有殘留的那一份不寫、印出檔名
 - `table.py` —— 從 `out/stats.jsonl` 印結果表與判準要比的數字
 - `out/stats.jsonl` —— 算數的每一發一行（`stats.py` 的輸出；洩題命中只留筆數，原文含本機路徑）；`out/reports/` —— 每個 subagent 交回的報告（去識別後）。作廢的 `P-med-1` 只有審查者的報告、不在 `stats.jsonl`
+- `timeline.py` —— 甲各發在時間軸上的位置（每個審查者相對裁決者的起訖秒數、Agent 呼叫出現的秒數與 prompt 字元數）；步驟 4 審查之後加的，輸出存在 `out/timeline.md`
 
 ## 約束
 
-- **凍結**：量測文件的數字是用這一版輸入跑出來的；要改實驗就另開新目錄。例外一個：`run.sh` 在第一次跑（`P-med-1`，作廢）之後加了 `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`，算數的每一發都是用加了之後的版本跑的
+- **凍結**：量測文件的數字是用這一版輸入跑出來的；要改實驗就另開新目錄。例外一個：`run.sh` 在第一次跑（`P-med-1`，作廢）之後加了 `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`，算數的每一發都是用加了之後的版本跑的。分析用的 `stats.py`、`outside.py` 跑完之後改過（步驟 3 的簡化；`stats.py` 另補兩個作廢檢查），算數的 5 發重跑輸出逐位元組相同，細節在量測文件「限制」
 - 發代號是 `<素材>-<臂>-<序>`：素材 `P`（甲）、`G2`、`G3`（乙）；臂 `med`、`low`（例如 `G3-low-2`）
 - 工作目錄（快照、prompt 檔、stream-json）放 scratchpad，不進 repo；`prepare.py` 填好的 prompt 檔含本機絕對路徑，也不進 repo
 - 乙的三個重點檔案由 `prepare.py` 的 `split3()` 照 `git diff --name-only` 的順序平均切，不看已知錯誤在哪個檔
