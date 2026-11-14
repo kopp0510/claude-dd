@@ -211,10 +211,13 @@ print_backup_notice() {
 # 回寫用 cat 而非 mv，保留原檔 inode / 權限 / symlink 身分（settings.json 可能被
 # dotfiles 管理器 symlink 到別處，mv 會把它換成獨立實體檔且權限變 0600）
 # 失敗（JSON 損毀等）回傳 1 且原檔不動，呼叫端須用 `|| ...` 接住，以免 set -e 中止安裝
+# 空檔、只有空白、頂層不是物件也算失敗：jq 對空輸入 exit 0 而且什麼都不印（照著寫回去就是
+# 「回報成功、實際沒寫」），對 null 則會把整個檔改寫成物件；python3 那條對這幾種都報錯，兩條要一致
 # 用法：jq_inplace <檔案> <jq 參數...>
 jq_inplace() {
     local file="$1"
     shift
+    jq -e 'type == "object"' "$file" >/dev/null 2>&1 || return 1
     local tmp
     tmp=$(mktemp)
     if jq "$@" "$file" > "$tmp"; then
@@ -230,7 +233,7 @@ jq_inplace() {
 # 寫入，同樣保留 inode / symlink）。變更敘述透過 env 取用 KEY=VAL 參數。
 # 呼叫端撰寫變更敘述時：用單引號或 quoted heredoc（避免 shell 先展開 $），
 # 且首行不得縮排（敘述會原樣插入 python 原始碼頂層）
-# 失敗（JSON 損毀等）回傳非零且原檔不動（載入失敗即退出，不會走到寫入）
+# 失敗（JSON 損毀等）回傳非零且原檔不動（載入失敗即退出，不會走到寫入）；頂層不是物件也算失敗（同 jq_inplace）
 py_inplace() {
     local file="$1" mutate="$2"
     shift 2
@@ -240,6 +243,8 @@ env = os.environ
 path = env['JSON_FILE']
 with open(path) as f:
     data = json.load(f)
+if not isinstance(data, dict):
+    raise SystemExit(1)
 $mutate
 with open(path, 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
@@ -628,7 +633,7 @@ install_builtin_agents() {
 #   global      — 根層 mcpServers（官方 scope 名稱為 user；所有專案皆可用，profile 要的就是這個）
 #   local:<N>   — 僅出現在 N 個專案的 projects.<路徑>.mcpServers（官方 scope 名稱為 local）
 #   none        — 檔案不存在，或解析成功但找不到
-#   unparseable — 檔案存在但 JSON 解析失敗（損毀 / 截斷），有無安裝無從判定
+#   unparseable — 檔案存在但 JSON 解析失敗（損毀 / 截斷），或頂層不是物件（null、陣列、字串…），有無安裝無從判定
 #   unknown     — 無 jq 也無 python3，只能字串比對，連「是否真的設定」都僅為字串證據
 # 兩點必須留意：
 #   1) 純字串 grep 會把別的專案的 scoped 設定誤判為已安裝，故需真正解析 JSON
@@ -640,11 +645,14 @@ mcp_scope() {
 
     if command_exists "jq"; then
         # 型別護欄與 python3 分支對齊：非物件的 mcpServers / projects 條目一律略過，
-        # 而不是讓整條 filter 報錯（報錯會被誤讀成「沒安裝」）
+        # 而不是讓整條 filter 報錯（報錯會被誤讀成「沒安裝」）。頂層不是物件則刻意報錯、落到
+        # 下面的 unparseable：整個檔不是設定檔的形狀時，講「沒安裝」是把不確定講成確定
+        # （頂層是 null 時 jq 原本回 none、python3 回 unparseable）
         out=$(jq -r --arg name "$mcp" '
             def hasmcp($o): ($o | type) == "object" and (($o.mcpServers // {}) | type) == "object"
                             and (($o.mcpServers // {}) | has($name));
-            if hasmcp(.) then "global"
+            if type != "object" then error("top level is not an object")
+            elif hasmcp(.) then "global"
             else
                 (((.projects // {}) | if type == "object" then [to_entries[] | select(hasmcp(.value))] | length else 0 end)) as $n
                 | if $n > 0 then "local:\($n)" else "none" end
@@ -661,6 +669,8 @@ except Exception:
 def hasmcp(o):
     return isinstance(o, dict) and isinstance(o.get("mcpServers") or {}, dict) \
            and name in (o.get("mcpServers") or {})
+if not isinstance(data, dict):
+    sys.exit(1)
 if hasmcp(data):
     print("global")
 else:
@@ -688,7 +698,7 @@ print_mcp_line() {
         local:*)
             echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 僅 ${scope#local:} 個專案設定（非全域${extra}）${NC}" ;;
         unparseable)
-            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 無法判定（~/.claude.json 解析失敗，檔案損毀？）${NC}" ;;
+            echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 無法判定（~/.claude.json 解析失敗或內容不是物件，檔案損毀？）${NC}" ;;
         unknown)
             echo -e "${indent}${tree} $mcp: ${YELLOW}${WARN} 疑似已設定（缺 jq/python3，僅字串比對，範圍未知）${NC}" ;;
         *)
@@ -748,13 +758,18 @@ install_plugins() {
     local plugins_base="$CLAUDE_DIR/plugins/marketplaces/$PLUGINS_MARKETPLACE/plugins"
 
     # installed_plugins.json 的登記敘述（迴圈不變，先備好）：jq 與 python 兩路徑
-    # 須維持等價 — 已存在就更新 version / lastUpdated / installPath，否則新建整筆
+    # 須維持等價 — 已存在就更新 version / lastUpdated / installPath，否則新建整筆。
+    # plugins 是 null 當成沒有這個鍵；既有登記的第一筆不是物件（[null]、["x"]）兩條都報錯、不改檔
+    # —— jq 原本會把 null 那筆寫成只有三個欄位的物件並回報成功
     # shellcheck disable=SC2016  # 單引號內的 $key/$path/$ver/$ts 是 jq 變數，不可由 shell 展開
     local jq_register='
         if (.plugins[$key] // [] | length) > 0 then
-            .plugins[$key][0].version = $ver |
-            .plugins[$key][0].lastUpdated = $ts |
-            .plugins[$key][0].installPath = $path
+            if (.plugins[$key][0] | type) != "object" then error("first entry is not an object")
+            else
+                .plugins[$key][0].version = $ver |
+                .plugins[$key][0].lastUpdated = $ts |
+                .plugins[$key][0].installPath = $path
+            end
         else
             .plugins[$key] = [{
                 "scope": "global",
@@ -770,7 +785,9 @@ install_plugins() {
     py_register=$(cat <<'PYEOF'
 entry = {'scope': 'global', 'projectPath': '', 'installPath': env['path'],
          'version': env['ver'], 'installedAt': env['ts'], 'lastUpdated': env['ts']}
-plugins = data.setdefault('plugins', {})
+if data.get('plugins') is None:
+    data['plugins'] = {}
+plugins = data['plugins']
 if plugins.get(env['key']):
     plugins[env['key']][0].update(version=env['ver'], lastUpdated=env['ts'], installPath=env['path'])
 else:
@@ -848,7 +865,7 @@ print(value if isinstance(value, str) else "")
             # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
             json_edit "$settings_file" \
                 '.enabledPlugins[$key] = true' \
-                "data.setdefault('enabledPlugins', {})[env['key']] = True" \
+                "data['enabledPlugins'] = {} if data.get('enabledPlugins') is None else data['enabledPlugins']; data['enabledPlugins'][env['key']] = True" \
                 "key=$plugin_key" || settings_ok=false
         fi
         if [ "$settings_ok" = false ]; then
@@ -1136,7 +1153,7 @@ uninstall() {
                 # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
                 json_edit "$settings_file" \
                     'del(.enabledPlugins[$key])' \
-                    "data.get('enabledPlugins', {}).pop(env['key'], None)" \
+                    "(data['enabledPlugins'] if data.get('enabledPlugins') is not None else {}).pop(env['key'], None)" \
                     "key=$plugin_key" \
                     || echo -e "${YELLOW}${WARN} settings.json 解析失敗，請手動移除 enabledPlugins 的 $plugin_key${NC}"
             fi
@@ -1146,7 +1163,7 @@ uninstall() {
                 # shellcheck disable=SC2016  # 單引號內的 $key 是 jq 變數，不可由 shell 展開
                 json_edit "$installed_file" \
                     'del(.plugins[$key])' \
-                    "data.get('plugins', {}).pop(env['key'], None)" \
+                    "(data['plugins'] if data.get('plugins') is not None else {}).pop(env['key'], None)" \
                     "key=$plugin_key" \
                     || echo -e "${YELLOW}${WARN} installed_plugins.json 解析失敗，請手動移除 $plugin_key${NC}"
             fi
