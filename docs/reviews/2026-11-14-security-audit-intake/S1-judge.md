@@ -74,7 +74,7 @@
 
 - Critical 1：Phase 1「用升級腳本升級」第 6 步在 `--apply` 之前先查 `CLAUDE.md.dd-upgrade` 在不在（含懸空 symlink），在就 `ls -ld`、問、不刪、不跑；寫明舊版腳本不會自己擋。AO 臂修正後 3/3 停在第 6 步
 - Critical 2：`check.sh` 改成每條連結各查問句有沒有附它自己的目標；負面測試見 `S1-a.md` 處置
-- Critical 3：問句後果改正、答「不要」時告知擋不住之後的截圖與怎麼換；蓋章區塊沒改，列在「需使用者決定」
+- Critical 3：問句後果改正、答「不要」時告知擋不住之後的截圖與怎麼換。蓋章區塊那一半列成「需使用者決定」，2026-11-14 使用者選 A（只在 `/dd-init` 當下告知）：蓋章區塊不改、不跳 dd-loop-rev，行為維持現狀，後果寫在 `commands/dd-init.md` 給使用者的告知裡
 - Critical 4：Phase 3 第 2 步加 fail-closed 的退路（不是剛好一行、`/` 開頭 → 改用沒解析的相對路徑照「寫檔前」那節檢查）；O、OI 臂（git 2.30.6）修正後各 1 次綠，第三版之二再跑 O 1 次綠
 - Important 各條：照上面逐條改了 `commands/dd-init.md`（第 6 步、「寫檔前」那節、Phase 3 第 2 步、Phase 5 開頭、Phase 6）、`check.sh`、設計文件、CHANGELOG、`results.txt`、量測目錄 CLAUDE.md。
   逐條做了什麼見 `S1-a.md`…`S1-d.md` 的處置
@@ -84,7 +84,7 @@
   `tests/test-dd-init-upgrade.sh`：`bash` 與 `/bin/bash`（3.2.57）各 48 ✅；空殼腳本 24 ✅、40 ❌
 - 步驟 5 期間又改了兩次文字：補「原本用 Write、Edit 的照樣用」（Y5 有兩次改用 `cat >>`）、後果清單補「搬位置／換寫法、`chmod`」；各自再跑了會走到的臂
 - 判完才改 `check.sh` 的兩處（H1K 只貼 `repos:` 清單項目、對照臂的「不是 symlink」）寫在 `results.txt`「check.sh 改過的地方」，存檔的回報用新版重判過
-- A14：Critical 1 落地前已修。Critical 3 沒改的那一半寫在 `commands/dd-init.md` 本身（給使用者的告知），這份報告沒有多講出新的路徑；在使用者決定之前不要 push
+- A14：Critical 1 落地前已修。Critical 3 沒改的那一半寫在 `commands/dd-init.md` 本身（給使用者的告知），這份報告沒有多講出新的路徑；使用者選了 A，不再等決定
 
 ## 重疊與獨有項
 
