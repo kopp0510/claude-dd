@@ -16,7 +16,7 @@
 
 **Who it's for**: people (or small teams) who use Claude Code daily, keep re-typing the same corrections, want them to survive a machine change, and would rather have a commit blocked than docs that no longer match the code.
 
-**Who it's not for**: anyone after a lightweight setup (the gate will block you, sometimes for a one-off change), or a team that doesn't yet agree stale docs are a real problem. The rule text, skill definitions and installer output are in Traditional Chinese; the mechanisms are language-independent, and translating the global template is the one change needed to adopt it in another language.
+**Who it's not for**: anyone after a lightweight setup (the gate will block you, sometimes for a one-off change), or a team that doesn't yet agree stale docs are a real problem. The rule text, skill definitions and installer output are in Traditional Chinese. The mechanisms are language-independent, but adopting it in another language takes more than translating the global template: the block `/dd-init` stamps into each project (and the commit message it uses), the upgrade script that recognises that block by matching its lines, the gate's messages, and most skill descriptions (which double as trigger phrases) are in Chinese too.
 
 ## Highlights
 
@@ -35,7 +35,7 @@
 - **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, yet the install still succeeds
 - Optional: `ffmpeg` — GIF export in tech-diagram-gif; without it that skill delivers SVG. On macOS: `brew install ffmpeg`
 - Optional: an OS-enforced sandbox for `/security-audit` — upstream requires one that disables external networking, uses a sanitized allowlisted environment, enforces resource limits, and allows writes only to assigned scratch paths. Without it the full audit does not execute target code, and leads that need execution stay `needs_validation`. Whether Claude Code's own sandbox provides all four controls is not verified
-- The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. Install `skill-creator` yourself once first: `claude plugin install skill-creator@claude-plugins-official`
+- The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. Install `skill-creator` yourself once first: `claude plugin install skill-creator@claude-plugins-official`. If claude-md-management isn't on disk either, the same form installs it: `claude plugin install claude-md-management@claude-plugins-official`
 
 ### First-time install
 
@@ -53,23 +53,35 @@ The installer reports its progress as 7 steps (`1/7` … `7/7`):
 2. Install 14 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
-5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). A plugin that isn't on disk is skipped with `Plugin 檔案不存在`; one with no readable version is skipped with the `claude plugin install` command to run
+5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). A plugin that isn't on disk is skipped with `Plugin 檔案不存在`; one with no readable version is skipped with the `claude plugin install` command to run; one whose `installed_plugins.json` or `settings.json` can't be updated — the file is empty, corrupt, or not exactly one JSON object — is skipped with a warning. Registration comes first and enabling second, so a failed registration never leaves a plugin enabled
 6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
 Plus unnumbered steps: before step 2, every skill's `hooks.json` command paths are checked (a relative path aborts); between steps 6 and 7, `check-claude-md.sh` (the gate itself) and `dd-init-upgrade.sh` (sorts template lines from your own when `/dd-init` upgrades an old stamp) go into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
+
+### What installing changes
+
+Worth knowing before you run it:
+
+- **Same-name files are replaced, with or without `--force`.** A skill, agent, command, script or output style already under `~/.claude/` with the same name as one in this repo and different content is replaced by the repo version. The old copy goes to `~/.claude/backups/pre-install-<timestamp>/` first, and the path is printed at the end. What `--force` adds is the global `CLAUDE.md`: it is overwritten without asking.
+- **Two settings files are edited in place and not backed up**: `enabledPlugins` in `~/.claude/settings.json`, and the two official plugins' entries in `~/.claude/plugins/installed_plugins.json`. Only those keys change, but the whole file is written back out, so its formatting may differ afterwards.
+- **The global template changes the language Claude uses.** Once it is in place — you answered `y` at step 7 on a fresh machine, chose `o` (or `s`, then `y`) when you already had a different file, or used `--force` — it tells Claude to respond in Traditional Chinese, and to write commit messages in Traditional Chinese unless the project says otherwise. `/dd-init` also commits its changes to your project with a Chinese commit message.
+- **Two hooks become global**, because they ship inside skills: `gate-guard` (before every Bash call; see the gate rules below) and the error capture from `self-improving-agent` (after every Bash call — it matches the command's output text, not its exit status, so a command that succeeded but printed `error:` or `failed` also gets a reminder injected into the conversation).
+- **Where it has been run**: CI runs the test suites on `ubuntu-latest` and on `macos-latest` with the system `/bin/bash` (3.2). Windows has not been tested. The installer warns, and carries on, when Claude Code is older than 2.1.154.
 
 ### Install options
 
 ```bash
 ./install-dd-pipeline.sh --help              # show help
 ./install-dd-pipeline.sh --check             # check the environment only, install nothing
-./install-dd-pipeline.sh --force             # reinstall, overwriting existing files
+./install-dd-pipeline.sh --force             # also overwrite the global CLAUDE.md without asking (other files are updated either way)
 ./install-dd-pipeline.sh --commands-only     # install commands only
 ./install-dd-pipeline.sh --update            # update skills and agents
-./install-dd-pipeline.sh --uninstall         # remove what this repo deployed
+./install-dd-pipeline.sh --uninstall         # remove what this repo deployed (what stays behind: see below)
 ./install-dd-pipeline.sh --uninstall --yes   # uninstall without confirmation (for automation; in non-interactive environments every prompt takes its default)
 ```
+
+`--uninstall` removes the skills, agents, commands, scripts and output styles this repo deployed — and with the skills, the two global hooks. It does not touch your global `CLAUDE.md`, `~/.claude/backups/`, or what `/dd-init` put into your projects (the stamped block and the pre-commit hook). Those hooks stay in place, but the gate script they call is gone, so each commit prints a warning and goes through unchecked. It also takes claude-md-management and skill-creator out of `enabledPlugins` in `settings.json` and out of `installed_plugins.json` — even if you had installed them yourself before this repo; other plugins are left alone. That last part needs `jq` or `python3` and a file that parses; otherwise it prints what to remove by hand.
 
 ## Upgrading
 
@@ -117,6 +129,15 @@ The full path from zero to daily use (install once, stamp each project once, put
 
 ![claude-dd usage flow](diagrams/claude-dd-usage-flow.gif)
 
+### What the review step costs
+
+Step 4 is the expensive one. When an increment contains hand-written code, the main session dispatches at least three reviewers, and the `agents/code-reviewer.md` shipped here sets `model: opus`; an increment that is all data, configuration, comments or documentation, or is fully covered by mechanical checks, dispatches none. Two measurements exist. They measure different things, and neither is a price per increment:
+
+- **Time per reviewer**: 311 reviewer runs taken from the maintainer's own session logs on 2026-10-23 (roughly the previous 30 days) — median 11.8 minutes, 90th percentile 27.7 minutes. This is wall time: it includes model thinking and tool execution, and a reviewer that was woken up to continue has the idle gap counted in.
+- **Cost of one whole review**: a single small bench comparison on 2026-10-24 — four runs of the current arrangement (the main session dispatching opus reviewers directly) averaged 269 seconds and US$5.13 per run. It was compared against an arrangement that differed in three ways at once, so it shows a direction, not a figure to budget with.
+
+Both are in `docs/measurements/2026-10-23-reviewer-real-sessions.md`, with the method and the limits.
+
 ### CLAUDE.md maintenance rules (enforced by pre-commit gate)
 
 - Every folder containing code needs a `CLAUDE.md`, updated in the same batch as the code. The cascade upward through the parent layers is a §3.9 rule, **not** something the gate checks — it only looks at the directory whose code changed, so a stale parent produces no signal at all
@@ -153,7 +174,7 @@ The gate demands one `CLAUDE.md` per code-bearing directory rather than one big 
   *Mitigation*: editing code in that directory means reading a file there first, which reloads it.
   *Residual*: only changing code from memory after a compaction without reading anything there.
 
-If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and don't install the gate. The 8-step loop works without it.
+If those trade-offs still sound worse than the problem you have, use a single root `CLAUDE.md` and leave the gate out: it only runs in a project where `/dd-init` hooked it, so don't run `/dd-init` there. The 8-step loop still runs from §3.9 of the global template. Two things stay on either way: `gate-guard` keeps Claude from committing with `--no-verify` in every project, and §3.9 still asks — as prose, with nothing enforcing it — for nested `CLAUDE.md` updates.
 
 ## Commands
 

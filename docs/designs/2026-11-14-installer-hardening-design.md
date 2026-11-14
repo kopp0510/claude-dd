@@ -27,7 +27,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | DONE | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | 28663da..490f7b6 |
-| S2 | 兩份 README：陌生人裝之前該知道的事 | TODO | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | |
+| S2 | 兩份 README：陌生人裝之前該知道的事 | IN_PROGRESS | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | 00955e2.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -141,6 +141,14 @@
 3. `skills/self-improving-agent/hooks/hooks.json` 掛了什麼、什麼時候會插提醒
 4. 全域模板 §1.1 對回應語言與 commit 語言的規定；`/dd-init` Phase 5 的 commit 訊息
 5. 迴圈成本的數字：`docs/measurements/2026-10-23-reviewer-real-sessions.md`、`skills/dd-loop/SKILL.md` 引的那組，連同日期與樣本數
+
+**開工前提查到的（2026-11-14）**
+1. 中文還寫死在：`commands/dd-init.md` 蓋章區塊（開頭 `## 開發流程（每個功能段落依序走）`）與 Phase 5 的 commit 訊息 `chore: 初始化 8 步開發迴圈慣例`；`scripts/dd-init-upgrade.sh` 的 heredoc `__DD_TEMPLATE_LINES__`（中文原句逐行比對）；`scripts/check-claude-md.sh` 擋下時印的訊息；13 份 `SKILL.md` 的 description 有 10 份是中文（英文的是 security-audit、self-improving-agent、writing-great-skills）
+2. 「不裝 gate」：`/dd-init` Phase 3 的「使用者選擇不裝」只出現在特例（非 shell 的 hook、其他工具產生的檔、掛載點在 repo 外或共用的 hooksPath 目錄、「寫檔前」那節答「不要」），一般的 repo 跑 `/dd-init` 就會掛。gate 腳本要被專案的 hook 呼叫才會跑；`skills/gate-guard/hooks/CLAUDE.md` 寫明 gate-guard 刻意在所有專案都擋；全域模板 §3.9 有「受影響目錄的巢狀 CLAUDE.md 逐層堆疊更新」
+3. `skills/self-improving-agent/hooks/hooks.json` 掛 `PostToolUse`、matcher `Bash`；`error-capture.sh` 檔頭寫明比對輸出文字、不看 exit code。`skills/gate-guard/hooks/hooks.json` 掛 `PreToolUse`、matcher `Bash`
+4. 全域模板 §1.1：對話回應「繁體中文」、Commit message「繁體中文(專案另有規定則從之)」
+5. `docs/measurements/2026-10-23-reviewer-real-sessions.md`：當天輸出「code-reviewer 次數=311 中位=11.8 分 第90百分位=27.7 分」，限制「耗時是 wall（含模型思考與工具執行）…被 SendMessage 喚醒續跑過的審查會把中間閒置算進去」；「五組並排」表的 A 組（沒有裁決者＋opus 審查者）整發 235、221、293、327 秒，平均 269 秒、費用平均 5.13 美元；限制「A 跟 S4 新做法比同時變了三件事」
+6. 另外核了：`install_builtin_agents`、`create_commands`、`create_scripts`、`create_output_styles` 在內容不同時都是先備份再覆蓋，`$FORCE` 只影響印出的字樣；`ALL_SKILLS` 含 gate-guard 與 self-improving-agent；專案 hook 找不到 gate 腳本時印「⚠️ CLAUDE.md gate 沒執行…」後放行；`claude plugin install --help` 的用法是 `<plugin>`（可寫 `plugin@marketplace`）
 
 **S2-1 README.md 與 README.zh-TW.md 同批改**
 - 檔案：`README.md`、`README.zh-TW.md`、`CHANGELOG.md`（`## 未發布`）；`DD_PIPELINE_ARCHITECTURE.md` 有同一句時一起改；`install-dd-pipeline.sh` 的 `show_help`（`--force` 那一行的說明字樣）與因此要同批更新的根目錄 `CLAUDE.md`

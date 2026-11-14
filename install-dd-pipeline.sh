@@ -282,7 +282,7 @@ show_help() {
     echo ""
     echo "選項:"
     echo "  --check             只檢查環境（不安裝）"
-    echo "  --force             強制重新安裝（覆蓋現有檔案）"
+    echo "  --force             全域 CLAUDE.md 也不問直接覆蓋（其餘檔案內容不同時本來就會更新）"
     echo "  --commands-only     只安裝 DD Commands（不安裝 skills）"
     echo "  --uninstall         移除 DD Pipeline（本 repo 部署過的項目）"
     echo "  --yes               跳過 --uninstall 的確認詢問（供自動化使用；"
