@@ -44,7 +44,7 @@ node --test skills/security-audit/validate-findings.test.cjs skills/security-aud
 判準：`SKILL.md` 裡會改變寫不寫檔、派不派 agent、要不要停下來問的條件句。清單是人照判準掃出來的，不保證列全：
 第一版 D1–D16 漏了 D1b、D5c2、D7b、D8b、D17，收編的 S2 步驟 4 審查才找到、補跑了乾跑。標記三種：
 
-- **乾跑**：2026-11-14 每條派一個 sonnet subagent，只讀、不寫檔、不跑 node、不派 agent，以 claude-dd 為目標照文字走那一條，回報卡住、要猜、互相矛盾的原句；原句都用 `grep -F` 回對過本目錄的檔
+- **乾跑**：2026-11-14 每條派一個 sonnet subagent，只讀、不寫檔、不跑 node、不派 agent，以 claude-dd 為目標照文字走那一條，回報卡住、要猜、互相矛盾的原句；引進本檔的原句都用 `grep -F` 回對過本目錄的檔（步驟 4 補跑的五份裡有 2 句對不到，沒引進來）
 - **試跑已實跑**：`docs/measurements/2026-11-14-security-audit-trial/` 那次真的跑完的 quick、budget 9
 - **不另跑**：附理由
 

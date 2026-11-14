@@ -79,6 +79,8 @@
     `git -C <S>/target/claude-dd status --porcelain --ignored` 0 行
   - A14：skill CLAUDE.md 沒寫進 claude-dd 目標的內容（`grep -nE 'install-dd-pipeline|\.drafts|githooks|check-claude-md|my_project|dd-init'` 只命中「從上游更新」第 9 步的安裝指令）；
     這 5 份報告落地前掃過 `<使用者名>|/Users/|-Users-|/private/tmp`，只剩審查者描述 grep 樣式的兩句
+- 更正（S2 步驟 8 查到）：派工節「④ 的勘誤」不成立。`diff -r`（④ 跑的）印 `2a3`、`4a6,7`，單檔 `diff`（①-b 跑的）印 `2a3`、`5a7,8`，
+  是同一次插入的兩種對齊（插入的是一個空行加 vendored 行，上游第 5 行也是空行，可以對在前面或後面），兩份都對；S2-c 判成同一次插入是對的。派工節照規矩不改
 - 步驟 5 照上面「需要外部查證」那三條調整：D5b 先跑 haiku 探針、正向那發查注入、反向對照沒叫起來就換中性目錄
 
 ## 重疊與獨有項
