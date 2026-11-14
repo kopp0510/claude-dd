@@ -53,7 +53,10 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
 3. 部署前先乾跑（新增或改寫都要）：派 subagent 照 repo 裡這份 `SKILL.md` 做一遍，逐條引用原文回報哪一句讓它卡住、
    只能用猜的、或兩句互相矛盾。skill 有分支就每條各跑一次（例如有沒有設計文件）；只讀的步驟拿實際在用的專案跑、
    不准寫檔；會寫檔或 commit 的步驟改在 scratchpad 的拋棄式 repo 真的跑，跨 session 的流程再派一個只讀專案文件的
-   agent 接手做完，結果用指令核對，不看 agent 自述。沙盒實跑會抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏
+   agent 接手做完，結果用指令核對，不看 agent 自述。沙盒實跑會抓到只讀看不出來的，例如 gate 在目錄同時有 staged 變更與 SKIP 欠帳時只印 staged 的理由，照訊息補會漏。
+   乾跑報告說上游「沒寫」的，寫進文件前拿 skill 目錄的每一份 `.md` 找反例：原句 `grep -F` 得到只證明引文存在，不證明缺口是真的
+   （2026-11-14 security-audit 有 4 條其實寫在別處，步驟 4 的審查才抓到）。照判準列的分支清單也會漏（同一次漏 5 條），
+   列完再拿判準逐段掃一次，配套檔裡的條件句也算（`skills/security-audit/CLAUDE.md` 分支表的 D17 就引了 RECONNAISSANCE.md）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
    在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
@@ -66,6 +69,9 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    這種 session 沒有寫檔工具也沒有 AskUserQuestion（題目會印成文字），只測得到「叫不叫、出不出得了草稿」，寫檔與 commit 的步驟要另外在沙盒實跑。
    測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`、`--disallowedTools` 拿掉 `Agent`、加 `--forward-subagent-text`、`--max-budget-usd` 調高 ——
    不然派不出裁決者，「沒問批准題」會因為審查根本沒跑而自動成立。
+   加了 `disable-model-invocation: true` 的 skill，正向那發只能用 slash 叫，而 slash 叫法的 stream-json 沒有 Skill 的 tool_use、也沒有 `Launching skill:`：
+   要讓回覆照貼 skill 本文裡只有這一版才有的一行，再配一發指令名換成不存在的對照。反向那發也要對照：用 `--plugin-dir` 載入拿掉 dmi 的副本，
+   同一個 prompt 要叫得起來，「沒叫」才有鑑別力（2026-11-14 security-audit，`docs/measurements/2026-11-14-security-audit-trigger/`）
 6. 只有 hook、沒有 skill 的元件也放 `skills/<名字>/`（`.claude-plugin/plugin.json` + `hooks/hooks.json`，不放 SKILL.md），
    會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
    被管的工具（例如 `Bash`），被 hook 擋下的呼叫才會在 tool_result 以「PreToolUse:Bash hook error: <理由>」出現、並列進 `permission_denials`
@@ -346,6 +352,11 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   放 `.py`／`.sh` 的目錄一樣要求 CLAUDE.md（2026-10-30 在另一台機器的 branch 實測，第一次 commit 就被擋），所以檔照寫，
   `run.sh` 把 fixture 複製到拋棄式目錄後跑 `find "$WORK" -mindepth 2 -name CLAUDE.md -delete`。fixture 由 `run.sh` 當場 `printf` 出來、
   不從 repo 複製的（`docs/measurements/2026-10-29-adhd-style/run.sh`）碰不到。
+- **stream-json 看不出巢狀 CLAUDE.md 有沒有被讀進去**：grep jsonl 找那份 CLAUDE.md 獨有的字串，連會載入的對照臂也是 0。
+  改成叫受測 session 照貼 context 裡出現的 CLAUDE.md 路徑與第一行，並配一個「skill 目錄放在 cwd 專案裡」的對照臂：對照臂報得出來，這個查法才有鑑別力
+  （2026-11-14 `docs/measurements/2026-11-14-security-audit-trigger/` 的 inj、injctrl）
+- **dontAsk 加 `Bash(ls:*)` 照樣擋 cwd 外的路徑**：`ls ~/…` 回 denial，加 `--add-dir <那個目錄>` 才放行（同一次的 probe-ls、probe-ls2）；
+  複合指令要每一段都在白名單，受測 session 常把 `git`、`echo`、`ls` 串成一條而被擋（同一次的 d5b 兩發）
 - **用 auto mode 跑 `claude -p` 時，受測 session 自己到 `/tmp` 開副本做實驗會被擋**，`permission_denials` 不為 0：擋它的是 auto mode 的分類器
   （理由字串 `[Shared Scratch Sweep]`），不是目錄白名單，`--add-dir /tmp /private/tmp` 照樣擋（2026-10-30 同一次實測，denial 2 → 3；本機沒重現）。
   `docs/measurements/2026-10-29-adhd-style/run.sh` 用的是 `--permission-mode dontAsk`，它會不會經過這個分類器沒驗證；判準要求 denials=0 時，先決定用哪個 mode 再跑。
