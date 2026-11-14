@@ -50,7 +50,7 @@ cd claude-dd
 安裝腳本的進度顯示為 7 步（`1/7` … `7/7`）：
 
 1. 檢查基礎環境（上述硬性需求，缺一即中止）
-2. 安裝 13 個 promoted Skills 到 `~/.claude/skills/`
+2. 安裝 14 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
 5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令
@@ -173,7 +173,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | `/workflow-review:review` | 綜合程式碼審查（安全、效能、配置）。這是命名空間指令，冒號形式才是可呼叫的名稱 |
 | `/output-style ADHD` | 開啟 ADHD 回覆風格（第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
 
-## Promoted Skills（預設部署，13 個）
+## Promoted Skills（預設部署，14 個）
 
 > 「Promoted」指該元件有實證使用紀錄，因此預設部署。唯一的例外是 `gate-guard`：它是 gate 的防護，不是「用過才收」的 skill。
 
@@ -186,6 +186,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | gate-guard | 只有 hook、沒有 skill 的 plugin：擋 Claude 用 `git commit --no-verify`／`-n`／`-c core.hooksPath=` 繞過 CLAUDE.md gate（先用 `git config core.hooksPath` 把 hook 關掉的擋不到） |
 | plan-review | 計畫的對抗式審查：裁決者（Opus）派至少 3 個審查者（haiku）猛攻，只留查證屬實的批評 |
 | review | 綜合審查 wrapper |
+| security-audit | 安全問答與漏洞審查；只有明確要求稽核時才跑完整流程（偵察 → 依覆蓋清單分波找漏洞 → 逐條獨立驗證 → 產出報告檔）（vendored 自 [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)，user-invoked，用 `/security-audit` 叫） |
 | self-improving-agent | 記憶審計與知識沉澱 |
 | task-planner | 功能段落規劃，進度表寫進設計文件 |
 | tech-diagram-gif | 技術圖表繪製與 GIF 匯出（風格規範 vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)） |
@@ -268,6 +269,7 @@ vendored 內容，各自附上游授權檔：
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | 有歸屬／NOTICE 要求 |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（Cloudflare, Inc.） |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（只借規則，逐節去向見該檔） |
 | `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15` 收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |
 

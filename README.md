@@ -49,7 +49,7 @@ cd claude-dd
 The installer reports its progress as 7 steps (`1/7` … `7/7`):
 
 1. Check the environment (the hard requirements above; missing any one aborts the install)
-2. Install 13 promoted Skills into `~/.claude/skills/`
+2. Install 14 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
 5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). A plugin that isn't on disk is skipped with `Plugin 檔案不存在`; one with no readable version is skipped with the `claude plugin install` command to run
@@ -162,7 +162,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | `/workflow-review:review` | Combined code review — security, performance, configuration. It's a namespaced command, so the colon form is the callable name |
 | `/output-style ADHD` | Turn on the ADHD response style (action first, numbered steps, progress every turn, short lists, no preamble or closers; written in Traditional Chinese); `/output-style default` turns it off. Claude Code reads style files at startup, so restart after installing. It applies to the current project only (saved to `.claude/settings.local.json`); for a default everywhere, set `"outputStyle": "ADHD"` in `~/.claude/settings.json` — a project's own `.claude/settings*.json` `outputStyle` still wins |
 
-## Promoted Skills (13, deployed by default)
+## Promoted Skills (14, deployed by default)
 
 > "Promoted" means the component has an evidenced usage record and therefore ships by default. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
 
@@ -175,6 +175,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `-c core.hooksPath=` (turning hooks off beforehand with `git config core.hooksPath` is not caught) |
 | plan-review | Adversarial plan review — an adjudicator (Opus) sends 3+ reviewers (haiku) to attack the plan, then keeps only the criticism that checks out |
 | review | Combined-review wrapper |
+| security-audit | Security guidance and vulnerability review; the full-audit workflow (reconnaissance → coverage-led hunting waves → independent validation → report artifacts) runs only on an explicit audit request (vendored from [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), user-invoked — run it with `/security-audit`) |
 | self-improving-agent | Memory auditing and knowledge distillation |
 | task-planner | Feature-increment planning, with the progress table written into the design doc |
 | tech-diagram-gif | Technical diagrams with GIF export (style specs vendored from [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)) |
@@ -252,6 +253,7 @@ Vendored content, each shipping its own upstream licence file:
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | attribution/NOTICE terms apply |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors (style rules only; see the file for exactly which parts) |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) (Cloudflare, Inc.) |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) (rules only; see the file for where each section went) |
 | `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15`. No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |
 
