@@ -43,6 +43,7 @@ PROMOTED_SKILLS=(
     "gate-guard"             # 只有 hook 的 plugin：擋 Claude 用 --no-verify 繞過 CLAUDE.md gate
     "plan-review"
     "review"
+    "security-audit"         # user-invoked（disable-model-invocation）；vendored 自 cloudflare/security-audit-skill
     "self-improving-agent"
     "task-planner"
     "tech-diagram-gif"
