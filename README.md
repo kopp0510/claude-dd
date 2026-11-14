@@ -34,6 +34,7 @@
 - Required MCP: `playwright` — the installer checks for it but will not install it, so set up [playwright MCP](https://github.com/microsoft/playwright-mcp) first
 - **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, yet the install still succeeds
 - Optional: `ffmpeg` — GIF export in tech-diagram-gif; without it that skill delivers SVG. On macOS: `brew install ffmpeg`
+- Optional: an auto-compact window — `/autocompact <tokens>` saves one for the current model, a top-level `"autoCompactWindow"` in `~/.claude/settings.json` applies to every model. The environment check reports whether one is set and never changes it; why it matters is under [What the main session costs](#what-the-main-session-costs)
 - Optional: an OS-enforced sandbox for `/security-audit` — upstream requires one that disables external networking, uses a sanitized allowlisted environment, enforces resource limits, and allows writes only to assigned scratch paths. Without it the full audit does not execute target code, and leads that need execution stay `needs_validation`. Whether Claude Code's own sandbox provides all four controls is not verified
 - The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. Install `skill-creator` yourself once first: `claude plugin install skill-creator@claude-plugins-official`. If claude-md-management isn't on disk either, the same form installs it: `claude plugin install claude-md-management@claude-plugins-official`
 
@@ -49,7 +50,7 @@ cd claude-dd
 
 The installer reports its progress as 7 steps (`1/7` … `7/7`):
 
-1. Check the environment (the hard requirements above; missing any one aborts the install)
+1. Check the environment (the hard requirements above; missing any one aborts the install). It also reports whether an auto-compact window is set — optional, a notice only, it never aborts
 2. Install 14 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
@@ -143,6 +144,17 @@ Step 4 is the expensive one. When an increment contains hand-written code, the m
 - **One whole review under the current rules, on a bench**: 2026-10-24, four runs over two fixed test diffs of 203 and 249 lines. A whole run took 221–327 seconds (average 269) and its slowest single reviewer 139–226 seconds; cost was US$3.89–6.89 per run (average 5.13), read from the last result record, which the measurement itself notes may be low. Four runs on small fixed diffs are too few to budget with.
 
 Both are in `docs/measurements/2026-10-23-reviewer-real-sessions.md`, with the method and the limits.
+
+### What the main session costs
+
+The other large share is the main session itself: every request carries the whole conversation so far, until Claude Code compacts it. When that happens is the auto-compact window. One job measured on 2026-11-15 (one session, n=1; nothing here is converted to money):
+
+- 124 main-session requests over 104 minutes; the context each one carried grew from 244,546 to 759,029 tokens. The model in use had no auto-compact window saved.
+- In the same session, a model with a 400,000-token window saved compacted automatically 12 times, at 366,594–385,382 tokens each. The model without one compacted automatically once, at 969,715. After `/autocompact 400000` was run for that model, its next automatic compaction came at 371,343.
+
+`/autocompact <tokens>` saves the window for the current model only, so switching to a model you have not set puts you back on that model's default. A top-level `"autoCompactWindow"` in `~/.claude/settings.json` applies to every model, and a per-model value takes precedence over it. The installer's environment check (step 1, also run by `--check`) reports which of these is set; it only reports. What compacting earlier does to the quality of later work was not measured.
+
+Method, script and limits: `docs/measurements/2026-11-15-main-session-context.md`.
 
 ### CLAUDE.md maintenance rules (enforced by pre-commit gate)
 

@@ -35,6 +35,7 @@
 - 必要 MCP：`playwright`（腳本只檢查不安裝，請先[安裝 playwright MCP](https://github.com/microsoft/playwright-mcp)）
 - **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過、MCP 檢查退化成字串比對，而安裝照樣成功
 - 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
+- 可選：自動壓縮視窗 —— `/autocompact <token 數>` 只存給當下的模型，`~/.claude/settings.json` 最上層的 `"autoCompactWindow"` 對每個模型生效。環境檢查會報有沒有設、不會改它；為什麼要設見[主對話那一塊要花多少](#主對話那一塊要花多少)
 - 可選：給 `/security-audit` 用的 OS 層沙盒（上游要求它斷外網、只給白名單環境變數、限制資源、只准寫指定的 scratch 路徑）。沒有它時 full audit 不執行目標程式碼，要實跑才能確認的線索停在 `needs_validation`。Claude Code 自帶的 sandbox 能不能滿足這四項沒驗證
 - claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 要先自己裝過一次：`claude plugin install skill-creator@claude-plugins-official`。claude-md-management 也不在磁碟上的話，同一種寫法：`claude plugin install claude-md-management@claude-plugins-official`
 
@@ -50,7 +51,7 @@ cd claude-dd
 
 安裝腳本的進度顯示為 7 步（`1/7` … `7/7`）：
 
-1. 檢查基礎環境（上述硬性需求，缺一即中止）
+1. 檢查基礎環境（上述硬性需求，缺一即中止）。另外提醒自動壓縮視窗有沒有設（可選，只提示、不中止）
 2. 安裝 14 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
@@ -146,6 +147,17 @@ git pull && ./install-dd-pipeline.sh --force
 - **現行規則下一整次審查，在基準台上**：2026-10-24，拿兩份固定的測試 diff（203 行與 249 行）跑了 4 發。整發 221–327 秒（平均 269 秒），其中最慢的單一審查者 139–226 秒；費用每發 3.89–6.89 美元（平均 5.13），取自最後一筆 result 紀錄，量測檔自己註明可能偏低。只有 4 發、又是小的固定 diff，不能拿來估預算。
 
 兩組都在 `docs/measurements/2026-10-23-reviewer-real-sessions.md`，方法與限制寫在裡面。
+
+### 主對話那一塊要花多少
+
+另一大塊是主對話自己：每次請求都帶著到目前為止的整段對話，直到 Claude Code 把它壓縮。什麼時候壓縮，由自動壓縮視窗決定。2026-11-15 量的一件工作（一個 session、n=1；這裡沒有換算成錢）：
+
+- 104 分鐘裡主對話 124 次請求，每次帶的 context 從 244,546 長到 759,029 token。當時用的模型沒有存自動壓縮視窗。
+- 同一個 session 裡，存了 400,000 視窗的模型自動壓縮 12 次，每次在 366,594–385,382 token；沒存的那個模型自動壓縮 1 次，在 969,715。對它下了 `/autocompact 400000` 之後，下一次自動壓縮在 371,343。
+
+`/autocompact <token 數>` 只存給當下的模型，換到沒設過的模型就回到那個模型的預設。`~/.claude/settings.json` 最上層的 `"autoCompactWindow"` 對每個模型生效，個別模型有值時以個別值為準。安裝的環境檢查（步驟 1，`--check` 也會跑）會報設在哪一層；它只報、不改。提早壓縮對後面工作的品質有什麼影響，沒有量。
+
+方法、腳本與限制：`docs/measurements/2026-11-15-main-session-context.md`。
 
 ### CLAUDE.md 維護規則（pre-commit gate 強制）
 

@@ -154,3 +154,4 @@ print("## 主對話 token（依 message.id 去重）請求 %d 次，輸出 %d" %
 - 「交回訊息」是 `queued_command` 且 `isMeta` 的那一類；當天抽看開頭，都是 `[Subagent hand-back`
 - subagent 自己用掉的 token 不在這支腳本裡（要讀各 agent 自己的紀錄檔）
 - 等待時間含使用者不在電腦前的時間（最長那次跨夜）
+- 同一個 session 之後的一段（換了模型、那個模型沒設自動壓縮視窗）量在 `2026-11-15-main-session-context.md`；兩份的時間範圍不重疊
