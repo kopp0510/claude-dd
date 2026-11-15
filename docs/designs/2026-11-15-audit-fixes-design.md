@@ -113,6 +113,11 @@ S1 的步驟 3–5（2026-11-15）：
   - 檔案：`skills/task-planner/SKILL.md`、`skills/dd-loop/SKILL.md`
   - 驗證（乾跑，會 commit 所以在拋棄式 repo 真跑）：一個 subagent 拿一份有進度表、有 `docs/reviews/`、S1 做到一半的拋棄式 repo，prompt 寫明「使用者已要求先做 S2」，照規則區塊把 S1 標 BLOCKED 並開 S2；我用指令核對 `docs/reviews/S1-BLOCKED.md` 已 commit、`--start-segment` exit 0、進度表 S1 是 BLOCKED 且 commits 欄的起點沒被改
   - commit：`fix: task-planner 補上段落先停時的 review 申報檔（S2-2）`
+  - 乾跑結果（2026-11-15，一個 sonnet subagent，拋棄式 repo 有進度表、有 `docs/reviews/`、S1 做完第一個小任務；它只讀專案自己的文件，規則區塊是改好的這一版）：
+    第一次 `--start-segment` 被擋 → 它建 `docs/reviews/S1-BLOCKED.md`、進度表 S1 標 `BLOCKED` 和原因、一個 commit → 第二次 `--start-segment` exit 0。
+    指令核對：`git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`；起點檔 = HEAD；進度表 S1 是 `BLOCKED…`、commits 欄仍是 `bf179bf..`；S2 是 `IN_PROGRESS`、`639bc77..`（留在工作目錄沒 commit，照規則跟第一個小任務一起送）。
+    它回報要猜的四處（狀態格的格式、申報檔的內容格式、先停那個 commit 的訊息格式、有沒有 SKIP 欠帳要自己查）都是原本規則就沒寫死的，結果都對，沒有另外加句子
+  - 規則區塊多寫了計畫沒列的一句：同一段第二次先停另建 `S<段落>-BLOCKED-2.md`（S1-3 實作時發現 gate 只認新增的檔）
 - S2-3 `commands/dd-init.md` Phase 4 兩處措辭
   - 內容：①改成解析 JSON、`enabledPlugins` 裡那個鍵的值是 `true` 才算啟用（鍵在、值為 `false` 是停用；不用字串比對）②「（腳本會裝）」改成先 `claude plugin install claude-md-management@claude-plugins-official`；已經下載、只是沒登記時，重跑 `./install-dd-pipeline.sh` 會登記並啟用（它不下載）
   - 檔案：`commands/dd-init.md`（Phase 4，蓋章區塊之外）
