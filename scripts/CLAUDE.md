@@ -214,7 +214,8 @@
     awk 的 `print > out` 會跟著 symlink 寫到它指的地方，clone 帶進來的 symlink 可以指到專案外
     （security-audit 試跑找到）。檢查放在建 `WORK` 之前，`--plan` 不受影響
   - 情境測試 `tests/test-dd-init-upgrade.sh`（變異對照見 `tests/CLAUDE.md`）
-- `githooks/pre-commit` — 本 repo 自用（dogfood），轉呼叫上面的 gate。
+- `githooks/pre-commit` — 本 repo 自用（dogfood）：先跑 `githooks/claude-md-size.sh --staged`（根目錄 CLAUDE.md 的大小上限，2026-11-16 加的；
+  `SKIP_DOC_CHECK=1` 不跳過它），非 0 就擋下，再轉呼叫上面的 gate。那一層三個檔（hook、大小檢查、上限檔）的說明在 `githooks/CLAUDE.md`。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。
   注意 `core.hooksPath` 設定後 git 會完全忽略 `.git/hooks/`，與 `/dd-init` 的
   預設掛載點互斥（dd-init Phase 3 會偵測並改掛到 hooksPath 目錄）。

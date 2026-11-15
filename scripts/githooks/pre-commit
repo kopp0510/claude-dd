@@ -1,5 +1,7 @@
 #!/bin/bash
-# claude-dd 自用 pre-commit（dogfood）：呼叫 repo 內的 CLAUDE.md gate
+# claude-dd 自用 pre-commit（dogfood）：先查根目錄 CLAUDE.md 的大小上限，再呼叫 repo 內的 CLAUDE.md gate
 # 啟用（clone 後跑一次）：git config core.hooksPath scripts/githooks
-# 逃生口同 gate 本體：SKIP_DOC_CHECK=1 git commit ...
-exec "$(git rev-parse --show-toplevel)/scripts/check-claude-md.sh"
+# 逃生口 SKIP_DOC_CHECK=1 git commit ... 只跳過 gate，不跳過大小上限（見同目錄 CLAUDE.md）
+top=$(git rev-parse --show-toplevel) || exit 1
+"$top/scripts/githooks/claude-md-size.sh" --staged || exit 1
+exec "$top/scripts/check-claude-md.sh"
