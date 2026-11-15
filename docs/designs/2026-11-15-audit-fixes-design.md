@@ -245,10 +245,11 @@ S4 的步驟 3–5（2026-11-15）：
     - T11 變異重跑（兩處 `-eq 1` 改 `-ge 1`）：rc=1「Skills 的 verification-gate 那一行應該有『無法比對』，實際：…已安裝（與 repo 不同，重跑安裝會更新）」；原版 rc=0
     - 沙盒 HOME 全新安裝 rc=0：輸出是「DD Pipeline Commands (1 個)」接「└── dd-init: 已安裝（新）」，沒有命名空間標題、shell 錯誤 0 筆；`~/.claude/commands/` 只有 `dd-init.md`、`~/.claude/skills/` 13 個目錄沒有 `review`。`--uninstall --yes` rc=0（提示印「0 個命名空間 Commands」）
     - 升級情境：沙盒 HOME 先裝 b3b2bf9 的內容（rc=0，兩個舊目錄在）→ 新版 `--force`（rc=0，兩個舊目錄還在，`--check` 沒有提到它們）→ 照 `UPGRADING.md` 的兩行指令清掉 → `--check` rc=0、skills 13 個
-    - 舊名的 `git grep` 剩下的（都是「已退場」的敘述）：`CLAUDE.md`「部署清單」與「目錄結構」各一句、`DD_PIPELINE_ARCHITECTURE.md` 部署清單的歷史與授權段各一句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 兩句；`skills/review`（濾掉 `self-improving-agent/skills/review`）0 筆
+    - 舊名的 `git grep` 剩下的（都是「已退場」的敘述）：`CLAUDE.md`「部署清單」與「目錄結構」各一句、`DD_PIPELINE_ARCHITECTURE.md` 部署清單的歷史與授權段各一句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 一行（「`commands/` 底下沒有子目錄」那條；同檔 T11 變異那一句提的是 `review` skill，不含 `workflow-review` 這個字）；`skills/review`（濾掉 `self-improving-agent/skills/review`）0 筆
     - 計畫以外多改的：根目錄 `CLAUDE.md`「新增 Command 步驟」命名空間那條、`tests/CLAUDE.md` 各補一句「命名空間的部署程式碼現在沒有測試跑到，加回時把斷言換回來」；`UPGRADING.md` 開頭「三種升級情境」改「四種」
 - S5-2 code-simplifier 包裝器補一句約束
   - 內容：`skills/code-simplifier/SKILL.md` 的 Prompt 模板「約束：」那一行後面加一句：編碼風格只照專案 CLAUDE.md 寫明的；agent 定義裡列的偏好（import 排序、`function` 與箭頭函式的取捨）不算專案標準，專案 CLAUDE.md 沒寫就不套用，不重排 import
+    （這是第一版，63f4d6c commit 的就是它；步驟 4 的審查之後改成第二版，現行的句子以 `skills/code-simplifier/SKILL.md` 為準，見下面「第三輪」）
   - 檔案：`skills/code-simplifier/SKILL.md`、`CHANGELOG.md` `## 未發布`
   - 驗證（行為，A/B；結果用 `diff`、`grep` 核對，不看 agent 自述）：scratchpad 的拋棄式 repo 放一個小 `.js`（import 沒排序、有箭頭函式、有一處可簡化的巢狀條件），CLAUDE.md 不寫風格規則。派包裝器實際會先試的那個 agent 類型（`code-simplifier:code-simplifier`；派之前 `cmp` 它的定義檔與 repo 這份）：舊 Prompt 模板 2 發、新的 2 發，各在自己的副本上改。
     每一發另外要它照貼 context 裡出現的 CLAUDE.md 路徑與第一行（subagent 可能帶著這個 session 的全域 CLAUDE.md，那份 §3.2 已經寫「不重排 import」，會讓舊的那一邊也不動）。
@@ -261,7 +262,7 @@ S4 的步驟 3–5（2026-11-15）：
       四發照貼的 context：都有 `~/.claude/CLAUDE.md` 與這個 repo 的根目錄 `CLAUDE.md`（素材專案的 CLAUDE.md 沒有被注入，是它們自己讀的）。舊的兩發不動的理由都是「這個檔全用箭頭函式，以專案寫法為準」
     - 第二輪（換素材；與上面寫的「只把 import 與箭頭函式加多」不同：依第一輪看到的理由改成**風格混用**，`function` 2 個、箭頭 4 個、import 7 行沒排序且 `./zones.js` 分兩行；這一輪沒有叫它照貼 context）：
 
-      | 臂 | 模組出現順序 | import 行 | `function` 宣告 | 箭頭 | 巢狀條件 | `quote()` 9 組輸入與原版 |
+      | 臂 | 模組出現順序 | import 行 | `function` 宣告 | 箭頭 | 巢狀條件 | `quote()` 9 組輸入與原版（我自己的比對，見表下） |
       |---|---|---|---|---|---|---|
       | 原檔 | zones、fs、os、path、crypto、assert | 7 行 | 2 | 4 | — | — |
       | 舊 1 | 變了（內建照字母在前、zones 在後） | 6 行 | 6 | 0 | 已簡化 | 相同 |
@@ -269,15 +270,45 @@ S4 的步驟 3–5（2026-11-15）：
       | 新 1 | 相同 | 逐字相同 | 3（多一個不匯出的 helper） | 4 | 已簡化 | 相同 |
       | 新 2 | 相同 | 逐字相同 | 2 | 4 | 已簡化 | 相同 |
 
-      判定：舊的 2 發都重排了 import、把 4 個箭頭全改成 `function`，新的 2 發都沒有 → 照派出前寫死的判定算通過。每臂 n=2、一份素材，四發的 context 都有全域 CLAUDE.md（它的 §3.2 寫「不重排 import」，舊的兩發照樣重排了）；沒有全域 CLAUDE.md 的環境沒測
+      9 組輸入是我自己另外跑的（`undefined`、`null`、`{}`、`items: null`、空陣列、未知國家、TW、US 加 express、JP 加 `express: 0`；`id` 是隨機值只比型別與長度），
+      第一次是臨時寫在指令列裡、沒存檔，審查者在素材目錄找到的 13 組那一支是某一臂自己留下的、不是這個數字的出處。第三輪起存成 `<scratchpad>/s5-ab2/mycmp.mjs`，五份（原檔對舊 1、舊 2、新 3、新 4 與自己）重跑都是 `inputs 9 diffs 0`
+
+      判定：舊的 2 發都重排了 import、把 4 個箭頭全改成 `function`，新的 2 發都沒有 → 判定式（舊的至少一發有、新的每一發都沒有）是派出前寫的，照它算通過；素材不是派出前定的那一份（見上）。每臂 n=2、一份素材。
+      第二輪沒有量 context：第一輪四發都回報有全域 CLAUDE.md（它的 §3.2 寫「不重排 import」），同一個 session 接著派的第二輪照理也有，這是推論；所以「舊模板看得到 §3.2 照樣重排」沒有直接證據。沒有全域 CLAUDE.md 的環境沒測
     - 副作用：新的 2 發都沒有合併 `./zones.js` 那兩行 import，理由都是「合併就得挪動 import」。那一句沒有為這個再改字（改了字，上面的證據就不算它的，要重跑）；寫進 CHANGELOG
     - 第三輪（步驟 4 的審查之後；那一句改了字，前兩輪的證據不算新句子的）。審查指出三件事：括號只點名兩項會被讀成完整清單（agent 那一節列了六項）、
       「不重排 import」讀起來不帶條件（專案 CLAUDE.md 有寫 import 規則時會打架、合併重複行也被擋）、「只照專案 CLAUDE.md」字面上連既有程式碼的寫法也排除。
       新句子見 `skills/code-simplifier/SKILL.md` 的 Prompt 模板。**派出前寫死的判定**：同一份第二輪素材、新句子 2 發（舊模板沒改字，沿用第二輪舊 1、舊 2 當對照）；
       每一發都要 模組出現順序與原檔相同、箭頭 4 個都還在、沒有把箭頭改成 `function`、巢狀條件已簡化、`quote()` 對同一組輸入與原檔相同 → 通過；任何一發不符 → 新句子不成立，停下回報。
       `./zones.js` 那兩行有沒有被合併只記錄、不列入判定（句子寫的是可以合併，沒有要求）
-    - 沒做的：沒有照根目錄 CLAUDE.md「新增 Skill 步驟」第 3 步把整份 `SKILL.md` 乾跑一遍 —— 這次只改 Prompt 模板的一行，上面 8 發跑的就是那一行會送出去的內容；`description` 與觸發條件沒動，沒跑 `claude -p` 的觸發測試
+      - 結果（判定在 6015e7b 先 commit 才派；`<scratchpad>/s5-ab2/{new3,new4}`，派工內容 `prompt-new3.txt`、`prompt-new4.txt`）：
+
+        | 臂 | 模組出現順序 | import 行 | `./zones.js` 行數 | `function` 宣告 | 箭頭 | `result = null` 殘留 | `mycmp.mjs` |
+        |---|---|---|---|---|---|---|---|
+        | 原檔 | — | 7 | 2 | 2 | 4 | 4 | — |
+        | 舊 1（第二輪） | 變了 | 6 | 1 | 6 | 0 | 0 | diffs 0 |
+        | 舊 2（第二輪） | 變了 | 6 | 1 | 6 | 0 | 0 | diffs 0 |
+        | 新 3 | 相同 | 6 | 1 | 2 | 4 | 0 | diffs 0 |
+        | 新 4 | 相同 | 6 | 1 | 2 | 4 | 0 | diffs 0 |
+
+        兩發都符合 → 通過。兩發都把 `./zones.js` 的兩行合併成一行、留在原本第一行的位置。新 3 把 `totalWeight` 的索引迴圈改成 `for...of`（對真正的陣列結果相同；`{length: 1, 0: {…}}` 這種類陣列物件會從算得出來變成丟錯，那 9 組輸入沒有這種），這跟風格約束無關，是 agent 自己的簡化判斷。
+        句子裡講到、但這一輪沒測的：專案 CLAUDE.md 有寫 import 規則時照它、回傳型別標註、try/catch、「以既有寫法為準」在全檔同一種風格時的效果
+    - 沒做的：沒有照根目錄 CLAUDE.md「新增 Skill 步驟」第 3 步把整份 `SKILL.md` 乾跑一遍 —— 這次只改 Prompt 模板的一行，上面三輪 A/B 跑的就是那一行會送出去的內容（現行的句子是第三輪那 2 發）；`description` 與觸發條件沒動，沒跑 `claude -p` 的觸發測試
     - 舊的兩發各在素材目錄的上一層寫了比對用的暫存檔（違反派工寫的「只改這個目錄裡的檔」），都在 scratchpad 裡、不在 repo；其中一發回報它的檔被另一發蓋掉。不影響上表（表上的數字是我對各臂自己的 `src/quote.js` 量的）
+
+S5 的步驟 3–5（2026-11-15）：
+
+- 步驟 3：`code-simplifier:code-simplifier` 看了安裝腳本、測試、ci.yml 這次改到的行，沒有要改的，沒動檔
+- 步驟 4：3 個 `code-reviewer`，0 條 Critical、5 條 Important、7 條 Smells；Important 全部採納，Smells 採納 6 條、駁回 1 條（沒有另派整份 `SKILL.md` 的乾跑臂）；
+  報告在 `docs/reviews/2026-11-15-audit-fixes/S5-{a,b,c,judge}.md`
+- 步驟 4 帶出的改動（都是文件與那一句 prompt，沒有程式碼）：`skills/code-simplifier/SKILL.md` 那一句改成第二版並重跑 A/B（上面「第三輪」）；
+  `UPGRADING.md` 的清理指令先確認是不是這個 repo 部署的那一份才刪、取回步驟逐處列出並提醒授權、「只新增、覆蓋」那句改準；
+  兩份 README 的 `--uninstall` 與升級指路句、根目錄 CLAUDE.md 的升級指路句補上退場元件；`tests/CLAUDE.md` 新條目搬進「此層約束」；CHANGELOG 那一條重寫；上面 S5-2 結果的兩處更正
+- 步驟 5（修完之後重跑）：照 ci.yml 逐 step 跑 26 個全部 rc=0；`/bin/bash tests/test-install.sh` macOS（bash 3.2）rc=0、21 個 ✅（輸出裡 5 行 ❌ 都是沙盒安裝印的「playwright (需要手動設定)」，步驟 1 那次也是 5 行）；
+  ubuntu:24.04 容器：`test-gate.sh` rc=0（150 個 ✅）、`test-dd-init-upgrade.sh` rc=0（48 個 ✅）、`test-install.sh` rc=0（21 個 ✅）、兩支 hook 測試 rc=0、一般帳號 `TEST_ONLY=T11` rc=0；
+  `UPGRADING.md` 新寫的三行指令在沙盒 HOME（先裝 b3b2bf9 的內容、再裝新版）實跑三種情況：這個 repo 部署的印 5 與 `review.md`、不相干的同名 skill 印 0、檔不在印找不到；
+  舊名 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述：根目錄 CLAUDE.md 兩行、`DD_PIPELINE_ARCHITECTURE.md` 兩行、兩份 README 的 `--uninstall` 那句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 一行
+- 步驟 4 之後沒有再對真實 HOME 跑安裝；部署與清掉本機已部署的那兩個目錄由使用者自己做
 
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 

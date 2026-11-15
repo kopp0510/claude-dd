@@ -40,7 +40,7 @@ Prompt 模板：
 範圍：{檔案清單或片段}
 
 重點：降低圈複雜度、改善命名、移除冗餘、簡化條件（early return、減少巢狀）。
-約束：不改公開 API 簽名；有測試必須全過。編碼風格只照專案 CLAUDE.md 寫明的；agent 定義裡列的偏好（import 排序、`function` 與箭頭函式的取捨）不算專案標準，專案 CLAUDE.md 沒寫就不套用，不重排 import。
+約束：不改公開 API 簽名；有測試必須全過。agent 定義「Apply Project Standards」列的每一項（import 排序、`function` 取代箭頭函式、回傳型別標註、少用 try/catch 等）都不算專案標準，專案 CLAUDE.md 沒寫明的就不套用；風格以被改的檔既有的寫法為準，既有寫法混用時不統一。import 只合併同一個模組的重複行、不改順序，專案 CLAUDE.md 有寫 import 規則時照它。
 輸出：簡化摘要 + 關鍵變更的 Before/After 對比。
 ```
 

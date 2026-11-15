@@ -117,12 +117,11 @@
   要看紅就在 Linux 容器裡把那一段 `sed -n` 抽出來跑（PATH 上放假的 `claude`、`node`、`git`）。整支在 Linux 上跑（repo 根目錄）：
   `docker run --rm -v "$PWD":/repo:ro ubuntu:24.04 bash -c 'apt-get update -qq >/tmp/a.log 2>&1 && apt-get install -y -qq jq python3 git >>/tmp/a.log 2>&1 || exit 3; mkdir /fb && printf "#!/bin/sh\necho v0\n" > /fb/node && chmod +x /fb/node && PATH=/fb:$PATH bash /repo/tests/test-install.sh'`
   （2026-11-14 實跑：bash 5.2.21、jq 1.7、Python 3.12.3、GNU coreutils 9.4，全過。同一天 `debian:bullseye` 的 apt 對 jq、git 回 404，裝不起來）
+- **`test-install.sh` 開頭「`commands/` 底下沒有子目錄」那條斷言（2026-11-15）**：`NS_COMMANDS` 變成空陣列後換上的，取代原本「`workflow-review` 目錄在、`README.md` 沒被部署」兩條。
+  安裝腳本裡命名空間 command 的複製、比對、刪 `README.md` 那段現在沒有測試跑到（`grep -n 'NS_COMMANDS\|ns_cmd' tests/*.sh` 只剩註解）；加回命名空間 command 時把那兩條換回來。
+  跟這個檔開頭其他的裸 `[ … ]` 一樣，不成立時 `set -e` 直接結束、不印 ❌
 
 ## 與上層的關係
 
 gate 本體的規則與「改了 gate 要做變異測試」的規定在 `scripts/CLAUDE.md`；CI 防線的總表在
 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`。
-- **`test-install.sh` 開頭「`commands/` 底下沒有子目錄」那條斷言（2026-11-15）**：`NS_COMMANDS` 變成空陣列後換上的，取代原本「`workflow-review` 目錄在、`README.md` 沒被部署」兩條。
-  安裝腳本裡命名空間 command 的複製、比對、刪 `README.md` 那段現在沒有測試跑到（`grep -n 'NS_COMMANDS\|ns_cmd' tests/*.sh` 只剩註解）；加回命名空間 command 時把那兩條換回來。
-  跟這個檔開頭其他的裸 `[ … ]` 一樣，不成立時 `set -e` 直接結束、不印 ❌
-

@@ -85,7 +85,7 @@ cd claude-dd
 
 `--check` 也會拿已部署的 skill、agent 跟這份 repo 比內容，比法跟安裝本身一樣。不同的那一行標「與 repo 不同」，代表重跑安裝會覆蓋它。部署的檔讀不到時改標「無法比對」。這項比對只提示：不改任何檔，也不影響結束碼。指令、腳本、輸出風格與全域 CLAUDE.md 不比。
 
-`--uninstall` 移除這個 repo 部署的 skill、agent、指令、腳本與輸出風格，跟著 skill 一起裝的兩個全域 hook 也一併移除。另外它會把 claude-md-management 與 skill-creator 從 `settings.json` 的 `enabledPlugins` 與 `installed_plugins.json` 拿掉，就算是你在裝這個 repo 之前自己裝的也一樣；其他 plugin 不動。（這一步要有 `jq` 或 `python3`、而且檔案解析得了，否則只印出要你手動移除什麼。）
+`--uninstall` 移除這個 repo 部署的 skill、agent、指令、腳本與輸出風格，跟著 skill 一起裝的兩個全域 hook 也一併移除。它只認現行的部署清單：這個 repo 後來退場的元件（`review` skill 與 `workflow-review` 指令）會留在原地，重跑安裝與 `--uninstall` 都不會清，手動清理見 [UPGRADING.md](UPGRADING.md)。另外它會把 claude-md-management 與 skill-creator 從 `settings.json` 的 `enabledPlugins` 與 `installed_plugins.json` 拿掉，就算是你在裝這個 repo 之前自己裝的也一樣；其他 plugin 不動。（這一步要有 `jq` 或 `python3`、而且檔案解析得了，否則只印出要你手動移除什麼。）
 
 它留下什麼、留下之後會怎樣：
 
@@ -105,7 +105,7 @@ git pull && ./install-dd-pipeline.sh --force
 > 舊版會備份到 `~/.claude/backups/pre-install-<時間戳>/`，路徑印在完成訊息裡，所以救得回來 —
 > 但若你的全域規則有在地修改想保留，先不帶 `--force` 跑一次、選 `k`（保留本地）。
 
-從舊版部署升級、既有專案升級到 8 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+從舊版部署升級、既有專案升級到 8 步迴圈、更新後清掉已退場的元件：見 [UPGRADING.md](UPGRADING.md)。
 歷次結構性變更見 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 核心工作法：8 步開發迴圈
