@@ -154,7 +154,7 @@
     修的洞:原本四種共用一句「段落開始前先跑 `--start-segment`」。起點那個 commit 被 `git commit --amend` 掉之後照做,起點移到現在的 HEAD,
     `git diff <起點> --stat` 是 0 行 —— 這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡(拋棄式 repo 實跑)。
     ⚠️ **共同祖先只印在 stderr**:印到 stdout 的話,`base=$(… --segment-base)` 的呼叫端會把它當成起點拿去用,等於把硬失敗改成軟退化。
-    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次。
+    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次(2026-11-15 S2 起它照這幾句分情況:認的是「沒記過」「共同祖先是」「找不到共同祖先」「內容不是 commit」這四串字;`skills/code-simplifier/SKILL.md`「取不到起點」那句認「共同祖先是」)。
     ⚠️ **「stdout 不印東西」只講這四種**:`dd.docfile` 不合法時整支在更前面就 exit 1,那句錯誤印在 stdout(既有的字元集檢查與 2026-11-15 加的程式碼檔名檢查都是)。
     呼叫端要看 exit code,不能只看輸出是不是空的 —— `skills/dd-loop/SKILL.md` 步驟 8 那段寫的是 `base=$(…) && [ -n "$base" ]`,擋得住。
 
