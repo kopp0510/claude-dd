@@ -176,6 +176,9 @@ S3 的步驟 3–5（2026-11-15）：
   - 檔案：`skills/self-improving-agent/agents/memory-analyst.md`、`skills/self-improving-agent/CLAUDE.md`
   - 驗證（乾跑）：一個 subagent 拿範例記憶（「這個專案的測試要用 /bin/bash 跑」）照改好的 memory-analyst.md 評分，交回三個分數；期望 Scope=2，三個分數等於我照 promotion-rules.md 的表算的。另跑 ci.yml 的「~/.claude/ 路徑要指得到東西」
   - commit：`fix: self-improving-agent 的評分表只留 promotion-rules 那一份（S4-2）`
+  - 乾跑結果（2026-11-15，兩個 sonnet subagent；預期在派出前寫下：新版 Durability 2、Impact 2、Scope 2，舊版 Scope 3）：新版交回 2／2／2、總分 6，讀的是 `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`（部署版與 repo 這份 `cmp` 相同）；
+    舊版（改之前的 `memory-analyst.md`）交回 Durability 3、Impact 2、Scope 3、總分 8。同一條記憶在兩版差 2 分，其中 Scope 差的 1 分是定義不同造成的；Durability 差的 1 分是舊版沒有刻度、它自己說是猜的。
+    新版那個 subagent 回報表上「Stable pattern／Architectural truth」「Prevents mistakes／Prevents breakage」的界線沒寫 —— 那是上游表格本身的粗細，沒有動
 - S4-3 agents 兩個官方備份的授權
   - 內容：新增 `agents/LICENSE.txt`：`code-simplifier.md` 與本機官方 marketplace 副本逐字相同（比對日期與指令）；`code-reviewer.md` 是改過的檔，有部分行與官方 `feature-dev`、`pr-review-toolkit` 的同名檔相同（行數與比對指令）；來源 plugin 目錄附 Apache License 2.0；後面附 Apache-2.0 全文（從本機官方副本的 LICENSE 複製）。兩份 README 的授權表各加一列、`DD_PIPELINE_ARCHITECTURE.md` 授權段加一句
   - 檔案：`agents/LICENSE.txt`（新）、`README.md`、`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md` `## 未發布`（S4 三項一起寫，含 A11）
