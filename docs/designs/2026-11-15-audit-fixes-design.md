@@ -16,7 +16,7 @@
 - A4 D1（使用者決定，2026-11-15）：`dd.docfile` **只拒絕副檔名在 `CODE_EXT` 裡的值**。擋不到的：`Makefile`、`Dockerfile` 這類沒副檔名的檔，以及清單沒列的副檔名（`mts`、`zsh`、`lua`…）—— 使用者選的時候選項說明已寫出這個缺口
 - A5 D2（使用者決定，2026-11-15）：段落標 `BLOCKED` 去做別段、專案有 `docs/reviews/` 時，**建申報檔 `docs/reviews/S<段落>-BLOCKED.md`**。gate 判定邏輯不改（檔名本來就命中 `S[0-9][^/]*\.md`），只在擋下訊息多列這條路。取捨：gate 只看檔名（跟 `SKIP.md` 同類），拿它當成做完的段落的報告 gate 分不出來，記進 `scripts/CLAUDE.md`。（S1-3 實作時更正：原本寫「回頭做完那段有沒有補跑步驟 4 沒有關卡會查」不對 —— 回頭做時要重跑 `--start-segment`，之後開下一段時 gate 照樣查那個範圍有沒有新增報告；查不到的是先停之前已經 commit 的那一部分，那靠進度表 commits 欄的起點）
 - A6 gate 訊息改了，照 `scripts/CLAUDE.md`「此層慣例」同步檢視 `skills/dd-loop/SKILL.md`、`skills/task-planner/SKILL.md` 規則區塊；照根目錄 CLAUDE.md「CI 不驗、只能手動同步的區塊」巡兩份 README 的「CLAUDE.md 維護規則」、gate 對策段、`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段
-- A7 `skills/task-planner/SKILL.md` 的規則區塊改了之後，已經照抄進各專案設計文件的舊版不會跟著變（根目錄 CLAUDE.md「核心工作法」已寫明）；CHANGELOG 條目寫明這點，不去改其他專案。本檔進度表下方照抄的是改之前的版本
+- A7 `skills/task-planner/SKILL.md` 的規則區塊改了之後，已經照抄進各專案設計文件的舊版不會跟著變（根目錄 CLAUDE.md「核心工作法」已寫明）；CHANGELOG 條目寫明這點，不去改其他專案。本檔進度表下方照抄的那份，`BLOCKED` 那一條在 S2 步驟 4 之後已經換成新句（審查者指出本 repo 自己也還有 S3、S4 要做），其餘各條沒有變
 - A8 `--segment-base` 維持硬失敗、stdout 維持空的（`scripts/CLAUDE.md` 的退化政策表不變），只改 stderr 的訊息
 - A9 S2、S4 改到 SKILL.md／commands 內文但不動 description 與觸發條件，只做根目錄 CLAUDE.md「新增 Skill 步驟」第 3 步的乾跑，不做第 5 步的 `claude -p` 觸發測試
 - A10 S4 的授權檔只寫查得到的事實：本機官方 marketplace 副本的比對結果與該目錄的 LICENSE；開工前提另外查 GitHub 上游，查不到就寫「上游線上版沒查到」，不編。`code-reviewer.md` 是改過的衍生檔，授權檔裡寫明它改過
@@ -42,7 +42,7 @@
 - 接手：`IN_PROGRESS` 那段就是目前這段。拿「段落與小任務」的清單對 `git log --oneline <表上這段的起點>..HEAD` 裡結尾帶 `（S2-` 的 commit（不加範圍會對到別份文件的同編號 commit）。
   **前綴是「這一段自己的 ID 加一個 `-`」**，不是固定字串：插隊進來的 `S2.5` 要找的是 `（S2.5-`，
   拿 `（S2-` 去比對不到它，拿 `（S2` 又會把 S2.5 的 commit 誤算成 S2 的，還沒 commit 的小任務先做完。小任務都做完了，再看同一範圍裡有沒有帶 `（S2）` 的 commit：有，代表步驟 6 之後的步驟做到一半；沒有就從步驟 3 開始
-- `BLOCKED` 用在這段要先停：外部卡住（等使用者決定、環境壞了），或使用者要先做別的事（別段、臨時修 bug）。狀態格寫 `BLOCKED` 和原因，外部卡住時停下來問使用者。先停之前，用正常 commit 補完這段 SKIP 欠下的 CLAUDE.md（不然 `--start-segment` 會拒絕）；回頭做這段時，範圍一樣從表上這段的起點算。依賴還沒完成的段落維持 `TODO`
+- `BLOCKED` 用在這段要先停：外部卡住（等使用者決定、環境壞了），或使用者要先做別的事（別段、臨時修 bug）。狀態格寫 `BLOCKED` 和原因，外部卡住時停下來問使用者。先停之前，用正常 commit 補完這段 SKIP 欠下的 CLAUDE.md（不然 `--start-segment` 會拒絕）；專案有 `docs/reviews/` 目錄時，先停還要 commit 一份申報檔 `S<段落>-BLOCKED.md`（跟進度表標 `BLOCKED` 的改動、補的 CLAUDE.md 放同一個 commit）—— 這段還沒有 review 報告，少了它 `--start-segment` 一樣會拒絕。申報檔寫明停在哪個小任務、為什麼停、先停之前已經 commit 的範圍；放的位置照專案 `docs/reviews/CLAUDE.md` 的規定，專案有好幾張進度表時放這張表自己的子目錄、不要放進別張表的，寫之前先 `ls`（要的是新增的檔，蓋掉或改既有的不算）；同一段第二次先停另建 `S<段落>-BLOCKED-2.md`。回頭做這段時，範圍一樣從表上這段的起點算，步驟 4 照跑、報告照落地（`-BLOCKED.md` 只是申報，不算報告）。依賴還沒完成的段落維持 `TODO`
 - 做到一半冒出新工作：先問使用者，同意才加一列 `TODO` 排進該在的位置；ID 不重編，插在中間用 `S2.5`。
   **同一批要在「段落與小任務」補上這一段的小任務**（名稱、要動的檔案、驗證方式、commit 訊息）——
   只加表上那一列的話，接手的 session 照上面「接手」那條去對 commit，清單本來就是空的，
@@ -126,9 +126,16 @@ S1 的步驟 3–5（2026-11-15）：
   - 乾跑結果（2026-11-15，sonnet subagent 各拿一份假的 settings.json，不准讀真的、不准跑 `claude plugin`）：值 true → 已啟用、無提示；值 false → 未啟用、提示 `claude plugin enable …`；沒有鍵 → 未啟用、提示 `claude plugin install …`；
     檔案截斷（計畫外加的第四臂）→ 無從判定、不提示安裝。假檔的真值另用 `jq` 與 `python3` 各讀一次核對
   - 與計畫不同的三處：①第一版照計畫寫「未啟用 → 先 `claude plugin install`」，值 false 那臂回報「停用與沒登記要不要給不同提示」沒寫 —— 分成兩條，停用給 `claude plugin enable`（`claude plugin --help` 列有 `enable [options] <plugin>  Enable a disabled plugin`，2.1.325 本機實跑）
-    ②計畫寫的「已經下載、只是沒登記時重跑安裝腳本會登記並啟用」沒有寫進指令：讀 `install_plugins()` 後，它的條件是 marketplace 目錄有那個 plugin 的 `plugin.json` 而且取得到版本字串，一句話講不準，改成只寫「安裝腳本不下載 plugin 的檔案，不要提示跑它就會裝」
+    ②計畫寫的「已經下載、只是沒登記時重跑安裝腳本會登記並啟用」沒有寫進指令：讀 `install_plugins()` 後，它的條件是 marketplace 目錄有那個 plugin 的 `plugin.json` 而且取得到版本字串，一句話講不準，沒有寫進指令。第一版還留著半句「只把本機已經有的登記起來並設成啟用」，步驟 4 的審查者指出它跟這裡的說法不一致，定稿只剩「安裝腳本不下載 plugin 的檔案」
     ③加一句 `jq` 的 `//` 會把 `false` 當成沒有值（沒有鍵那臂回報的，`echo '{"a":false}' | jq -r '.a // "無鍵"'` 印「無鍵」）；改字之後 true／false／沒有鍵／壞檔四臂重跑過，加 `//` 那句之後 false 臂再跑一次，結論都相同
 - S2-4 `CHANGELOG.md` `## 未發布` 補 S2 的條目（含 A7 那句）；commit：`docs: 流程文字三項修補的 CHANGELOG（S2-4）`
+
+S2 的步驟 3–5（2026-11-15）：
+
+- 步驟 3 沒有跑：diff 全是 Markdown，沒有程式碼。步驟 4：3 個 `code-reviewer`，0 條 Critical、4 條 Important、5 條 Smells，全部採納；報告在 `docs/reviews/2026-11-15-audit-fixes/S2-{a,b,c,judge}.md`
+- 步驟 4 帶出的改動：`/dd-init` Phase 4 改成直接附一條 `jq`（判法同 `plugin_enabled_state()`），不讓模型自己寫；code-simplifier 取不到起點時改問「這一段從哪個 commit 開始」；task-planner 的 `BLOCKED` 那條改成「專案有 `docs/reviews/` 時先停一律 commit 申報檔」並寫明放哪、寫什麼；dd-loop 補上錯誤印在 stdout 的情況；本檔照抄的規則區塊同步
+- 步驟 5（修完之後）：Phase 4 的指令對 12 份假設定檔的結論與 `plugin_enabled_state()` 逐份相同，文件裡的指令與測過的那份 `diff` 相同；改過字的三處重跑乾跑六臂（Phase 4 的 false／空檔／字串值、規則區塊的多張表／零 commit 先停、code-simplifier 沒記過起點），結果用指令核對都對；本機照 ci.yml 逐 step 跑的結果見這個 commit 的訊息
+- 沒驗證的：`claude plugin enable` 與 `claude plugin install` 都沒有實跑（會改真實的 `~/.claude`），只確認 `claude plugin --help` 列有這兩個子指令
 
 ### S3 安裝腳本 `--check`
 
