@@ -298,12 +298,27 @@ if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]; then "$HOME/.claude/script
 
 ### Phase 4: 檢查巢狀 CLAUDE.md 依賴
 
-1. 檢查 `claude-md-management` plugin 是否已啟用：解析 `~/.claude/settings.json`（用 `jq` 或 `python3` 讀 JSON，不要用 grep 比對字串），
-   看 `enabledPlugins` 裡 `claude-md-management@claude-plugins-official` 這個鍵的**值是不是 `true`**。
-   檔案解析不了就照實說「無從判定」，不要當成已啟用或未啟用。用 `jq` 時不要拿 `//` 給預設值：它把 `false` 也當成沒有值，停用會被看成沒有這個鍵
-   - 鍵在、值是 `false`（裝了但停用）→ 提示執行 `claude plugin enable claude-md-management@claude-plugins-official`
-   - 沒有這個鍵、沒有 `enabledPlugins`、或沒有這個檔（未啟用）→ 提示執行 `claude plugin install claude-md-management@claude-plugins-official`
-   - 兩種都不要提示「跑 `./install-dd-pipeline.sh` 就會裝」：安裝腳本不下載 plugin 的檔案，只把本機已經有的登記起來並設成啟用
+1. 檢查 `claude-md-management` plugin 是否已啟用。`~/.claude/settings.json` 不存在 → 算未啟用（照下面 `none` 那條）；存在就跑這一條
+   （不要用 grep 比對字串，也不要自己寫 `jq -r` 看印出來的字：字串 `"true"` 與布林 `true` 印出來一樣，空檔則什麼都不印、也不報錯）：
+
+   ```bash
+   jq -r -s '
+     if length != 1 or (.[0] | type) != "object" then "unparseable"
+     else (.[0].enabledPlugins // {}) as $e
+       | if ($e | type) != "object" then "none"
+         else $e["claude-md-management@claude-plugins-official"] as $v
+           | if $v == true then "enabled" elif $v == false then "disabled" else "none" end
+         end
+     end' ~/.claude/settings.json
+   ```
+
+   沒有 `jq` 就用 `python3` 照同樣的規則判：檔案剛好是一個 JSON 物件才往下看，那個鍵的值是布林 `true` 才算 `enabled`、布林 `false` 才算 `disabled`，其他都是 `none`。
+   - `enabled` → 已啟用，不用提示
+   - `disabled`（鍵在、值是 `false`：裝了但停用）→ 提示執行 `claude plugin enable claude-md-management@claude-plugins-official`
+   - `none`（沒有這個鍵、沒有 `enabledPlugins`，或值不是布林）→ 未啟用，提示執行 `claude plugin install claude-md-management@claude-plugins-official`；值不是布林時把實際的值一起告訴使用者
+   - `unparseable`、指令失敗、或什麼都沒印（檔案壞了、是空的、頂層不是物件、不只一個 JSON 值）→ 照實說「無從判定」，不要當成已啟用或未啟用，也不提示安裝
+   - 這裡只讀 `~/.claude/settings.json` 一個檔，其他設定檔沒查：提示時講「`~/.claude/settings.json` 裡沒有啟用」，不要講成確定沒裝
+   - 不要提示「跑 `./install-dd-pipeline.sh` 就會裝」：安裝腳本不下載 plugin 的檔案
 2. 現有專案且尚無巢狀 CLAUDE.md → 提示：可對主要目錄（如 `backend/`、`frontend/`）
    逐步補 CLAUDE.md，不強制一次補齊
 

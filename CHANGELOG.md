@@ -118,13 +118,14 @@
   （同一段第二次先停另建 `-BLOCKED-2.md`：gate 要的是新增的檔，改既有那份不算）。原本印的兩條路（跑步驟 4、`SKIP.md` 申報）在這個情況都不適用。gate 的判定沒改，只多印這幾行；這個檔只是申報、不算審查報告，寫法見 `docs/reviews/CLAUDE.md`
 - **`tests/test-gate.sh` 加 ⑬⑭⑮**，釘住上面三條；`said` 的字串以 `-` 開頭時會被 grep 當成選項、永遠紅，記在 `tests/CLAUDE.md`
 - **`skills/dd-loop`：`--segment-base` 取不到起點時寫明下一步**：原本只寫「exit 非 0 = 範圍沒算出來」。現在：有進度表用表上這段的起點；沒有進度表時照 gate 印的那一句分情況 ——
-  「沒記過」問使用者、印出共同祖先就用那個 sha（不用問）、找不到共同祖先或內容不是 commit 問使用者；都不要順手重跑 `--start-segment`。`skills/code-simplifier`「取不到起點」那句同步
-- **`skills/task-planner` 規則區塊：段落先停（`BLOCKED`）時加 review 申報檔**：專案有 `docs/reviews/`、而這段已經有 commit 時，補 CLAUDE.md 的同一個 commit 加一份 `docs/reviews/S<段落>-BLOCKED.md`
-  （同一段第二次先停另建 `-BLOCKED-2.md`），不然開別段的 `--start-segment` 會拒絕；回頭做完時步驟 4 照跑、報告照落地。`skills/dd-loop`「報告一律落地」那條同步。
+  「沒記過」問使用者、印出共同祖先就用那個 sha（不用問）、找不到共同祖先或內容不是 commit 問使用者；都不要順手重跑 `--start-segment`；這幾句都沒有（`dd.docfile` 不合法這類，錯誤印在 stdout）就照它印的修好再重跑 `--segment-base`。
+  `skills/code-simplifier`「取不到起點」那句同步：原本叫人問「範圍不明」那一題，那題的預設是最近修改的檔案，會把範圍縮窄，改成問「這一段從哪個 commit 開始」
+- **`skills/task-planner` 規則區塊：段落先停（`BLOCKED`）時加 review 申報檔**：專案有 `docs/reviews/` 時，先停要 commit 一份申報檔 `S<段落>-BLOCKED.md`
+  （跟進度表標 `BLOCKED` 的改動、補的 CLAUDE.md 放同一個 commit；專案有好幾張進度表時放這張表自己的子目錄；同一段第二次先停另建 `-BLOCKED-2.md`），不然開別段的 `--start-segment` 會拒絕；回頭做完時步驟 4 照跑、報告照落地。`skills/dd-loop`「報告一律落地」那條同步。
   ⚠️ 已經照抄進各專案設計文件的規則區塊不會跟著變：正在用進度表的專案要先停一段時，照 gate 擋下時印的第 3 條路做，或自己把這一句補進設計文件
 - **`/dd-init` Phase 4：plugin 有沒有啟用看值，不提示「安裝腳本會裝」**：原本寫「`enabledPlugins` 是否含」，停用（鍵在、值為 `false`）會被當成已啟用；
-  原本的提示「`./install-dd-pipeline.sh --force`（腳本會裝）」也不對，安裝腳本不下載 plugin。現在解析 JSON、值是 `true` 才算啟用，停用提示 `claude plugin enable`、沒有鍵提示 `claude plugin install`，
-  檔案解析不了說「無從判定」。蓋章區塊沒動，`dd-loop-rev` 不跳
+  原本的提示「`./install-dd-pipeline.sh --force`（腳本會裝）」也不對，安裝腳本不下載 plugin。現在指令裡直接附一條 `jq`（判法跟安裝腳本的 `plugin_enabled_state()` 相同：剛好一個 JSON 物件、值是布林 `true` 才算啟用），停用提示 `claude plugin enable`、沒有鍵提示 `claude plugin install`，
+  檔案壞了、是空的、頂層不是物件說「無從判定」；只讀 `~/.claude/settings.json` 一個檔，提示不講成確定沒裝。蓋章區塊沒動，`dd-loop-rev` 不跳
 
 ## 1.6.14 — 2026-10-30
 
