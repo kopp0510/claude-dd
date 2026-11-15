@@ -512,6 +512,7 @@ S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣�
 - 「拿掉整數檢查」不一樣的是 O 的 `abc`、兩行數字與 P 的兩則；30 位數那一則是 12 位那一行在擋，另外做了一個變異
 - 實作時補的情境：A、D、H 各一則直接跑；O 的「從子目錄跑」「工作目錄沒有 CLAUDE.md」「刪掉上限檔」（已補進上面的清單）
 - 實作時補的變異：拿掉 12 位那一行、兩處 `resolve_limit … || exit 1` 各改成 `exit 0`、最後的 `exit $rc` 改 `exit 0`、`--staged` 超過上限時的 `exit 1` 改 `exit 0`、拿掉 `cd`、拿掉「找不到 CLAUDE.md」那一段、`pre-commit` 拿掉 `exec` gate 的那一行
+- S7-3 之後另外實跑的一項（2026-11-16，拋棄式 repo、git 2.42.0，上限 100、`main` 的 CLAUDE.md 50 bytes）：`git cherry-pick`、`git merge --no-ff`、`git rebase`、`git revert` 產生的 commit 不經過 pre-commit —— 四種都讓 `HEAD` 的 CLAUDE.md 變成 150 bytes，大小檢查沒有跑到；對照的一般 commit、`git merge --squash` 之後的 `git commit`、`git commit --amend` 都有跑到、被擋下。計畫時「哪些路繞得過」只列了 `--no-verify`、沒掛 hook 的 clone、發版前分兩個 commit，少了這一類；已補進 `scripts/githooks/CLAUDE.md`「繞得過的路」。這一類跟 `--no-verify` 一樣要等 push 時由 CI 擋
 
 小任務：
 
