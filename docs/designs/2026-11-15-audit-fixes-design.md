@@ -30,7 +30,7 @@
 |---|---|---|---|---|---|
 | S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
 | S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0..0227f5b |
-| S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | IN_PROGRESS | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53.. |
+| S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | TODO | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
@@ -157,6 +157,8 @@ S3 的步驟 3–5（2026-11-15）：
   根目錄 CLAUDE.md 拿掉「只跑四段」那句、兩份 README 的結束碼說法、`tests/CLAUDE.md` 的變異對照搬位置並照實際的改法重寫
 - 測試清單以外加的（都在 T11 這一組裡）：剛裝好的對照、同名的 `code-simplifier` skill 與另外兩個沒改的不可以被標、段尾計數、輸出沒有 shell 錯誤與壞的 UTF-8、重跑安裝後不再報、只改子目錄的 skill、讀不到的檔（最後兩格是審查後修 bug 時加的）
 - 步驟 5 的結果見 `S3-judge.md`「處置」
+- 步驟 7：沒有寫檔。候選（等使用者同意才寫進根目錄 CLAUDE.md「注意事項」`set -e` 那一條）：`diff`、`cmp`、`grep` 有第三種結束碼（2 = 出錯），用 `! cmd` 或 `if cmd` 壓成兩種時，出錯會被算進其中一邊；要分三種就寫 `cmd || rc=$?`
+- 步驟 8：範圍是根目錄 `CLAUDE.md` 與 `tests/CLAUDE.md`。修了一處（`tests/CLAUDE.md`「T8、T9、T10 另有 `utf8_ok`」漏了 T11）；根目錄那四句對回程式碼與實跑輸出都成立
 - 沒做的：`--check` 的一行說明（`--help`、兩份 README 的指令範例、根目錄 CLAUDE.md）仍寫「只檢查環境」，這次之前就不精確；commands、scripts、output styles、全域 CLAUDE.md 過期了 `--check` 還是看不出來
 
 ### S4 vendored 內容與授權
