@@ -376,6 +376,16 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - 三發都過，只能寫「帶著新版根目錄 CLAUDE.md 的全新 session，被問到這三件事時拿得到搬走的內容（每題 n=1）」。沒有「拿掉指路句」的對照臂，**不證明是指路句造成的**；**不證明主對話在長對話中途做到那一步時會主動去讀**；受測 session 一讀 `docs/measurements/` 底下的檔，那份 CLAUDE.md 可能當巢狀記憶自動進 context，stream-json 看不出來（新檔「已知的坑」有這一條）
 - 有一發沒過 → 讀它的工具順序與答案，改指路句後那一題重跑一次；還是沒過就停下回報
 
+步驟 5 補測的結果（2026-11-16，快照取自 `7e5a1c2`，claude 2.1.325，三發同時跑）：
+
+- 三發都過。答案裡指定字串的次數：Q1 `dontAsk` 2、`Launching skill` 2、`advisorModel` 3；Q2 `dontAsk` 3、`no-session-persistence` 2；Q3 `duration_api_ms` 1、`advisorModel` 1
+- 三發的第一個工具呼叫都是 Read `docs/measurements/CLAUDE.md`，之前沒有 Grep／Glob；工具呼叫數是 6、8、2，沒有指到快照以外的路徑
+- `permission_denials` 三發都是 0；`modelUsage` 的鍵三發都只有 `claude-fable-5-2`（advisor 沒被叫）；`subtype` 都是 `success`，stderr 都是 0 bytes
+- 另外讀過三份答案的指令行：Q1 給的是 `--allowedTools "Skill Read Glob Grep"` 那條，開跑前列了先部署與關 advisor；Q2 把 `Bash` 從 `--disallowedTools` 移到 `--allowedTools`，寫明底稿在新檔「測 skill 會不會自己叫」，判定用 `PreToolUse:Bash hook error` 與 `permission_denials`；Q3 給了 `--agents`、`duration_api_ms` 與關 advisor
+- 花費（result 的 `total_cost_usd`）：1.33、1.80、1.22 美元
+- 這只證明上面寫死的那一句：帶著新版根目錄 CLAUDE.md 的全新 session，被問到這三件事時拿得到搬走的內容（每題 n=1）。沒有對照臂、不證明是指路句造成的，也不證明主對話在長對話中途會主動去讀
+- 三發的 jsonl、題目、抽欄位的腳本都在做這件事的 session 暫存區，沒進 repo（jsonl 的 init 訊息有本機路徑）
+
 沒驗證的事：
 
 - 以後用這個 commit 之後的 rev 做快照實驗（`--add-dir` 加進來的那種），快照裡的 `docs/measurements/CLAUDE.md` 會不會被受測 session 當巢狀記憶讀進去、把實驗手法洩給它（審查者 C 列的，要跑對照臂才知道）
