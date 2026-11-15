@@ -32,16 +32,6 @@ Promoting a pattern from memory to rules fundamentally changes how Claude treats
 /plugin install self-improving-agent@claude-code-skills
 ```
 
-### OpenClaw
-```bash
-clawhub install self-improving-agent
-```
-
-### Codex CLI
-```bash
-./scripts/codex-install.sh --skill self-improving-agent
-```
-
 ## How It Works
 
 ```
@@ -80,8 +70,6 @@ Space freed for new learnings
 | Platform | Memory System | Support |
 |----------|--------------|---------|
 | Claude Code | Auto-memory (MEMORY.md) | ✅ Full |
-| OpenClaw | workspace/MEMORY.md | ✅ Adapted |
-| Codex CLI | AGENTS.md | ✅ Adapted |
 | GitHub Copilot | copilot-instructions.md | ⚠️ Manual |
 
 ## Credits

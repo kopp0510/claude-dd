@@ -48,16 +48,6 @@ Claude Code's auto-memory (v2.1.32+) automatically records project patterns, deb
 /plugin install self-improving-agent@claude-code-skills
 ```
 
-### OpenClaw
-```bash
-clawhub install self-improving-agent
-```
-
-### Codex CLI
-```bash
-./scripts/codex-install.sh --skill self-improving-agent
-```
-
 ## Memory Architecture
 
 ### Where things live
@@ -152,8 +142,6 @@ no exit code field, so a command that succeeded while printing `failed` or `erro
 | Platform | Memory System | Plugin Works? |
 |----------|--------------|---------------|
 | Claude Code | Auto-memory (MEMORY.md) | ✅ Full support |
-| OpenClaw | workspace/MEMORY.md | ✅ Adapted (reads workspace memory) |
-| Codex CLI | AGENTS.md | ✅ Adapted (reads AGENTS.md patterns) |
 | GitHub Copilot | `.github/copilot-instructions.md` | ⚠️ Manual promotion only |
 
 ## Related

@@ -77,3 +77,11 @@ line, so one incidental `console.error` no longer silences a real failure beside
 
 It is registered automatically by `hooks/hooks.json` — do not add it to `settings.json` by hand
 (see `hooks/CLAUDE.md`).
+
+## Differences from upstream (this copy lives in the claude-dd repo)
+
+- 2026-11-15: removed the `### OpenClaw` and `### Codex CLI` install subsections and the matching two
+  rows of the Platform Support table from `SKILL.md` and `README.md`. The Codex one pointed at
+  an install script under `./scripts/` that is not in this directory, and neither route is deployed by claude-dd.
+  The upstream credit links and the two `clawhub publish` mentions are unchanged; `settings.json`
+  still lists `openclaw` and `codex` under `platforms` (left as upstream wrote it).
