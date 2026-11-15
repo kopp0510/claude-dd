@@ -22,6 +22,10 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 只讀這一個設定檔，專案層等其他設定檔不讀，所以「都沒設」那一行印的是「沒有有效的設定（其他設定檔沒查）」，不寫成確定沒設。
 印出的句子只寫官方文件原文撐得住的說法（出處在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15），「幾萬才壓縮」這類數字不進安裝輸出。
 
+`--check` 的 skills、agents 兩段除了看在不在，還比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`）：部署版與 repo 這份不同，
+那一行印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行計數；只提示、不改檔、不影響結束碼（`tests/test-install.sh` 的 T11）。
+`--check` 只跑 skills、agents、MCP、plugin 四段，commands、scripts（gate 住在這層）、output styles、全域 CLAUDE.md 過期了它看不出來。
+
 ## 部署清單（使用率盤點制）
 
 repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單定義在 `install-dd-pipeline.sh` 頂部的

@@ -493,14 +493,23 @@ check_builtin_skills() {
     local i=0
     local installed=0
     local missing=0
+    local stale=0
 
     for skill in "${BUILTIN_SKILLS[@]}"; do
         i=$((i + 1))
         local tree_char="├──"
         [ "$i" -eq "$count" ] && tree_char="└──"
+        local source="$SCRIPT_DIR/skills/$skill"
 
         if dir_exists "$SKILLS_DIR/$skill"; then
-            echo -e "$tree_char $skill: ${GREEN}${CHECK} 已安裝${NC}"
+            # 比法跟 install_builtin_skills 一樣（diff -rq），所以這裡報不同的，重跑安裝就會覆蓋。
+            # diff 放在 if 條件裡：內容不同回 1，單獨成行會被 set -e 中止
+            if [ -d "$source" ] && ! diff -rq "$source" "$SKILLS_DIR/$skill" > /dev/null 2>&1; then
+                echo -e "$tree_char $skill: ${YELLOW}已安裝（與 repo 不同，重跑安裝會更新）${NC}"
+                stale=$((stale + 1))
+            else
+                echo -e "$tree_char $skill: ${GREEN}${CHECK} 已安裝${NC}"
+            fi
             installed=$((installed + 1))
         else
             echo -e "$tree_char $skill: ${YELLOW}未安裝${NC}"
@@ -510,6 +519,9 @@ check_builtin_skills() {
 
     echo ""
     echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
+    if [ "$stale" -gt 0 ]; then
+        echo -e "├── 與 repo 不同：${YELLOW}${stale}${NC}（重跑安裝會更新；只提示，不影響結束碼）"
+    fi
     if [ "$missing" -gt 0 ]; then
         echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
     else
@@ -683,14 +695,22 @@ check_builtin_agents() {
     local i=0
     local installed=0
     local missing=0
+    local stale=0
 
     for agent in "${BUILTIN_AGENTS[@]}"; do
         i=$((i + 1))
         local tree_char="├──"
         [ "$i" -eq "$count" ] && tree_char="└──"
+        local source="$SCRIPT_DIR/agents/$agent.md"
 
         if file_exists "$AGENTS_DIR/$agent.md"; then
-            echo -e "$tree_char $agent: ${GREEN}${CHECK} 已安裝${NC}"
+            # 比法跟 install_builtin_agents 一樣（cmp -s）；cmp 放在 if 條件裡，理由同 check_builtin_skills
+            if [ -f "$source" ] && ! cmp -s "$source" "$AGENTS_DIR/$agent.md"; then
+                echo -e "$tree_char $agent: ${YELLOW}已安裝（與 repo 不同，重跑安裝會更新）${NC}"
+                stale=$((stale + 1))
+            else
+                echo -e "$tree_char $agent: ${GREEN}${CHECK} 已安裝${NC}"
+            fi
             installed=$((installed + 1))
         else
             echo -e "$tree_char $agent: ${YELLOW}未安裝${NC}"
@@ -700,6 +720,9 @@ check_builtin_agents() {
 
     echo ""
     echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
+    if [ "$stale" -gt 0 ]; then
+        echo -e "├── 與 repo 不同：${YELLOW}${stale}${NC}（重跑安裝會更新；只提示，不影響結束碼）"
+    fi
     if [ "$missing" -gt 0 ]; then
         echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
     else
