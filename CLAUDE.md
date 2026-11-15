@@ -2,6 +2,8 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
+進度以 docs/designs/2026-11-15-audit-fixes-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
+
 ## 安裝 / 更新
 
 ```bash
@@ -32,12 +34,13 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
 不是「用過才收」的元件。各元件的加入日期與實證來源見 `DD_PIPELINE_ARCHITECTURE.md`「部署清單」。
 
 - 2026-08-04 盤點刪掉的元件從 tag 取回：`git checkout pre-prune-2026-08-04 -- skills/<名字>` 後加回陣列
+- 2026-11-15 退場的 `review` skill 與 `workflow-review` 命名空間指令：取回方式、已部署的機器怎麼清，見 `UPGRADING.md`「已退場的元件」
 
 ## 目錄結構
 
-- `skills/` — 14 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph、security-audit 為 vendored 自 cloudflare/security-audit-skill 的安全稽核（user-invoked）；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
+- `skills/` — 13 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph、security-audit 為 vendored 自 cloudflare/security-audit-skill 的安全稽核（user-invoked）；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）；`LICENSE.txt` 記兩個官方備份與官方檔的比對結果、附 Apache-2.0 全文，不部署
-- `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 1 個命名空間 command 目錄（workflow-review）
+- `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 0 個命名空間 command 目錄（2026-11-15 `workflow-review` 退場後沒有了；部署它的程式碼還在）
 - `output-styles/` — Output Style（`adhd.md`，部署到 `~/.claude/output-styles/`，使用者用 `/output-style ADHD`／`/output-style default` 自己開關；安裝不改任何 `outputStyle` 設定）。`LICENSE.txt` 記上游 i-have-adhd 的逐節去向、不部署；這層別放其他 `.md`，CI 會把它當成要部署的風格
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）
@@ -136,7 +139,9 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ## 新增 Command 步驟
 
 - 平面指令：在 `commands/` 建立 `<name>.md`，並更新 `install-dd-pipeline.sh` 頂層的 `DD_COMMANDS` 陣列
-- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列
+- 命名空間指令：在 `commands/<namespace>/` 建立 `.md` 檔案，並更新 `install-dd-pipeline.sh` 頂層的 `NS_COMMANDS` 陣列。
+  2026-11-15 起這個陣列是空的：加回第一個時，把 `tests/test-install.sh` 開頭「`commands/` 底下沒有子目錄」那條斷言換回「目錄在、`README.md` 沒被部署」兩條 ——
+  現在沒有任何測試跑到命名空間的複製、比對、刪 `README.md` 那段程式碼
 - 平面指令的檔名**必須 `dd-` 開頭**：CI 的陣列一致性用 `ls commands/dd-*.md` 掃，非此前綴的檔案掃不到，
   本機安裝正常、push 才紅燈，而訊息只說「陣列與實際目錄不一致」，很難聯想到是檔名前綴
 - 兩種都要**同批**同步本檔「目錄結構」那行的數字（`N 個 dd-* 指令`、`N 個命名空間 command 目錄`）——

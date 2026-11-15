@@ -52,11 +52,11 @@ cd claude-dd
 安裝腳本的進度顯示為 7 步（`1/7` … `7/7`）：
 
 1. 檢查基礎環境（上述硬性需求，缺一即中止）。另外提醒自動壓縮視窗有沒有設（可選，只提示、不中止）
-2. 安裝 14 個 promoted Skills 到 `~/.claude/skills/`
+2. 安裝 13 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
 5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令；`installed_plugins.json` 或 `settings.json` 更新不了時（檔案是空的、壞掉、或內容不是剛好一個物件）印警告後跳過。先登記、再啟用，所以登記失敗時不會接著去啟用它
-6. 安裝 `/dd-init` + `workflow-review` 命名空間 Command 到 `~/.claude/commands/`
+6. 安裝 `/dd-init` Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
 另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）與 `dd-init-upgrade.sh`（`/dd-init` 升級舊蓋章區塊時分出範本行與自己加的內容）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
@@ -212,10 +212,9 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | 指令 | 說明 |
 |------|------|
 | `/dd-init` | 初始化專案：蓋章 8 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`（僅在專案有前端時；純後端/CLI 跳過）、檢查 plugin 依賴 |
-| `/workflow-review:review` | 綜合程式碼審查（安全、效能、配置）。這是命名空間指令，冒號形式才是可呼叫的名稱 |
 | `/output-style ADHD` | 開啟 ADHD 回覆風格（第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
 
-## Promoted Skills（預設部署，14 個）
+## Promoted Skills（預設部署，13 個）
 
 > 「Promoted」指該元件有實證使用紀錄，因此預設部署。唯一的例外是 `gate-guard`：它是 gate 的防護，不是「用過才收」的 skill。
 
@@ -227,7 +226,6 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | frontend-design | 前端視覺設計 |
 | gate-guard | 只有 hook、沒有 skill 的 plugin：擋 Claude 用 `git commit --no-verify`／`-n`／`-c core.hooksPath=` 繞過 CLAUDE.md gate（先用 `git config core.hooksPath` 把 hook 關掉的擋不到） |
 | plan-review | 計畫的對抗式審查：裁決者（Opus）派至少 3 個審查者（haiku）猛攻，只留查證屬實的批評 |
-| review | 綜合審查 wrapper |
 | security-audit | 安全問答與漏洞審查；只有明確要求稽核時才跑完整流程（偵察 → 依覆蓋清單分波找漏洞 → 逐條獨立驗證 → 產出報告檔）（vendored 自 [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)，user-invoked，用 `/security-audit` 叫） |
 | self-improving-agent | 記憶審計與知識沉澱 |
 | task-planner | 功能段落規劃，進度表寫進設計文件 |
@@ -314,7 +312,6 @@ vendored 內容，各自附上游授權檔：
 | `agents/LICENSE.txt` | Apache-2.0 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) —— `agents/code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔逐字相同；`agents/code-reviewer.md` 是改過的檔，只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同（比對指令與行數見該檔） |
 | `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（Cloudflare, Inc.） |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（只借規則，逐節去向見該檔） |
-| `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15` 收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |
 
 收編規則見 [CLAUDE.md「第三方 Skill / Agent 收編檢查清單」](CLAUDE.md)。
 

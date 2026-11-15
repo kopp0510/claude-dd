@@ -42,7 +42,6 @@ PROMOTED_SKILLS=(
     "frontend-design"
     "gate-guard"             # 只有 hook 的 plugin：擋 Claude 用 --no-verify 繞過 CLAUDE.md gate
     "plan-review"
-    "review"
     "security-audit"         # user-invoked（disable-model-invocation）；vendored 自 cloudflare/security-audit-skill
     "self-improving-agent"
     "task-planner"
@@ -78,10 +77,9 @@ DD_COMMANDS=(
 
 ALL_DD_COMMANDS=("${DD_COMMANDS[@]}")
 
-# 命名空間 commands（目錄型）
-NS_COMMANDS=(
-    "workflow-review"
-)
+# 命名空間 commands（目錄型）。2026-11-15 起是空的：唯一的 workflow-review 退場了（見 UPGRADING.md）。
+# 部署、比對、解除安裝的程式碼都留著，加回名字就會動
+NS_COMMANDS=()
 
 ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 
@@ -1133,7 +1131,10 @@ create_commands() {
         esac
     done
 
-    echo -e "├── ${BLUE}命名空間 Commands (${#NS_COMMANDS[@]} 個)${NC}"
+    # 沒有命名空間 command 時不印標題：上面最後一個 dd 指令已經用 └── 收尾
+    if [ "${#NS_COMMANDS[@]}" -gt 0 ]; then
+        echo -e "├── ${BLUE}命名空間 Commands (${#NS_COMMANDS[@]} 個)${NC}"
+    fi
 
     for ns_cmd in "${NS_COMMANDS[@]}"; do
         i=$((i + 1))

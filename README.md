@@ -51,11 +51,11 @@ cd claude-dd
 The installer reports its progress as 7 steps (`1/7` … `7/7`):
 
 1. Check the environment (the hard requirements above; missing any one aborts the install). It also reports whether an auto-compact window is set — optional, a notice only, it never aborts
-2. Install 14 promoted Skills into `~/.claude/skills/`
+2. Install 13 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)
 5. Register the official plugins (claude-md-management — the dependency behind nested CLAUDE.md maintenance; skill-creator — authoring and eval-testing skills). A plugin that isn't on disk is skipped with `Plugin 檔案不存在`; one with no readable version is skipped with the `claude plugin install` command to run; one whose `installed_plugins.json` or `settings.json` can't be updated — the file is empty, corrupt, or not exactly one JSON object — is skipped with a warning. Registration comes first and enabling second, so a failed registration doesn't go on to enable the plugin
-6. Install the `/dd-init` command and the `workflow-review` namespace into `~/.claude/commands/`
+6. Install the `/dd-init` command into `~/.claude/commands/`
 7. **Diff the global CLAUDE.md** (`~/.claude/CLAUDE.md`): if it differs from the repo template, the diff is shown and you're asked whether to overwrite — keeping your local copy is the default. **On a machine with no global CLAUDE.md yet, this step asks whether to install it and defaults to No** (non-interactive runs take the default too) — answer `y`, or use `--force`, to actually get the full profile. `--force` also skips the diff prompt and overwrites; see [Upgrading](#upgrading)
 
 Plus unnumbered steps: before step 2, every skill's `hooks.json` command paths are checked (a relative path aborts); between steps 6 and 7, `check-claude-md.sh` (the gate itself) and `dd-init-upgrade.sh` (sorts template lines from your own when `/dd-init` upgrades an old stamp) go into `~/.claude/scripts/` and `adhd.md` (the ADHD response style) into `~/.claude/output-styles/`.
@@ -201,10 +201,9 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | Command | Description |
 |---------|-------------|
 | `/dd-init` | Initialise a project: stamp the 8-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/` (only when the project has a frontend — pure backend/CLI skips it), verify plugin dependencies |
-| `/workflow-review:review` | Combined code review — security, performance, configuration. It's a namespaced command, so the colon form is the callable name |
 | `/output-style ADHD` | Turn on the ADHD response style (action first, numbered steps, progress every turn, short lists, no preamble or closers; written in Traditional Chinese); `/output-style default` turns it off. Claude Code reads style files at startup, so restart after installing. It applies to the current project only (saved to `.claude/settings.local.json`); for a default everywhere, set `"outputStyle": "ADHD"` in `~/.claude/settings.json` — a project's own `.claude/settings*.json` `outputStyle` still wins |
 
-## Promoted Skills (14, deployed by default)
+## Promoted Skills (13, deployed by default)
 
 > "Promoted" means the component has an evidenced usage record and therefore ships by default. One exception: `gate-guard` is a safeguard for the gate, not a skill that earned its place through use.
 
@@ -216,7 +215,6 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | frontend-design | Frontend visual design |
 | gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `-c core.hooksPath=` (turning hooks off beforehand with `git config core.hooksPath` is not caught) |
 | plan-review | Adversarial plan review — an adjudicator (Opus) sends 3+ reviewers (haiku) to attack the plan, then keeps only the criticism that checks out |
-| review | Combined-review wrapper |
 | security-audit | Security guidance and vulnerability review; the full-audit workflow (reconnaissance → coverage-led hunting waves → independent validation → report artifacts) runs only on an explicit audit request (vendored from [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), user-invoked — run it with `/security-audit`) |
 | self-improving-agent | Memory auditing and knowledge distillation |
 | task-planner | Feature-increment planning, with the progress table written into the design doc |
@@ -298,7 +296,6 @@ Vendored content, each shipping its own upstream licence file:
 | `agents/LICENSE.txt` | Apache-2.0 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) — `agents/code-simplifier.md` is byte-identical to the file of the same name in the official `code-simplifier` plugin; `agents/code-reviewer.md` is a modified file that shares only some lines with the files of the same name in the official `pr-review-toolkit` and `feature-dev` plugins (the file lists the comparison commands and line counts) |
 | `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) (Cloudflare, Inc.) |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) (rules only; see the file for where each section went) |
-| `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15`. No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |
 
 Intake rules: [CLAUDE.md, "第三方 Skill / Agent 收編檢查清單"](CLAUDE.md) *(Traditional Chinese)*.
 

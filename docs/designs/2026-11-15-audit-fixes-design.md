@@ -7,6 +7,7 @@
 - 使用者的話（逐字，依序，2026-11-15）：「幫我檢查claude-dd 這整個repo 流程 和設定, 再請給我一份每個的分數,低於60分要告訴我如何改善調整」、「所以現在該怎做?」
 - 我用選單問「claude-dd 評分後要我動手做哪幾批？」（可複選：A 修缺陷／B review 與 workflow-review 退場／C 出兩份 CLAUDE.md 的逐條清單／D error-capture 少誤報）。**使用者只選了「A 修缺陷（建議）」**（使用者決定）。選項 A 的說明：「7 項：gate 的 dd.docfile 繞過、amend 掉起點後範圍變 0、BLOCKED 後開不了下一段、--check 看不出部署版過期、/dd-init Phase 4 兩處措辭、self-improving-agent 的死指標與評分表打架、agents 兩個官方備份補授權檔。照 8 步迴圈做，約 2–3 小時。」
 - 7 項的佐證都是評分那一輪在拋棄式 repo 實跑或讀檔得到的，整理在「開工前查到的事實」
+- S5（2026-11-15 加的）：S1–S4 做完後使用者再問一次同一句，我重新評分，低於 60 的還是六項，結尾寫「我建議先做 1（退場）與 3（包裝器加一句）」；使用者回「好」。「好」沒有點名項目；我讀成同意做我建議的這兩件（推論，不是使用者逐項選的）。四條步驟 7 候選沒有回覆，不寫
 
 ## 假設
 
@@ -32,6 +33,7 @@
 | S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0..0227f5b |
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
+| S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | IN_PROGRESS | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | b3b2bf9.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -205,6 +207,56 @@ S4 的步驟 3–5（2026-11-15）：
 - 步驟 8：範圍是根目錄 `CLAUDE.md` 與 `skills/self-improving-agent/CLAUDE.md`。根目錄修了一處：「新增 Agent 步驟」寫官方備份「維持上游的 `opus`」，官方 `feature-dev` 版的 code-reviewer 其實是 `sonnet`，改成寫明哪幾份是什麼；
   同一句補上「改這兩個官方備份之後重跑 `agents/LICENSE.txt` 列的比對指令」。skill 那份的差異清單逐句對回 git 與檔案都成立，沒有改
 
+### S5 `review` 兩個元件退場、code-simplifier 包裝器補約束
+
+假設（S5 自己的；`plan-review` 審過）：
+
+- B1 退場 = 從 repo 刪掉 `skills/review/` 與 `commands/workflow-review/`（`git rm -r`）並從部署陣列拿掉。不另開 tag；取回用 `git checkout v1.6.14 -- skills/review commands/workflow-review`（`git diff v1.6.14 b3b2bf9 -- skills/review commands/workflow-review` 是空的，tag 已經在 origin 上）
+- B2 使用者機器上已部署的 `~/.claude/skills/review/`、`~/.claude/commands/workflow-review/` 不由安裝腳本清：`create_commands` 既有的清理迴圈（`deprecated_dd`）只認 `dd-*.md` 單檔，不涵蓋命名空間目錄與 skills 目錄，`--uninstall` 也只認現行部署清單。
+  沿用 2026-08-04 的做法，在 `UPGRADING.md` 寫手動清理的指令；不擴充那個迴圈、不動 `~/.claude`
+- B3 不發版、不跳 `dd-loop-rev`；CHANGELOG 只寫進 `## 未發布`
+- B4 兩件事放同一段：都小、同一次同意，步驟 4 一次審兩件
+- B5 `agents/code-simplifier.md` 不動（`agents/LICENSE.txt` 寫它與官方檔逐字相同）。約束加在 `skills/code-simplifier/SKILL.md`
+- B6 `skills/self-improving-agent/skills/review/`（也是 `name: review`）不動；撞名因為 `skills/review` 退場而消失
+- B7 沒有要新增的測試：S5-1 只改既有斷言（部署清單變了），S5-2 用 A/B 實跑驗
+
+開工前提的結果（2026-11-15，scratchpad 實測）：照 ci.yml「陣列與目錄一致性」`ALL_NS_COMMANDS` 那一組的寫法、陣列是空的、`set -e`，macOS `/bin/bash` 3.2.57 與 ubuntu:24.04 都判「一致」，多一個子目錄時判「不一致」，rc=0；
+但 macOS 多印一行 `ls: commands/*/: No such file or directory`，ubuntu 多印那一行與 `basename: missing operand`。空陣列的 `for` 迴圈跑 0 次。
+
+- S5-1 `review` 包裝器與 `workflow-review` 退場
+  - 內容：`git rm -r skills/review commands/workflow-review`；`install-dd-pipeline.sh` 的 `PROMOTED_SKILLS` 拿掉 `"review"`、`NS_COMMANDS` 變空陣列，`create_commands` 的「命名空間 Commands (N 個)」標題在 N 是 0 時不印（其他印個數的地方照印 0）；
+    ci.yml 那一組的目錄那一邊改成 `find commands -mindepth 1 -maxdepth 1 -type d | sed 's#.*/##' | sort`（不用 `xargs`，沒有子目錄時不印錯誤）；
+    `tests/test-install.sh` 開頭兩條 `workflow-review` 的斷言改成「`commands/` 底下沒有子目錄」，T11「讀不到的檔」那一格寫 `review` 的四行（`chmod 000`、`cat` 判斷、`t11_expect`、`chmod 644`）換成 `verification-gate`
+  - 檔案：`skills/review/`、`commands/workflow-review/`（刪）、`install-dd-pipeline.sh`、`.github/workflows/ci.yml`、`tests/test-install.sh`、`tests/CLAUDE.md`（T11 變異對照裡寫 review 的那一句，重跑那個變異再改）、根目錄 `CLAUDE.md`（目錄結構的數字與名稱、部署清單加取回方式）、
+    `README.md`、`README.zh-TW.md`（安裝步驟、指令一覽、Promoted Skills 標題與那一列、授權表那一列）、`DD_PIPELINE_ARCHITECTURE.md`（部署清單那句、授權段的例外）、`UPGRADING.md`（已部署的殘留手動清、取回方式）、`CHANGELOG.md` `## 未發布` `### Removed`
+  - 驗證（其他方式 + 既有測試；沒有新行為可以寫成會失敗的測試，改的是部署清單）：本機逐 step 跑 ci.yml 全部 rc=0；負面測試（拋棄式副本，macOS 與 ubuntu 容器各一次）：`commands/` 多一個子目錄、`NS_COMMANDS` 多一個名字而目錄不在、`PROMOTED_SKILLS` 留著 `review` 而目錄刪掉，三個都要紅，還原回綠；
+    那個 step 在沒有子目錄時 stderr 是空的（兩個平台）；`tests/test-install.sh` 整份在 macOS `/bin/bash` 與 ubuntu:24.04 容器 rc=0，容器另開一般帳號跑 `TEST_ONLY=T11`；
+    沙盒 HOME 全新安裝 rc=0、輸出沒有「命名空間 Commands」那一行與 shell 錯誤、`~/.claude/commands/` 只有 `dd-init.md`，`--uninstall --yes` rc=0；
+    升級情境（沙盒 HOME 先裝 b3b2bf9 的內容、再裝新版）：兩個舊目錄還在，照 `UPGRADING.md` 新寫的指令清掉後 `--check` 正常；
+    舊名的 `git grep`（`workflow-review`，以及濾掉 `self-improving-agent/skills/review` 的 `skills/review`；排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）：剩下的每一筆都要是「已退場」的敘述，逐筆列在下面的結果裡，不能有把它們當成還在的句子
+  - commit：`chore: review 包裝器與 workflow-review 退場（S5-1）`
+  - 結果（2026-11-15）：
+    - 刪之前 `git status --short --ignored -- skills/review commands/workflow-review` 沒有輸出（兩個目錄各只有一個追蹤中的檔），`git rm -r` 後目錄不在
+    - `grep -nE 'set -[a-z]*u|nounset' install-dd-pipeline.sh tests/*.sh .github/workflows/ci.yml scripts/*.sh` 沒有命中（空陣列在 bash 3.2 不會撞到未定義變數檢查）
+    - 本機逐 step 跑 ci.yml：26 個 step 都 rc=0
+    - 負面測試（「陣列與目錄一致性」那個 step，macOS `/bin/bash` 與 ubuntu:24.04 各一次，結果相同）：乾淨版 rc=0、stderr 0 行；`commands/` 多一個 `stray/` → rc=1「ALL_NS_COMMANDS：陣列與實際目錄不一致」；
+      `NS_COMMANDS=("ghost")` 而目錄不在 → rc=1 同一句；`PROMOTED_SKILLS` 留著 `"review"` → rc=1「ALL_SKILLS：陣列與實際目錄不一致」
+    - `tests/test-install.sh` 整份：macOS `/bin/bash` rc=0、行首 ❌ 0；ubuntu:24.04 容器三支測試加兩支 hook 測試都 rc=0，另開一般帳號跑 `TEST_ONLY=T11` rc=0（讀不到檔那一格有跑到）
+    - T11 變異重跑（兩處 `-eq 1` 改 `-ge 1`）：rc=1「Skills 的 verification-gate 那一行應該有『無法比對』，實際：…已安裝（與 repo 不同，重跑安裝會更新）」；原版 rc=0
+    - 沙盒 HOME 全新安裝 rc=0：輸出是「DD Pipeline Commands (1 個)」接「└── dd-init: 已安裝（新）」，沒有命名空間標題、shell 錯誤 0 筆；`~/.claude/commands/` 只有 `dd-init.md`、`~/.claude/skills/` 13 個目錄沒有 `review`。`--uninstall --yes` rc=0（提示印「0 個命名空間 Commands」）
+    - 升級情境：沙盒 HOME 先裝 b3b2bf9 的內容（rc=0，兩個舊目錄在）→ 新版 `--force`（rc=0，兩個舊目錄還在，`--check` 沒有提到它們）→ 照 `UPGRADING.md` 的兩行指令清掉 → `--check` rc=0、skills 13 個
+    - 舊名的 `git grep` 剩下的（都是「已退場」的敘述）：`CLAUDE.md`「部署清單」與「目錄結構」各一句、`DD_PIPELINE_ARCHITECTURE.md` 部署清單的歷史與授權段各一句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 兩句；`skills/review`（濾掉 `self-improving-agent/skills/review`）0 筆
+    - 計畫以外多改的：根目錄 `CLAUDE.md`「新增 Command 步驟」命名空間那條、`tests/CLAUDE.md` 各補一句「命名空間的部署程式碼現在沒有測試跑到，加回時把斷言換回來」；`UPGRADING.md` 開頭「三種升級情境」改「四種」
+- S5-2 code-simplifier 包裝器補一句約束
+  - 內容：`skills/code-simplifier/SKILL.md` 的 Prompt 模板「約束：」那一行後面加一句：編碼風格只照專案 CLAUDE.md 寫明的；agent 定義裡列的偏好（import 排序、`function` 與箭頭函式的取捨）不算專案標準，專案 CLAUDE.md 沒寫就不套用，不重排 import
+  - 檔案：`skills/code-simplifier/SKILL.md`、`CHANGELOG.md` `## 未發布`
+  - 驗證（行為，A/B；結果用 `diff`、`grep` 核對，不看 agent 自述）：scratchpad 的拋棄式 repo 放一個小 `.js`（import 沒排序、有箭頭函式、有一處可簡化的巢狀條件），CLAUDE.md 不寫風格規則。派包裝器實際會先試的那個 agent 類型（`code-simplifier:code-simplifier`；派之前 `cmp` 它的定義檔與 repo 這份）：舊 Prompt 模板 2 發、新的 2 發，各在自己的副本上改。
+    每一發另外要它照貼 context 裡出現的 CLAUDE.md 路徑與第一行（subagent 可能帶著這個 session 的全域 CLAUDE.md，那份 §3.2 已經寫「不重排 import」，會讓舊的那一邊也不動）。
+    判定（派出前寫死）：舊的至少 1 發重排了 import 或把箭頭函式改成 `function`，而新的每一發都沒有 → 通過；新的任何一發照樣重排或改成 `function` → S5-2 不成立，不 commit、不寫 CHANGELOG，停下來回報使用者（要改 agent 本文會碰到 B5）；
+    舊的每一發都沒動 → 這個素材沒有鑑別力，不當成通過的證據：換一次素材（只把沒排序的 import 與箭頭函式加多，其餘不變）再跑一輪 2+2；
+    還是分不出來 → 那一句照樣 commit（它與全域 §3.2 同方向，前提是新的每一發都沒有重排、巢狀條件有被簡化），CHANGELOG 與回報寫明「沒有實測證據顯示它改變了行為」，不拿它當評分改善的依據
+  - commit：`fix: code-simplifier 包裝器不套用專案沒寫的風格偏好（S5-2）`
+
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 
 1. `tests/test-gate.sh` ⑬（S1-1）：`dd.docfile` 設 `main.py`、`notes.sh` 要拒絕，`AGENTS.txt` 照常（對照）
@@ -222,3 +274,9 @@ S4 的步驟 3–5（2026-11-15）：
 駁回（7 條）：「S1 會在使用者決定前動手」（D1、D2 本來就列為要問的題）；dd-init Phase 3 寫死檔名（A1 範圍外）；README 沒提 docs/reviews（沒有就不用改）；「起點沒被改」與 `--start-segment` 衝突（指的是進度表 commits 欄）；「重跑安裝會登記並啟用」沒讀碼（已讀碼確認）；不確定 repo 來源路徑變數（`SCRIPT_DIR`）；`gh api` 查上游（已排進開工前提）。
 
 需要外部查證（2 條小事）：Apache-2.0 對改過的衍生檔怎麼標示（A10 已寫明在授權檔標出改過）；部署目錄裡的執行期檔會被 `--check` 報成不同（S3-1 已寫明與安裝本身一致）。
+
+`plan-review`（S5，2026-11-15）第 1 輪：通過。4 個審查者（前提／漏掉的同步點／範圍與驗證／全面），讀檔檢查都過，沒有重派。沒有重大、沒有需使用者決定、沒有需要外部查證。
+
+採納的小事（4 條，都已改進上面的 S5）：A/B 每臂至少 2 發、判定預先寫死（含新臂失敗時停下回報）、新句子點名 agent 定義裡的偏好不算專案標準；B2 的理由寫準（既有的 `deprecated_dd` 迴圈只認 `dd-*.md` 單檔）；T11 寫 `review` 的四行都要換；ci.yml 的新寫法寫死成不用 `xargs`、驗證加「stderr 是空的」。
+
+駁回（6 條）：CI 那一行是可以不做的順手修（沒有子目錄後每次都印錯誤、會被讀成壞了，是刻意改）；`--help` 與 `--uninstall` 會印「0 個命名空間」（計畫明寫照印）；沒安排標 IN_PROGRESS 與記起點（表下方的規則已規定）；一條不是批評；subagent 的 system prompt 與 user 訊息誰優先（A/B 實跑就是在驗這件事）；gate 會因為改 `.github/` 擋 commit（`CODE_EXT` 沒有 yml）。
