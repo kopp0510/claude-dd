@@ -79,8 +79,16 @@
       已實際踩到;當下的處置是「起點改用進度表 commits 欄的值」,
       **不要為了讓 gate 過而改檔名**(那會讓檔名與段落 ID、commit 訊息三者不一致)。
     - **`docs/reviews/CLAUDE.md` 不算報告**(不是 `S` 開頭),改它不會放行。
-    - 擋下時印的「兩條路」第 1 條是主對話直接派審查者的報告(每個審查者一份 `-a/-b/-c…`,加查證 `-judge.md`)。**判定樣式沒變** —— `-judge.md`、`-c.md` 本來就命中 `S[0-9]`。
+    - 擋下時印的「三條路」(2026-11-15 以前是兩條)第 1 條是主對話直接派審查者的報告(每個審查者一份 `-a/-b/-c…`,加查證 `-judge.md`)。**判定樣式沒變** —— `-judge.md`、`-c.md` 本來就命中 `S[0-9]`。
       第 2 條(SKIP)多印一行「trailer 緊接在 `Co-Authored-By` 前面、中間不能空行」:隔了空行 git 不認它是 trailer,`--format='%(trailers…)'` 查不到、commit 照樣成功
+    - **第 3 條(2026-11-15):這一段還沒做完、要先停下來做別段(進度表標 `BLOCKED`)時,建 `docs/reviews/S<段落>-BLOCKED.md` 並 commit。**
+      修的洞:有 `docs/reviews/` 的專案,一段做到一半要開別段時 `--start-segment` 擋在這裡,原本印的兩條路都不適用(還沒做完所以沒有報告、也不是「不需要審」),
+      `skills/task-planner/SKILL.md` 規則區塊的 `BLOCKED` 那條也只交代補 CLAUDE.md(拋棄式 repo 實跑:記起點 → 一個程式碼 commit → 再跑 `--start-segment` 回 1)。
+      **判定沒改,只多印這三行** —— `S1-BLOCKED.md` 本來就命中 `S[0-9][^/]*\.md`;`tests/test-gate.sh` ⑮ 把「只建檔沒 commit 照樣擋、commit 之後放行」釘住。
+      變異:拿掉那三行 → 只有 ⑮ 的 `said "S<段落>-BLOCKED.md"` 紅。
+      ⚠️ **gate 只看檔名(跟 `-SKIP.md` 同類,使用者 2026-11-15 選定這個做法)**:拿 `-BLOCKED.md` 當成一段已經做完的段落的報告,gate 分不出來。
+      回頭做這一段時要重跑 `--start-segment`,所以之後再開下一段時,「回頭之後的 commit 範圍裡有沒有新增報告」照樣會查;
+      查不到的是先停之前已經 commit 的那一部分有沒有被審到 —— 那要靠進度表 commits 欄的起點(步驟 4 的範圍從它算,見 `skills/dd-loop/SKILL.md`)
     - **剛採用這個慣例時第一次 `--start-segment` 通常會被擋**(上一段本來就沒報告)——
       預期行為,照它印的出路補一份 `S<N>-SKIP.md` 並 commit(只建檔不 commit 還是擋)。
       起點檔不存在、或上一段從空樹開始時不擋(`reviews_missing` 的 `EMPTY_TREE` 那行,視為第一段;2026-10-30 乾跑實測)。

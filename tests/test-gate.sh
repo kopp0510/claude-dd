@@ -602,5 +602,36 @@ said "內容不是 commit"
 said "進度表"
 not_said "段落開始前先跑"
 
+# ⑮ **段落先停(進度表標 BLOCKED)去做別段時的申報檔**(2026-11-15)。
+# 修的洞:有 `docs/reviews/` 的專案,一段做到一半標 BLOCKED、要開別段時,`--start-segment` 以
+#   「上一段沒有附 review 報告」擋下,而訊息只列兩條路(跑步驟 4／SKIP 申報),兩條都不適用:
+#   這一段還沒做完、不是不需要審。task-planner 的規則區塊也只交代補 CLAUDE.md(拋棄式 repo 實跑)。
+# ⚠️ gate 的判定沒改:`S1-BLOCKED.md` 本來就命中 `S[0-9][^/]*\.md`。「commit 之後放行」那則修之前就綠,
+#   是把這個行為釘住的特性測試;有牙的是 `said "S<段落>-BLOCKED.md"`。
+mkdir "$WORK/blocked" && cd "$WORK/blocked" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+mkdir -p docs/reviews && echo '格式說明' > docs/reviews/CLAUDE.md && echo root > CLAUDE.md
+expect "⑮ 第一個 commit(有 docs/reviews/)" pass commit b0
+expect "⑮ 記 S1 的起點" pass "$GATE" --start-segment
+S1_BASE=$(cat "$BASE_FILE")
+mkdir -p a && echo 1 > a/x.sh && echo doc > a/CLAUDE.md
+expect "⑮ S1 做到一半的 commit(CLAUDE.md 同批)" pass commit b1
+expect "S1 先停、要開別段:沒報告照樣擋" block "$GATE" --start-segment
+said "上一段沒有附 review 報告"
+# ⚠️ 字串不可以用 `-` 開頭:`said` 是 `grep -qF "$1"`,`-BLOCKED.md` 會被當成 grep 的選項(grep 報錯回 2),
+#   於是這一則**永遠紅** —— 第一版就這樣寫,修好 gate 之後它還是紅,才發現紅的原因不是 gate
+said "S<段落>-BLOCKED.md"     # 訊息要列出段落先停時的申報方式
+# 對照:只建檔、沒 commit 還是擋(放行要靠範圍裡真的新增了這個檔,不是工作目錄有就算)
+echo 'S1 先停:使用者要先做 S2' > docs/reviews/S1-BLOCKED.md
+expect "只建 S1-BLOCKED.md 沒 commit:照樣擋" block "$GATE" --start-segment
+base_is "$S1_BASE"            # 擋下不寫入
+expect "⑮ commit S1-BLOCKED.md" pass commit b2
+expect "S1-BLOCKED.md 已 commit:開下一段放行" pass "$GATE" --start-segment
+
 exit $fail
 
