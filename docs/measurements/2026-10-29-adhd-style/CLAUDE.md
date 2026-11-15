@@ -13,7 +13,7 @@
 ## 檔案
 
 - `run.sh` —— 在拋棄式目錄（放 `notes.txt` 7 項、`greet.txt`）用 `claude -p` 跑兩個 prompt，ADHD 與 default 兩臂各 n=2，共 8 發。
-  切換風格用 `--settings '{"outputStyle":"<臂>","advisorModel":""}'`（`advisorModel` 照根 CLAUDE.md 的量測注意事項關掉 advisor）。
+  切換風格用 `--settings '{"outputStyle":"<臂>","advisorModel":""}'`（`advisorModel` 照 `docs/measurements/CLAUDE.md`「量 agent 指令本體」關掉 advisor）。
   原始 stream-json **不進 repo**（init 裡有編碼成 `-Users-<名字>-…` 的家目錄路徑、連接器清單、plugin 路徑），
   每發只抽 `out/<臂>-p<prompt>-r<次>.jsonl` 兩行：`kind=init`（`output_style`）與 `kind=result`（`num_turns`、`total_cost_usd`、
   `permission_denials` 筆數、回覆文字，文字裡的路徑換成 `<work>`／`<home>`）。prompt 原文存 `out/p1.prompt.txt`、`out/p2.prompt.txt`
