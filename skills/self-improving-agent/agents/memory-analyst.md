@@ -45,10 +45,11 @@ For each MEMORY.md entry, evaluate:
 
 ### 4. Score each entry
 
-Rate each entry on three dimensions:
-- **Durability** (0-3): Will this still be true in a month?
-- **Impact** (0-3): How much does this affect daily work?
-- **Scope** (0-3): Project-wide (3) vs. one-file (1) vs. one-time (0)
+Rate each entry on three dimensions, 0-3 each: **Durability**, **Impact**, **Scope**.
+What each score means is defined in one place only: the Scoring Guide table in
+`~/.claude/skills/self-improving-agent/reference/promotion-rules.md`. Read that table before scoring and
+use it as written; do not score from memory. If you cannot read the file, say so in the report and
+leave the entries unscored.
 
 Promotion candidates: total score ≥ 6
 

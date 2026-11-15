@@ -85,3 +85,8 @@ It is registered automatically by `hooks/hooks.json` — do not add it to `setti
   an install script under `./scripts/` that is not in this directory, and neither route is deployed by claude-dd.
   The upstream credit links and the two `clawhub publish` mentions are unchanged; `settings.json`
   still lists `openclaw` and `codex` under `platforms` (left as upstream wrote it).
+- 2026-11-15: `agents/memory-analyst.md` no longer carries its own score definitions. Upstream had two
+  tables that disagreed (the agent said Scope 3 = project-wide, 1 = one file, 0 = one-time;
+  `reference/promotion-rules.md` says 0 = one file, 1 = one directory, 2 = entire project, 3 = all your projects).
+  The agent now points at the Scoring Guide in `reference/promotion-rules.md`. This changes results: a
+  project-wide entry scores Scope 2 instead of 3, so some entries drop below the `≥ 6` promotion threshold.
