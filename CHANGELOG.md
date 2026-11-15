@@ -45,6 +45,13 @@
   `code-reviewer.md` 是改過的檔（只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同），附官方 plugin 目錄的 Apache License 2.0 全文。
   `agents/code-reviewer.md` 開頭（frontmatter 之後）加一行 HTML 註解，說明這個檔改過、指到 `agents/LICENSE.txt`；審查指示沒有動。
   兩份 README 的授權表與 `DD_PIPELINE_ARCHITECTURE.md` 的授權段各加一筆。`agents/LICENSE.txt` 不部署
+- **根目錄 `CLAUDE.md` 加大小上限（本 repo 自用，不部署）**：新增 `scripts/githooks/claude-md-size.sh` 與上限檔 `scripts/githooks/claude-md-max-bytes`（48000 bytes）。
+  `scripts/githooks/pre-commit` 在呼叫 gate 之前先跑它：這次 commit 讓根目錄 CLAUDE.md 變大、而且超過上限就擋下，`SKIP_DOC_CHECK=1` 不跳過。
+  CI 新增「根目錄 CLAUDE.md 大小上限」一步，量 push 上來的那一份，補 hook 擋不到的（`--no-verify`、沒設 `core.hooksPath` 的 clone）。
+  上限取自最新 `v*` tag 那一版的上限檔：在 commit 裡把數字調高不會生效，要等發下一版。
+  ⚠️ 這一點要等帶上限檔的版本發出去之後才成立。在那之前 pre-commit 讀 `HEAD` 那一版（同一個 commit 調高沒有用，但先單獨 commit 調高、下一個 commit 再加字就過得去）、
+  CI 讀 push 上來的那一份；每次檢查都印出上限取自哪裡。取不到上限或上限檔內容不合法一律不通過。
+  起因與各時間點量到的大小在 `docs/designs/2026-11-15-audit-fixes-design.md` 的 S7；兩種跑法各擋什麼、繞得過的路、變異對照在 `scripts/githooks/CLAUDE.md`
 
 ### Changed
 
