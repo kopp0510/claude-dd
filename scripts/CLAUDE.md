@@ -19,6 +19,13 @@
       想在別的 repo 乾跑就真的 `git config --local dd.docfile <檔名>`，驗完 `--unset`
     - **只接受單純檔名**（`[A-Za-z0-9._-]`，不是 `.` / `..`，**也不以 `-` 開頭**）：帶路徑或空白一律 `exit 1`。
       這個字元集同時擋掉 regex 特殊字元，所以組 awk 樣式時只需要跳脫 `.`（`DOC_RE`）
+    - **不可以是程式碼檔名**（2026-11-15）：副檔名在 `CODE_EXT` 裡的值（`main.py`、`notes.sh`…）一律 `exit 1`。
+      修的洞：`dd.docfile=main.py` 時，改 `a/main.py` 的 commit 自己就算「記憶檔同批 staged」，`owed_dirs` 也把它當成銷帳 ——
+      SKIP 欠的帳被洗掉、之後沒有 CLAUDE.md 的改碼 commit 照過，`git status` 是乾淨的（拋棄式 repo 實跑）。
+      檢查放在 `CODE_EXT` 定義之後（要用它），不在上面那段字元集驗證裡。
+      ⚠️ **擋不到的**：`Makefile`、`Dockerfile` 這類沒副檔名的檔，以及 `CODE_EXT` 沒列的副檔名 —— 這些檔本身不算程式碼，
+      設成記憶檔名時 gate 要的是「每個改碼目錄都有一份、而且同批 staged」，不是自己替自己銷帳那一種（使用者 2026-11-15 選定只擋程式碼副檔名，
+      理由是不影響已經設成非 `.md` 檔名的 repo）
     - ⚠️ **`-` 開頭要另外擋**：字元集本身放行 `-`，而 `md_of "."` 是 `echo "$DOC_FILE"` ——
       bash 內建 echo 把 `-n` / `-e` 當選項吃掉，根目錄的記憶檔路徑會變成**空字串**
       （`[ -f "" ]` 恆假、訊息也印不出檔名）；用 `od -c` 驗過，`echo "-n"` 真的印零位元組
@@ -33,6 +40,7 @@
       | 把 `case "$DOC_FILE" in …` 整段驗證拿掉 | ⑫④ 的「帶路徑」「含空白」兩則 expect + `said "必須是單純檔名"` |
       | `--local` 改回 `--get`（吃得到 global） | ⑫⑤ 的 expect 與 `said "c/CLAUDE.md"` |
       | 驗證的 `case` 拿掉 `-*` 那一條 | ⑫④ 的「以 - 開頭」expect 與 `said "不以 - 開頭"` |
+      | 拿掉「不可以是程式碼檔名」那段 `if` | ⑬ 的「main.py:--start-segment 拒絕執行」「改 a/main.py 的 commit 不可以自己當記憶檔」兩則 expect 與三則 `said "不可以是程式碼檔名"`；「AGENTS.txt:--start-segment 照常」也跟著紅（前面那個 commit 進了歷史、變成欠帳，是連鎖不是它自己的斷言壞了） |
 
       ⚠️ **第二個變異第一版是 0 紅** —— 當時 ③ 的最後一則是「補上 `c/GEMINI.md` 後放行」。
       `owed_dirs` 其實跑了、也確實把 `c` 算成欠帳,**是 `[ -f "$md" ] && grep -qxF "$md" && continue`

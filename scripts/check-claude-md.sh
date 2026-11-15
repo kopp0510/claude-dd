@@ -37,6 +37,14 @@ export DOC_RE="(^|/)${DOC_FILE//./\\.}\$"
 
 # 視為「程式碼」的副檔名（改動這些才要求文件同步；純文件/設定/資產不觸發）
 CODE_EXT='js|jsx|ts|tsx|mjs|cjs|py|go|rs|java|kt|rb|php|sh|bash|c|h|cpp|hpp|cs|swift|sql|vue|svelte'
+# 記憶檔名不可以是程式碼檔名（2026-11-15）：`dd.docfile=main.py` 時，改 a/main.py 的 commit 自己就算
+# 「記憶檔同批 staged」，owed_dirs 也把它當成銷帳 —— 欠帳被洗掉、沒有記憶檔的改碼 commit 照過，git 裡零痕跡。
+# 放在這裡而不是上面那段驗證裡，是因為要用 CODE_EXT。
+# 只擋得到副檔名在 CODE_EXT 裡的值：Makefile、Dockerfile 這類沒副檔名的檔，以及清單沒列的副檔名照樣設得進來
+if printf '%s\n' "$DOC_FILE" | grep -qE "\.($CODE_EXT)\$"; then
+    echo "❌ check-claude-md.sh：git config dd.docfile 不可以是程式碼檔名（副檔名在 CODE_EXT 裡的都算），目前是「${DOC_FILE}」"
+    exit 1
+fi
 # 任一路徑段命中即排除的目錄
 EXCLUDE_DIRS='(^|/)(\.git|node_modules|dist|build|out|coverage|vendor|\.next|\.screenshots|__pycache__|\.venv|venv|tmp|test-data|migrations)(/|$)'
 # 同一組規則給 awk 用：從環境變數讀，awk 才不會再處理一次反斜線
