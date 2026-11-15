@@ -55,6 +55,7 @@ CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上�
 
 - `git commit --no-verify`／`-n`：整支 hook 不跑，要等 push 時 CI 擋。Claude 端另有 `skills/gate-guard` 的 hook 在執行前 deny
 - 沒設 `core.hooksPath` 的 clone：hook 不存在，要等 push 時 CI 擋
+- 不經過 pre-commit 的 commit：`git cherry-pick`、`git merge --no-ff` 自動合併出來的那個 commit、`git rebase` 重放的 commit、`git revert`（2026-11-16 拋棄式 repo、git 2.42.0 實跑：四種都讓 `HEAD` 的 CLAUDE.md 超過上限，大小檢查沒有跑到；同一個 repo 裡 `git merge --squash` 之後的 `git commit`、`git commit --amend` 有跑到、被擋下）。一樣要等 push 時 CI 擋
 - 上一節第 2 條的那兩種
 
 `SKIP_DOC_CHECK=1` **不會**跳過它：那個變數只有 gate 在讀，大小檢查排在 gate 前面。
