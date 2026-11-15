@@ -494,6 +494,7 @@ check_builtin_skills() {
     local installed=0
     local missing=0
     local stale=0
+    local unknown=0
 
     for skill in "${BUILTIN_SKILLS[@]}"; do
         i=$((i + 1))
@@ -503,12 +504,20 @@ check_builtin_skills() {
 
         if dir_exists "$SKILLS_DIR/$skill"; then
             # 比法跟 install_builtin_skills 一樣（diff -rq），所以這裡報不同的，重跑安裝就會覆蓋。
-            # diff 放在 if 條件裡：內容不同回 1，單獨成行會被 set -e 中止
-            if [ -d "$source" ] && ! diff -rq "$source" "$SKILLS_DIR/$skill" > /dev/null 2>&1; then
+            # diff 接在 || 前面：內容不同回 1，單獨成行會被 set -e 中止。回 2 以上是比不了（例如部署的檔讀不到），
+            # 不可以併進「不同」：那時重跑安裝會在覆蓋前的備份那一步失敗
+            local cmp_rc=0
+            if [ -d "$source" ]; then
+                diff -rq "$source" "$SKILLS_DIR/$skill" > /dev/null 2>&1 || cmp_rc=$?
+            fi
+            if [ "$cmp_rc" -eq 0 ]; then
+                echo -e "$tree_char $skill: ${GREEN}${CHECK} 已安裝${NC}"
+            elif [ "$cmp_rc" -eq 1 ]; then
                 echo -e "$tree_char $skill: ${YELLOW}已安裝（與 repo 不同，重跑安裝會更新）${NC}"
                 stale=$((stale + 1))
             else
-                echo -e "$tree_char $skill: ${GREEN}${CHECK} 已安裝${NC}"
+                echo -e "$tree_char $skill: ${YELLOW}已安裝（無法比對：部署的檔讀不到或比對失敗）${NC}"
+                unknown=$((unknown + 1))
             fi
             installed=$((installed + 1))
         else
@@ -521,6 +530,9 @@ check_builtin_skills() {
     echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
     if [ "$stale" -gt 0 ]; then
         echo -e "├── 與 repo 不同：${YELLOW}${stale}${NC}（重跑安裝會更新；只提示，不影響結束碼）"
+    fi
+    if [ "$unknown" -gt 0 ]; then
+        echo -e "├── 無法比對：${YELLOW}${unknown}${NC}（先看那幾個部署的檔讀不讀得到；重跑安裝可能在備份時失敗）"
     fi
     if [ "$missing" -gt 0 ]; then
         echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"
@@ -696,6 +708,7 @@ check_builtin_agents() {
     local installed=0
     local missing=0
     local stale=0
+    local unknown=0
 
     for agent in "${BUILTIN_AGENTS[@]}"; do
         i=$((i + 1))
@@ -704,12 +717,19 @@ check_builtin_agents() {
         local source="$SCRIPT_DIR/agents/$agent.md"
 
         if file_exists "$AGENTS_DIR/$agent.md"; then
-            # 比法跟 install_builtin_agents 一樣（cmp -s）；cmp 放在 if 條件裡，理由同 check_builtin_skills
-            if [ -f "$source" ] && ! cmp -s "$source" "$AGENTS_DIR/$agent.md"; then
+            # 比法跟 install_builtin_agents 一樣（cmp -s）；回 1 是不同、回 2 以上是比不了，理由同 check_builtin_skills
+            local cmp_rc=0
+            if [ -f "$source" ]; then
+                cmp -s "$source" "$AGENTS_DIR/$agent.md" || cmp_rc=$?
+            fi
+            if [ "$cmp_rc" -eq 0 ]; then
+                echo -e "$tree_char $agent: ${GREEN}${CHECK} 已安裝${NC}"
+            elif [ "$cmp_rc" -eq 1 ]; then
                 echo -e "$tree_char $agent: ${YELLOW}已安裝（與 repo 不同，重跑安裝會更新）${NC}"
                 stale=$((stale + 1))
             else
-                echo -e "$tree_char $agent: ${GREEN}${CHECK} 已安裝${NC}"
+                echo -e "$tree_char $agent: ${YELLOW}已安裝（無法比對：部署的檔讀不到或比對失敗）${NC}"
+                unknown=$((unknown + 1))
             fi
             installed=$((installed + 1))
         else
@@ -722,6 +742,9 @@ check_builtin_agents() {
     echo -e "├── 已安裝：${GREEN}$installed${NC} / $count"
     if [ "$stale" -gt 0 ]; then
         echo -e "├── 與 repo 不同：${YELLOW}${stale}${NC}（重跑安裝會更新；只提示，不影響結束碼）"
+    fi
+    if [ "$unknown" -gt 0 ]; then
+        echo -e "├── 無法比對：${YELLOW}${unknown}${NC}（先看那幾個部署的檔讀不讀得到；重跑安裝可能在備份時失敗）"
     fi
     if [ "$missing" -gt 0 ]; then
         echo -e "└── 未安裝：${YELLOW}$missing${NC}（執行安裝可補齊）"

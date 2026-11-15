@@ -149,6 +149,16 @@ S2 的步驟 3–5（2026-11-15）：
   - commit：`feat: --check 看得出部署版與 repo 不同（S3-1）`
 - S3-2 文件：兩份 README 的 `--check` 說明、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md` `## 未發布`；驗證：本機逐 step 跑 ci.yml（flag 三方對照只驗名稱，名稱沒變）；commit：`docs: --check 新增的過期提示（S3-2）`
 
+S3 的步驟 3–5（2026-11-15）：
+
+- 實際跑真實環境的 `--check` 時，標出不同的是 4 個 skill（`code-simplifier`、`dd-loop`、`plan-review`、`task-planner`），不只進度表寫的 `plan-review`：另外三個是 S2 改了 repo、還沒重新部署。直接 `diff -rq` 也是這四個
+- 步驟 3：`code-simplifier` 跑了，沒有改。步驟 4：3 個 `code-reviewer`，0 條 Critical、5 條 Important、3 條 Smells（其中兩條是同一件事），全部採納；報告在 `docs/reviews/2026-11-15-audit-fixes/S3-{a,b,c,judge}.md`
+- 步驟 4 帶出的改動：`diff`／`cmp` 回 2 以上（部署的檔讀不到）另外印「無法比對」，不併進「與 repo 不同」；T11 加「只改子目錄的 skill」「讀不到的檔」兩格，快照涵蓋目錄與 symlink、三次 `--check` 都包；
+  根目錄 CLAUDE.md 拿掉「只跑四段」那句、兩份 README 的結束碼說法、`tests/CLAUDE.md` 的變異對照搬位置並照實際的改法重寫
+- 測試清單以外加的（都在 T11 這一組裡）：剛裝好的對照、同名的 `code-simplifier` skill 與另外兩個沒改的不可以被標、段尾計數、輸出沒有 shell 錯誤與壞的 UTF-8、重跑安裝後不再報、只改子目錄的 skill、讀不到的檔（最後兩格是審查後修 bug 時加的）
+- 步驟 5 的結果見 `S3-judge.md`「處置」
+- 沒做的：`--check` 的一行說明（`--help`、兩份 README 的指令範例、根目錄 CLAUDE.md）仍寫「只檢查環境」，這次之前就不精確；commands、scripts、output styles、全域 CLAUDE.md 過期了 `--check` 還是看不出來
+
 ### S4 vendored 內容與授權
 
 開工前提：①查 GitHub 上游的 `code-simplifier` plugin 目錄有沒有 LICENSE（repo 名稱從本機 `~/.claude/plugins/known_marketplaces.json` 讀，讀不到就不查、照 A10 寫）②讀 `skills/self-improving-agent/CLAUDE.md` 有沒有記「與上游的差異」，有就同批更新。

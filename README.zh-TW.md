@@ -83,7 +83,7 @@ cd claude-dd
 ./install-dd-pipeline.sh --uninstall --yes   # 免確認解除安裝（自動化用；非互動環境的互動詢問一律採預設值）
 ```
 
-`--check` 也會拿已部署的 skill、agent 跟這份 repo 比內容，比法跟安裝本身一樣。不同的那一行標「與 repo 不同」，代表重跑安裝會覆蓋它。只提示：不改任何檔，結束碼照舊是 0。指令、腳本、輸出風格與全域 CLAUDE.md 不比。
+`--check` 也會拿已部署的 skill、agent 跟這份 repo 比內容，比法跟安裝本身一樣。不同的那一行標「與 repo 不同」，代表重跑安裝會覆蓋它。部署的檔讀不到時改標「無法比對」。這項比對只提示：不改任何檔，也不影響結束碼。指令、腳本、輸出風格與全域 CLAUDE.md 不比。
 
 `--uninstall` 移除這個 repo 部署的 skill、agent、指令、腳本與輸出風格，跟著 skill 一起裝的兩個全域 hook 也一併移除。另外它會把 claude-md-management 與 skill-creator 從 `settings.json` 的 `enabledPlugins` 與 `installed_plugins.json` 拿掉，就算是你在裝這個 repo 之前自己裝的也一樣；其他 plugin 不動。（這一步要有 `jq` 或 `python3`、而且檔案解析得了，否則只印出要你手動移除什麼。）
 

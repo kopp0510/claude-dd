@@ -74,7 +74,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
   plugin 先登記（`installed_plugins.json`）、再啟用（`settings.json`），登記失敗就不啟用。
   jq 與 python3 兩條路徑在 `tests/test-install.sh` T2 列的那幾類輸入上結論相同（沒列的類別沒有保證）。
 - **`--check` 看得出部署版過期（只限 skills、agents）**：這兩段除了看在不在，還跟 repo 這份比內容（skill 用 `diff -rq`、agent 用 `cmp -s`，
-  與安裝本身相同），不同就在那一行標「與 repo 不同」；只提示、不改檔、不影響結束碼。commands、scripts、output styles、全域 CLAUDE.md 不比。
+  與安裝本身相同），不同就在那一行標「與 repo 不同」，比不了（部署的檔讀不到）標「無法比對」；只提示、不改檔、不影響結束碼。commands、scripts、output styles、全域 CLAUDE.md 不比。
 - **可回復**：覆蓋差異檔前備份到 `~/.claude/backups/pre-install-<時間>/`，
   完成訊息顯示位置；清掉舊版留下的指令檔之前也先備份；目標是指向檔案的 symlink 時，備份的是它指到的內容；
   `--uninstall` 只移除本 repo 部署過的檔案，另外會取消登記 `OFFICIAL_PLUGINS` 列的官方 plugin（不管當初是誰裝的）；
