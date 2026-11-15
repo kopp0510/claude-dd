@@ -7,7 +7,9 @@
       相同才代表下面的 make 填的是範本、不是我另外寫的 prompt。
   python3 -I fill.py make <claude-dd repo> <工作目錄> pack|paste <發代號>…
       先用 ../2026-11-15-reviewer-effort/prepare.py 建好快照。讀 repo 工作目錄現在這份 SKILL.md。
-      pack：寫審查包 prompts/<發代號>.pack.md，裁決者 prompt 裡計畫與事實那一段換成 SKILL.md 第 2 步那一句
+      pack：寫審查包 prompts/<發代號>.pack.md，照 SKILL.md 第 2 步換兩處：計畫與事實那一段換成讀檔指示，
+            「派審查者」的「《計畫與事實》貼上面兩組標記之間的內容（連標記一起）」換成「貼那一段讀檔指示」
+            （P-med-4、P-med-5 那一版只換第一處，範本裡另有一條條件句；那一版的 fill.py 在 2cf7aba）
       paste：照舊貼在標記之間
       兩種都重寫 prompts/<發代號>.judge.txt 與 .parent.txt
 
@@ -21,6 +23,7 @@ OLD = os.path.join(HERE, "..", "2026-11-15-reviewer-effort")
 EFFORT_FROM = 'model "haiku"。'
 EFFORT_TO = 'model "haiku"、effort "{EFFORT}"（每個審查者都要帶這個 effort 參數，重派、補派的也一樣）。'
 END = "<<<審查包結束>>>"
+HALF = "《計畫與事實》貼上面兩組標記之間的內容（連標記一起）"   # 範本「派審查者」裡要換掉的半句
 EFFORT = {"med": "medium", "low": "low"}
 
 def read(p): return open(p, encoding="utf-8").read()
@@ -65,6 +68,12 @@ def pack_sentence(skill, path, n):
     assert "{" not in out, out
     return out
 
+def half_sentence(skill):
+    """SKILL.md 第 2 步的第二處：換上去的那半句（整份檔裡這樣開頭的只能有一行）。"""
+    hit = [l for l in skill.split("\n") if l.startswith("《計畫與事實》貼上面「材料在這個檔：」")]
+    assert len(hit) == 1, f"第二處的替換句有 {len(hit)} 行"
+    return hit[0]
+
 def check(repo):
     old = subprocess.run(["git", "-C", repo, "show", "b1935bb:skills/plan-review/SKILL.md"], capture_output=True, check=True).stdout.decode()
     judge = read(os.path.join(OLD, "judge.txt"))
@@ -92,6 +101,8 @@ def make(repo, w, mode, runs):
             write(pk, body)
             a, b = block(t)
             t = t[:a] + pack_sentence(skill, pk, body.count("\n")) + t[b:]
+            assert t.count(HALF) == 1, f"範本裡要換掉的半句有 {t.count(HALF)} 處"
+            t = t.replace(HALF, half_sentence(skill))
         else:
             t = paste(t, plan, facts)
         assert t.count("{ROOT}") == 1 and t.count("{EFFORT}") == 1
