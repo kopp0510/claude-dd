@@ -240,4 +240,4 @@
 ## 與上層的關係
 
 安裝腳本的 `create_scripts()` 負責部署（覆蓋前有差異備份）；gate 的使用情境
-定義在 `templates/global/CLAUDE.md` §3.9 與根目錄 CLAUDE.md「核心工作法」。
+定義在 `templates/global/CLAUDE.md` §3.9 與 `DD_PIPELINE_ARCHITECTURE.md`「核心工作法」。

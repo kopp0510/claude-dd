@@ -294,8 +294,21 @@ claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 ## 清理外部殘留（手動）
 
 安裝腳本只管理**本 repo 部署過**的項目；其他來源（第三方 skill 安裝器、舊版安裝包）寫進
-`~/.claude/skills/` 的殘留需手動清理，型態與排查指令見
-[CLAUDE.md「殘留清理（手動）」](CLAUDE.md#殘留清理手動)（單一維護來源，避免兩份文件各自過期）。
+`~/.claude/skills/` 的殘留需手動清理。已知會污染目錄的型態：
+
+| 類型 | 範例 | 風險 |
+|---|---|---|
+| 安裝包 zip | `~/.claude/skills/*.zip` | 純垃圾，不會載入但佔空間 |
+| 分類子目錄 | `~/.claude/skills/{communication,development,documentation,git,security}/` | 內含同名 skill（如 `code-reviewer`、`security-auditor`），與 DD 的同名 agent 撞名 |
+
+排查指令：
+
+```bash
+find ~/.claude/skills -maxdepth 1 -name '*.zip'                    # 查 zip 殘留（zsh 下 glob 無匹配會直接報錯，故用 find）
+ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null  # 查分類目錄殘留
+```
+
+確認非 DD pipeline 內容後手動 `rm` / `rm -rf` 清掉。
 
 ## 授權
 

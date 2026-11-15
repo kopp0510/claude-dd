@@ -34,7 +34,7 @@
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
 | S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | DONE | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | b3b2bf9..41d98a7 |
-| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | IN_PROGRESS | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動'` 0 筆；乾跑三臂的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字 | `bf7e654..` |
+| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | IN_PROGRESS | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆（這份文件自己會提到這串字）；乾跑三臂的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字 | `bf7e654..` |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -339,7 +339,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - **S6-2** B2 搬到架構文件與 README
   - 「安裝 / 更新」底下兩段 → `DD_PIPELINE_ARCHITECTURE.md`「安裝腳本」一節最後；「核心工作法」講 gate 的那段 → 同檔「核心工作法」一節最後；「注意事項」的「**迴圈步數**已有 CI 兩道防線」一條 → 同檔「CI 防線」一節最後（表格與表後引用塊之後）；「殘留清理（手動）」的表格、指令與最後一句 → `README.zh-TW.md`「清理外部殘留（手動）」，`README.md` 同一節寫英文
   - 同批改：`scripts/CLAUDE.md`「與上層的關係」那句、根目錄收編清單第 6 項的指代、根目錄「CI 不驗、只能手動同步的區塊」那條（補四方與第五方的定義在哪、清單加上「清理外部殘留」一節）、`CHANGELOG.md` `## 未發布`
-  - 驗證：核對腳本（同上，另查架構文件「CI 防線」表每一列連續、各檔圍欄行數是偶數、根目錄不含「## 殘留清理」）；`git grep 'CLAUDE.md#殘留清理手動'` 0 筆；本機照 ci.yml 逐 step 跑全部 rc=0
+  - 驗證：核對腳本（同上，另查架構文件「CI 防線」表每一列連續、各檔圍欄行數是偶數、根目錄不含「## 殘留清理」）；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆；本機照 ci.yml 逐 step 跑全部 rc=0
   - commit：`docs: 根目錄 CLAUDE.md 的描述與導覽段搬到架構文件與 README（S6-2）`
 
 步驟 5 的乾跑（兩個小任務都 commit 之後才派；判定在這裡先寫死）：

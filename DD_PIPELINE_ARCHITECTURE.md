@@ -80,6 +80,18 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
   `--uninstall` 只移除本 repo 部署過的檔案，另外會取消登記 `OFFICIAL_PLUGINS` 列的官方 plugin（不管當初是誰裝的）；
   安裝時被換掉的同名檔不會放回去，只在備份裡。`settings.json` 與 `installed_plugins.json` 是就地改寫、不備份。
 
+環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**：tech-diagram-gif 的
+GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。
+只偵測提示、不代裝系統套件。最後一行報**自動壓縮視窗**有沒有設（`autocompact_state`，讀 `~/.claude/settings.json`
+最上層與 `modelSettings` 的 `autoCompactWindow`、以及這個 shell 的 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`）：只提示、不改檔、不影響結束碼。
+只讀這一個設定檔，專案層等其他設定檔不讀，所以「都沒設」那一行印的是「沒有有效的設定（其他設定檔沒查）」，不寫成確定沒設。
+印出的句子只寫官方文件原文撐得住的說法（出處在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15），「幾萬才壓縮」這類數字不進安裝輸出。
+
+`--check` 的 skills、agents 兩段除了看在不在，還比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`）：部署版與 repo 這份不同，
+那一行印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行計數；只提示、不改檔、不影響結束碼（`tests/test-install.sh` 的 T11）。
+`diff`／`cmp` 回 2 以上（例如部署的檔讀不到）另外印「無法比對」，不併進「不同」：那時重跑安裝會在覆蓋前的備份那一步失敗（2026-11-15 沙盒實跑 rc=1）。
+內容比對只有這兩段有：commands、scripts（gate 住在這層）、output styles、全域 CLAUDE.md 過期了 `--check` 看不出來。
+
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
@@ -119,6 +131,14 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md
 「開發本 repo」一節。
 
+搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
+並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
+`~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有
+`core.hooksPath` 時改掛該目錄，見根目錄 CLAUDE.md「開發本 repo」）— 改碼目錄缺
+CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
+SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit
+（就算沒改程式碼）一樣擋；細節見 `scripts/CLAUDE.md`。
+
 ## CI 防線（.github/workflows/ci.yml）
 
 | 檢查 | 防什麼 |
@@ -147,6 +167,15 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 > 這張表是 CI 覆蓋範圍的單一入口，**新增 CI step 時要同步補一列**（沒有任何檢查會擋它過期）。
 
 CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
+
+**迴圈步數**已有 CI 兩道防線。**四方一致**（全域模板 §3.9 ↔ `/dd-init` 蓋章版 ↔
+兩份 README 清單 ↔ `dd-loop-version` 標記）只數**編號清單**；**第五方**（2026-09-04 補）
+管它看不到的兩類使用者可見文案 — ①安裝腳本印出的「N 步開發迴圈」（排除註解行，
+那裡是有日期的歷史敘述）②一行式箭頭摘要（合併續行後，箭頭 ≥3 且同時含 commit
+與 review 才認定；CHANGELOG／UPGRADING 為歷史敘述故排除）。兩次踩雷都是靜默失效
+不報錯：2026-08-31 迴圈 6→7→8 時標記停在 `6step`（舊專案跑 `/dd-init` 會被誤判為
+最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
+`DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
 
 ## 授權
 
