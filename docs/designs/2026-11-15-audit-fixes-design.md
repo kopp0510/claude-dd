@@ -35,6 +35,7 @@
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
 | S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | DONE | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | b3b2bf9..41d98a7 |
 | S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | DONE | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆（這份文件自己會提到這串字）；乾跑三臂與全新 session 補測三發的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字（56,111 → 46,424） | bf7e654..0dafca5 |
+| S7 | 根目錄 CLAUDE.md 大小上限（pre-commit 與 CI 都擋） | IN_PROGRESS | — | 拋棄式 repo 的情境（真的 `git commit` 經過 `scripts/githooks/pre-commit`）每一則都符合預期；變異對照每個變異都讓它對應的情境變得不一樣；`shellcheck -S warning` 與 `/bin/bash`（3.2）都過；本機照 ci.yml 逐 step 跑全部 rc=0，新 step 的 log 印出大小、上限、上限取自哪裡；上限檔臨時改成 40000 時新 step rc≠0、還原後 rc=0；標 DONE 刪掉指路句之後 `wc -c CLAUDE.md` 是 46,424 | e4ec5cc.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -400,6 +401,140 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 
 步驟 3 不跑 code-simplifier（diff 只有 Markdown）。步驟 4 照樣派 3 個 code-reviewer。要新增的測試：沒有。
 
+### S7 根目錄 CLAUDE.md 大小上限（pre-commit 與 CI 都擋）
+
+來源：2026-11-16 我量了根目錄 `CLAUDE.md` 的大小（`git show <commit>:CLAUDE.md | wc -c`，每列是當天最後一個 commit）：2026-08-31 12,797 → 10-30 42,290 → 11-14 48,844 → 11-15 56,111 → 11-16（S6 之後）46,424 bytes。`2bd0014..HEAD`（HEAD 當時是 `e4ec5cc`）有 68 個 commit 動到它，合計加 19,914；扣掉 S6 搬移的兩個 commit，其餘合計只減 1,786。我提了四種做法，第 1 種是「大小上限，寫成會擋的檢查」，上限誰能調高給了兩個選項：甲 = 數字寫在 repo、調高前先問使用者；乙 = 數字寫在 repo，但檢查讀的是最新發版 tag 那一版的數字。我那則訊息的最後一行是「回『乙 48000』（或『甲』加一個數字；現在是 46,424），我就動手做第 1 項」。使用者回「好」。
+
+假設：
+
+- 使用者的原話只有「好」。乙與 48000 是我的建議，我把「好」讀成接受建議；這是我的解讀，回報時第一行寫明
+- 只管根目錄 `CLAUDE.md`。全域模板與各層巢狀 CLAUDE.md 不設上限
+- 量的是整個檔的 bytes（含 HTML 註解）
+- 這一段不部署任何東西：`scripts/githooks/` 不在 `DD_SCRIPTS`、`tests/` 不部署。不動 `install-dd-pipeline.sh`、`templates/`、兩份 README；不跳 `dd-loop-rev`；不發版；push 由使用者自己做
+- 乙在「有一個帶上限檔的 `v*` tag」之後才成立。現在最新的 `v1.6.14` 沒有這個檔。到下一次發版之前：pre-commit 讀 `HEAD` 那一版的上限（同一個 commit 調高沒有用，但先單獨 commit 調高、下一個 commit 再加字就過得去）；CI 讀工作目錄那一份（同一次 push 改得到）。這個缺口不再往下補，每次檢查都印出上限取自哪裡，回報時照實講
+- 根目錄 `CLAUDE.md` 不新增任何永久內容。開工時照進度表規則加回的指路句（130 bytes，含後面的空行），在標 DONE 的那個 commit 刪掉；刪完 `wc -c CLAUDE.md` 要回到 46,424。這一段的說明與步驟 7 的教訓都寫進巢狀檔（`scripts/githooks/CLAUDE.md`、`tests/CLAUDE.md`）或架構文件
+- `SKIP_DOC_CHECK=1` 不跳過大小上限（它只跳過 gate）。`git commit --no-verify` 會跳過整支 hook，那種 commit 靠 CI 在 push 時補擋；gate-guard 只擋 Claude 用 `--no-verify`
+- hook 只在設了 `core.hooksPath scripts/githooks` 的 clone 生效（這台有設）；沒設的 clone 要等 push、由 CI 擋
+- 測試要不要收進 repo 由使用者決定（進度表規則：清單以外的測試先問使用者）。S7-1、S7-2 做完、步驟 3 開始之前用 AskUserQuestion 問，題目裡寫出不收的後果（`--staged` 那條路在 repo 裡沒有回歸測試、CI 的 `bash32` job 驗不到這支腳本、腳本壞了會擋住所有讓根目錄 CLAUDE.md 變大的 commit）；同意才做 S7-3。不管收不收，同一批情境在 S7-1 都會在 scratchpad 的拋棄式 repo 實跑
+
+設計：
+
+1. 上限檔 `scripts/githooks/claude-md-max-bytes`（新）：`#` 開頭的說明行，加一行整數。內容：
+
+   ```
+   # 根目錄 CLAUDE.md 的大小上限（bytes）。讀它的是 scripts/githooks/claude-md-size.sh。
+   # 調高之前先問使用者。有帶這個檔的 v* tag 之後，檢查讀的是最新 tag 那一版：改這裡要等發下一版才生效。
+   # 格式：# 開頭的行與空行不算，其餘要剛好一行整數。
+   48000
+   ```
+
+2. 檢查腳本 `scripts/githooks/claude-md-size.sh`（新；`#!/bin/bash`，3.2 相容，不用 `set -e`，執行位元開著）：
+   - 用法：`--staged`（pre-commit 用，看 index 那一版）；不帶參數（CI 用，看工作目錄那一份）；其他參數 exit 2
+   - 開頭 `cd "$(git rev-parse --show-toplevel)"`，失敗 exit 2
+   - 取上限：`tag=$(git tag --list 'v*' --sort=-v:refname | head -1)`（跟 `ci.yml`「CHANGELOG 已發布區塊不可改動」那一步同一個寫法）。那個 tag 有上限檔 → 讀 tag 那一版。沒有（沒有任何 tag，或那個 tag 沒有這個檔）→ `--staged` 依序試 `HEAD` 那一版、index 那一版（`HEAD` 沒有這個檔時才讀 index，所以加進上限檔的那個 commit 自己過得去）；不帶參數讀工作目錄那一份
+   - 解析：去掉 `#` 開頭的行與空行之後，要剛好剩一行、整行都是數字、不超過 12 位；否則算不合法。找不到上限檔或不合法都是 exit 1
+   - `--staged`：`new` = `git cat-file -s :CLAUDE.md`（index 裡沒有就當 0）；`old` = `git cat-file -s HEAD:CLAUDE.md`（沒有 HEAD 或 HEAD 沒有這個檔就當 0）。`new` 沒有比 `old` 大 → 什麼都不印、exit 0（這次 commit 沒有讓它變大，連上限都不取）。變大 → 取上限，印一行「根目錄 CLAUDE.md `old` → `new` bytes，上限 `limit`（取自 …）」；`new` 大於上限 → 印做法、exit 1；否則 exit 0。上限取不到 → exit 1
+   - 不帶參數：`new` = 工作目錄 `CLAUDE.md` 的 bytes（`$(( $(wc -c < CLAUDE.md) ))`，macOS 的 `wc` 輸出前面有空白；沒有這個檔 → exit 1）。取上限，印「✅／❌ 根目錄 CLAUDE.md `new` bytes，上限 `limit`（取自 …）」；`new` 大於上限 → exit 1。另外不管上限取自哪裡，工作目錄那一份上限檔也要解析得出來（它會是下一版的基準），解析不出來 → exit 1；它的值跟取到的上限不同時多印一行「工作目錄的上限檔寫 `n`，發下一版之後才生效」
+   - 「取自 …」的固定寫法：`取自 <tag>`；`取自 HEAD：<原因>`；`取自 index：<原因>`；`取自工作目錄：<原因>`。原因兩種：`<tag> 還沒有這個檔，發下一版之後改以 tag 為準`、`還沒有 v* tag`
+   - 兩句固定的錯誤：`找不到上限檔 scripts/githooks/claude-md-max-bytes（<原因>）`、`上限檔內容不合法（取自 …）`
+   - 擋下時印的做法（四句）：新內容改寫進它在講的那個目錄的 CLAUDE.md 或 `DD_PIPELINE_ARCHITECTURE.md`，根目錄不加；一定要放根目錄，就先把一塊既有的內容原文搬走、根目錄留一句指路；不要為了過關把既有的句子縮短（縮短最容易把條件改掉）；調高上限先問使用者，有帶這個檔的 `v*` tag 之後改了要等發下一版才生效
+   - 緊貼全形字的變數一律寫 `${var}`（`scripts/CLAUDE.md`「此層慣例」）
+
+3. `scripts/githooks/pre-commit`：`exec` gate 之前先跑大小檢查，非 0 就不往下。改完是：
+
+   ```bash
+   #!/bin/bash
+   # claude-dd 自用 pre-commit（dogfood）：先查根目錄 CLAUDE.md 的大小上限，再呼叫 repo 內的 CLAUDE.md gate
+   # 啟用（clone 後跑一次）：git config core.hooksPath scripts/githooks
+   # 逃生口 SKIP_DOC_CHECK=1 git commit ... 只跳過 gate，不跳過大小上限（見同目錄 CLAUDE.md）
+   top=$(git rev-parse --show-toplevel) || exit 1
+   "$top/scripts/githooks/claude-md-size.sh" --staged || exit 1
+   exec "$top/scripts/check-claude-md.sh"
+   ```
+
+4. `.github/workflows/ci.yml`（`lint` job，已有 `fetch-depth: 0`）：
+   - ShellCheck 清單加 `scripts/githooks/claude-md-size.sh`，插在 `scripts/githooks/pre-commit \` 的下一行、行尾帶反斜線（清單最後一項沒有反斜線，不接在最後）
+   - 新 step「根目錄 CLAUDE.md 大小上限（以最新 v* tag 那一版的上限為準）」：先查有沒有任何 `v*` tag，沒有就印跟「CHANGELOG 已發布區塊不可改動」那一步同一句錯誤、exit 1（腳本自己遇到沒有 tag 會退回工作目錄的上限；在 CI 那代表 checkout 壞了，不能當成「還沒發版」）；再跑 `scripts/githooks/claude-md-size.sh`。`run: |` 裡不用 heredoc
+
+5. 文件（都不是根目錄）：
+   - `scripts/githooks/CLAUDE.md`（新；gate 對有程式碼變更的目錄要求同目錄的 CLAUDE.md 一起 staged，`sh` 在 `CODE_EXT` 裡）：這一層的職責、三個檔各做什麼、上限怎麼調高、乙什麼時候才成立、哪些路繞得過（`--no-verify`、沒掛 hook 的 clone、發版前分兩個 commit）、情境與變異對照記在哪
+   - `scripts/CLAUDE.md`「關鍵檔案」裡 `githooks/pre-commit` 那一條：補「先跑大小檢查」並指到 `githooks/CLAUDE.md`
+   - `DD_PIPELINE_ARCHITECTURE.md`：CI 防線表加一列（加在表格裡面，加完把表格範圍逐行印出來確認每一行都是 `|` 開頭）；同表第一列的「11 支腳本」改 12；「核心工作法」一節「本 repo 自身也掛同一個 gate（dogfood）」那一句補上同一支 hook 還擋大小上限、說明在 `scripts/githooks/CLAUDE.md`
+   - `CHANGELOG.md` 的 `## 未發布` → `### Added` 加一條（「CI 新增…」這種條目在已發布的區塊有前例）
+
+擋誤用機制的三個檢查（全域模板 §3.9）：
+
+- 誤用發生的那一刻機制在不在：加字的 commit 在設了 hooksPath 的 clone 會經過 hook；沒設的要等 push。hook 與腳本都在 main，不是只存在某個 branch 的檔。hook 從工作目錄跑，同一個 commit 把腳本改壞就擋不到，這跟其他檢查一樣，diff 看得到
+- 基準不取自被稽核的對象：上限取自最新 tag 那一版；有帶上限檔的 tag 之前，pre-commit 取自 `HEAD`、CI 取自工作目錄（上面假設裡的已知缺口）
+- 參數白名單：沒有「被包的指令成功才做」的後置動作，不適用
+- 既有的痕跡有沒有更強的：`DD_PIPELINE_ARCHITECTURE.md` 的 CI 防線表沒有任何一列管檔案大小
+
+情境（S7-1 在 scratchpad 的拋棄式 repo 實跑；使用者同意的話 S7-3 收進 `tests/test-gate.sh`）。拋棄式 repo 照真 repo 的配置：`scripts/githooks/pre-commit`、`scripts/githooks/claude-md-size.sh`、`scripts/check-claude-md.sh` 從真 repo 複製，`scripts/CLAUDE.md`、`scripts/githooks/CLAUDE.md` 各放一行，`git config core.hooksPath scripts/githooks`。上限用小數字。沒寫「直接跑」的都是真的 `git commit`，經過 `pre-commit`：
+
+- A 還沒有任何 commit、哪裡都沒有上限檔，第一個 commit 就帶根目錄 CLAUDE.md → 擋，訊息是「找不到上限檔」。第一個 commit 不帶它 → 放行；之後新增它（有 HEAD 了、還是沒有上限檔）→ 擋；直接跑不帶參數的模式 → exit 1、「找不到上限檔」
+- B 上限檔（100）與 CLAUDE.md（50 bytes）同一個 commit → 放行，印出上限 100、「取自 index：還沒有 v* tag」。直接跑不帶參數的模式 → exit 0、「取自工作目錄：還沒有 v* tag」
+- C CLAUDE.md 變 150 → 擋，輸出有 150、100、「取自 HEAD：還沒有 v* tag」、「先問使用者」
+- D 把 `v0.0.0` 打在還沒有上限檔的第一個 commit 上，CLAUDE.md 變 150 → 擋，輸出有「v0.0.0 還沒有這個檔」；直接跑不帶參數的模式 → exit 1，印 ❌、150、100、「取自工作目錄：v0.0.0 還沒有這個檔」
+- E 同一個 commit 把上限檔改成 200、CLAUDE.md 變 150 → 擋（`HEAD` 那一版還是 100）。先單獨 commit 上限檔 200、下一個 commit CLAUDE.md 才變 150 → 放行（發版前的已知缺口；寫成情境是為了這個行為變了看得到）
+- F 打 `v0.0.1`（上限檔 200）；同一個 commit 把上限檔改成 300、CLAUDE.md 變 250 → 擋，輸出有「取自 v0.0.1」與 200
+- G 只 commit 上限檔 300、CLAUDE.md 不動 → 放行，大小檢查什麼都不印。下一個 commit CLAUDE.md 變 250 → 照擋，上限還是 `v0.0.1` 的 200（乙的核心：調高要等發版）
+- H 打 `v0.0.2`；CLAUDE.md 剛好 300 bytes → 放行，直接跑不帶參數的模式也通過；301 → 擋
+- I 只 commit 上限檔 400、打 `v0.0.10`；CLAUDE.md 300 → 350 → 放行，輸出有「取自 v0.0.10」與 400（照字典序倒排會選到 `v0.0.2` 的 300 而擋下）
+- J index 裡把上限檔刪掉、CLAUDE.md 變 450 → 照 `v0.0.10` 的 400 擋下
+- K 只 commit 上限檔 120、打 `v0.0.12`（CLAUDE.md 350，超過上限）；350 → 340 → 放行、不印；340 → 345 → 擋；直接跑不帶參數的模式 → exit 1，印 ❌、340、120
+- L index 與工作目錄不一樣：index 是變小的版本、工作目錄是更大的 → 放行；index 是變大的版本、工作目錄改回小的 → 擋
+- M `SKIP_DOC_CHECK=1` 加上讓它變大的 commit → 照擋
+- N `git commit -am` 讓它變大 → 擋；`git commit CLAUDE.md -m …`（指定路徑）讓它變大 → 擋；變大的 CLAUDE.md 已經 `git add`、但指定路徑只 commit 別的檔 → 放行，而且 CLAUDE.md 還留在 index 沒被 commit
+- O 直接跑不帶參數的模式：CLAUDE.md 縮到上限以內並 commit → exit 0、印 ✅、「取自 v0.0.12」；從子目錄跑 → 量的還是根目錄那一份；工作目錄沒有 CLAUDE.md → exit 1；工作目錄的上限檔改成別的數字 → exit 0、多印「發下一版之後才生效」；改成不合法（`abc`、兩行數字、30 位數）或刪掉 → exit 1
+- P 最新 tag 的上限檔不合法（上限檔改成 `abc` 並 commit、打 `v0.0.13`）：CLAUDE.md 變大 → 擋，訊息是「上限檔內容不合法」；只改別的檔 → 放行；直接跑不帶參數的模式 → exit 1
+- Q 經過 hook 之後 gate 還是有跑到：新增 `scripts/x.sh`、不附 `scripts/CLAUDE.md` → 擋，輸出有 gate 的「commit 已擋下」
+- R 不認得的參數 → exit 2
+
+變異對照（先存下原版每一則情境的完整輸出，變異版跟它不一樣就算紅；逐個看不一樣的原因是被測的腳本給了錯的結果，不是載入失敗。記「哪個變異 → 哪幾則不一樣」，不記紅數；每個變異跑完還原、`cmp` 確認與原檔相同）：
+
+- 拿掉 `--sort=-v:refname`（不排序時 `head -1` 我預期拿到 `v0.0.0`，它沒有上限檔，會退回 `HEAD`；實跑確認）→ F 的輸出、G 的第二則至少這兩則不一樣
+- 改成 `--sort=-refname`（字典序倒排）→ I 不一樣
+- 拿掉讀 tag 的那條分支 → G 的第二則、J 不一樣
+- 拿掉 `HEAD` 那一層（tag 沒有就直接讀 index）→ E 的第一則不一樣
+- 「沒有變大就離開」改成「大小相等才離開」→ K 的「350 → 340」不一樣
+- `--staged` 的大小改讀工作目錄 → L 的兩則不一樣
+- 拿掉整數檢查 → O、P 的不合法那幾則不一樣
+- 找不到上限檔時改成放行 → A 不一樣
+- 「大於」改成「大於等於」→ H 的「剛好 300」不一樣
+- 不帶參數的模式不驗工作目錄的上限檔 → O 的不合法那幾則不一樣
+- `pre-commit` 拿掉呼叫大小檢查的那一行，或拿掉它後面的 `|| exit 1` → 大小那幾則「擋」的都不一樣，Q 一樣
+
+S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣，直接不一樣的是哪幾則、哪些只是連鎖，記在 `scripts/githooks/CLAUDE.md`「情境與變異對照」。跟上面的預期不一樣的地方：
+
+- 「`--staged` 的大小改讀工作目錄」在 A 的「第一個 commit 不帶 CLAUDE.md」就把它擋下、情境腳本接著中止，跑不到 L。改成只在 L 打開這個變異，才看得到 L 的兩則各自不一樣
+- 「拿掉讀 tag 的那條分支」最先不一樣的是 F 的「取自 v0.0.1」與 G 的第二則；J 也不一樣，但那是前面放行之後的連鎖，不算 J 自己的證據
+- 「拿掉 `HEAD` 那一層」除了 E 的第一則，C、D 的「取自 HEAD」也不一樣（變成取自 index）
+- 「拿掉整數檢查」不一樣的是 O 的 `abc`、兩行數字與 P 的兩則；30 位數那一則是 12 位那一行在擋，另外做了一個變異
+- 實作時補的情境：A、D、H 各一則直接跑；O 的「從子目錄跑」「工作目錄沒有 CLAUDE.md」「刪掉上限檔」（已補進上面的清單）
+- 實作時補的變異：拿掉 12 位那一行、兩處 `resolve_limit … || exit 1` 各改成 `exit 0`、最後的 `exit $rc` 改 `exit 0`、`--staged` 超過上限時的 `exit 1` 改 `exit 0`、拿掉 `cd`、拿掉「找不到 CLAUDE.md」那一段、`pre-commit` 拿掉 `exec` gate 的那一行
+
+小任務：
+
+- **S7-1** 大小檢查腳本、上限檔、hook、說明檔
+  - 檔：`scripts/githooks/claude-md-size.sh`（新）、`scripts/githooks/claude-md-max-bytes`（新）、`scripts/githooks/CLAUDE.md`（新）、`scripts/githooks/pre-commit`、`scripts/CLAUDE.md`；同一個 commit 帶開工的改動（進度表這一列、這一節、根目錄的指路句、計畫審查紀錄）
+  - 順序：先寫情境腳本（scratchpad），大小檢查先放一個一律 exit 0 的空殼，確認該擋的情境是因為「沒擋」而紅；再寫腳本到情境全過、跑變異對照。真的 `scripts/githooks/pre-commit` 最後才改 —— hook 從工作目錄跑，腳本有 bug 會擋住自己的 commit，而 `--no-verify` 不能用
+  - 驗證：情境 A–R 每一則符合預期（輸出連同中間印的大小與上限一起留在 scratchpad）；變異對照；`shellcheck -S warning scripts/githooks/claude-md-size.sh scripts/githooks/pre-commit`；情境腳本用 `/bin/bash`（3.2）跑；真 repo 上直接跑 `scripts/githooks/claude-md-size.sh` → exit 0、印出「取自工作目錄：v1.6.14 還沒有這個檔」；真 repo 的上限檔臨時改成 40000 → exit 1，還原後 exit 0、`git status --short` 沒有多出改動
+  - 3.2 相容：這裡只有開發當下在本機（macOS `/bin/bash` 3.2）跑過。`scripts/CLAUDE.md` 寫「新腳本要有行為測試並加進那個 job，才算有驗 3.2」，所以沒有 S7-3 的話，CI 的 `bash32` job 驗不到這支腳本，要寫進回報
+  - commit：`feat: 根目錄 CLAUDE.md 加大小上限，pre-commit 擋下讓它超過上限的 commit（S7-1）`
+- **S7-2** CI step 與文件
+  - 檔：`.github/workflows/ci.yml`、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md`
+  - 驗證：`ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'`；本機照 ci.yml 逐 step 跑全部 rc=0，新 step 的 log 有 ✅ 那一行；負面測試三個，各自還原後回綠：①上限檔臨時改成 40000 → 新 step rc≠0 ②在新腳本臨時加一個 warning 級的問題 → ShellCheck 那一步 rc≠0（證明清單真的有檢查到它）③架構文件的 12 臨時改回 11 → 「數字宣稱一致性」那一步 rc≠0；架構文件 CI 防線表的範圍逐行印出來，每一行都是 `|` 開頭
+  - commit：`ci: 新增根目錄 CLAUDE.md 大小上限的檢查，補 CI 防線表（S7-2）`
+- **S7-3**（使用者同意才做）情境收進 `tests/test-gate.sh`
+  - 檔：`tests/test-gate.sh`、`tests/CLAUDE.md`、`DD_PIPELINE_ARCHITECTURE.md`（CI 防線表「gate 情境測試」那一列補一句）
+  - 內容：在檔尾 `exit $fail` 之前加一節，另開一個拋棄式 repo、照上面的配置放真的 `scripts/githooks/pre-commit`，跑情境 A–R；沿用檔裡的 `expect`、`said`、`not_said`。第二、三個參數可以換成別的大小檢查腳本與 `pre-commit` 的路徑（做變異用），不給就取 repo 裡那一份。這支測試本來就在 `lint` 與 `bash32` 兩個 job 各跑一次，不用另外接 CI
+  - 驗證：`/bin/bash tests/test-gate.sh` rc=0、新情境都是 ✅、原有情境的 ✅ 一則不少（改之前先記下原有的 ✅ 行，改之後比對）；變異對照同上；ubuntu:24.04 容器跑一次
+  - commit：`test: 根目錄 CLAUDE.md 大小上限的情境測試（S7-3）`
+
+提議要新增的測試（還沒問使用者；同意才加，同意後補進下面的測試清單）：`tests/test-gate.sh`（S7-3）上面情境 A–R，經過真的 `scripts/githooks/pre-commit`。
+
+步驟 3–8 照進度表規則對整段跑（範圍從 `e4ec5cc` 算）；步驟 4 的報告放 `docs/reviews/2026-11-15-audit-fixes/S7-*.md`（寫之前先 `ls`）。步驟 7 有教訓的話寫進巢狀檔，不寫根目錄。
+
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 
 1. `tests/test-gate.sh` ⑬（S1-1）：`dd.docfile` 設 `main.py`、`notes.sh` 要拒絕，`AGENTS.txt` 照常（對照）
@@ -429,3 +564,11 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 採納的小事（都已改進上面的 S6）：殘留清理的範圍到檔尾、核對腳本另查圍欄行數與根目錄不含那一節；迴圈步數那條插在「CI 防線」一節最後、不拆開表格與表後的引用塊；gate 段與架構文件既有的段落並存要寫明；「會寫新字的地方」不寫種類數；乾跑移到步驟 5、引文比對前去掉行首的 `>`；新檔的出處註記不寫條數；「核心工作法」多留一段的理由；根目錄「CI 不驗」那條補四方與第五方的定義在哪、清單加上 README 的「清理外部殘留」。
 
 駁回：「新增 Skill 步驟」第 6 步與「同一則訊息裡派的幾個 subagent」起的那幾條也該搬（使用者決定的範圍沒有它們）；`runci.rb` 沒跑 `bash32` job（讀過，兩個 job 都跑）；README「前置需求」要同步（這次沒動到那條規則）；乾跑只證明 repo 裡找得到（計畫已寫明它不證明什麼）；新檔不在 `git ls-files`（S6-1 就 commit 了）；刪掉箭頭圖後步驟沒有編號可對照（編號由全域 §3.9 定義）；GitHub 預設 shell 帶 pipefail（沒寫 `shell:` 時不帶，而且這段不動 ci.yml）；「明寫先 Read」沒有實測（不是批評，計畫已寫明）。
+
+`plan-review`（S7，2026-11-16）第 1 輪：通過。4 個審查者（前提成不成立／漏掉的同步點／範圍與驗證／全面），讀檔檢查都過，沒有重派。沒有重大、沒有需使用者決定。用的是 repo 這份 `skills/plan-review/SKILL.md` 的範本與審查包（部署版與 repo 不同）。
+
+採納的小事（都已改進上面的 S7）：發版前 `--staged` 的上限改成依序讀 tag、`HEAD`、index（原本直接讀 index，同一個 commit 調高就過得去）；「取自 …」與兩句錯誤訊息寫成固定字串；拿掉 `--sort=-v:refname` 那個變異的機制寫錯了（不排序時拿到的是最舊的 tag，不是 `v0.0.2`）、它也會讓 F 不一樣；變異對照改成跟原版的完整輸出比，不斷言「某一則要紅」；「沒有逃生口」改成寫明 `--no-verify` 會跳過整支 hook、靠 CI 補擋；問使用者測試那一題要寫出不收的後果；不帶參數的模式取大小時去掉 `wc` 輸出前面的空白；補「還沒有任何 commit」與「tag 有上限檔、index 刪掉上限檔」兩則情境。
+
+駁回：「好」被讀成「乙 48000」（原訊息最後一行就是在問這個、計畫已寫明是解讀、回報第一行會講）；加 S7 這一列與加回指路句沒有規則依據（使用者同意做這項工作；表上有不是 DONE 的列就該有指路句）；要巡 README 的「CLAUDE.md 維護規則」（gate 本身沒改，改的是本 repo 自用、不部署的 hook）；hook 對「變小但仍超過上限」放行而 CI 擋下（刻意的，CI 比較嚴）；上限檔沒有執行位元的情境（要開執行位元的是腳本；沒開時 hook 會直接報錯）。
+
+需要外部查證（2 條小事）：`git commit -a` 與指定路徑的 commit 時 hook 裡 `git cat-file -s :CLAUDE.md` 讀到的是不是要 commit 的那一版（改成情境 N 實測）；bash 3.2 下的行為（S7-1 用 `/bin/bash` 跑情境；CI 驗不驗得到看 S7-3）。
