@@ -28,7 +28,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | IN_PROGRESS | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062.. |
+| S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
 | S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | TODO | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | |
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | TODO | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | TODO | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | |
@@ -93,6 +93,7 @@ S1 的步驟 3–5（2026-11-15）：
 - 步驟 5（修完之後重跑）：`/bin/bash tests/test-gate.sh` macOS（bash 3.2）rc=0、150 個 ✅、0 個 ❌；ubuntu:24.04 容器（bash 5.2.21）rc=0、150 個 ✅、0 個 ❌；
   拋棄式 repo 設 `dd.docfile=main.py` 後 commit 與 `--start-segment` 都 rc=1、印「不可以是程式碼檔名」、沒有產生 commit；本機照 ci.yml 逐 step 跑 26 個全部 rc=0；
   變異九個（各只改一處，固定版與變異版判定行數相同），紅的都只落在對應的斷言，對照記在 `scripts/CLAUDE.md`
+- 步驟 7：跳過 —— 這一段的教訓（`said` 字串不可以 `-` 開頭、同一段第二次先停要另建檔、`stdout 空` 只講那四種）在步驟 1–6 已經寫進 `tests/CLAUDE.md`、`scripts/CLAUDE.md`、`docs/reviews/CLAUDE.md`，沒有另外要進根目錄或全域的。步驟 8：範圍三份（`docs/reviews/CLAUDE.md`、`scripts/CLAUDE.md`、`tests/CLAUDE.md`），逐句對回測試名稱與指令，修了三處對不上的（變異表「三則 `stdout_empty`」應為四則、對照那則的名稱、`tests/CLAUDE.md` 把 `stdout_empty` 寫成對舊寫法有牙）
 - S2 開工時要接的事：`scripts/CLAUDE.md` 那句「`skills/dd-loop/SKILL.md`…要跟著對一次」—— S2-1 落地後在那裡補上 dd-loop 已經照訊息分情況
 
 ### S2 流程文字（依賴 S1：文字要引用 S1 改好的 gate 訊息）
