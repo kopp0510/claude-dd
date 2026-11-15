@@ -415,7 +415,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - 根目錄 `CLAUDE.md` 不新增任何永久內容。開工時照進度表規則加回的指路句（130 bytes，含後面的空行），在標 DONE 的那個 commit 刪掉；刪完 `wc -c CLAUDE.md` 要回到 46,424。這一段的說明與步驟 7 的教訓都寫進巢狀檔（`scripts/githooks/CLAUDE.md`、`tests/CLAUDE.md`）或架構文件
 - `SKIP_DOC_CHECK=1` 不跳過大小上限（它只跳過 gate）。`git commit --no-verify` 會跳過整支 hook，那種 commit 靠 CI 在 push 時補擋；gate-guard 只擋 Claude 用 `--no-verify`
 - hook 只在設了 `core.hooksPath scripts/githooks` 的 clone 生效（這台有設）；沒設的 clone 要等 push、由 CI 擋
-- 測試要不要收進 repo 由使用者決定（進度表規則：清單以外的測試先問使用者）。S7-1、S7-2 做完、步驟 3 開始之前用 AskUserQuestion 問，題目裡寫出不收的後果（`--staged` 那條路在 repo 裡沒有回歸測試、CI 的 `bash32` job 驗不到這支腳本、腳本壞了會擋住 commit —— 計畫時寫的是「擋住所有讓根目錄 CLAUDE.md 變大的 commit」，S7-1 在拋棄式 repo 實跑的結果是執行位元沒了或開頭就語法錯時**每一個** commit 都被擋，見 `scripts/githooks/CLAUDE.md`「改這三個檔之前」）；同意才做 S7-3。不管收不收，同一批情境在 S7-1 都會在 scratchpad 的拋棄式 repo 實跑
+- 測試要不要收進 repo 由使用者決定（進度表規則：清單以外的測試先問使用者）。S7-1、S7-2 做完、步驟 3 開始之前用 AskUserQuestion 問，題目裡寫出不收的後果（`--staged` 那條路在 repo 裡沒有回歸測試、CI 的 `bash32` job 驗不到這支腳本、腳本壞了會擋住 commit —— 計畫時寫的是「擋住所有讓根目錄 CLAUDE.md 變大的 commit」，S7-1 在拋棄式 repo 實跑的結果是執行位元沒了或開頭就語法錯時**每一個** commit 都被擋，見 `scripts/githooks/CLAUDE.md`「改這三個檔之前」）；同意才做 S7-3。不管收不收，同一批情境在 S7-1 都會在 scratchpad 的拋棄式 repo 實跑。2026-11-16 S7-2 commit 之後用選單問了，使用者選「收進 repo」
 
 設計：
 
@@ -529,13 +529,17 @@ S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣�
     ④ShellCheck 清單拿掉新腳本那一行、同時在腳本種同一個問題 → ShellCheck 那一步照樣 rc=0（清單那一行拿掉就沒人檢查這支腳本），「數字宣稱一致性」那一步 rc=1（宣稱 12、實際 11）；
     ⑤沒帶 tag 的淺 clone（`git clone --no-tags --depth 1`）裡跑新 step → rc=1、印「找不到任何 v* tag」；同一個 clone 直接跑腳本 → rc=0、「取自工作目錄：還沒有 v* tag」（step 開頭那道檢查擋的就是這個）；clone 裡補一個 tag 之後新 step rc=0。
     ubuntu:24.04 容器（bash 5.2.21、git 2.43.0）跑同一批情境，每一則的輸出與 macOS `/bin/bash` 存下的相同；容器裡真 repo 直接跑腳本 rc=0
-- **S7-3**（使用者同意才做）情境收進 `tests/test-gate.sh`
+- **S7-3**（使用者 2026-11-16 選了「收進 repo」）情境收進 `tests/test-gate.sh`
   - 檔：`tests/test-gate.sh`、`tests/CLAUDE.md`、`DD_PIPELINE_ARCHITECTURE.md`（CI 防線表「gate 情境測試」那一列補一句）
   - 內容：在檔尾 `exit $fail` 之前加一節，另開一個拋棄式 repo、照上面的配置放真的 `scripts/githooks/pre-commit`，跑情境 A–R；沿用檔裡的 `expect`、`said`、`not_said`。第二、三個參數可以換成別的大小檢查腳本與 `pre-commit` 的路徑（做變異用），不給就取 repo 裡那一份。這支測試本來就在 `lint` 與 `bash32` 兩個 job 各跑一次，不用另外接 CI
   - 驗證：`/bin/bash tests/test-gate.sh` rc=0、新情境都是 ✅、原有情境的 ✅ 一則不少（改之前先記下原有的 ✅ 行，改之後比對）；變異對照同上；ubuntu:24.04 容器跑一次
   - commit：`test: 根目錄 CLAUDE.md 大小上限的情境測試（S7-3）`
+  - 實跑的結果（2026-11-16）：情境成為 `tests/test-gate.sh` 的 ⑯，說明以「⑯ A」…「⑯ R」開頭。`/bin/bash`（3.2.57）與 ubuntu:24.04 容器（bash 5.2.21）都 rc=0；改之前存下的輸出逐行等於改之後輸出的開頭（原有情境一則不少），新增的 ✅ 行去掉「⑯ 」之後與 S7-1 情境腳本的 ✅ 行相同。
+    變異對照改在測試層級重跑（變異版當第二或第三個參數）：每個變異都 rc=1，⑯ 之前的輸出都沒有變，變 ❌ 的情境與 S7-1 那次情境腳本變 ❌ 的集合相同；`scripts/githooks/CLAUDE.md` 的對照表改成記「哪幾則變 ❌」。
+    跟 S7-1 的表不一樣的兩處：「大小相等才離開」的 O「縮到 100 並 commit」、「`--staged` 大於改成大於等於」的 H「301」只是輸出不同，沒有斷言在看，不會紅（各自另有直接變紅的情境）。
+    搬進來時改的一處：A 建第一個 commit 之後取 `HEAD` 那一行原本裸跑，建不起來時 `set -e` 靜靜結束；改成印一行 ❌ 再結束
 
-提議要新增的測試（還沒問使用者；同意才加，同意後補進下面的測試清單）：`tests/test-gate.sh`（S7-3）上面情境 A–R，經過真的 `scripts/githooks/pre-commit`。
+要新增的測試（2026-11-16 用選單問，使用者選「收進 repo」；已補進下面測試清單的第 6 條）：`tests/test-gate.sh`（S7-3）上面情境 A–R，經過真的 `scripts/githooks/pre-commit`。
 
 步驟 3–8 照進度表規則對整段跑（範圍從 `e4ec5cc` 算）；步驟 4 的報告放 `docs/reviews/2026-11-15-audit-fixes/S7-*.md`（寫之前先 `ls`）。步驟 7 有教訓的話寫進巢狀檔，不寫根目錄。
 
@@ -546,6 +550,7 @@ S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣�
 3. `tests/test-gate.sh`（S1-2）：連共同祖先都沒有時（孤兒分支）訊息叫人用進度表的起點或問使用者
 4. `tests/test-gate.sh`（S1-3）：上一段沒報告被擋時訊息列出 BLOCKED 申報檔；commit 了 `S1-BLOCKED.md` 之後開下一段放行
 5. `tests/test-install.sh` T11（S3-1）：`--check` 對改過的已部署 skill 與 agent 印「與 repo 不同」、沒改的不印、不寫任何檔、結束碼 0
+6. `tests/test-gate.sh` ⑯（S7-3；這一條是 2026-11-16 另外問的，使用者選「收進 repo」）：根目錄 CLAUDE.md 大小上限的情境 A–R（內容見上面 S7 一節），在拋棄式 repo 裡經過真的 `scripts/githooks/pre-commit`
 
 ## 計畫審查紀錄
 

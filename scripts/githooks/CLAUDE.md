@@ -71,42 +71,47 @@ CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上�
 
 - hook 跑的是**工作目錄**那一份腳本。`claude-md-size.sh` 壞了的後果（2026-11-16 拋棄式 repo 實跑）：執行位元沒了（`Permission denied`）、
   或開頭就語法錯，**每一個** commit 都被擋，不只是動到 CLAUDE.md 的。把工作目錄那一份改好就恢復，不用 `--no-verify`。
-  所以先在拋棄式 repo 跑過情境，真的 `pre-commit` 最後才改
+  所以改完先跑 `/bin/bash tests/test-gate.sh`（⑯ 在拋棄式 repo 裡跑這一層的三個檔）再 commit；要改 `pre-commit` 時它最後才改
 - `git add` 新腳本之後看 `git ls-files -s scripts/githooks/`，腳本的模式要是 `100755`
 - git 的 `<rev>:<path>` 寫成 `"${tag}:${LIMIT_FILE}"`，變數一律加大括號：緊貼冒號的 `$tag:` 在 zsh 會被當成修飾詞、冒號後面整段不見、不報錯
   （bash 不會；把指令貼到 Claude 的 Bash 工具裡試的時候才會中）。緊貼全形字的變數同理（`scripts/CLAUDE.md`「此層慣例」）
-- 訊息裡的「取自 …」「找不到上限檔」「上限檔內容不合法」是情境在比對的字串，改字要一起改情境
+- 訊息裡的「取自 …」「找不到上限檔」「上限檔內容不合法」是 `tests/test-gate.sh` ⑯ 在比對的字串，改字要一起改測試
 
 ## 情境與變異對照（2026-11-16）
 
-情境 A–R 的內容在設計文件「S7」一節：拋棄式 repo 照這個 repo 的配置（`scripts/githooks/` 三個檔、`scripts/check-claude-md.sh`、`core.hooksPath`），
-沒寫「直接跑」的都是真的 `git commit`、經過 `pre-commit`。原版用 `/bin/bash`（3.2.57）跑兩次，輸出逐位元組相同。
+情境 A–R 在 `tests/test-gate.sh` 的 ⑯（CI 的 ubuntu 與 macOS `/bin/bash` 3.2 兩個 job 都跑這支測試）：拋棄式 repo 照這個 repo 的配置
+（`scripts/githooks/` 三個檔、`scripts/check-claude-md.sh`、`core.hooksPath`），沒寫「直接跑」的都是真的 `git commit`、經過 `pre-commit`。
+本機跑：`/bin/bash tests/test-gate.sh`。
 
-變異版的輸出跟原版逐則比，下表記「哪個變異 → 哪幾則不一樣」，不記數量。「連鎖」= 前面有一則該擋的放行了（或反過來），
-之後 `HEAD` 的狀態跟原版不同，後面的情境跟著不一樣；它們不算那個變異自己的證據。
+改了這一層的腳本要做變異對照：複製一份、改壞一行，當成測試的第二個參數（大小檢查）或第三個參數（`pre-commit`），沒換的給空字串或不給 ——
+`/bin/bash tests/test-gate.sh "" <改壞的 claude-md-size.sh>`、`/bin/bash tests/test-gate.sh "" "" <改壞的 pre-commit>`。repo 裡那一份不用動。
 
-| 變異（改了哪一行） | 直接不一樣的情境 |
+下表記「哪個變異 → ⑯ 的哪幾則變 ❌」，不記數量（2026-11-16 用 `/bin/bash` 3.2.57 跑的；每個變異跑的時候，⑯ 之前 gate 的那些情境都沒有變）。
+「連鎖」= 前面有一則該擋的放行了（或反過來），之後 `HEAD` 的狀態跟原版不同，後面的情境跟著紅；它們不算那個變異自己的證據。
+
+| 變異（改了哪一行） | 直接變 ❌ 的情境 |
 |---|---|
-| `git tag --list … \| head -1` 拿掉 `--sort=-v:refname` | F 的「取自 v0.0.1」（沒排序時 `head -1` 拿到最舊的 `v0.0.0`，它沒有上限檔，改讀 `HEAD`）、G 的第二則（放行了）；H 起連鎖 |
+| `git tag --list … \| head -1` 拿掉 `--sort=-v:refname` | F（輸出沒有「取自 v0.0.1」：沒排序時 `head -1` 拿到最舊的 `v0.0.0`，它沒有上限檔，改讀 `HEAD`）、G 的第二則（放行了）；H 起連鎖 |
 | 同一行改成 `--sort=-refname`（字典序倒排） | I 的第二則（照 `v0.0.2` 的 300 擋下）；J 起連鎖 |
-| 讀 tag 的那條分支改成 `if false` | F 的「取自 v0.0.1」、G 的第二則；H 起連鎖 |
-| 讀 `HEAD` 的那條分支改成 `elif false` | C、D 的「取自 HEAD」（變成取自 index）、E 的第一則（放行了）；E 後兩則連鎖 |
-| `[ "$new" -le "$old" ] && exit 0` 的 `-le` 改 `-eq` | K 的「350 → 340」（擋下）、L 的第一則（擋下）、O 的「縮到 100 並 commit」（多印一行）；K「340 → 345」、L 第二則、M、N 前兩則連鎖 |
-| `--staged` 的大小改讀工作目錄 | A 的「第一個 commit 不帶 CLAUDE.md」（擋下），情境腳本接著取不到 `HEAD` 而中止。只在 L 那一節打開這個變異：L 的第一則（擋下）；只在 L 的第二則打開：L 的第二則（放行了） |
-| `parse_limit()` 拿掉 `case` 那三行（整數檢查） | O 的「不是整數」「有兩行數字」（通過了）、P 的「CLAUDE.md 變大」「直接跑」（`[ -gt ]` 報錯） |
+| 讀 tag 的那條分支改成 `if false` | F（輸出沒有「取自 v0.0.1」）、G 的第二則（放行了）；H 起連鎖 |
+| 讀 `HEAD` 的那條分支改成 `elif false` | C、D 的第一則（輸出沒有「取自 HEAD」，變成取自 index）、E 的第一則（放行了）；E 後兩則連鎖 |
+| `[ "$new" -le "$old" ] && exit 0` 的 `-le` 改 `-eq` | K 的「350 → 340」（擋下）、L 的第一則（擋下）；K「340 → 345」、L 第二則、M、N 前兩則連鎖。O 的「縮到 100 並 commit」會多印一行，那一則沒有斷言在看輸出，不會紅 |
+| `--staged` 的大小改讀工作目錄 | A 的「第一個 commit 不帶 CLAUDE.md」（擋下），測試接著印「第一個 commit 沒建起來，A 之後的情境沒有跑」就結束。只在 L 那一節打開這個變異：L 的第一則（擋下），第二則跟著紅；只在 L 的第二則打開：L 的第二則（放行了）；兩種都是 M、N 前兩則連鎖 |
+| `parse_limit()` 拿掉 `case` 那三行（整數檢查） | O 的「不是整數」「有兩行數字」（通過了）、P 的「CLAUDE.md 變大」「直接跑」（`[ -gt ]` 報錯，測試判「輸出裡有 shell 錯誤」） |
 | `parse_limit()` 拿掉 12 位那一行 | O 的「30 位數」（通過了） |
 | 找不到上限檔那一支的 `return 1` 改 `exit 0` | A 的三則「擋／不通過」；B 的第一則連鎖 |
 | `resolve_limit staged \|\| exit 1` 改 `\|\| exit 0` | A 的兩則「擋」、P 的「CLAUDE.md 變大」；B 的第一則連鎖 |
 | `resolve_limit worktree \|\| exit 1` 改 `\|\| exit 0` | A 的「直接跑」、P 的「直接跑」 |
-| `--staged` 的 `-gt` 改 `-ge` | H 的「剛好 300」；H「301」、I 第二則連鎖 |
+| `--staged` 的 `-gt` 改 `-ge` | H 的「剛好 300」（擋下）；I 第二則連鎖 |
 | 不帶參數的 `-gt` 改 `-ge` | H 的「直接跑：剛好 300」 |
 | 工作目錄的上限檔不合法時不設 `rc=1` | O 的「不是整數」「有兩行數字」「30 位數」「沒有上限檔」 |
 | 最後的 `exit $rc` 改 `exit 0` | D、K 的「直接跑」，O 的那四則 |
 | `--staged` 超過上限時的 `exit 1` 改 `exit 0` | C 起每一則該擋的 commit（含連鎖） |
 | 拿掉 `cd "$top"` | O 的「從子目錄直接跑」（量到的是 `scripts/CLAUDE.md`） |
-| 拿掉「找不到 CLAUDE.md」那一段 | O 的「工作目錄沒有 CLAUDE.md」（印 ✅ 0 bytes、通過了） |
-| `pre-commit` 拿掉呼叫大小檢查的那一行；或只拿掉它後面的 `\|\| exit 1` | A 起每一則大小的「擋」（含連鎖）；Q 一樣 |
+| 拿掉「找不到 CLAUDE.md」那一段 | O 的「工作目錄沒有 CLAUDE.md」（印 ✅ 0 bytes、通過了；`wc` 讀不到檔的那一行錯誤也被測試判成 shell 錯誤） |
+| `pre-commit` 拿掉呼叫大小檢查的那一行；或只拿掉它後面的 `\|\| exit 1` | A 起每一則大小的「擋」（含連鎖）；Q 照樣綠 |
 | `pre-commit` 拿掉 `exec` gate 的那一行 | 只有 Q |
 
-「只在 L 打開」的做法：變異版在 `git rev-parse --git-path m-on` 那個檔存在時才讀工作目錄，情境副本只在那一則前後 `touch`／`rm` 它；
-情境副本配原版腳本跑出來的輸出要跟原版逐位元組相同，才算副本沒有動到別的東西。
+「只在 L 打開」的做法：變異版在 `git rev-parse --git-path m-on` 那個檔存在時才讀工作目錄；另做一份測試檔的副本，只在那一則前後 `touch`／`rm` 它
+（副本不放在 `tests/` 底下時三個參數都要給 —— 預設值是照測試檔自己的位置推的）。
+副本配原版腳本跑出來的輸出要跟正本逐位元組相同，才算副本沒有動到別的東西。

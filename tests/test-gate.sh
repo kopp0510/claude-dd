@@ -1,9 +1,12 @@
 #!/bin/bash
 # CLAUDE.md gate（scripts/check-claude-md.sh）的情境測試：段落起點、SKIP 欠帳、中文與含空白的路徑。
+# 檔尾的 ⑯ 另測本 repo 自用的 pre-commit 與根目錄 CLAUDE.md 大小上限（scripts/githooks/）。
 # CI 會在 ubuntu（bash 5）與 macOS（/bin/bash 3.2）各跑一次（.github/workflows/ci.yml）。
 #
-# 用法：tests/test-gate.sh [gate 腳本路徑]　預設取 repo 裡的 scripts/check-claude-md.sh。
-# 給別的路徑可以做變異測試：複製一份 gate 改壞一行，確認這裡會出現 ❌（scripts/CLAUDE.md 的規定）。
+# 用法：tests/test-gate.sh [gate 腳本路徑] [大小檢查腳本路徑] [pre-commit 路徑]
+# 都不給就取 repo 裡的 scripts/check-claude-md.sh、scripts/githooks/claude-md-size.sh、scripts/githooks/pre-commit。
+# 給別的路徑可以做變異測試：複製一份改壞一行，確認這裡會出現 ❌（scripts/CLAUDE.md 的規定）。
+# 後兩個只有 ⑯ 用到；只換後面的，前面的給空字串：tests/test-gate.sh "" <改壞的 claude-md-size.sh>
 #
 # 2026-09-11 修的漏洞：gate 原本只看「這次 commit」staged 的檔案。rental-line 段落 1
 # 第一個 commit 用 SKIP 建了 4 個沒有 CLAUDE.md 的程式碼目錄，最後一個 commit 沒改
@@ -13,6 +16,13 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 GATE="${1:-$ROOT/scripts/check-claude-md.sh}"
 case "$GATE" in /*) ;; *) GATE="$PWD/$GATE" ;; esac
 [ -x "$GATE" ] || { echo "❌ 找不到可執行的 ${GATE}"; exit 2; }
+SIZE_CHECK="${2:-$ROOT/scripts/githooks/claude-md-size.sh}"
+case "$SIZE_CHECK" in /*) ;; *) SIZE_CHECK="$PWD/$SIZE_CHECK" ;; esac
+HOOK="${3:-$ROOT/scripts/githooks/pre-commit}"
+case "$HOOK" in /*) ;; *) HOOK="$PWD/$HOOK" ;; esac
+for f in "$SIZE_CHECK" "$HOOK"; do
+  [ -f "$f" ] || { echo "❌ 找不到 ${f}"; exit 2; }
+done
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT   # 本機會拿來重跑、做變異測試，暫存檔與拋棄式 repo 要清掉
 OUT="$WORK/out"
@@ -659,6 +669,227 @@ said "S<段落>-BLOCKED-2.md"
 echo '第二次先停' > docs/reviews/S1-BLOCKED-2.md
 expect "⑮ commit S1-BLOCKED-2.md" pass commit b5
 expect "第二次先停:新增 S1-BLOCKED-2.md 之後放行" pass "$GATE" --start-segment
+
+# ⑯ **根目錄 CLAUDE.md 大小上限**（2026-11-16）。被測的是 scripts/githooks/ 的 pre-commit 與 claude-md-size.sh
+#   （本 repo 自用、不部署；兩種跑法各擋什麼、已知繞得過的路在 scripts/githooks/CLAUDE.md）。
+# 拋棄式 repo 照這個 repo 的配置：scripts/githooks/ 放 hook 與大小檢查、scripts/check-claude-md.sh 放 gate、
+#   core.hooksPath 指到 scripts/githooks。沒寫「直接跑」的都是真的 git commit，經過 pre-commit（大小檢查 → gate）。
+# 代號 A–R 對應 scripts/githooks/CLAUDE.md「情境與變異對照」那張表。上限用小數字、tag 用 v0.0.N。
+# ⚠️ 情境一路接下去（後面的靠前面留下的 HEAD、tag、上限檔）：變異版讓前面一則該擋的放行，後面會跟著紅，
+#   那些連鎖不算那個變異自己的證據。
+# ⚠️ E 的「下一個 commit…放行」是發版前的已知缺口、N 的「只 commit 別的檔」是 git 本來的行為，兩則都是特性測試：
+#   變紅 = 行為變了，回頭改 scripts/githooks/CLAUDE.md 講它們的那幾句。
+mkdir "$WORK/size" && cd "$WORK/size" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+mkdir -p scripts/githooks
+cp "$HOOK" scripts/githooks/pre-commit
+cp "$SIZE_CHECK" scripts/githooks/claude-md-size.sh
+cp "$GATE" scripts/check-claude-md.sh
+chmod +x scripts/githooks/pre-commit scripts/githooks/claude-md-size.sh scripts/check-claude-md.sh
+echo doc > scripts/CLAUDE.md
+echo doc > scripts/githooks/CLAUDE.md
+git config core.hooksPath scripts/githooks
+LIM=scripts/githooks/claude-md-max-bytes
+CHK=scripts/githooks/claude-md-size.sh
+mk() { head -c "$1" /dev/zero | tr '\0' 'x' > CLAUDE.md; }     # 剛好 $1 bytes
+lim() { printf '# 說明\n%s\n' "$1" > "$LIM"; }
+
+# A 找不到上限檔：擋（fail-closed）
+mk 50
+expect "⑯ A 還沒有任何 commit、沒有上限檔，第一個 commit 帶根目錄 CLAUDE.md：擋" block commit a1
+said "找不到上限檔 scripts/githooks/claude-md-max-bytes（還沒有 v* tag）"
+git rm -q --cached CLAUDE.md
+expect "⑯ A 第一個 commit 不帶 CLAUDE.md：放行" pass git commit -qm a2
+# 後面的情境都接在這個 commit 上：建不起來就直接講（裸跑的話 set -e 會靜靜結束，看起來像只紅了前面幾則）
+C0=$(git rev-parse -q --verify HEAD) || { echo "❌ ⑯ 第一個 commit 沒建起來，A 之後的情境沒有跑"; exit 1; }
+expect "⑯ A 有 HEAD 了、還是沒有上限檔，新增 CLAUDE.md：擋" block commit a3
+said "找不到上限檔"
+expect "⑯ A 直接跑：哪裡都沒有上限檔，不通過" block "$CHK"
+said "找不到上限檔 scripts/githooks/claude-md-max-bytes（還沒有 v* tag）"
+
+# B 加進上限檔的那個 commit 自己過得去（HEAD 還沒有上限檔，讀 index）
+lim 100
+expect "⑯ B 上限檔 100 與 CLAUDE.md 50 同一個 commit：放行" pass commit b1
+said "根目錄 CLAUDE.md 0 → 50 bytes，上限 100（取自 index：還沒有 v* tag）"
+expect "⑯ B 直接跑（不帶參數）：通過" pass "$CHK"
+said "✅ 根目錄 CLAUDE.md 50 bytes，上限 100（取自工作目錄：還沒有 v* tag）"
+
+# C 超過上限
+mk 150
+expect "⑯ C CLAUDE.md 變 150：擋" block commit c1
+said "根目錄 CLAUDE.md 50 → 150 bytes，上限 100（取自 HEAD：還沒有 v* tag）"
+said "先問使用者"
+
+# D 最新的 tag 還沒有上限檔
+git tag v0.0.0 "$C0"
+expect "⑯ D 最新的 tag 還沒有上限檔，CLAUDE.md 變 150：擋" block commit d1
+said "（取自 HEAD：v0.0.0 還沒有這個檔，發下一版之後改以 tag 為準）"
+expect "⑯ D 直接跑：工作目錄 150 超過 100" block "$CHK"
+said "❌ 根目錄 CLAUDE.md 150 bytes，超過上限 100（取自工作目錄：v0.0.0 還沒有這個檔，發下一版之後改以 tag 為準）"
+
+# E 發版前：同一個 commit 調高沒有用；分兩個 commit 過得去（已知缺口）
+lim 200
+expect "⑯ E 同一個 commit 調高上限檔並讓 CLAUDE.md 變 150：擋" block commit e1
+said "上限 100（取自 HEAD"
+git reset -q
+git add "$LIM"
+expect "⑯ E 只 commit 上限檔 200：放行，大小檢查不印" pass git commit -qm e2
+not_said "根目錄 CLAUDE.md"
+expect "⑯ E 下一個 commit CLAUDE.md 才變 150：放行（發版前的已知缺口）" pass commit e3
+said "根目錄 CLAUDE.md 50 → 150 bytes，上限 200（取自 HEAD：v0.0.0 還沒有這個檔"
+
+# F、G 有帶上限檔的 tag 之後：調高要等下一個 tag
+git tag v0.0.1
+lim 300
+mk 250
+expect "⑯ F 同一個 commit 調高上限檔並讓 CLAUDE.md 變 250：擋" block commit f1
+said "根目錄 CLAUDE.md 150 → 250 bytes，上限 200（取自 v0.0.1）"
+git reset -q
+git add "$LIM"
+expect "⑯ G 只 commit 上限檔 300：放行，大小檢查不印" pass git commit -qm g1
+not_said "根目錄 CLAUDE.md"
+expect "⑯ G 下一個 commit CLAUDE.md 變 250：照擋（上限還是 v0.0.1 的 200）" block commit g2
+said "上限 200（取自 v0.0.1）"
+
+# H 邊界
+git tag v0.0.2
+mk 300
+expect "⑯ H CLAUDE.md 剛好 300：放行" pass commit h1
+said "根目錄 CLAUDE.md 150 → 300 bytes，上限 300（取自 v0.0.2）"
+expect "⑯ H 直接跑：剛好 300 通過" pass "$CHK"
+said "✅ 根目錄 CLAUDE.md 300 bytes，上限 300（取自 v0.0.2）"
+mk 301
+expect "⑯ H 301：擋" block commit h2
+git reset -q
+mk 300
+
+# I 最新的 tag 照版本號排，不照字典序
+lim 400
+git add "$LIM"
+expect "⑯ I 只 commit 上限檔 400" pass git commit -qm i1
+git tag v0.0.10
+mk 350
+expect "⑯ I 最新的 tag 是 v0.0.10 不是 v0.0.2，CLAUDE.md 變 350：放行" pass commit i2
+said "根目錄 CLAUDE.md 300 → 350 bytes，上限 400（取自 v0.0.10）"
+
+# J tag 有上限檔時，index 裡刪掉它也沒用
+git rm -q --cached "$LIM"
+mk 450
+git add CLAUDE.md
+expect "⑯ J index 裡刪掉上限檔、CLAUDE.md 變 450：照 tag 的 400 擋" block git commit -qm j1
+said "上限 400（取自 v0.0.10）"
+git reset -q
+mk 350
+
+# K 已經超過上限（上限被調低）時：變小放行、再變大才擋；直接跑一律不通過
+lim 120
+git add "$LIM"
+expect "⑯ K 只 commit 上限檔 120" pass git commit -qm k1
+git tag v0.0.12
+mk 340
+expect "⑯ K 超過上限但變小（350 → 340）：放行，大小檢查不印" pass commit k2
+not_said "根目錄 CLAUDE.md"
+mk 345
+expect "⑯ K 超過上限又變大（340 → 345）：擋" block commit k3
+said "根目錄 CLAUDE.md 340 → 345 bytes，上限 120（取自 v0.0.12）"
+git reset -q
+mk 340
+expect "⑯ K 直接跑：340 超過 120" block "$CHK"
+said "❌ 根目錄 CLAUDE.md 340 bytes，超過上限 120（取自 v0.0.12）"
+
+# L --staged 看的是 index，不是工作目錄
+mk 330
+git add CLAUDE.md
+mk 500
+expect "⑯ L index 是變小的（330）、工作目錄更大（500）：放行" pass git commit -qm l1
+mk 335
+git add CLAUDE.md
+mk 100
+expect "⑯ L index 是變大的（335）、工作目錄改回小的（100）：擋" block git commit -qm l2
+said "根目錄 CLAUDE.md 330 → 335 bytes"
+git reset -q
+mk 330
+
+# M SKIP_DOC_CHECK=1 只跳過 gate
+mk 336
+expect "⑯ M SKIP_DOC_CHECK=1 不跳過大小上限" block skip_commit m1
+said "根目錄 CLAUDE.md 330 → 336 bytes"
+git reset -q
+mk 330
+
+# N git commit -a 與指定路徑的 commit：hook 看到的是要 commit 的那一版
+mk 337
+expect "⑯ N git commit -am 讓它變大：擋" block git commit -qam n1
+said "根目錄 CLAUDE.md 330 → 337 bytes"
+expect "⑯ N 指定路徑 commit CLAUDE.md 讓它變大：擋" block git commit -qm n2 CLAUDE.md
+said "根目錄 CLAUDE.md 330 → 337 bytes"
+git add CLAUDE.md
+echo other > other.txt
+git add other.txt
+expect "⑯ N 變大的 CLAUDE.md 已 add、指定路徑只 commit 別的檔：放行" pass git commit -qm n3 other.txt
+not_said "根目錄 CLAUDE.md"
+if [ "$(git diff --cached --name-only)" = "CLAUDE.md" ]; then echo "✅ ⑯ N CLAUDE.md 還留在 index、沒被 commit"; else echo "❌ ⑯ N CLAUDE.md 還留在 index、沒被 commit：預期 index 只剩 CLAUDE.md，實際 $(git diff --cached --name-only | tr '\n' ' ')"; fail=1; fi
+git reset -q
+mk 330
+
+# O 不帶參數的模式（CI 用）
+mk 100
+expect "⑯ O CLAUDE.md 縮到 100 並 commit" pass commit o1
+expect "⑯ O 直接跑：通過" pass "$CHK"
+said "✅ 根目錄 CLAUDE.md 100 bytes，上限 120（取自 v0.0.12）"
+not_said "發下一版之後才生效"
+expect "⑯ O 從子目錄直接跑：量的還是根目錄那一份" pass sh -c 'cd scripts && githooks/claude-md-size.sh'
+said "✅ 根目錄 CLAUDE.md 100 bytes，上限 120（取自 v0.0.12）"
+mv CLAUDE.md CLAUDE.md.bak
+expect "⑯ O 直接跑：工作目錄沒有 CLAUDE.md，不通過" block "$CHK"
+said "找不到 CLAUDE.md"
+mv CLAUDE.md.bak CLAUDE.md
+lim 999
+expect "⑯ O 工作目錄的上限檔改成 999：通過，多印一行" pass "$CHK"
+said "工作目錄的上限檔寫 999，發下一版之後才生效"
+echo abc > "$LIM"
+expect "⑯ O 工作目錄的上限檔不是整數：不通過" block "$CHK"
+said "不存在或內容不合法"
+printf '100\n200\n' > "$LIM"
+expect "⑯ O 工作目錄的上限檔有兩行數字：不通過" block "$CHK"
+said "不存在或內容不合法"
+printf '%s\n' 123456789012345678901234567890 > "$LIM"
+expect "⑯ O 工作目錄的上限檔 30 位數：不通過" block "$CHK"
+said "不存在或內容不合法"
+rm "$LIM"
+expect "⑯ O 工作目錄沒有上限檔：不通過" block "$CHK"
+said "不存在或內容不合法"
+lim 120
+
+# P 最新 tag 的上限檔不合法：變大的 commit 一律擋（fail-closed），別的 commit 不受影響
+echo abc > "$LIM"
+git add "$LIM"
+expect "⑯ P 只 commit 不合法的上限檔（hook 不查上限檔本身）" pass git commit -qm p1
+git tag v0.0.13
+mk 101
+expect "⑯ P 最新 tag 的上限檔不合法，CLAUDE.md 變大：擋" block commit p2
+said "上限檔內容不合法（取自 v0.0.13）"
+git reset -q
+mk 100
+echo x > other.txt
+expect "⑯ P 同一個狀態只改別的檔：放行" pass commit p3
+expect "⑯ P 直接跑：不通過" block "$CHK"
+said "上限檔內容不合法（取自 v0.0.13）"
+
+# Q 大小檢查過了之後 gate 還是有跑到
+echo 'echo hi' > scripts/x.sh
+git add scripts/x.sh
+expect "⑯ Q 改 scripts/ 的程式碼、沒附 scripts/CLAUDE.md：gate 擋" block git commit -qm q1
+said "gate：commit 已擋下"
+git reset -q
+rm scripts/x.sh
+
+# R 不認得的參數
+rc=0
+"$CHK" --bogus > "$OUT" 2>&1 || rc=$?
+if [ "$rc" = 2 ]; then echo "✅ ⑯ R 不認得的參數（exit 2）"; else echo "❌ ⑯ R 不認得的參數（exit 2）：預期 exit 2，實際 exit ${rc}"; sed 's/^/    /' "$OUT"; fail=1; fi
 
 exit $fail
 
