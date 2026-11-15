@@ -4,6 +4,7 @@
 # 2026-11-14 補上 T1–T9：symlink 的備份、jq 與 python3 兩條路徑的等價表（只守它列的那幾類輸入）、plugin 登記、--check 的 MCP 輸出、
 # 覆蓋前備份、全域 CLAUDE.md 三種情境、hook 路徑驗證、舊指令檔的備份、完成訊息。
 # 2026-11-15 補上 T10：環境檢查的自動壓縮視窗那一行；T2 的等價表加 `autocompact_state`。
+# 2026-11-15 補上 T11：`--check` 看得出部署的 skill、agent 與 repo 這份不同。
 # 測不到的：全域 CLAUDE.md 的互動選單（ask 用 [ -t 0 ] 判斷，管線餵 stdin 一律走預設值）。
 # CI 在 ubuntu（bash 5）與 macOS（/bin/bash 3.2）各跑一次（.github/workflows/ci.yml）。
 # 2026-10-01 從 ci.yml 內嵌 step 搬出來，macOS 那個 job 才能共用；判斷一行都沒改。
@@ -92,14 +93,15 @@ HOME="$UN_SANDBOX" ./install-dd-pipeline.sh --uninstall --yes < /dev/null
 echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"
 
 # ---------------------------------------------------------------------------
-# 以下各組：T1–T9 在 2026-11-14 補上（碰設定檔、備份與完成訊息的路徑），T10 在 2026-11-15 補上（環境檢查的自動壓縮視窗那一行）。
+# 以下各組：T1–T9 在 2026-11-14 補上（碰設定檔、備份與完成訊息的路徑），T10 在 2026-11-15 補上（環境檢查的自動壓縮視窗那一行），
+# T11 在 2026-11-15 補上（`--check` 的 skill、agent 那兩段看得出部署版與 repo 不同）。
 # 斷言失敗時一律印出「組名＋斷言名」再 exit 1 —— 上面那些裸 [ … ] 在 set -e 下失敗不印任何字。
 # 本機做變異實驗時可以只跑一組：`TEST_ONLY=T5 tests/test-install.sh`（上面原有的檢查與 T1 照跑，T2 之後只跑指定那組）。
 # ---------------------------------------------------------------------------
 # TEST_ONLY 打錯（t5、T05）時會一組都沒跑卻 rc=0，所以先驗值；新增一組時這裡要跟著加
 case "${TEST_ONLY:-}" in
-    ""|T2|T3|T4|T5|T6|T7|T8|T9|T10) ;;
-    *) echo "❌ TEST_ONLY=${TEST_ONLY} 不是 T2–T10 其中一組"; exit 2 ;;
+    ""|T2|T3|T4|T5|T6|T7|T8|T9|T10|T11) ;;
+    *) echo "❌ TEST_ONLY=${TEST_ONLY} 不是 T2–T11 其中一組"; exit 2 ;;
 esac
 want() { [ -z "${TEST_ONLY:-}" ] || [ "$TEST_ONLY" = "$1" ]; }
 # 去掉顏色碼。LC_ALL=C：輸出裡有壞的位元組時，UTF-8 locale 下的 BSD sed 印到那一行就失敗、
@@ -720,4 +722,67 @@ t10_nojson_state n3 none "沒有 settings.json"
 plain "$T10_DIR/n1.txt" | grep -F '自動壓縮視窗' | grep -qF '缺 jq 與 python3' \
     || { echo "❌ T10：沒有 jq 與 python3 時，那一行應該講缺 jq 與 python3，實際：$(plain "$T10_DIR/n1.txt" | grep -F '自動壓縮視窗' | head -1)"; exit 1; }
 echo "✅ T10 環境檢查的自動壓縮視窗那一行：${T10_N} 種設定與環境變數各印各的、不影響結束碼；沒有 jq 與 python3 時不講成已設"
+fi
+
+# --- T11：--check 的「檢查內建 Skills」「檢查內建 Agents」看得出部署版與 repo 這份不同（2026-11-15）
+# 原本只看目錄／檔案在不在：部署版是舊的照印「已安裝」。比法跟安裝本身一樣（skill 用 diff -rq、agent 用 cmp -s）。
+if want T11; then
+T11_HOME=$(mktemp -d "$WORK/t11.XXXXXX")
+T11_OUT="$WORK/t11.out"     # 輸出放在沙盒 HOME 外面：下面要比 --check 前後 HOME 裡的檔有沒有變
+mkdir -p "$T11_OUT"
+HOME="$T11_HOME" ./install-dd-pipeline.sh < /dev/null > "$T11_OUT/install.txt" 2>&1 \
+    || { echo "❌ T11：安裝失敗"; tail -20 "$T11_OUT/install.txt"; exit 1; }
+t11_snap() { (cd "$T11_HOME" && find . -type f | LC_ALL=C sort | while IFS= read -r f; do cksum "$f"; done); }
+# 某個名字在 skill 或 agent 那一段的那一行（兩段都有 code-simplifier，所以用段落標題夾出來）
+t11_line() { plain "$1" | awk -v sec="$2" -v name="$3" '
+    index($0, "檢查內建 ") { on = (index($0, sec) > 0) }
+    on && index($0, " " name ": ") { print; exit }'; }
+t11_expect() {  # 檔 段落 名字 要有的字 不可以有的字（可空）
+    line=$(t11_line "$1" "$2" "$3")
+    case "$line" in
+        *"$4"*) ;;
+        *) echo "❌ T11：${2} 的 ${3} 那一行應該有「${4}」，實際：${line:-（沒有這一行）}"; exit 1 ;;
+    esac
+    if [ -n "$5" ]; then
+        case "$line" in
+            *"$5"*) echo "❌ T11：${2} 的 ${3} 那一行不該有「${5}」，實際：${line}"; exit 1 ;;
+        esac
+    fi
+}
+# 對照：剛裝好、什麼都沒改，--check 不可以報任何一個不同
+HOME="$T11_HOME" ./install-dd-pipeline.sh --check < /dev/null > "$T11_OUT/clean.txt" 2>&1 \
+    || { echo "❌ T11：剛裝好時 --check 失敗"; tail -20 "$T11_OUT/clean.txt"; exit 1; }
+if plain "$T11_OUT/clean.txt" | grep -qF '與 repo 不同'; then
+    echo "❌ T11：剛裝好、什麼都沒改，--check 卻報了不同：$(plain "$T11_OUT/clean.txt" | grep -F '與 repo 不同' | head -3)"; exit 1
+fi
+t11_expect "$T11_OUT/clean.txt" "Skills" "dd-loop" "已安裝" ""
+t11_expect "$T11_OUT/clean.txt" "Agents" "code-simplifier" "已安裝" ""
+# 把一個 skill 與一個 agent 改成「跟 repo 不一樣」（模擬部署版是舊的）；兩段都有 code-simplifier，只改 agent 那一份
+printf '\n部署版多出來的一行\n' >> "$T11_HOME/.claude/skills/dd-loop/SKILL.md"
+printf '\n部署版多出來的一行\n' >> "$T11_HOME/.claude/agents/code-simplifier.md"
+t11_snap > "$T11_OUT/before.txt"
+HOME="$T11_HOME" ./install-dd-pipeline.sh --check < /dev/null > "$T11_OUT/stale.txt" 2>&1 \
+    || { echo "❌ T11：部署版與 repo 不同時 --check 的結束碼不是 0（它只提示，不該影響結束碼）"; tail -20 "$T11_OUT/stale.txt"; exit 1; }
+t11_snap > "$T11_OUT/after.txt"
+cmp -s "$T11_OUT/before.txt" "$T11_OUT/after.txt" \
+    || { echo "❌ T11：--check 前後沙盒 HOME 的檔案不一樣（它不該寫任何檔）"; diff "$T11_OUT/before.txt" "$T11_OUT/after.txt" | head -5; exit 1; }
+t11_expect "$T11_OUT/stale.txt" "Skills" "dd-loop" "與 repo 不同" ""
+t11_expect "$T11_OUT/stale.txt" "Agents" "code-simplifier" "與 repo 不同" ""
+t11_expect "$T11_OUT/stale.txt" "Skills" "code-simplifier" "已安裝" "與 repo 不同"   # 同名的 skill 沒改
+t11_expect "$T11_OUT/stale.txt" "Skills" "plan-review" "已安裝" "與 repo 不同"
+t11_expect "$T11_OUT/stale.txt" "Agents" "code-reviewer" "已安裝" "與 repo 不同"
+t11_n=$(plain "$T11_OUT/stale.txt" | grep -cF '與 repo 不同：1' || true)
+[ "$t11_n" -eq 2 ] || { echo "❌ T11：skill 與 agent 兩段各該有一行「與 repo 不同：1」，實際 ${t11_n} 行"; exit 1; }
+t11_err=$(plain "$T11_OUT/stale.txt" | grep -E ': line [0-9]+: |bad substitution|unbound variable' || true)
+[ -z "$t11_err" ] || { echo "❌ T11：輸出裡有 shell 錯誤：${t11_err}"; exit 1; }
+utf8_ok "$T11_OUT/stale.txt" || { echo "❌ T11：輸出有不合法的 UTF-8"; exit 1; }
+# 重跑安裝之後就該回到「沒有不同」
+HOME="$T11_HOME" ./install-dd-pipeline.sh < /dev/null > "$T11_OUT/reinstall.txt" 2>&1 \
+    || { echo "❌ T11：重跑安裝失敗"; tail -20 "$T11_OUT/reinstall.txt"; exit 1; }
+HOME="$T11_HOME" ./install-dd-pipeline.sh --check < /dev/null > "$T11_OUT/fixed.txt" 2>&1 \
+    || { echo "❌ T11：重跑安裝之後 --check 失敗"; tail -20 "$T11_OUT/fixed.txt"; exit 1; }
+if plain "$T11_OUT/fixed.txt" | grep -qF '與 repo 不同'; then
+    echo "❌ T11：重跑安裝之後 --check 還報不同：$(plain "$T11_OUT/fixed.txt" | grep -F '與 repo 不同' | head -3)"; exit 1
+fi
+echo "✅ T11 --check 看得出部署版與 repo 不同：改過的 skill、agent 各一行、沒改的照印已安裝、不寫檔、結束碼 0；重跑安裝後不再報"
 fi
