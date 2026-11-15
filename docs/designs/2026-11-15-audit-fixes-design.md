@@ -270,8 +270,9 @@ S4 的步驟 3–5（2026-11-15）：
       | 新 1 | 相同 | 逐字相同 | 3（多一個不匯出的 helper） | 4 | 已簡化 | 相同 |
       | 新 2 | 相同 | 逐字相同 | 2 | 4 | 已簡化 | 相同 |
 
-      9 組輸入是我自己另外跑的（`undefined`、`null`、`{}`、`items: null`、空陣列、未知國家、TW、US 加 express、JP 加 `express: 0`；`id` 是隨機值只比型別與長度），
-      第一次是臨時寫在指令列裡、沒存檔，審查者在素材目錄找到的 13 組那一支是某一臂自己留下的、不是這個數字的出處。第三輪起存成 `<scratchpad>/s5-ab2/mycmp.mjs`，五份（原檔對舊 1、舊 2、新 3、新 4 與自己）重跑都是 `inputs 9 diffs 0`
+      9 組輸入是我自己另外跑的，第一次是臨時寫在指令列裡、沒存檔，審查者在素材目錄找到的 13 組那一支是某一臂自己留下的、不是這個數字的出處。
+      第三輪起存成 `<scratchpad>/s5-ab2/mycmp.mjs`：它的 9 組是 `undefined`、`null`、`{}`、`items: null`、空陣列、未知國家、TW、US 加 express、JP 加 `express: 0`（`id` 是隨機值只比型別與長度）；
+      第一次那一支沒留下來，是不是同樣這 9 組核對不了。用存檔的這一支重跑：原檔對自己、舊 1、舊 2、新 1、新 2、新 3、新 4 都是 `inputs 9 diffs 0`
 
       判定：舊的 2 發都重排了 import、把 4 個箭頭全改成 `function`，新的 2 發都沒有 → 判定式（舊的至少一發有、新的每一發都沒有）是派出前寫的，照它算通過；素材不是派出前定的那一份（見上）。每臂 n=2、一份素材。
       第二輪沒有量 context：第一輪四發都回報有全域 CLAUDE.md（它的 §3.2 寫「不重排 import」），同一個 session 接著派的第二輪照理也有，這是推論；所以「舊模板看得到 §3.2 照樣重排」沒有直接證據。沒有全域 CLAUDE.md 的環境沒測
@@ -309,7 +310,7 @@ S5 的步驟 3–5（2026-11-15）：
   `UPGRADING.md` 新寫的三行指令在沙盒 HOME（先裝 b3b2bf9 的內容、再裝新版）實跑三種情況：這個 repo 部署的印 5 與 `review.md`、不相干的同名 skill 印 0、檔不在印找不到；
   舊名 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述：根目錄 CLAUDE.md 兩行、`DD_PIPELINE_ARCHITECTURE.md` 兩行、兩份 README 的 `--uninstall` 那句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 一行
 - 步驟 4 之後沒有再對真實 HOME 跑安裝；部署與清掉本機已部署的那兩個目錄由使用者自己做
-- 步驟 7：候選四條列給使用者（見 `S5-judge.md`「這一段自己犯的錯」），等同意才寫進 CLAUDE.md，這一輪沒有寫。步驟 8：範圍是根目錄 `CLAUDE.md` 與 `tests/CLAUDE.md`，這一段改到的每一句實跑核對過
+- 步驟 7：候選四條列給使用者（見 `S5-judge.md`「這一段自己犯的錯」），等同意才寫進 CLAUDE.md，這一輪沒有寫。步驟 8：範圍是根目錄 `CLAUDE.md` 與 `tests/CLAUDE.md`（`claude-md-management:claude-md-improver`，只審這兩份），這一段改到的每一句實跑核對過
   （`skills/` 13 個目錄與 `PROMOTED_SKILLS` 13、`NS_COMMANDS` 0 與 `commands/` 0 個子目錄、`grep -n 'NS_COMMANDS\|ns_cmd' tests/*.sh` 只有一行註解、`UPGRADING.md` 有「已退場的元件」那一節、T11 變異的紀錄在 `<scratchpad>/s5-mut/`），沒有要改的
 
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
