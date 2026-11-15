@@ -34,6 +34,7 @@
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
 | S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | DONE | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | b3b2bf9..41d98a7 |
+| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | IN_PROGRESS | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動'` 0 筆；乾跑三臂的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字 | `bf7e654..` |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -313,6 +314,45 @@ S5 的步驟 3–5（2026-11-15）：
 - 步驟 7：候選四條列給使用者（見 `S5-judge.md`「這一段自己犯的錯」），等同意才寫進 CLAUDE.md，這一輪沒有寫。步驟 8：範圍是根目錄 `CLAUDE.md` 與 `tests/CLAUDE.md`（`claude-md-management:claude-md-improver`，只審這兩份），這一段改到的每一句實跑核對過
   （`skills/` 13 個目錄與 `PROMOTED_SKILLS` 13、`NS_COMMANDS` 0 與 `commands/` 0 個子目錄、`grep -n 'NS_COMMANDS\|ns_cmd' tests/*.sh` 只有一行註解、`UPGRADING.md` 有「已退場的元件」那一節、T11 變異的紀錄在 `<scratchpad>/s5-mut/`），沒有要改的
 
+### S6 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段
+
+來源：2026-11-16 我把根目錄 `CLAUDE.md` 與全域模板逐條分成「可拿掉／沒驗證／留」交給使用者（可拿掉 0 條），使用者回「B1 B2」。
+B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導覽（安裝輸出的描述、「核心工作法」、迴圈步數的 CI 兩道防線、殘留清理）。B3、B4、全域模板不動。
+
+假設：
+
+- 「搬」= 原文逐字搬。搬的塊由腳本從 `git show bf7e654:CLAUDE.md` 依行號切出來（切之前比對每塊開頭的字），不是重打。新寫的字只有：根目錄留下的指路句與三條約束句、新檔的標題與各節的出處註記、gate 段裡一處指代（「見下方「開發本 repo」」→「見根目錄 CLAUDE.md「開發本 repo」」）、`README.zh-TW.md` 那一段的銜接句、`README.md` 的英文翻譯
+- B1 的去處是新檔 `docs/measurements/CLAUDE.md`（檔名是我選的）。根目錄的指路寫「做之前先 Read」；巢狀 CLAUDE.md 什麼時候自動載入沒有實測過，不靠它
+- 「安裝 / 更新」兩段整段搬到架構文件，其中三句是改安裝輸出時要守的約束，根目錄留著（兩邊各一份）：沒有驗證測得到 B2 的指路有沒有用，約束句不離開每輪都載入的檔
+- 「核心工作法」根目錄留三段：dd-loop 與模板 §3.9 怎麼分工、§3.10 為什麼放在 §3.9 之外、task-planner 規則區塊照抄後不會跟著更新。開頭兩行與箭頭圖刪掉不搬（架構文件同名一節有自己的）；講 gate 的那段搬到架構文件同名一節的最後，與那裡既有的「配套：…」段並存、不合併
+- 「殘留清理」搬進兩份 README 的「清理外部殘留」一節（使用者看到的寫法是「要搬就搬進 README」）。根目錄那一節的第一句刪掉不搬：README 既有的第一句講同一件事，少掉的只有陣列名 `BUILTIN_SKILLS` 與「tresor」這個例子
+- 不發版、不跳 `dd-loop-rev`、不動 `templates/`、`install-dd-pipeline.sh`、`ci.yml`；部署與 push 由使用者自己做
+
+小任務：
+
+- **S6-1** B1 搬到 `docs/measurements/CLAUDE.md`
+  - 搬：「新增 Skill 步驟」第 5 步、「新增 Agent 步驟」第 5 步（兩步的第一句留在根目錄，後面接指路）、「開發本 repo」的「沙盒用 `claude -p` 測行為前…」一條、「注意事項」裡開頭是這幾串字的條目：「`claude -p` 的 stream-json 要進 repo 前先去識別」「`claude -p` 實驗的 fixture 有子目錄時」「stream-json 看不出巢狀 CLAUDE.md 有沒有被讀進去」「dontAsk 加 `Bash(ls:*)` 照樣擋 cwd 外的路徑」「用 auto mode 跑 `claude -p` 時」「`claude -p` 在父 session 最後一輪結束 10 分鐘後」「受測 session 的快照放在 scratchpad 底下時」
+  - 不搬：「同一則訊息裡派的幾個 subagent 不一定同時開跑」起的那幾條與「新增 Skill 步驟」第 6 步（講怎麼寫 skill、派 subagent、測 hook）
+  - 同批改指路：`docs/measurements/2026-10-30-dd-loop-trigger/CLAUDE.md`、`docs/measurements/2026-10-29-adhd-style/CLAUDE.md` 各一句；根目錄「目錄結構」`docs/` 那一行
+  - 驗證：核對腳本（根目錄與「`bf7e654` 那版照清單替換」逐位元組相同；每一塊整塊在新檔恰好出現 1 次；新檔扣掉搬來的塊只剩標題與出處註記；沒有 4 個以上空白開頭的行）
+  - commit：`docs: claude -p 實驗的做法搬到 docs/measurements/CLAUDE.md（S6-1）`
+- **S6-2** B2 搬到架構文件與 README
+  - 「安裝 / 更新」底下兩段 → `DD_PIPELINE_ARCHITECTURE.md`「安裝腳本」一節最後；「核心工作法」講 gate 的那段 → 同檔「核心工作法」一節最後；「注意事項」的「**迴圈步數**已有 CI 兩道防線」一條 → 同檔「CI 防線」一節最後（表格與表後引用塊之後）；「殘留清理（手動）」的表格、指令與最後一句 → `README.zh-TW.md`「清理外部殘留（手動）」，`README.md` 同一節寫英文
+  - 同批改：`scripts/CLAUDE.md`「與上層的關係」那句、根目錄收編清單第 6 項的指代、根目錄「CI 不驗、只能手動同步的區塊」那條（補四方與第五方的定義在哪、清單加上「清理外部殘留」一節）、`CHANGELOG.md` `## 未發布`
+  - 驗證：核對腳本（同上，另查架構文件「CI 防線」表每一列連續、各檔圍欄行數是偶數、根目錄不含「## 殘留清理」）；`git grep 'CLAUDE.md#殘留清理手動'` 0 筆；本機照 ci.yml 逐 step 跑全部 rc=0
+  - commit：`docs: 根目錄 CLAUDE.md 的描述與導覽段搬到架構文件與 README（S6-2）`
+
+步驟 5 的乾跑（兩個小任務都 commit 之後才派；判定在這裡先寫死）：
+
+- 各派一個全新的 general-purpose subagent，只讀，問三個實際會遇到的問題：①改了某個 skill 的 description，照這個 repo 的規則部署後怎麼驗它會不會自己被叫（要完整指令、判定方式、每次花多少）②要跑一個受測 session 會自己到暫存目錄開副本改檔的實驗、判準要求權限拒絕數是 0，權限模式怎麼選、已知會被擋的情況 ③某個會再叫 plan-review 的 skill 改了 description，測它會不會自己被叫的完整指令
+- 每臂交回：答案、每個做法引出處的原句與檔案路徑（一字不差）、context 裡有哪些 CLAUDE.md（路徑加第一行）、依序 Read 了哪些檔
+- 判定：引的原句（去掉換行與行首的 `>` 後）在 `docs/measurements/CLAUDE.md` 找得到，而且是指定的那一條 —— ①「測 skill 會不會自己叫」裡的指令與費用 ②「已知的坑」講 auto mode 的那一條 ③「測 skill 會不會自己叫」裡講會叫 `plan-review` 的 skill 的那一句。對不上先讀原檔那一段再判
+- 原句本身不寫在這裡（寫進 repo 等於把答案放到 agent grep 得到的地方），臂回來之後才補
+- 三臂都拿到 → 只能寫「全新 agent 從這個 repo 拿得到搬走的內容（每臂 n=1）」，並照實寫它是照根目錄的指路去讀、還是自己搜到的；context 裡沒有根目錄 CLAUDE.md 的臂沒測到指路。**這不證明主對話做到那一步時會主動去讀**
+- 有臂沒拿到 → 讀它的 Read 順序，改指路句的位置後重跑那一臂一次；還是沒拿到就停下回報
+
+步驟 3 不跑 code-simplifier（diff 只有 Markdown）。步驟 4 照樣派 3 個 code-reviewer。要新增的測試：沒有。
+
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 
 1. `tests/test-gate.sh` ⑬（S1-1）：`dd.docfile` 設 `main.py`、`notes.sh` 要拒絕，`AGENTS.txt` 照常（對照）
@@ -336,3 +376,9 @@ S5 的步驟 3–5（2026-11-15）：
 採納的小事（4 條，都已改進上面的 S5）：A/B 每臂至少 2 發、判定預先寫死（含新臂失敗時停下回報）、新句子點名 agent 定義裡的偏好不算專案標準；B2 的理由寫準（既有的 `deprecated_dd` 迴圈只認 `dd-*.md` 單檔）；T11 寫 `review` 的四行都要換；ci.yml 的新寫法寫死成不用 `xargs`、驗證加「stderr 是空的」。
 
 駁回（6 條）：CI 那一行是可以不做的順手修（沒有子目錄後每次都印錯誤、會被讀成壞了，是刻意改）；`--help` 與 `--uninstall` 會印「0 個命名空間」（計畫明寫照印）；沒安排標 IN_PROGRESS 與記起點（表下方的規則已規定）；一條不是批評；subagent 的 system prompt 與 user 訊息誰優先（A/B 實跑就是在驗這件事）；gate 會因為改 `.github/` 擋 commit（`CODE_EXT` 沒有 yml）。
+
+`plan-review`（S6，2026-11-16）第 1 輪：通過。4 個審查者（前提成不成立／漏掉的同步點／範圍與驗證／全面），讀檔檢查都過，沒有重派。沒有重大、沒有需使用者決定、沒有需要外部查證。用的是 repo 這份 `skills/plan-review/SKILL.md` 的範本與審查包（部署版還是沒有審查包的舊版）。
+
+採納的小事（都已改進上面的 S6）：殘留清理的範圍到檔尾、核對腳本另查圍欄行數與根目錄不含那一節；迴圈步數那條插在「CI 防線」一節最後、不拆開表格與表後的引用塊；gate 段與架構文件既有的段落並存要寫明；「會寫新字的地方」不寫種類數；乾跑移到步驟 5、引文比對前去掉行首的 `>`；新檔的出處註記不寫條數；「核心工作法」多留一段的理由；根目錄「CI 不驗」那條補四方與第五方的定義在哪、清單加上 README 的「清理外部殘留」。
+
+駁回：「新增 Skill 步驟」第 6 步與「同一則訊息裡派的幾個 subagent」起的那幾條也該搬（使用者決定的範圍沒有它們）；`runci.rb` 沒跑 `bash32` job（讀過，兩個 job 都跑）；README「前置需求」要同步（這次沒動到那條規則）；乾跑只證明 repo 裡找得到（計畫已寫明它不證明什麼）；新檔不在 `git ls-files`（S6-1 就 commit 了）；刪掉箭頭圖後步驟沒有編號可對照（編號由全域 §3.9 定義）；GitHub 預設 shell 帶 pipefail（沒寫 `shell:` 時不帶，而且這段不動 ci.yml）；「明寫先 Read」沒有實測（不是批評，計畫已寫明）。

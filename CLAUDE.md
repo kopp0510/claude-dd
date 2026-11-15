@@ -2,6 +2,8 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
+進度以 docs/designs/2026-11-15-audit-fixes-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
+
 ## 安裝 / 更新
 
 ```bash
@@ -47,7 +49,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
   （改來源再重出，勿手改 GIF）。
   三層架構圖於 2026-08-31 移除 — 它畫的是目錄清單而非架構，資訊都在
   `DD_PIPELINE_ARCHITECTURE.md` 的文字版裡，還多一份圖要維護
-- `docs/` — `designs/` 放 task-planner 的段落進度表、`measurements/` 放實測原始數字與實驗輸入（例如 reviewer 的派送開銷）；**不部署**
+- `docs/` — `designs/` 放 task-planner 的段落進度表、`measurements/` 放實測原始數字與實驗輸入（例如 reviewer 的派送開銷），它的 `CLAUDE.md` 是跑 `claude -p` 實驗的做法與已知的坑；**不部署**
 - `tests/` — CI 在 ubuntu 與 macOS（bash 3.2）都跑的測試：gate 情境 `test-gate.sh`、dd-init 升級分類 `test-dd-init-upgrade.sh`、安裝端到端 `test-install.sh`；**不部署**，也不在 `scripts/*.sh` 那個 glob 內
 - `install-dd-pipeline.sh` — 安裝腳本（部署到 ~/.claude/；唯一安裝路線，分享亦同）
 
@@ -75,19 +77,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    要動檔的臂派 general-purpose（agent 清單上 Explore、Plan 沒有 Edit、Write）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
-   在拋棄式專案裡跑 `claude -p "<需求>" --output-format stream-json --verbose --max-budget-usd 3 --no-session-persistence
-   --permission-mode dontAsk --allowedTools "Skill Read Glob Grep" --disallowedTools "Edit Write NotebookEdit Bash Agent"
-   < /dev/null > out.jsonl`，正反各一個（該叫的大需求、不該叫的小改動），解析 jsonl 看有沒有 `Launching skill:`，
-   並確認 `permission_denials` 是空的 —— dontAsk 沒加 `--allowedTools Skill` 會把 Skill 擋掉，只證明它「想叫」。
-   要量 skill 注入了多少字元，量下一則以 `Base directory for this skill:` 開頭的 user 訊息：Skill 的 tool_result 只有 `Launching skill: <名字>` 那一行
-   （2026-10-30 dd-loop 實測，量法見 `docs/measurements/2026-10-30-dd-loop-trigger/check.sh`）。
-   prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不了「不含關鍵字」這種說法；每次約 US$0.4–1.6。
-   這種 session 沒有寫檔工具也沒有 AskUserQuestion（題目會印成文字），只測得到「叫不叫、出不出得了草稿」，寫檔與 commit 的步驟要另外在沙盒實跑。
-   測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`、`--disallowedTools` 拿掉 `Agent`、加 `--forward-subagent-text`、`--max-budget-usd` 調高 ——
-   不然派不出裁決者，「沒問批准題」會因為審查根本沒跑而自動成立。
-   加了 `disable-model-invocation: true` 的 skill，正向那發只能用 slash 叫，而 slash 叫法的 stream-json 沒有 Skill 的 tool_use、也沒有 `Launching skill:`：
-   要讓回覆照貼 skill 本文裡只有這一版才有的一行，再配一發指令名換成不存在的對照。反向那發也要對照：用 `--plugin-dir` 載入拿掉 dmi 的副本，
-   同一個 prompt 要叫得起來，「沒叫」才有鑑別力（2026-11-14 security-audit，`docs/measurements/2026-11-14-security-audit-trigger/`）
+   做之前先 Read `docs/measurements/CLAUDE.md`，照「測 skill 會不會自己叫」做（`claude -p` 的指令、旗標、怎麼判定、費用都在那裡）
 6. 只有 hook、沒有 skill 的元件也放 `skills/<名字>/`（`.claude-plugin/plugin.json` + `hooks/hooks.json`，不放 SKILL.md），
    會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
    被管的工具（例如 `Bash`），被 hook 擋下的呼叫才會在 tool_result 以「PreToolUse:Bash hook error: <理由>」出現、並列進 `permission_denials`
@@ -116,23 +106,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
    promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
-5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：`jq -n --rawfile` 把去掉 frontmatter 的新舊兩份塞成
-   `{名字:{description,prompt}}`，`claude -p --agents <json> --agent <名字> --model opus` 各跑一發，素材挑
-   「後續 commit 已認定真錯誤」的舊 diff（ground truth 現成）。先用 haiku 問一句確認兩個 arm 真的載入不同
-   prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**：2026-10-02 五發實測 api 58–84s、
-   非模型開銷 35–170s，用 wall 做 n=1 比較會得到相反結論。**命中數也要 n≥2**：單發 reviewer 命中的是隨機
-   子集，五發各中 3 項中的 2 項、子集還不同。
-   **量 Task 派出的 subagent 時**：它跑的是 agent 定義裡的 `model`，父 session 的 `--model` 不影響它
-   （實測 haiku 父 session 派 code-reviewer，subagent 的 `message.model` 是 `claude-opus-5-5`）——
-   父層可以用 haiku 省錢，但別誤以為那樣是在測 haiku 的 reviewer。數字的位置：subagent 自己的
-   `duration_ms`／`tool_uses`／`total_tokens` 在「帶 `output_file` 的 task 記錄」的 `usage`
-   （`jq -c 'select(.output_file!=null)|.usage'`），`result.subagent_stats` 只有 spawned/completed 計數、
-   沒有時間；subagent 的訊息靠 `parent_tool_use_id != null` 認（每則有 `timestamp`）；**父 session 會有兩筆
-   `result`**（`result_index` 0 與 1 —— subagent 在背景跑，父層先結束一輪、它完成後再被喚起），
-   只取第一筆會少算整體時間；要讓 subagent 的文字進 jsonl 加 `--forward-subagent-text`。
-   **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型），
-   assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發。
-   `--disallowedTools advisor` 擋不掉，要加 `--settings '{"advisorModel":""}'`；跑完再讀 `modelUsage` 的鍵核一次
+5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：做之前先 Read `docs/measurements/CLAUDE.md`，照「量 agent 指令本體」做（怎麼組兩個 arm、看哪個欄位、量 Task 派出的 subagent、先關掉 advisor 都在那裡）
 
 ## 新增 Command 步驟
 
@@ -222,10 +196,6 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   別跑安裝，驗證完 commit 後再重跑，其他專案才會用到新版
 - 要在 Claude 的 Bash 工具裡取用安裝腳本的函式或陣列，一律 `bash -c 'source ./install-dd-pipeline.sh && validate_skill_hooks'`：
   Bash 工具是 zsh，沒有 `BASH_SOURCE`，腳本尾端的 source guard 會失效，整支安裝直接在真實 `~/.claude` 上跑起來（2026-09-30 踩過）
-- **沙盒用 `claude -p` 測行為前，先 `./install-dd-pipeline.sh --force`**：headless session 載入的是
-  `~/.claude/` 的部署版，不是 repo 這份。2026-10-02 踩過：dd-init 的 rev 跳 5 → 6 後直接去沙盒跑
-  `/dd-init`，它回「含 `dd-loop-rev: 5` → 已是現行版，跳過」—— 那是**舊版的正確行為**，看起來卻像
-  新版判定壞了。部署後重跑才判為舊版並列出 rev 5 缺的兩條
 - **cherry-pick 上來的 commit 要重核「它指向的檔在這裡存不存在」**：在原本的環境（本機設定、
   沒進版控的檔）成立的路徑，到了公開 repo 就是點不到的死指標 —— 2026-10-16 推 `dd.docfile` 時，
   `scripts/check-claude-md.sh` 檔頭與 `scripts/CLAUDE.md` 都寫「用途見 `~/.claude/rules/<某個本機檔>`」。
@@ -380,26 +350,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - 可選 MCP 推薦名單比照使用率盤點制：上游 deprecated／改名（如 cipher → byterover-cli，
   2026-08-11 移除）或本機實際使用紀錄已斷即移除；後繼品未經實證使用不自動遞補
 
-- **`claude -p` 的 stream-json 要進 repo 前先去識別，而且要認得 Claude Code 自己編碼過的路徑**：init 訊息的 `memory_paths` 等欄位
-  把路徑裡的 `/` 換成 `-`（`-Users-<名字>-…`、`-private-tmp-…`），只換斜線形式、只 grep `/Users/` 都抓不到，還會回 0 筆看起來像通過。
-  init 另有連接器清單、plugin 路徑。做法：只抽判定要用的欄位（照 `docs/measurements/2026-10-29-adhd-style/run.sh`），掃描樣式加 `-Users-`、`-private-tmp-`。
-- **`claude -p` 實驗的 fixture 有子目錄時，子目錄的 CLAUDE.md 會被受測 session 當巢狀記憶讀進去**：gate 對 `docs/measurements/` 底下
-  放 `.py`／`.sh` 的目錄一樣要求 CLAUDE.md（2026-10-30 在另一台機器的 branch 實測，第一次 commit 就被擋），所以檔照寫，
-  `run.sh` 把 fixture 複製到拋棄式目錄後跑 `find "$WORK" -mindepth 2 -name CLAUDE.md -delete`。fixture 由 `run.sh` 當場 `printf` 出來、
-  不從 repo 複製的（`docs/measurements/2026-10-29-adhd-style/run.sh`）碰不到。
-- **stream-json 看不出巢狀 CLAUDE.md 有沒有被讀進去**：grep jsonl 找那份 CLAUDE.md 獨有的字串，連會載入的對照臂也是 0。
-  改成叫受測 session 照貼 context 裡出現的 CLAUDE.md 路徑與第一行，並配一個「skill 目錄放在 cwd 專案裡」的對照臂：對照臂報得出來，這個查法才有鑑別力
-  （2026-11-14 `docs/measurements/2026-11-14-security-audit-trigger/` 的 inj、injctrl）
-- **dontAsk 加 `Bash(ls:*)` 照樣擋 cwd 外的路徑**：`ls ~/…` 回 denial，加 `--add-dir <那個目錄>` 才放行（同一次的 probe-ls、probe-ls2）；
-  複合指令要每一段都在白名單，受測 session 常把 `git`、`echo`、`ls` 串成一條而被擋（同一次的 d5b 兩發）
-- **用 auto mode 跑 `claude -p` 時，受測 session 自己到 `/tmp` 開副本做實驗會被擋**，`permission_denials` 不為 0：擋它的是 auto mode 的分類器
-  （理由字串 `[Shared Scratch Sweep]`），不是目錄白名單，`--add-dir /tmp /private/tmp` 照樣擋（2026-10-30 同一次實測，denial 2 → 3；本機沒重現）。
-  `docs/measurements/2026-10-29-adhd-style/run.sh` 用的是 `--permission-mode dontAsk`，它會不會經過這個分類器沒驗證；判準要求 denials=0 時，先決定用哪個 mode 再跑。
-- **`claude -p` 在父 session 最後一輪結束 10 分鐘後，會把還在跑的背景 subagent 停掉**：stderr 印 `Background tasks still running 10m after the last turn (…); stopping them`，
-  父 log 照樣有 `subtype: success` 的 result，subagent 的紀錄檔停在一半、沒有最後的報告。要等超過 10 分鐘的 subagent（例如裁決者再派審查者）時設
-  `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`（2.1.325 實測；2026-11-15 `docs/measurements/2026-11-15-reviewer-effort/run.sh`）；跑完 grep stderr 有沒有那句（那支 `run.sh` 用 `2>&1` 把 stderr 併進父 log；stderr 另存的要 grep 那個檔）
-- **受測 session 的快照放在 scratchpad 底下時，它找得到 scratchpad 裡別的檔**：2026-11-15 有個審查者 `cd` 到快照的上三層（暫存區的根）去 `find` 計畫提到的探針腳本。
-  洩題檢查要掃「快照以外的暫存區絕對路徑」，只認家目錄、`../` 會漏（那個目錄的 `outside.py`）；答案檔不要跟快照放在同一棵暫存樹下
+- **跑任何 `claude -p` 實驗、或拿另一個 session 當受測對象之前，先 Read `docs/measurements/CLAUDE.md`「已知的坑」**：實驗前先部署、權限模式會擋什麼、輸出進 repo 前去識別、fixture 的巢狀 CLAUDE.md、背景 subagent 被停掉、快照放哪裡都在那裡
 - **同一則訊息裡派的幾個 subagent 不一定同時開跑**：2026-11-15 四發 `claude -p`（2.1.325）裡，opus 裁決者在一則訊息派 4 個審查者，每個 Agent 呼叫的 prompt 約 1.48 萬字元，
   審查者一個隔約 75 秒才開始（`P-med-2` 是第 84、159、234、312 秒，另外三發差 3 秒以內）—— 第 4 個開跑時已經過了整發 455–614 秒的一半以上。這是不是 Claude Code 一般的行為沒查文件。
   量「等的時間花在哪」要看每個 subagent 在時間軸上的起訖（`docs/measurements/2026-11-15-reviewer-effort/timeline.py`），拿整發秒數減最慢的 subagent 會算錯；
