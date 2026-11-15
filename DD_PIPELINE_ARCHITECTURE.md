@@ -107,7 +107,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 （`scripts/check-claude-md.sh`）強制 — 改碼目錄缺 CLAUDE.md 或未同批更新
 即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`，但 SKIP 不是豁免：
 段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit 一樣擋。
-記憶檔名可設（`git config --local dd.docfile <檔名>`，預設 `CLAUDE.md`、只讀 local），
+記憶檔名可設（`git config --local dd.docfile <檔名>`，預設 `CLAUDE.md`、只讀 local、不收程式碼檔名），
 給只准放特定檔名的 repo 用；三處使用點與驗證規則見 `scripts/CLAUDE.md`。
 
 要跨好幾段的工作由 `task-planner` 拆成段落（一段一圈）與小任務（只走步驟 1、2，
