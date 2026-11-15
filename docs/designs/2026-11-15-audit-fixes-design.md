@@ -14,7 +14,7 @@
 - A2 不動 `commands/dd-init.md` 的蓋章區塊（Phase 4 在區塊外），不跳 `dd-loop-rev`；全域模板 §3.9 的 `<起點>` 那句在蓋章區塊裡有一份逐字副本，所以模板那句也不改，新做法只寫進 `skills/dd-loop/SKILL.md`。不發版、不 push、不跑 `./install-dd-pipeline.sh`（部署由使用者自己做）
 - A3 CHANGELOG 條目一律寫進 `## 未發布`，用行首錨
 - A4 D1（使用者決定，2026-11-15）：`dd.docfile` **只拒絕副檔名在 `CODE_EXT` 裡的值**。擋不到的：`Makefile`、`Dockerfile` 這類沒副檔名的檔，以及清單沒列的副檔名（`mts`、`zsh`、`lua`…）—— 使用者選的時候選項說明已寫出這個缺口
-- A5 D2（使用者決定，2026-11-15）：段落標 `BLOCKED` 去做別段、專案有 `docs/reviews/` 時，**建申報檔 `docs/reviews/S<段落>-BLOCKED.md`**。gate 判定邏輯不改（檔名本來就命中 `S[0-9][^/]*\.md`），只在擋下訊息多列這條路。取捨：gate 只看檔名，回頭做完那段有沒有補跑步驟 4 沒有關卡會查（跟 `SKIP.md` 同類），記進 `scripts/CLAUDE.md` 的已知繞過
+- A5 D2（使用者決定，2026-11-15）：段落標 `BLOCKED` 去做別段、專案有 `docs/reviews/` 時，**建申報檔 `docs/reviews/S<段落>-BLOCKED.md`**。gate 判定邏輯不改（檔名本來就命中 `S[0-9][^/]*\.md`），只在擋下訊息多列這條路。取捨：gate 只看檔名（跟 `SKIP.md` 同類），拿它當成做完的段落的報告 gate 分不出來，記進 `scripts/CLAUDE.md`。（S1-3 實作時更正：原本寫「回頭做完那段有沒有補跑步驟 4 沒有關卡會查」不對 —— 回頭做時要重跑 `--start-segment`，之後開下一段時 gate 照樣查那個範圍有沒有新增報告；查不到的是先停之前已經 commit 的那一部分，那靠進度表 commits 欄的起點）
 - A6 gate 訊息改了，照 `scripts/CLAUDE.md`「此層慣例」同步檢視 `skills/dd-loop/SKILL.md`、`skills/task-planner/SKILL.md` 規則區塊；照根目錄 CLAUDE.md「CI 不驗、只能手動同步的區塊」巡兩份 README 的「CLAUDE.md 維護規則」、gate 對策段、`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段
 - A7 `skills/task-planner/SKILL.md` 的規則區塊改了之後，已經照抄進各專案設計文件的舊版不會跟著變（根目錄 CLAUDE.md「核心工作法」已寫明）；CHANGELOG 條目寫明這點，不去改其他專案。本檔進度表下方照抄的是改之前的版本
 - A8 `--segment-base` 維持硬失敗、stdout 維持空的（`scripts/CLAUDE.md` 的退化政策表不變），只改 stderr 的訊息
@@ -73,7 +73,7 @@
   - commit：`fix: gate 不收程式碼檔名當 dd.docfile（S1-1）`
 - S1-2 起點失效時 `--segment-base` 的訊息分開講
   - 檔案：`scripts/check-claude-md.sh`、`tests/test-gate.sh`、`scripts/CLAUDE.md`、`tests/CLAUDE.md`
-  - 內容：沒記過起點 → 照舊叫你跑 `--start-segment`。起點檔在、但不在目前分支的歷史裡（換過分支或改寫過歷史）→ 印出共同祖先，說明範圍可以從它算、會多含被改寫的那個 commit，並寫明不要重跑 `--start-segment`（起點會移到現在，這一段已經 commit 的就不在範圍內）。連共同祖先都沒有 → 「改用進度表 commits 欄的起點；沒有進度表就問使用者」。三種都維持 exit 1、stdout 空
+  - 內容：沒記過起點 → 照舊叫你跑 `--start-segment`。起點檔在、但不在目前分支的歷史裡（換過分支或改寫過歷史）→ 印出共同祖先，說明範圍可以從它算、會多含被改寫的那個 commit，並寫明不要重跑 `--start-segment`（起點會移到現在，這一段已經 commit 的就不在範圍內）。連共同祖先都沒有 → 「改用進度表 commits 欄的起點；沒有進度表就問使用者」。三種都維持 exit 1、stdout 空（實作時多分出第四種：起點檔在、內容不是 commit —— 原本併在「沒記過」那句裡一樣叫人重記；下一步同「連共同祖先都沒有」，測試多加一則）
   - 驗證（測試）：先寫、確認現況紅：amend 掉起點後 block、stdout 空、`said` 共同祖先 sha、輸出不含「段落開始前先跑」；孤兒分支時 `said "進度表"`；沒記過起點時 `said "段落開始前先跑"`（對照，現況綠）
   - commit：`fix: 起點失效時 --segment-base 講出共同祖先、不再叫人重記（S1-2）`
 - S1-3 「上一段沒有附 review 報告」的擋下訊息加第 3 條路（A5）

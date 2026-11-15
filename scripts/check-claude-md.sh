@@ -230,7 +230,7 @@ case "$1" in
             echo "❌ 上一段沒有附 review 報告（8 步迴圈的步驟 4），先補完再記新起點："
             echo "   範圍 ${base}..HEAD 裡沒有新增任何 docs/reviews/S*.md"
             echo ""
-            echo "   兩條路，選一條："
+            echo "   三條路，選一條："
             echo "   1. 跑步驟 4（主對話直接派最少 3 個審查者，自己逐條查證），"
             echo "      每個審查者一份 docs/reviews/S<段落>-a.md、-b.md、-c.md…，加查證 S<段落>-judge.md，"
             echo "      各三節：派工 / 發現 / 處置"
@@ -238,6 +238,9 @@ case "$1" in
             echo "      建 docs/reviews/S<段落>-SKIP.md 寫明理由，並在 commit 訊息加"
             echo "      SKIP-REVIEW: <段落> <理由> 這行 trailer"
             echo "      （緊接在 Co-Authored-By 那一行前面，中間不能空行，不然 git 不認它是 trailer）"
+            echo "   3. 這一段還沒做完、要先停下來做別段（進度表標 BLOCKED）："
+            echo "      建 docs/reviews/S<段落>-BLOCKED.md 寫明停在哪、為什麼停，commit 之後再重跑"
+            echo "      （它只是申報、不是審查報告：回頭做完這一段時步驟 4 照跑、報告照落地）"
             echo ""
             echo "   （不想採用這個慣例：刪掉 docs/reviews/ 目錄，本檢查就完全不啟用）"
             exit 1
