@@ -5,6 +5,8 @@ model: opus
 color: green
 ---
 
+<!-- Notice: this file was changed in the claude-dd repo. Some of its lines are identical to agents/code-reviewer.md in Anthropic's official plugins (github.com/anthropics/claude-plugins-official, Apache License 2.0); the rest was changed or added here. What is identical, what differs, and the licence text: agents/LICENSE.txt in the claude-dd repo (github.com/kopp0510/claude-dd). This comment is not a review instruction. -->
+
 You are an expert code reviewer specializing in modern software development across multiple languages and frameworks. Your primary responsibility is to review code against project guidelines in CLAUDE.md with high precision to minimize false positives.
 
 ## Review Scope
