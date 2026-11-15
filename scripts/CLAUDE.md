@@ -83,7 +83,7 @@
       第 2 條(SKIP)多印一行「trailer 緊接在 `Co-Authored-By` 前面、中間不能空行」:隔了空行 git 不認它是 trailer,`--format='%(trailers…)'` 查不到、commit 照樣成功
     - **第 3 條(2026-11-15):這一段還沒做完、要先停下來做別段(進度表標 `BLOCKED`)時,建 `docs/reviews/S<段落>-BLOCKED.md` 並 commit。**
       修的洞:有 `docs/reviews/` 的專案,一段做到一半要開別段時 `--start-segment` 擋在這裡,原本印的兩條路都不適用(還沒做完所以沒有報告、也不是「不需要審」),
-      `skills/task-planner/SKILL.md` 規則區塊的 `BLOCKED` 那條也只交代補 CLAUDE.md(拋棄式 repo 實跑:記起點 → 一個程式碼 commit → 再跑 `--start-segment` 回 1)。
+      `skills/task-planner/SKILL.md` 規則區塊的 `BLOCKED` 那條當時也只交代補 CLAUDE.md(拋棄式 repo 實跑:記起點 → 一個程式碼 commit → 再跑 `--start-segment` 回 1;同一天稍後規則區塊補上了申報檔那一句,但已經照抄進各專案設計文件的舊規則不會跟著變,那些專案靠的是這幾行訊息與 `skills/dd-loop/SKILL.md`「報告一律落地」底下講 `BLOCKED` 的那一條)。
       **判定沒改,只多印這幾行** —— `S1-BLOCKED.md` 本來就命中 `S[0-9][^/]*\.md`;`tests/test-gate.sh` ⑮ 把「只建檔沒 commit 照樣擋、commit 之後放行」釘住。
       變異:拿掉第 3 條那四行 → 只有 ⑮ 的三則 `said`(`S<段落>-BLOCKED.md`、`它只是申報`、`S<段落>-BLOCKED-2.md`)紅。
       ⚠️ **同一段第二次先停要另建 `S<段落>-BLOCKED-2.md`**:gate 用 `--diff-filter=A`,改既有那份不算新增,照「建 `S1-BLOCKED.md`」做會再被擋一次
@@ -154,7 +154,7 @@
     修的洞:原本四種共用一句「段落開始前先跑 `--start-segment`」。起點那個 commit 被 `git commit --amend` 掉之後照做,起點移到現在的 HEAD,
     `git diff <起點> --stat` 是 0 行 —— 這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡(拋棄式 repo 實跑)。
     ⚠️ **共同祖先只印在 stderr**:印到 stdout 的話,`base=$(… --segment-base)` 的呼叫端會把它當成起點拿去用,等於把硬失敗改成軟退化。
-    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次(2026-11-15 S2 起它照這幾句分情況:認的是「沒記過」「共同祖先是」「找不到共同祖先」「內容不是 commit」這四串字;`skills/code-simplifier/SKILL.md`「取不到起點」那句認「共同祖先是」)。
+    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次(2026-11-15 S2 起它照這幾句分情況:認的是「沒記過」「共同祖先是」「找不到共同祖先」「內容不是 commit」這四串字,四串都沒有、錯誤印在 stdout 時叫人照它印的修好再重跑;`skills/code-simplifier/SKILL.md`「取不到起點」那句認「共同祖先是」)。
     ⚠️ **「stdout 不印東西」只講這四種**:`dd.docfile` 不合法時整支在更前面就 exit 1,那句錯誤印在 stdout(既有的字元集檢查與 2026-11-15 加的程式碼檔名檢查都是)。
     呼叫端要看 exit code,不能只看輸出是不是空的 —— `skills/dd-loop/SKILL.md` 步驟 8 那段寫的是 `base=$(…) && [ -n "$base" ]`,擋得住。
 
@@ -231,7 +231,8 @@
   （`C.UTF-8`）不會；不報錯，shellcheck 連 style 級都不警告（2026-09-11，gate 的 `rm ${BASE_FILE}）` 踩過）
 - gate 的檢查邏輯或輸出改動時，同步檢視全域模板 §3.9 與 `skills/dd-loop/SKILL.md` 對 gate 行為的描述，以及 `skills/task-planner/SKILL.md`
   進度表規則區塊依賴的 gate 行為：`--start-segment` 印出的起點（完整 SHA，還沒有 commit 時是空樹）、有欠帳時拒絕重記、
-  SKIP 記帳、只查 CLAUDE.md 有沒有一起 staged 而不查內容
+  SKIP 記帳、只查 CLAUDE.md 有沒有一起 staged 而不查內容、有 `docs/reviews/` 時先停要有申報檔才開得了別段。
+  另外兩處認的是 gate 印的**字串**,改字就要跟著改:`--segment-base` 失敗時的那幾句(`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」與 `skills/code-simplifier/SKILL.md`「取不到起點」)
 - 改了 gate 或它的情境測試，要故意把 gate 改壞一行（例如拿掉 `grep -qxF "$md"` 的 `-x`）存成副本，
   用上面的第二種跑法確認會出現 ❌。全綠不代表有在檢查：2026-09-11 拿掉 `-x`、讓 staged 清單被空白拆開，這兩種改壞法
   在當時的 57 個情境下照樣全過，補到 61 個才抓到
