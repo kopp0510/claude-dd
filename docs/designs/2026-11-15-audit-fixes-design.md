@@ -390,7 +390,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 
 步驟 7、8（2026-11-16）：
 
-- 步驟 7：候選列給使用者（見 `S6-judge.md`「這一段自己犯的錯」；其中「同一個對話派出的 subagent 帶的是對話開始時那一版 CLAUDE.md，改了 CLAUDE.md 之後不能拿它驗指路」適合放進 `docs/measurements/CLAUDE.md`「已知的坑」），等同意才寫，這一輪沒有寫
+- 步驟 7：候選列給使用者（見 `S6-judge.md`「這一段自己犯的錯」；其中「同一個對話派出的 subagent 帶的是對話開始時那一版 CLAUDE.md，改了 CLAUDE.md 之後不能拿它驗指路」適合放進 `docs/measurements/CLAUDE.md`「已知的坑」）。使用者 2026-11-16 回「加」，那一條寫進「已知的坑」的最後；其餘候選沒有寫
 - 步驟 8：範圍照表上的起點 `bf7e654` 算出五份（根目錄 `CLAUDE.md`、`docs/measurements/CLAUDE.md`、`docs/measurements/2026-10-29-adhd-style/CLAUDE.md`、`docs/measurements/2026-10-30-dd-loop-trigger/CLAUDE.md`、`scripts/CLAUDE.md`），用 `claude-md-management:claude-md-improver` 只審這一段改到的地方。實跑核對：指到的節名都在、架構文件「CI 防線」一節最後一段是迴圈步數那段、三條約束句引的字串在安裝腳本與設計文件裡找得到、每個日期目錄都有 CLAUDE.md、收編清單的表格 7 列完整。沒有找到要改的錯，沒有動檔
 
 沒驗證的事：
