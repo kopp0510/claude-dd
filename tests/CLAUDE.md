@@ -105,7 +105,7 @@
   agent 報不同的那一支裡寫一個檔、或 skill 報不同的那一支裡 `mkdir` 一個空目錄 → 「--check 前後沙盒 HOME 不一樣」；
   兩處結尾那行的 `${stale}${NC}（` 改成緊貼全形括號的 `$stale（` → 「Skills 那一段結尾應該有一行『與 repo 不同：2』」；
   `diff -rq` 改成 `diff -q`（不遞迴）→ 「Skills 的 gate-guard 那一行應該有」（T11 在 gate-guard 改的是 `hooks/hooks.json`，只有它在子目錄）；
-  兩處 `elif [ "$cmp_rc" -eq 1 ]` 改成 `-ge 1`（比不了併進不同）→ 「Skills 的 review 那一行應該有『無法比對』」。
+  兩處 `elif [ "$cmp_rc" -eq 1 ]` 改成 `-ge 1`（比不了併進不同）→ 「Skills 的 verification-gate 那一行應該有『無法比對』」（2026-11-15 `review` skill 退場，讀不到檔那一格改用 `verification-gate`，換名後這個變異重跑過，照樣紅）。
   有兩個變異紅在 T11 之前、不算 T11 的（第一版程式碼上跑的）：每個 agent 都寫檔（原有的 `--check` 檢查那時沙盒還沒有 `agents/` 目錄，安裝腳本自己報錯）、`--check` 一律回非 0（原有的檢查擋下）。
   ⚠️ 「讀不到的檔」那一格用 `chmod 000`，root 讀得到，所以以 root 跑時（容器預設）那一格不跑，✅ 那一行會寫「讀不到檔案那一格沒跑」；
   要在容器裡驗它，另開一般帳號跑（`useradd -m tester; su tester -c 'cd /tmp && TEST_ONLY=T11 bash /repo/tests/test-install.sh'`，2026-11-15 ubuntu:24.04 實跑 rc=0）。CI 的 runner 不是 root。
@@ -122,3 +122,7 @@
 
 gate 本體的規則與「改了 gate 要做變異測試」的規定在 `scripts/CLAUDE.md`；CI 防線的總表在
 根目錄的 `DD_PIPELINE_ARCHITECTURE.md`。
+- **`test-install.sh` 開頭「`commands/` 底下沒有子目錄」那條斷言（2026-11-15）**：`NS_COMMANDS` 變成空陣列後換上的，取代原本「`workflow-review` 目錄在、`README.md` 沒被部署」兩條。
+  安裝腳本裡命名空間 command 的複製、比對、刪 `README.md` 那段現在沒有測試跑到（`grep -n 'NS_COMMANDS\|ns_cmd' tests/*.sh` 只剩註解）；加回命名空間 command 時把那兩條換回來。
+  跟這個檔開頭其他的裸 `[ … ]` 一樣，不成立時 `set -e` 直接結束、不印 ❌
+

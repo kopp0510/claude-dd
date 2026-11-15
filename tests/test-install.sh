@@ -44,8 +44,9 @@ source ./install-dd-pipeline.sh
 [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "${#PROMOTED_SKILLS[@]}" ]
 [ "$(ls "$SANDBOX"/.claude/agents/*.md | wc -l)" -eq "${#PROMOTED_AGENTS[@]}" ]
 [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
-[ -d "$SANDBOX/.claude/commands/workflow-review" ]
-[ ! -f "$SANDBOX/.claude/commands/workflow-review/README.md" ]
+# 2026-11-15 起沒有命名空間 command（NS_COMMANDS 是空的）：commands/ 底下不該有子目錄。
+# 加回命名空間 command 時，把「目錄在、README.md 沒被部署」那兩條斷言加回來
+[ -z "$(find "$SANDBOX/.claude/commands" -mindepth 1 -maxdepth 1 -type d)" ]
 [ -x "$SANDBOX/.claude/scripts/check-claude-md.sh" ]
 [ "$(ls "$SANDBOX"/.claude/output-styles/*.md | wc -l)" -eq "${#DD_OUTPUT_STYLES[@]}" ]
 grep -qx 'name: ADHD' "$SANDBOX/.claude/output-styles/adhd.md"
@@ -794,20 +795,20 @@ t11_err=$(plain "$T11_OUT/stale.txt" | grep -E ': line [0-9]+: |bad substitution
 utf8_ok "$T11_OUT/stale.txt" || { echo "❌ T11：輸出有不合法的 UTF-8"; exit 1; }
 # 部署的檔讀不到時（diff／cmp 回 2）不可以講成「與 repo 不同，重跑安裝會更新」：重跑安裝會在備份那一步中止。
 # root 讀得到 chmod 000 的檔（容器裡常是 root），那時這一格驗不到，印出來、不當成通過
-chmod 000 "$T11_HOME/.claude/skills/review/SKILL.md" "$T11_HOME/.claude/agents/senior-devops.md"
-if cat "$T11_HOME/.claude/skills/review/SKILL.md" > /dev/null 2>&1; then
+chmod 000 "$T11_HOME/.claude/skills/verification-gate/SKILL.md" "$T11_HOME/.claude/agents/senior-devops.md"
+if cat "$T11_HOME/.claude/skills/verification-gate/SKILL.md" > /dev/null 2>&1; then
     T11_UNREADABLE="（讀不到檔案那一格沒跑：這個帳號讀得到 chmod 000 的檔）"
 else
     HOME="$T11_HOME" ./install-dd-pipeline.sh --check < /dev/null > "$T11_OUT/unreadable.txt" 2>&1 \
         || { echo "❌ T11：部署的檔讀不到時 --check 的結束碼不是 0"; tail -20 "$T11_OUT/unreadable.txt"; exit 1; }
-    t11_expect "$T11_OUT/unreadable.txt" "Skills" "review" "無法比對" "與 repo 不同"
+    t11_expect "$T11_OUT/unreadable.txt" "Skills" "verification-gate" "無法比對" "與 repo 不同"
     t11_expect "$T11_OUT/unreadable.txt" "Agents" "senior-devops" "無法比對" "與 repo 不同"
     t11_foot "$T11_OUT/unreadable.txt" "Skills" "無法比對" 1
     t11_foot "$T11_OUT/unreadable.txt" "Agents" "無法比對" 1
     t11_foot "$T11_OUT/unreadable.txt" "Skills" "與 repo 不同" 2
     T11_UNREADABLE="讀不到的檔印「無法比對」、不講成重跑會更新；"
 fi
-chmod 644 "$T11_HOME/.claude/skills/review/SKILL.md" "$T11_HOME/.claude/agents/senior-devops.md"
+chmod 644 "$T11_HOME/.claude/skills/verification-gate/SKILL.md" "$T11_HOME/.claude/agents/senior-devops.md"
 # 重跑安裝之後就該回到「沒有不同」
 HOME="$T11_HOME" ./install-dd-pipeline.sh < /dev/null > "$T11_OUT/reinstall.txt" 2>&1 \
     || { echo "❌ T11：重跑安裝失敗"; tail -20 "$T11_OUT/reinstall.txt"; exit 1; }

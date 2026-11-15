@@ -6,7 +6,7 @@
 git pull && ./install-dd-pipeline.sh --force
 ```
 
-以下是需要額外處理的三種升級情境。
+以下是需要額外處理的四種升級情境。
 
 ## 從舊版部署（全量 / 分桶時期）升級
 
@@ -87,3 +87,21 @@ CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「1.2.0」）。
    這批專案的起點檔還不存在，不主動跑的話要等第一個 `SKIP_DOC_CHECK=1` commit 才會自動補記，
    起點就落在段落中間，它前面的 commit 步驟 3、4、8 全部看不到 —— 而 gate 印的是「記下段落起點 …」、
    `--segment-base` 也正常 exit 0，兩個訊號都看不出範圍已經縮水
+
+## 已退場的元件：`review` skill 與 `workflow-review` 命名空間指令（2026-11-15）
+
+這兩個從 repo 與部署清單拿掉了：`/workflow-review:review` 是第三方內容，沒有隨附 LICENSE、查不出上游；`review` skill 只是包它的一層。
+
+安裝腳本**不會**清掉已經部署的那一份 —— 它只新增、覆蓋現行清單上的東西，`--uninstall` 也只認現行清單。
+之前裝過的機器，`git pull && ./install-dd-pipeline.sh --force` 之後自己清：
+
+```bash
+ls -d ~/.claude/skills/review ~/.claude/commands/workflow-review   # 先看在不在；印 No such file 就是那一個本來就沒有
+rm -rf ~/.claude/skills/review ~/.claude/commands/workflow-review  # 確認是這兩個再刪
+```
+
+- 不清的話兩個檔都還在 `~/.claude/` 底下、Claude Code 照樣讀得到，而 repo 這邊已經沒有對應的檔：之後不會再更新，`--check` 也不會提到它們
+- 自己改過、想留著的，先備份再刪
+- 要取回：`git checkout v1.6.14 -- skills/review commands/workflow-review`（v1.6.14 是它們還在的最後一個版本），
+  把 `"review"` 加回 `PROMOTED_SKILLS`、`"workflow-review"` 加回 `NS_COMMANDS`，並把兩份 README、根目錄 CLAUDE.md、
+  `DD_PIPELINE_ARCHITECTURE.md` 的數字與表格、`tests/test-install.sh` 開頭的斷言改回來（CI 會擋數字與陣列不一致）

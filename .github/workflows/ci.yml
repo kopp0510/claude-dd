@@ -82,7 +82,7 @@ jobs:
             "$(ls commands/dd-*.md | xargs -n1 basename | sed 's/\.md$//' | sort)"
           check "ALL_NS_COMMANDS" \
             "$(printf "%s\n" "${ALL_NS_COMMANDS[@]}" | sort)" \
-            "$(ls -d commands/*/ | xargs -n1 basename | sort)"
+            "$(find commands -mindepth 1 -maxdepth 1 -type d | sed 's#.*/##' | sort)"
           # scripts/ 是後果最嚴重的一類（gate 腳本在這層），卻是最晚補上檢查的：
           # 忘了加進 DD_SCRIPTS 時 create_scripts() 不會部署它，使用者機器上 ~/.claude/scripts/
           # 根本沒有那支腳本，而 repo 裡檔案在、CI 全綠，只有到別人的機器上才會炸。

@@ -83,13 +83,14 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部的部署陣列：`PROMOTED_*` 的 14 個 promoted Skills、4 個 promoted Agents，加上 dd-init、workflow-review，以及 `DD_OUTPUT_STYLES` 的 `adhd.md`；
+（清單 = 腳本頂部的部署陣列：`PROMOTED_*` 的 13 個 promoted Skills、4 個 promoted Agents，加上 dd-init，以及 `DD_OUTPUT_STYLES` 的 `adhd.md`；
 2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif（實證來源為當次對話的完整管線驗證），2026-09-30 新增只有 hook 的 gate-guard ——
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞；2026-10-23 新增自製 plan-review，
 實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，
 實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑；2026-10-30 新增自製 dd-loop，
 內容是從全域 §3.9 原文搬出的迴圈做法細則，實證來源為 `docs/measurements/2026-10-30-dd-loop-trigger/` 的觸發實測；2026-11-14 收編 vendored security-audit（user-invoked），
-實證來源為 `docs/measurements/2026-11-14-security-audit-trial/` 的試跑）。
+實證來源為 `docs/measurements/2026-11-14-security-audit-trial/` 的試跑；2026-11-15 `review` skill 與它包的 `workflow-review` 命名空間指令退場 ——
+後者沒有隨附 LICENSE、查不出上游，前者只是包它的一層，取回與清理見 `UPGRADING.md`「已退場的元件」）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
@@ -154,7 +155,6 @@ Root MIT（LICENSE）。vendored 內容各自附上游授權
 `skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`、`skills/security-audit/LICENSE.txt`（cloudflare/security-audit-skill，MIT）、`output-styles/LICENSE.txt`（i-have-adhd，MIT，只借規則，逐節去向見該檔）、
 `agents/LICENSE.txt`（anthropics/claude-plugins-official，Apache-2.0：`code-simplifier.md` 與官方檔逐字相同、`code-reviewer.md` 是改過的檔，比對結果見該檔）），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
-**一個例外**：`commands/workflow-review/` 同為第三方（Alireza Rezvani，`7248a15` 收編），
-但**未隨附 LICENSE、上游 repo 從未記錄**，歸屬只記在 `review.md` 檔頭 ——
-不符收編檢查清單第 1 項，尚未解決（查不出上游就不能編一個授權上去）。
+原本有一個例外 `commands/workflow-review/`（第三方，`7248a15` 收編，未隨附 LICENSE、上游 repo 從未記錄，不符收編檢查清單第 1 項）：
+查不出上游就不能編一個授權上去，2026-11-15 退場。
 **新增 vendored 元件時，這裡與兩份 README 的授權段落要同批更新**（沒有任何 CI 檢查會擋）。

@@ -66,6 +66,14 @@
   交回的訊息會整份進主對話的 context。不叫 subagent 把報告寫成檔 —— 實測五個沙盒臂用 Write 寫報告檔都被擋下；結果照樣用指令核對。
   審查者的報告主對話本來就要讀全文，`skills/dd-loop` 的審查者流程不動。
 
+### Removed
+
+- **`review` skill 與 `workflow-review` 命名空間指令退場。** `/workflow-review:review` 是第三方內容，沒有隨附 LICENSE、上游 repo 查不出來（不符收編檢查清單第 1 項），
+  frontmatter 的參數與內文也對不上；`review` skill 只是包它的一層，還跟 `self-improving-agent` 裡的 `review` 同名。promoted Skills 從 14 個變 13 個，命名空間指令變 0 個
+  （`NS_COMMANDS` 是空陣列；部署、比對、解除安裝的程式碼留著，安裝輸出不再印「命名空間 Commands」那一行標題）。
+  ⚠️ 安裝腳本不會清掉已經部署的那一份：之前裝過的機器要自己刪 `~/.claude/skills/review` 與 `~/.claude/commands/workflow-review`，指令與取回方式見 `UPGRADING.md`「已退場的元件」。
+  CI「陣列與目錄一致性」比命名空間目錄的那一邊改用 `find`：原本的 `ls -d commands/*/ | xargs -n1 basename` 在沒有子目錄時結果是對的，但每次都印錯誤訊息（`ls` 找不到目錄；ubuntu 另有 `basename: missing operand`）
+
 ### Fixed
 
 - **`--uninstall` 在沒有 jq 也沒有 python3 時，手動清理的提示補上 `installed_plugins.json`**：原本只講 `settings.json` 的 `enabledPlugins`，照做會留下兩筆登記。
