@@ -447,8 +447,11 @@ base_is "$BASE_BEFORE"
 expect "沒有共同祖先:--segment-base 照樣硬失敗" block "$GATE" --segment-base
 # 2026-11-15:這一支要講「範圍算不出來、改用進度表的起點或問使用者」,不可以叫人重記起點
 #   (照做的話起點移到現在,這一段已經 commit 的就不在範圍裡)。
+said "也找不到共同祖先"       # 這一支自己的第一行(這個 OUT 裡只有 --segment-base 的輸出,owed_dirs 沒跑)
 said "進度表"
+said "不要重跑"
 not_said "段落開始前先跑"
+stdout_empty "沒有共同祖先:stdout 是空的" "$GATE" --segment-base
 expect "沒有共同祖先:放行,但要講出來(不可靜默)" pass "$GATE" --start-segment
 said "只檢查 staged"             # owed_dirs 那一處
 said "跳過 review 報告檢查"       # reviews_missing 那一處
@@ -536,7 +539,7 @@ unset GIT_CONFIG_GLOBAL
 
 # ⑬ **dd.docfile 不可以是程式碼檔名**(2026-11-15)。
 # 修的洞:`git config dd.docfile main.py` 之後,改 `a/main.py` 的 commit 自己就算「記憶檔同批更新」,
-#   `owed_dirs` 也把它當成銷帳 —— 欠帳被洗掉、沒有 CLAUDE.md 的改碼 commit 照過,而且 git 裡零痕跡。
+#   `owed_dirs` 也把它當成銷帳 —— 欠帳被洗掉、沒有 CLAUDE.md 的改碼 commit 照過,`git status` 是乾淨的(設定只留在 .git/config)。
 # ⚠️ 斷言用 `--start-segment` 與真的 commit,不用 `--segment-base`:全新 repo 的 `--segment-base`
 #   本來就會失敗(沒記過起點),拿它斷言 block 是恆真的 —— 釘得住的只剩那句 `said`。
 mkdir "$WORK/docfile-code" && cd "$WORK/docfile-code" || exit 2
@@ -549,11 +552,14 @@ BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
 git config dd.docfile main.py
 expect "dd.docfile=main.py:--start-segment 拒絕執行" block "$GATE" --start-segment
 said "不可以是程式碼檔名"
-mkdir -p a && echo 1 > a/main.py
-expect "dd.docfile=main.py:改 a/main.py 的 commit 不可以自己當記憶檔" block commit c1
-said "不可以是程式碼檔名"
+# ⚠️ notes.sh 這則要排在下面那個 commit 之前:拿掉新檢查的變異版會讓 c1 進歷史、變成欠帳,
+#   排在後面的話這則 expect 會被欠帳頂住照樣 block(為了錯的理由綠),只剩它的 said 有牙(2026-11-15 審查抓到)
 git config dd.docfile notes.sh
 expect "dd.docfile=notes.sh:--start-segment 拒絕執行" block "$GATE" --start-segment
+said "不可以是程式碼檔名"
+git config dd.docfile main.py
+mkdir -p a && echo 1 > a/main.py
+expect "dd.docfile=main.py:改 a/main.py 的 commit 不可以自己當記憶檔" block commit c1
 said "不可以是程式碼檔名"
 # 對照:不是程式碼副檔名的檔名照常可用(同一個 repo、同一個狀態,只差設定值)
 git config dd.docfile AGENTS.txt
@@ -579,6 +585,7 @@ expect "⑭ 第一個 commit" pass commit s0
 # 對照:從沒記過起點時照舊叫人先記(修之前就是綠的)
 expect "沒記過起點:--segment-base 失敗" block "$GATE" --segment-base
 said "段落開始前先跑"
+stdout_empty "沒記過起點:stdout 是空的" "$GATE" --segment-base
 echo 1 > a.txt
 expect "⑭ 起點要用的 commit" pass commit s1
 expect "⑭ 記起點(= s1)" pass "$GATE" --start-segment
@@ -600,7 +607,14 @@ echo not-a-commit > "$BASE_FILE"
 expect "起點檔內容不是 commit:--segment-base 硬失敗" block "$GATE" --segment-base
 said "內容不是 commit"
 said "進度表"
+said "不要重跑"
 not_said "段落開始前先跑"
+stdout_empty "起點檔內容不是 commit:stdout 是空的" "$GATE" --segment-base
+# 起點檔是 tree、但不是空樹:`read_base` 連 tree 都收,第一版因此走到「也找不到共同祖先」那一句(2026-11-15 審查抓到)
+git rev-parse 'HEAD^{tree}' > "$BASE_FILE"
+expect "起點檔是不是空樹的 tree:--segment-base 硬失敗" block "$GATE" --segment-base
+said "內容不是 commit"
+not_said "也找不到共同祖先"
 
 # ⑮ **段落先停(進度表標 BLOCKED)去做別段時的申報檔**(2026-11-15)。
 # 修的洞:有 `docs/reviews/` 的專案,一段做到一半標 BLOCKED、要開別段時,`--start-segment` 以
@@ -626,12 +640,14 @@ said "上一段沒有附 review 報告"
 # ⚠️ 字串不可以用 `-` 開頭:`said` 是 `grep -qF "$1"`,`-BLOCKED.md` 會被當成 grep 的選項(grep 報錯回 2),
 #   於是這一則**永遠紅** —— 第一版就這樣寫,修好 gate 之後它還是紅,才發現紅的原因不是 gate
 said "S<段落>-BLOCKED.md"     # 訊息要列出段落先停時的申報方式
+said "它只是申報"             # 以及「不是審查報告、回頭做完時步驟 4 照跑」那一行
 # 對照:只建檔、沒 commit 還是擋(放行要靠範圍裡真的新增了這個檔,不是工作目錄有就算)
 echo 'S1 先停:使用者要先做 S2' > docs/reviews/S1-BLOCKED.md
 expect "只建 S1-BLOCKED.md 沒 commit:照樣擋" block "$GATE" --start-segment
 base_is "$S1_BASE"            # 擋下不寫入
 expect "⑮ commit S1-BLOCKED.md" pass commit b2
-expect "S1-BLOCKED.md 已 commit:開下一段放行" pass "$GATE" --start-segment
+# scripts/CLAUDE.md「已知的繞過路徑」的 ④:申報檔只看檔名,這一則變紅 = gate 開始看內容或不收這個檔名了
+expect "繞過④ S1-BLOCKED.md 已 commit:開下一段放行" pass "$GATE" --start-segment
 # 同一段第二次先停(回頭做了一點又要停):gate 用 `--diff-filter=A`,改既有的 S1-BLOCKED.md 不算新增 ——
 #   照第 3 條路「建 S1-BLOCKED.md」做會再被擋一次,所以訊息要講另建 `-BLOCKED-2.md`(2026-11-15 拋棄式 repo 實跑)
 echo 2 > a/x.sh && echo doc2 > a/CLAUDE.md
