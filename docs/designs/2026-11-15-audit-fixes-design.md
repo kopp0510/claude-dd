@@ -29,7 +29,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
-| S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | TODO | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | |
+| S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | IN_PROGRESS | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0.. |
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | TODO | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | TODO | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | |
 
@@ -103,6 +103,11 @@ S1 的步驟 3–5（2026-11-15）：
   - 檔案：`skills/dd-loop/SKILL.md`；`skills/code-simplifier/SKILL.md` 只檢視、有矛盾才改
   - 驗證（乾跑）：一個 subagent 在拋棄式 repo（已記起點 → amend → 再 commit 一筆）照 repo 這份 `skills/dd-loop/SKILL.md` 算步驟 4 的範圍，交回它用的起點；我用指令核對它等於 gate 印的共同祖先 sha、起點檔內容沒變
   - commit：`fix: dd-loop 補上取不到起點時的下一步（S2-1）`
+  - 乾跑結果（2026-11-15，兩個 sonnet subagent 各拿一個拋棄式 repo、只給 `skills/dd-loop/SKILL.md` 的副本，結果用指令核對）：
+    amend 臂交回的起點 `6cc6922…` 等於 `git merge-base <起點檔的值> HEAD`，起點檔內容與乾跑前相同，沒有多出 commit；
+    加跑一個「從沒記過起點」的臂：它停下來交回要問使用者的那一題、沒有跑 `--start-segment`（起點檔仍不存在）。
+    兩臂都沒有回報要猜的句子；「沒記過」臂提到文件沒寫問到起點之後要不要補記 —— 不補記（下一段開始前照常跑 `--start-segment`），沒有另外加句子
+  - 同批改了 `skills/code-simplifier/SKILL.md`「取不到起點」那句：原句只說「問一題，不要退回 `HEAD~1`」，gate 印出共同祖先時照它做會多問一題，補上「印出共同祖先就用它、不要重跑 `--start-segment`」
 - S2-2 `skills/task-planner/SKILL.md` 規則區塊的 BLOCKED 那條（A5）
   - 內容：在「先停之前，用正常 commit 補完這段 SKIP 欠下的 CLAUDE.md」後面補：專案有 `docs/reviews/` 時，同一個 commit 加 `docs/reviews/S<段落>-BLOCKED.md` 寫明停下的原因（不然 `--start-segment` 會以「上一段沒有附 review 報告」拒絕）；回頭做完這段時步驟 4 照跑、報告照落地。「有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段」那條不改。`skills/dd-loop/SKILL.md`「報告一律落地」那條同步寫明這個檔名不算審查報告
   - 檔案：`skills/task-planner/SKILL.md`、`skills/dd-loop/SKILL.md`
