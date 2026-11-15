@@ -525,5 +525,32 @@ expect "dd.docfile 設在 global:gate 不理它,照用 CLAUDE.md" block "$GATE"
 said "c/CLAUDE.md"
 unset GIT_CONFIG_GLOBAL
 
+# ⑬ **dd.docfile 不可以是程式碼檔名**(2026-11-15)。
+# 修的洞:`git config dd.docfile main.py` 之後,改 `a/main.py` 的 commit 自己就算「記憶檔同批更新」,
+#   `owed_dirs` 也把它當成銷帳 —— 欠帳被洗掉、沒有 CLAUDE.md 的改碼 commit 照過,而且 git 裡零痕跡。
+# ⚠️ 斷言用 `--start-segment` 與真的 commit,不用 `--segment-base`:全新 repo 的 `--segment-base`
+#   本來就會失敗(沒記過起點),拿它斷言 block 是恆真的 —— 釘得住的只剩那句 `said`。
+mkdir "$WORK/docfile-code" && cd "$WORK/docfile-code" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+git config dd.docfile main.py
+expect "dd.docfile=main.py:--start-segment 拒絕執行" block "$GATE" --start-segment
+said "不可以是程式碼檔名"
+mkdir -p a && echo 1 > a/main.py
+expect "dd.docfile=main.py:改 a/main.py 的 commit 不可以自己當記憶檔" block commit c1
+said "不可以是程式碼檔名"
+git config dd.docfile notes.sh
+expect "dd.docfile=notes.sh:--start-segment 拒絕執行" block "$GATE" --start-segment
+said "不可以是程式碼檔名"
+# 對照:不是程式碼副檔名的檔名照常可用(同一個 repo、同一個狀態,只差設定值)
+git config dd.docfile AGENTS.txt
+expect "dd.docfile=AGENTS.txt:--start-segment 照常" pass "$GATE" --start-segment
+echo doc > a/AGENTS.txt
+expect "dd.docfile=AGENTS.txt:a/AGENTS.txt 同批 staged 就過關" pass commit c2
+
 exit $fail
 
