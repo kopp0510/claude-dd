@@ -150,6 +150,11 @@
   ⚠️ 行為改變，三項都會變：Scope「整個專案」從 3 變 2、「單檔」從 1 變 0；Durability、Impact 改照表上的刻度打。總分可能升也可能降，有些條目會跌破「≥ 6 才建議升級」的門檻。
   乾跑過一條記憶（新舊各一發）：舊版 3／2／3 = 8、新版 2／2／2 = 6（仍達門檻；差的 2 分裡 Scope 佔 1 分，另 1 分是 Durability，舊版那一發自己說沒有刻度、是猜的）。
   兩項與上游的差異記在 `skills/self-improving-agent/CLAUDE.md` 檔尾
+- **code-simplifier 包裝器：派工時寫明「專案 CLAUDE.md 沒寫的風格偏好不套用，不重排 import」**（`skills/code-simplifier/SKILL.md` 的 Prompt 模板「約束」那一行）。
+  官方 code-simplifier agent 的定義把「import 排序」「偏好 `function`、不用箭頭函式」列成要套用的專案標準；`agents/code-simplifier.md` 與官方檔逐字相同、不能改，所以寫在包它的這一層。
+  實測（2026-11-15，新舊模板各 2 發，`code-simplifier:code-simplifier`，結果用 `grep`、`diff` 核對）：風格混用的檔（`function` 2 個、箭頭 4 個、import 沒排序）上，舊模板 2 發都把 import 排成內建在前並把 4 個箭頭全改成 `function`，
+  新模板 2 發 import 行逐字沒變、箭頭 4 個都還在；四發的巢狀條件都有簡化、對同一組輸入的結果與原版相同。全檔都用箭頭函式的那份素材上，新舊各 2 發都沒動 import 與箭頭，分不出差別。
+  ⚠️ 副作用：新模板 2 發都沒有合併「同一個模組分兩行 import」，理由是合併就得挪動 import；要合併得自己另外交代。四發的 context 裡都有全域 CLAUDE.md，沒有它的環境沒測
 
 ## 1.6.14 — 2026-10-30
 
