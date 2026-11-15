@@ -27,6 +27,9 @@
   起因是一次量測：換到沒存視窗的模型之後，主對話的 context 長到 969,715 token 才自動壓縮（`docs/measurements/2026-11-15-main-session-context.md`）；
   兩份 README 加了「主對話那一塊要花多少／What the main session costs」一節。
   `tests/test-install.sh` 的 T2 加 `autocompact_state` 的 jq／python3 對照，新的一組 T10 跑真的 `--check`
+- **`--check` 看得出已部署的 skill、agent 與 repo 不同**：原本只看目錄、檔案在不在，部署版是舊的照印「已安裝」。
+  現在再比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`），不同的那一行印「已安裝（與 repo 不同，重跑安裝會更新）」，段尾多一行計數。
+  只提示、不改檔、不影響結束碼。commands、scripts、output styles、全域 CLAUDE.md 不比，過期了 `--check` 看不出來。`tests/test-install.sh` 新增 T11
 - **收編 [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（MIT，上游 `c1c8a8c`）為 user-invoked skill `security-audit`**：
   用 `/security-audit` 叫，frontmatter 加 `disable-model-invocation: true`（不讓模型自己叫）；其餘上游文字未改。
   收編前在 claude-dd 的拋棄式 clone 試跑一次 quick（`docs/measurements/2026-11-14-security-audit-trial/`），

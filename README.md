@@ -82,6 +82,8 @@ Worth knowing before you run it:
 ./install-dd-pipeline.sh --uninstall --yes   # uninstall without confirmation (for automation; in non-interactive environments every prompt takes its default)
 ```
 
+`--check` also compares each deployed skill and agent with this repo, the same way the installer does. One that differs is marked "與 repo 不同" ("differs from the repo"; the installer's output is in Traditional Chinese), which means re-running the installer would overwrite it. It only reports: no file is changed and the exit code stays 0. Commands, scripts, output styles and the global CLAUDE.md are not compared.
+
 `--uninstall` removes the skills, agents, commands, scripts and output styles this repo deployed — and with the skills, the two global hooks. It also takes claude-md-management and skill-creator out of `enabledPlugins` in `settings.json` and out of `installed_plugins.json`, even if you had installed them yourself before this repo; other plugins are left alone. (That step needs `jq` or `python3` and a file that parses; otherwise it tells you what to remove by hand.)
 
 What it leaves behind, and what that means:

@@ -73,6 +73,8 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
   （`jq_inplace` / `py_inplace` / `json_edit`，jq 優先、python3 後備）。空檔、只有空白、內容不是「剛好一個物件」也算失敗、不改檔；
   plugin 先登記（`installed_plugins.json`）、再啟用（`settings.json`），登記失敗就不啟用。
   jq 與 python3 兩條路徑在 `tests/test-install.sh` T2 列的那幾類輸入上結論相同（沒列的類別沒有保證）。
+- **`--check` 看得出部署版過期（只限 skills、agents）**：這兩段除了看在不在，還跟 repo 這份比內容（skill 用 `diff -rq`、agent 用 `cmp -s`，
+  與安裝本身相同），不同就在那一行標「與 repo 不同」；只提示、不改檔、不影響結束碼。commands、scripts、output styles、全域 CLAUDE.md 不比。
 - **可回復**：覆蓋差異檔前備份到 `~/.claude/backups/pre-install-<時間>/`，
   完成訊息顯示位置；清掉舊版留下的指令檔之前也先備份；目標是指向檔案的 symlink 時，備份的是它指到的內容；
   `--uninstall` 只移除本 repo 部署過的檔案，另外會取消登記 `OFFICIAL_PLUGINS` 列的官方 plugin（不管當初是誰裝的）；
@@ -138,7 +140,7 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
 | gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
 | dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個；`--apply` 跟著 symlink 寫到專案外。要 `fetch-depth: 0`（兩個 job 都設了） |
-| Sandbox 端到端非互動安裝（`tests/test-install.sh`） | 只有執行期才會出現的安裝 bug；jq 與 python3 兩條路徑對同一份設定檔結論不同；覆蓋或清除前沒備份（含 symlink 目標）；plugin 登記寫錯或移除不乾淨；完成訊息把沒做的講成做了。互動選單測不到 |
+| Sandbox 端到端非互動安裝（`tests/test-install.sh`） | 只有執行期才會出現的安裝 bug；jq 與 python3 兩條路徑對同一份設定檔結論不同；覆蓋或清除前沒備份（含 symlink 目標）；plugin 登記寫錯或移除不乾淨；完成訊息把沒做的講成做了；`--check` 把過期的 skill、agent 印成「已安裝」。互動選單測不到 |
 | macOS `/bin/bash` 3.2 行為測試（`bash32` job：error-capture、gate-guard、gate 情境、dd-init 升級分類、安裝端到端） | ubuntu 的 bash 5 驗不到的 3.2 不相容（`${x,,}`、`declare -A`、`mapfile`…）。先確認 `/bin/bash` 真的是 3.2，否則直接失敗。這類錯誤常常只印一行、結果照舊，所以 gate-guard 測試看 hook 的 stderr、gate 情境測試比對輸出裡的 shell 錯誤；error-capture 與安裝測試靠 `set -e` 的非 0 中止。公開 repo 的 macOS runner 不計費 |
 
 > 這張表是 CI 覆蓋範圍的單一入口，**新增 CI step 時要同步補一列**（沒有任何檢查會擋它過期）。
