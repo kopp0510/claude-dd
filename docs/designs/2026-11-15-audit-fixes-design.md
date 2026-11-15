@@ -34,7 +34,7 @@
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
 | S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | DONE | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | b3b2bf9..41d98a7 |
-| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | DONE | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆（這份文件自己會提到這串字）；乾跑三臂與全新 session 補測三發的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字（56,111 → 46,319） | bf7e654..f104bc7 |
+| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | DONE | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆（這份文件自己會提到這串字）；乾跑三臂與全新 session 補測三發的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字（56,111 → 46,424） | bf7e654..f104bc7 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -385,6 +385,8 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - 花費（result 的 `total_cost_usd`）：1.33、1.80、1.22 美元
 - 這只證明上面寫死的那一句：帶著新版根目錄 CLAUDE.md 的全新 session，被問到這三件事時拿得到搬走的內容（每題 n=1）。沒有對照臂、不證明是指路句造成的，也不證明主對話在長對話中途會主動去讀
 - 三發的 jsonl、題目、抽欄位的腳本都在做這件事的 session 暫存區，沒進 repo（jsonl 的 init 訊息有本機路徑）
+- 跑完補核的兩件（判定裡寫的是推論）：三發 init 訊息的 `memory_paths` 都指到快照自己那個路徑的記憶目錄，裡面 0 個檔；快照往上每一層目錄都沒有 `CLAUDE.md`、`CLAUDE.local.md`、`.claude/CLAUDE.md`。init 訊息沒有列出載入了哪幾份 CLAUDE.md 的欄位，「路徑只可能來自根目錄 CLAUDE.md」仍是推論（依據：第一個工具呼叫就是 Read 那個路徑，之前沒有任何搜尋）
+- 補測之後根目錄又改了一句（標 `DONE` 後的收尾檢查發現）：「CI 不驗、只能手動同步的區塊」那條新寫的「本檔不再有副本」跟「安裝 / 更新」留著的三條約束矛盾，改成寫明那三條兩邊各一份、要一起改。補測的快照是改這句之前的版本（根目錄 46,319 bytes，改完 46,424）；這句不是指路句，沒有重跑
 
 步驟 7、8（2026-11-16）：
 
