@@ -2,7 +2,7 @@ agents/ 底下兩個「官方備份」的來源與授權
 ==========================================
 
 這個目錄有四個 agent。這個檔只講 code-simplifier.md 與 code-reviewer.md；另外兩個（senior-devops.md、security-auditor.md）
-根目錄 CLAUDE.md 列為自製，不在這個檔的範圍。
+不是官方 plugin 的檔，不在這個檔的範圍。
 這兩個檔跟 Anthropic 官方 plugin（https://github.com/anthropics/claude-plugins-official）裡的同名檔，一個逐字相同、一個有一部分行相同。
 那幾個 plugin 目錄各附一份 Apache License 2.0（全文附在本檔最後）。這裡只寫查得到的事實。
 
@@ -13,12 +13,14 @@ agents/ 底下兩個「官方備份」的來源與授權
    cmp agents/code-simplifier.md "$M/plugins/code-simplifier/agents/code-simplifier.md"   → 逐字相同
    （官方 pr-review-toolkit plugin 裡也有一個同名檔，內容不同，不是這一份的來源。）
 
-2. code-reviewer.md —— 改過的檔（117 行），不是官方檔的副本
+2. code-reviewer.md —— 改過的檔（119 行），不是官方檔的副本。檔案開頭（frontmatter 之後）有一行說明它改過、指到本檔
    它有一部分行與官方的兩個同名檔逐行相同：
    grep -v '^[[:space:]]*$' agents/code-reviewer.md | grep -cxFf "$M/plugins/pr-review-toolkit/agents/code-reviewer.md"   → 13 行（官方那份 56 行）
    grep -v '^[[:space:]]*$' agents/code-reviewer.md | grep -cxFf "$M/plugins/feature-dev/agents/code-reviewer.md"         → 10 行（官方那份 46 行）
-   相同的是 frontmatter 的幾行、開頭那一段、「Review Scope」「Core Review Responsibilities」兩節的標題與條目、「Output Format」的標題。
-   與官方兩份不同的地方：frontmatter 的 description；「Scope Discipline」「Work Order」「Fowler Smell Baseline」「Severity」四節（官方兩份都沒有這幾個標題）；
+   兩份都相同的：frontmatter 的 `---` 與 `name`、開頭那一段、「Review Scope」「Core Review Responsibilities」兩節的標題與條目。
+   只與 pr-review-toolkit 那份相同的：frontmatter 的 `model: opus`、`color: green`，與「Output Format」這個標題
+   （feature-dev 那份是 `model: sonnet`、`color: red`、多一行 `tools:`，沒有「Output Format」這個標題）。
+   與官方兩份都不同的地方：frontmatter 的 description；開頭那一行改動說明；「Scope Discipline」「Work Order」「Fowler Smell Baseline」「Severity」四節（官方兩份都沒有這幾個標題）；
    「Output Format」標題底下的內容。其中「Fowler Smell Baseline」改編自 mattpocock/skills（MIT，見 skills/writing-great-skills/LICENSE.txt）。
    最早是哪一個 commit 從哪一份官方檔抄來的，git 紀錄裡沒有寫（`git log -- agents/code-reviewer.md` 最早一筆是 279c8a9，2026-04-24），所以這裡不寫它「源自」哪一份。
 

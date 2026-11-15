@@ -41,6 +41,10 @@
   部署後用全新的 `claude -p` 各跑一發（`docs/measurements/2026-11-14-security-audit-trigger/`）：`/security-audit` 叫得起來；
   只說「做完整安全稽核」時不會自己叫，拿掉 dmi 的對照副本會叫；沒指定輸出目錄時解出 `~/security-audit-skill/claude-dd/run-2`，與預期相同。
   `agents/security-auditor.md` 的 description 改成把全面稽核指向 `/security-audit`。
+- **`agents/` 兩個官方備份補上授權檔 `agents/LICENSE.txt`**：寫明 `code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔逐字相同、
+  `code-reviewer.md` 是改過的檔（只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同），附官方 plugin 目錄的 Apache License 2.0 全文。
+  `agents/code-reviewer.md` 開頭（frontmatter 之後）加一行 HTML 註解，說明這個檔改過、指到 `agents/LICENSE.txt`；審查指示沒有動。
+  兩份 README 的授權表與 `DD_PIPELINE_ARCHITECTURE.md` 的授權段各加一筆。`agents/LICENSE.txt` 不部署
 
 ### Changed
 
@@ -132,13 +136,12 @@
   檔案壞了、是空的、頂層不是物件說「無從判定」；只讀 `~/.claude/settings.json` 一個檔，提示不講成確定沒裝。蓋章區塊沒動，`dd-loop-rev` 不跳
 - **`skills/self-improving-agent`：拿掉指不到東西的安裝小節**：`SKILL.md` 與 `README.md` 的「OpenClaw」「Codex CLI」兩個安裝小節、Platform Support 表對應的兩列刪掉 ——
   Codex 那條指向的 `./scripts/` 安裝腳本不在這個目錄，兩條路這個 repo 都不部署。上游的出處連結與 `clawhub publish` 那兩處沒動
-- **`skills/self-improving-agent`：評分表只留一份**：`agents/memory-analyst.md` 自己的分數定義（Scope：整個專案 3、單檔 1、一次性 0）跟
-  `reference/promotion-rules.md` 的 Scoring Guide（單檔 0、單一目錄 1、整個專案 2、所有專案 3）對不上，現在只指到 Scoring Guide。
-  ⚠️ 行為改變：整個專案適用的條目 Scope 從 3 變 2，總分可能跌破「≥ 6 才建議升級」的門檻（同一條記憶乾跑：新版 2／2／2 = 6、舊版 3／2／3 = 8）。
+- **`skills/self-improving-agent`：評分表只留一份**：`agents/memory-analyst.md` 自己有一份分數定義（Scope：整個專案 3、單檔 1、一次性 0；
+  Durability、Impact 各只有一句問句、沒有刻度），跟 `reference/promotion-rules.md` 的 Scoring Guide（三項都有 0–3 的表；Scope：單檔 0、單一目錄 1、整個專案 2、所有專案 3）對不上。
+  現在只指到 Scoring Guide；讀不到那個檔就不評分、不列升級候選。
+  ⚠️ 行為改變，三項都會變：Scope「整個專案」從 3 變 2、「單檔」從 1 變 0；Durability、Impact 改照表上的刻度打。總分可能升也可能降，有些條目會跌破「≥ 6 才建議升級」的門檻。
+  乾跑過一條記憶（新舊各一發）：舊版 3／2／3 = 8、新版 2／2／2 = 6（仍達門檻；差的 2 分裡 Scope 佔 1 分，另 1 分是 Durability，舊版那一發自己說沒有刻度、是猜的）。
   兩項與上游的差異記在 `skills/self-improving-agent/CLAUDE.md` 檔尾
-- **`agents/` 兩個官方備份補上授權檔 `agents/LICENSE.txt`**：寫明 `code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔逐字相同、
-  `code-reviewer.md` 是改過的檔（只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同），附官方 plugin 目錄的 Apache License 2.0 全文。
-  兩份 README 的授權表與 `DD_PIPELINE_ARCHITECTURE.md` 的授權段各加一筆。這個檔不部署
 
 ## 1.6.14 — 2026-10-30
 

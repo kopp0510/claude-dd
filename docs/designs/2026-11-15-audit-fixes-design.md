@@ -179,11 +179,27 @@ S3 的步驟 3–5（2026-11-15）：
   - 乾跑結果（2026-11-15，兩個 sonnet subagent；預期在派出前寫下：新版 Durability 2、Impact 2、Scope 2，舊版 Scope 3）：新版交回 2／2／2、總分 6，讀的是 `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`（部署版與 repo 這份 `cmp` 相同）；
     舊版（改之前的 `memory-analyst.md`）交回 Durability 3、Impact 2、Scope 3、總分 8。同一條記憶在兩版差 2 分，其中 Scope 差的 1 分是定義不同造成的；Durability 差的 1 分是舊版沒有刻度、它自己說是猜的。
     新版那個 subagent 回報表上「Stable pattern／Architectural truth」「Prevents mistakes／Prevents breakage」的界線沒寫 —— 那是上游表格本身的粗細，沒有動
+  - 更正（步驟 4 審查後）：假設 A11 與下面「採納的小事」只寫了 Scope 從 3 變 2，不完整。舊版的 Durability、Impact 各只有一句問句、沒有刻度，改成照表打分之後這兩項也會變；Scope「單檔」也從 1 變 0。
+    總分可能升也可能降。上面那條乾跑的 8 → 6 仍達門檻，不是「跌破門檻」的例子。`CHANGELOG.md` 與 `skills/self-improving-agent/CLAUDE.md` 已照這個寫
+  - 步驟 4 審查後 `agents/memory-analyst.md` 多一句退路（讀不到評分表時不評分、升級候選清單留空並說明原因）。改完再乾跑兩發（sonnet；預期在派出前寫下）：
+    正常路徑 2／2／2 = 6、候選清單有這一條；路徑改成不存在的檔（其餘逐字相同）→ 沒評分、沒有找別的檔代替、候選清單是空的並說明原因。都與預期相同。
+    兩發都回報「Use the format defined in the `/self-improving-agent:review` skill」那一句要猜 —— 既有的句子，沒有動
 - S4-3 agents 兩個官方備份的授權
   - 內容：新增 `agents/LICENSE.txt`：`code-simplifier.md` 與本機官方 marketplace 副本逐字相同（比對日期與指令）；`code-reviewer.md` 是改過的檔，有部分行與官方 `feature-dev`、`pr-review-toolkit` 的同名檔相同（行數與比對指令）；來源 plugin 目錄附 Apache License 2.0；後面附 Apache-2.0 全文（從本機官方副本的 LICENSE 複製）。兩份 README 的授權表各加一列、`DD_PIPELINE_ARCHITECTURE.md` 授權段加一句
-  - 檔案：`agents/LICENSE.txt`（新）、`README.md`、`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md` `## 未發布`（S4 三項一起寫，含 A11）
+  - 檔案：`agents/LICENSE.txt`（新）、`README.md`、`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md` `## 未發布`（S4 三項一起寫，含 A11）；
+    實際還改了根目錄 `CLAUDE.md`「目錄結構」`agents/` 那一行（計畫漏列），與步驟 4 審查後加的 `agents/code-reviewer.md`（開頭一行改動說明）
   - 驗證（其他方式，純文件）：本機逐 step 跑 ci.yml（「陣列與目錄一致性」用 `ls agents/*.md`，`.txt` 不會被算成 agent）；`cmp` 確認附的全文與本機官方副本的 LICENSE 相同
   - commit：`docs: agents 兩個官方備份補上授權檔（S4-3）`
+
+S4 的步驟 3–5（2026-11-15）：
+
+- 步驟 3：沒有跑 `code-simplifier`，這一段的 diff 全是 Markdown 與純文字。步驟 4：照樣派了 3 個 `code-reviewer`（有一處行為改變與一批引別處的宣稱），0 條 Critical、3 條 Important、7 條 Smells，全部採納；
+  報告在 `docs/reviews/2026-11-15-audit-fixes/S4-{a,b,c,judge}.md`
+- 步驟 4 帶出的改動：`agents/code-reviewer.md` 開頭加一行改動說明（Apache-2.0 第 4 條 (b)；這個檔原本不在 S4-3 的檔案清單）；`agents/memory-analyst.md` 補讀不到評分表時的退路；
+  `skills/self-improving-agent/CLAUDE.md` 的差異清單寫明從 2026-11-15 起、不完整；行為改變的說明改成三項都會變（見 S4-2 的更正）；`agents/LICENSE.txt` 開頭三處說法改準；授權檔的 CHANGELOG 條目移到 `### Added`
+- 步驟 5 的結果見 `S4-judge.md`「處置」
+- 沒做、沒驗證的：沒有重新部署，部署版的 `memory-analyst.md`、`code-reviewer.md` 還是舊的；加了那一行說明的 `code-reviewer.md` 沒有拿去實際審查過；授權標示夠不夠沒有人驗證過；
+  `skills/self-improving-agent/settings.json` 的 `platforms` 仍列 `openclaw`、`codex`；skill 裡 review／promote 兩個子 skill 的候選條件與 Scoring Guide 是兩套說法、`memory-analyst.md` 的 Output Format 指到沒有分數欄位的格式（都是既有的，審查者 A 列在 Not reported）
 
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 

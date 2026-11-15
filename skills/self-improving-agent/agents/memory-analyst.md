@@ -49,7 +49,8 @@ Rate each entry on three dimensions, 0-3 each: **Durability**, **Impact**, **Sco
 What each score means is defined in one place only: the Scoring Guide table in
 `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`. Read that table before scoring and
 use it as written; do not score from memory. If you cannot read the file, say so in the report and
-leave the entries unscored.
+leave the entries unscored. With no scores there are no promotion candidates: in step 5 leave that list
+empty and say why; the other lists do not depend on scores.
 
 Promotion candidates: total score ≥ 6
 

@@ -80,13 +80,22 @@ It is registered automatically by `hooks/hooks.json` — do not add it to `setti
 
 ## Differences from upstream (this copy lives in the claude-dd repo)
 
+This list starts on 2026-11-15 and is not complete: earlier local changes (memory-directory path encoding,
+the hooks' stdin interface and timeout, `$HOME` hook paths, renamed commands, and others) are not listed here.
+For those, read `git log -- skills/self-improving-agent`; the earliest commit of this directory is `7248a15`.
+
 - 2026-11-15: removed the `### OpenClaw` and `### Codex CLI` install subsections and the matching two
   rows of the Platform Support table from `SKILL.md` and `README.md`. The Codex one pointed at
   an install script under `./scripts/` that is not in this directory, and neither route is deployed by claude-dd.
   The upstream credit links and the two `clawhub publish` mentions are unchanged; `settings.json`
   still lists `openclaw` and `codex` under `platforms` (left as upstream wrote it).
-- 2026-11-15: `agents/memory-analyst.md` no longer carries its own score definitions. Upstream had two
-  tables that disagreed (the agent said Scope 3 = project-wide, 1 = one file, 0 = one-time;
-  `reference/promotion-rules.md` says 0 = one file, 1 = one directory, 2 = entire project, 3 = all your projects).
-  The agent now points at the Scoring Guide in `reference/promotion-rules.md`. This changes results: a
-  project-wide entry scores Scope 2 instead of 3, so some entries drop below the `≥ 6` promotion threshold.
+- 2026-11-15: `agents/memory-analyst.md` no longer carries its own score definitions. The copy in `7248a15`
+  (the earliest commit of this directory) had two definitions that disagreed: the agent listed Scope 3 = project-wide, 1 = one file, 0 = one-time,
+  and gave Durability and Impact one question each with no scale; `reference/promotion-rules.md` has a table
+  (Scope 0 = one file, 1 = one directory, 2 = entire project, 3 = all your projects, and a 0-3 scale for the other two).
+  The agent now points at the Scoring Guide in `reference/promotion-rules.md`, and says what to do when that file
+  cannot be read (leave entries unscored, list no promotion candidates). This changes results on all three
+  dimensions, not only Scope: a project-wide entry scores Scope 2 instead of 3, a one-file entry 0 instead of 1,
+  and Durability and Impact now follow the table instead of the agent's own reading of a question.
+  Totals can move either way, and some entries will drop below the `≥ 6` promotion threshold.
+  One dry run on 2026-11-15 (one entry, one run per version): old wording 3/2/3 = 8, new wording 2/2/2 = 6.
