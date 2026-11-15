@@ -29,7 +29,7 @@
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
 | S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
-| S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | IN_PROGRESS | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0.. |
+| S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0..0227f5b |
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | TODO | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | |
 | S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | TODO | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | |
 
@@ -135,6 +135,9 @@ S2 的步驟 3–5（2026-11-15）：
 - 步驟 3 沒有跑：diff 全是 Markdown，沒有程式碼。步驟 4：3 個 `code-reviewer`，0 條 Critical、4 條 Important、5 條 Smells，全部採納；報告在 `docs/reviews/2026-11-15-audit-fixes/S2-{a,b,c,judge}.md`
 - 步驟 4 帶出的改動：`/dd-init` Phase 4 改成直接附一條 `jq`（判法同 `plugin_enabled_state()`），不讓模型自己寫；code-simplifier 取不到起點時改問「這一段從哪個 commit 開始」；task-planner 的 `BLOCKED` 那條改成「專案有 `docs/reviews/` 時先停一律 commit 申報檔」並寫明放哪、寫什麼；dd-loop 補上錯誤印在 stdout 的情況；本檔照抄的規則區塊同步
 - 步驟 5（修完之後）：Phase 4 的指令對 12 份假設定檔的結論與 `plugin_enabled_state()` 逐份相同，文件裡的指令與測過的那份 `diff` 相同；改過字的三處重跑乾跑六臂（Phase 4 的 false／空檔／字串值、規則區塊的多張表／零 commit 先停、code-simplifier 沒記過起點），結果用指令核對都對；本機照 ci.yml 逐 step 跑的結果見這個 commit 的訊息
+- 步驟 7：沒有寫檔。有一條候選要等使用者同意才寫進根目錄 CLAUDE.md「注意事項」查設定檔那一條：指令文字要模型判斷 plugin 啟用狀態時，直接附 `/dd-init` Phase 4 那條 `jq`，不要寫「用 jq 讀」——
+  模型自己寫的 `jq` 會踩三個坑（`//` 把 `false` 當成沒有值、`-r` 印出來分不出字串 "true" 與布林 true、空檔不報錯也不印東西），這一段三個都實測到
+- 步驟 8：範圍只有 `scripts/CLAUDE.md`。修了一句因為這一段而過期的（task-planner 規則區塊「只交代補 CLAUDE.md」）、補了 dd-loop 現在怎麼處理印在 stdout 的錯誤、同步清單加上「認 gate 字串的兩處」
 - 沒驗證的：`claude plugin enable` 與 `claude plugin install` 都沒有實跑（會改真實的 `~/.claude`），只確認 `claude plugin --help` 列有這兩個子指令
 
 ### S3 安裝腳本 `--check`
