@@ -92,16 +92,25 @@ CLAUDE.md（原因見 [CHANGELOG.md](CHANGELOG.md)「1.2.0」）。
 
 這兩個從 repo 與部署清單拿掉了：`/workflow-review:review` 是第三方內容，沒有隨附 LICENSE、查不出上游；`review` skill 只是包它的一層。
 
-安裝腳本**不會**清掉已經部署的那一份 —— 它只新增、覆蓋現行清單上的東西，`--uninstall` 也只認現行清單。
+安裝腳本**不會**清掉已經部署的那一份 —— 它會清的舊檔只有 `~/.claude/commands/` 底下五個舊的 `dd-*.md`（`install-dd-pipeline.sh` 的 `deprecated_dd`），
+skill 目錄與命名空間指令目錄不在內；`--uninstall` 也只認現行清單。
 之前裝過的機器，`git pull && ./install-dd-pipeline.sh --force` 之後自己清：
 
 ```bash
-ls -d ~/.claude/skills/review ~/.claude/commands/workflow-review   # 先看在不在；印 No such file 就是那一個本來就沒有
-rm -rf ~/.claude/skills/review ~/.claude/commands/workflow-review  # 確認是這兩個再刪
+grep -c 'workflow-review' ~/.claude/skills/review/SKILL.md   # 這個 repo 部署的那一份會印一個非 0 的數字（它是包 workflow-review 的一層）
+ls ~/.claude/commands/workflow-review                        # 這個 repo 部署的那一份只有 review.md 一個檔
+rm -rf ~/.claude/skills/review ~/.claude/commands/workflow-review   # 上面兩行都對得上才跑這一行
 ```
+
+- 第一行印 0、或說找不到檔：`~/.claude/skills/review` 不是這個 repo 部署的（或本來就沒有），**不要刪它**，第三行只留 `~/.claude/commands/workflow-review`
+- 第二行找不到目錄、或裡面不只 `review.md`：同理，那個目錄不要照這裡的指令刪
+- `rm -rf` 不會備份。安裝腳本覆蓋檔案前會備份，但它不碰這兩個目錄，所以沒有備份可以撈
 
 - 不清的話兩個檔都還在 `~/.claude/` 底下、Claude Code 照樣讀得到，而 repo 這邊已經沒有對應的檔：之後不會再更新，`--check` 也不會提到它們
 - 自己改過、想留著的，先備份再刪
 - 要取回：`git checkout v1.6.14 -- skills/review commands/workflow-review`（v1.6.14 是它們還在的最後一個版本），
-  把 `"review"` 加回 `PROMOTED_SKILLS`、`"workflow-review"` 加回 `NS_COMMANDS`，並把兩份 README、根目錄 CLAUDE.md、
-  `DD_PIPELINE_ARCHITECTURE.md` 的數字與表格、`tests/test-install.sh` 開頭的斷言改回來（CI 會擋數字與陣列不一致）
+  把 `"review"` 加回 `PROMOTED_SKILLS`、`"workflow-review"` 加回 `NS_COMMANDS`，並把這幾處改回來：
+  兩份 README（安裝步驟第 2、6 步、指令一覽那一列、Promoted Skills 標題與那一列、授權表那一列、`--uninstall` 與升級那兩句）、
+  根目錄 CLAUDE.md（目錄結構的兩個數字）、`DD_PIPELINE_ARCHITECTURE.md`（部署清單那句與授權段）、`tests/test-install.sh` 開頭的斷言、`CHANGELOG.md`。
+  CI 只擋數字與陣列不一致，其餘要自己對（`git show 758dbc9` 是退場那個 commit，照它反著改）。
+  ⚠️ 加回來等於重新收進一份沒有 LICENSE、查不出上游的第三方內容（收編檢查清單第 1 項不過）：先解決授權再加

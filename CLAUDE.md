@@ -13,7 +13,7 @@
 ./install-dd-pipeline.sh --uninstall --yes  # 免確認解除安裝（自動化；非互動環境的詢問一律採預設值）。官方 plugin 的登記不管誰裝的都會拿掉；全域 CLAUDE.md 與備份不動
 ```
 
-> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 8 步迴圈：見 [UPGRADING.md](UPGRADING.md)。
+> 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 8 步迴圈、更新後清掉已退場的元件：見 [UPGRADING.md](UPGRADING.md)。
 
 環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**：tech-diagram-gif 的
 GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。

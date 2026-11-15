@@ -84,7 +84,7 @@ Worth knowing before you run it:
 
 `--check` also compares each deployed skill and agent with this repo, the same way the installer does. One that differs is marked "與 repo 不同" ("differs from the repo"; the installer's output is in Traditional Chinese), which means re-running the installer would overwrite it. A deployed file that cannot be read is marked "無法比對" ("cannot compare") instead. The comparison only reports: it changes no file and does not affect the exit code. Commands, scripts, output styles and the global CLAUDE.md are not compared.
 
-`--uninstall` removes the skills, agents, commands, scripts and output styles this repo deployed — and with the skills, the two global hooks. It also takes claude-md-management and skill-creator out of `enabledPlugins` in `settings.json` and out of `installed_plugins.json`, even if you had installed them yourself before this repo; other plugins are left alone. (That step needs `jq` or `python3` and a file that parses; otherwise it tells you what to remove by hand.)
+`--uninstall` removes the skills, agents, commands, scripts and output styles this repo deployed — and with the skills, the two global hooks. It goes by the current deploy list, so components this repo has since retired (the `review` skill and the `workflow-review` command) stay where they are; neither a re-install nor `--uninstall` removes them — [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)* has the manual cleanup. It also takes claude-md-management and skill-creator out of `enabledPlugins` in `settings.json` and out of `installed_plugins.json`, even if you had installed them yourself before this repo; other plugins are left alone. (That step needs `jq` or `python3` and a file that parses; otherwise it tells you what to remove by hand.)
 
 What it leaves behind, and what that means:
 
@@ -102,7 +102,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 > **`--force` overwrites your global `CLAUDE.md` without asking.** The interactive diff described above only runs *without* `--force`. The previous version is backed up to `~/.claude/backups/pre-install-<timestamp>/` and the path is printed in the completion message, so it is recoverable — but if you have local edits you want to keep, run the installer without `--force` first and choose `k` (keep local).
 
-For upgrades from older layouts and for moving an existing project onto the 8-step cycle, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
+For upgrades from older layouts, for moving an existing project onto the 8-step cycle, and for cleaning up retired components after an update, see [UPGRADING.md](UPGRADING.md) *(Traditional Chinese)*.
 Structural changes over time are in [CHANGELOG.md](CHANGELOG.md) *(Traditional Chinese)*.
 
 ## The core loop: 8-step development cycle
