@@ -30,6 +30,7 @@
 |---|---|---|---|---|---|
 | S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7..fd96d69 |
 | S2 | 審查者思考強度實驗（medium 對 low） | DONE | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I table.py` 能從存下的 stats 重印出表（原本寫 `stats.py`：它要讀不在 repo 的原始紀錄，從存下的 stats 重印的是 `table.py`） | 58fc4ba..024546e |
+| S3 | 計畫審查的計畫與事實放成檔、審查者只拿路徑 | IN_PROGRESS | S2 | 量測文件有真跑的結果：每一發最後一個審查者開始的秒數與 prompt 字元數、每個 subagent 有沒有把審查包讀到結尾、那條重大幾發中幾發；照跑之前寫死的三個關卡寫出「採用／不採用」；不採用時 SKILL.md 與 CHANGELOG 已還原 | dd570e7.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -204,7 +205,27 @@ S2 跑的結果（細節在量測文件「結果」）：
 - 步驟 3、4（2026-11-15）：code-simplifier 改了 `stats.py`、`outside.py`（6 發輸出逐位元組相同）；3 個 `code-reviewer` 的報告與查證在 `docs/reviews/2026-11-15-speed-cost/S2-*.md`，採納 Important 7 條、Smells 3 條，沒有駁回。
   最重的一條：結果文件第一版把「時間花在哪」寫錯（照時間戳，第 4 個審查者開跑時整發已過一半以上，其中至少約 230 秒是裁決者在寫第 2–4 份審查者 prompt；最後一個審查者結束之後只有 94–147 秒），已改
 - 步驟 7：根目錄 CLAUDE.md「注意事項」補三條（`claude -p` 的 10 分鐘背景等待上限、快照放暫存區時的洩題檢查、同一則訊息派的 subagent 錯開開跑）。步驟 8：這一段動到的三份 CLAUDE.md（根目錄、`tests/`、實驗目錄），用 `claude-md-improver` 只審這一段動到的行，能用指令驗的逐項核對過（`run.sh` 的參數與環境變數、stderr 原文、Claude Code 版本、引用的檔存在、`out/` 的檔數、秒數），改了一句秒數的寫法；沒有其他要改的。步驟 7 那三條是我直接寫進去的，沒有先列給使用者同意，回報時列出來讓他否決
-- 沒做、另外問使用者的：計畫審查改成「計畫與事實放成檔、審查者 prompt 只給路徑」（要改 `skills/plan-review/SKILL.md`，省多少沒量過）
+- 沒做、另外問使用者的：計畫審查改成「計畫與事實放成檔、審查者 prompt 只給路徑」（要改 `skills/plan-review/SKILL.md`，省多少沒量過）。使用者 2026-11-15 回「改」→ S3
+
+### S3 計畫審查的計畫與事實放成檔（使用者 2026-11-15 回「改」之後加的）
+
+預估 1 個功能段落。計畫審查 1 輪通過（4 個審查者；重大 0、小事 17 條都照改、駁回 4 條、需使用者決定 0）。方法、判準、預算寫在 `docs/measurements/2026-11-15-plan-review-pack.md`，這裡只列做法與小任務。
+
+改法（只動 `skills/plan-review/SKILL.md` 一份規則檔）：
+- 第 1 步加一項：把審查範圍、計畫全文（含附錄）、事實寫成一個檔（審查包），放 scratchpad、每輪重寫、最後一行是固定的結尾句；寫不了檔就照舊貼
+- 第 2 步：寫了審查包時，範本裡兩組標記那一整段換成一句讀檔指示（路徑、行數、每次 300 行讀到結尾句）
+- 裁決者範本「派審查者」那條加一句：上面是讀檔指示時，《計畫與事實》貼那一句、不貼檔案內容。貼的那條路的字不改
+- 「計畫全文」那條的「整份大文件放不下時，附路徑讓審查者自己讀」留著：它講的是計畫引用的別份大文件，兩條路都適用
+- 「常見錯誤」加一列
+- 跟計畫不同的一處：結尾句不含行數（計畫寫「含總行數」）。行數由 `wc -l` 數、寫在讀檔指示裡，含結尾句那一行；讀到看見結尾句為止，不靠行數
+
+不改：`skills/task-planner/SKILL.md`、`skills/design-brainstorm/SKILL.md`（只寫「交 plan-review」）、兩份 README。`diagrams/src/CLAUDE.md` 規定 plan-review 第 1–5 步改了要回頭對 `gen_review.py`，S3-2 逐框對一次、記結論。
+不跑安裝腳本：部署由使用者，回報時講明還沒部署。不新增 `tests/` 的測試；description 與觸發條件不動，不做「會不會自己叫」的測試。
+
+小任務：
+- **S3-1 判準與實驗輸入**。檔案：量測文件（方法、判準）、`fill.py`、`readcheck.py`、目錄 CLAUDE.md、本節與進度表、根目錄 CLAUDE.md 的指路句。驗證（不寫測試，理由：一次性的量測腳本）：`fill.py check` 回「相同」，把輪次改填 2 會紅。commit：`docs: 計畫審查材料放檔的實驗輸入與判準（S3-1）`
+- **S3-2 改 SKILL.md 與 CHANGELOG**。驗證：`grep -rn '\$[0-9]' skills/plan-review/SKILL.md` 沒有輸出；`git diff` 裡貼的那條路的句子沒被刪改（只有新增）；`gen_review.py` 逐框對過；本機照 CI 逐 step 跑全過。commit：`feat: plan-review 的計畫與事實改成放檔、審查者只拿路徑（S3-2）`
+- **S3-3 跑驗證、寫結果**。真跑 2 發（必要時補 1 發）、大檔臂、乾跑三臂、貼的那條路一臂；報告去識別後進 `out/`，commit 前 `grep -rnE -- '-Users-|/Users/|-private-tmp-|/private/tmp' docs/measurements/2026-11-15-plan-review-pack*` 要 0 筆。不採用時在這裡還原 SKILL.md 與 CHANGELOG。commit：`docs: 計畫審查材料放檔的實驗結果（S3-3）`
 
 ### 要新增的測試清單（全部在 `tests/test-install.sh`）
 
