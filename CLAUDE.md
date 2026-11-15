@@ -15,17 +15,11 @@
 
 > 從舊版（全量部署 / 分桶時期）升級、既有專案升級到 8 步迴圈、更新後清掉已退場的元件：見 [UPGRADING.md](UPGRADING.md)。
 
-環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**：tech-diagram-gif 的
-GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。
-只偵測提示、不代裝系統套件。最後一行報**自動壓縮視窗**有沒有設（`autocompact_state`，讀 `~/.claude/settings.json`
-最上層與 `modelSettings` 的 `autoCompactWindow`、以及這個 shell 的 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`）：只提示、不改檔、不影響結束碼。
-只讀這一個設定檔，專案層等其他設定檔不讀，所以「都沒設」那一行印的是「沒有有效的設定（其他設定檔沒查）」，不寫成確定沒設。
-印出的句子只寫官方文件原文撐得住的說法（出處在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15），「幾萬才壓縮」這類數字不進安裝輸出。
+環境檢查與 `--check` 印什麼、哪些只提示不改檔：見 `DD_PIPELINE_ARCHITECTURE.md`「安裝腳本」一節，改這幾段輸出之前先讀。改的時候守這三條：
 
-`--check` 的 skills、agents 兩段除了看在不在，還比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`）：部署版與 repo 這份不同，
-那一行印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行計數；只提示、不改檔、不影響結束碼（`tests/test-install.sh` 的 T11）。
-`diff`／`cmp` 回 2 以上（例如部署的檔讀不到）另外印「無法比對」，不併進「不同」：那時重跑安裝會在覆蓋前的備份那一步失敗（2026-11-15 沙盒實跑 rc=1）。
-內容比對只有這兩段有：commands、scripts（gate 住在這層）、output styles、全域 CLAUDE.md 過期了 `--check` 看不出來。
+- 可選項（ffmpeg）只偵測提示、不代裝系統套件
+- 自動壓縮視窗那一行，設定檔只讀 `~/.claude/settings.json` 這一個，專案層等其他設定檔不讀，所以「都沒設」那一行印的是「沒有有效的設定（其他設定檔沒查）」，不寫成確定沒設
+- 印出的句子只寫官方文件原文撐得住的說法（出處在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15），「幾萬才壓縮」這類數字不進安裝輸出
 
 ## 部署清單（使用率盤點制）
 
@@ -156,13 +150,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 
 ## 核心工作法：8 步開發迴圈
 
-骨幹是經實際專案實戰驗證的功能段落迴圈
-（定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章）：
-
-```
-實作+測試 → commit → code-simplifier → code-review → 再測(curl/playwright) → commit
-  → 沉澱本輪所學 → 評分&修正
-```
+總覽（8 步、gate 怎麼擋）見 `DD_PIPELINE_ARCHITECTURE.md`「核心工作法」；迴圈定義於 `templates/global/CLAUDE.md` §3.9，專案具體版由 `/dd-init` 蓋章。
 
 各步的做法細則（起點與範圍怎麼算、步驟 4 怎麼派工與落地報告、第 7、8 步的範圍與發現怎麼分類）在 `skills/dd-loop/SKILL.md`；
 全域模板 §3.9 只留 8 步清單、不能跳的關卡與驗證教訓，並規定段落開始時、步驟 3、4、8 開始前呼叫它。
@@ -173,14 +161,6 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 要跨好幾段的工作由 `task-planner` 拆成段落與小任務：小任務只走步驟 1、2，全部 commit 完，整段才跑 3–8，
 進度表連同規則區塊照抄進專案的設計文件。照抄進去的那份不會跟著 skill 更新 ——
 改了 `skills/task-planner/SKILL.md` 的規則區塊，已經在用的專案手上仍是舊版。
-
-搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
-並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
-`~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有
-`core.hooksPath` 時改掛該目錄，見下方「開發本 repo」）— 改碼目錄缺
-CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
-SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit
-（就算沒改程式碼）一樣擋；細節見 `scripts/CLAUDE.md`。
 
 ## 開發本 repo
 
@@ -262,8 +242,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   與 `DD_OUTPUT_STYLES ↔ output-styles/*.md`），數字宣稱只驗 skills / agents / commands；MCP 表格會靜靜過期。
   **CI 不驗、只能手動同步的區塊**（不寫總數 — 沒窮舉過，寫個數字只會變成下一個過期宣稱）：
   兩份 README 的安裝步驟清單、指令一覽、官方 Plugins、第三方 Plugin 推薦、MCP 必要表、
-  MCP 可選表、前置需求段落、MCP 退化狀態表、**CLAUDE.md 維護規則那幾條**（含 `--no-verify` 與 gate-guard 那條）、**「為什麼要巢狀」
-  底下的 gate 對策段落**、**散文裡的「8 步／8-step」字樣**（四方只數圍欄內的編號項、
+  MCP 可選表、前置需求段落、MCP 退化狀態表、**清理外部殘留那一節（英文版是另外寫的翻譯）**、**CLAUDE.md 維護規則那幾條**（含 `--no-verify` 與 gate-guard 那條）、**「為什麼要巢狀」
+  底下的 gate 對策段落**、**散文裡的「8 步／8-step」字樣**（四方、第五方是 CI 的兩道步數防線，定義見 `DD_PIPELINE_ARCHITECTURE.md`「CI 防線」一節最後一段；四方只數圍欄內的編號項、
   第五方只認箭頭行與安裝腳本輸出，標題與內文的步數字樣五道防線一道都碰不到；要改步數時自己
   `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，不要在這裡寫死數量）、
   **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
@@ -286,14 +266,6 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   `set -e` 當場中止，而且**連一個字都不印** — 沒有錯誤訊息、沒有半截輸出，
   看起來就跟「這段檢查跑完了、沒事」一模一樣。所以「先確認抓到東西非空、再計數」
   這個順序有承重，不可為了整理而對調（`ci.yml` §7.2 那兩道護欄即此形狀，註解已標明）
-- **迴圈步數**已有 CI 兩道防線。**四方一致**（全域模板 §3.9 ↔ `/dd-init` 蓋章版 ↔
-  兩份 README 清單 ↔ `dd-loop-version` 標記）只數**編號清單**；**第五方**（2026-09-04 補）
-  管它看不到的兩類使用者可見文案 — ①安裝腳本印出的「N 步開發迴圈」（排除註解行，
-  那裡是有日期的歷史敘述）②一行式箭頭摘要（合併續行後，箭頭 ≥3 且同時含 commit
-  與 review 才認定；CHANGELOG／UPGRADING 為歷史敘述故排除）。兩次踩雷都是靜默失效
-  不報錯：2026-08-31 迴圈 6→7→8 時標記停在 `6step`（舊專案跑 `/dd-init` 會被誤判為
-  最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
-  `DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
 - **動到 `commands/dd-init.md` 的蓋章區塊就必須跳 `dd-loop-rev`**（前例是一個段落跳一次：v1.6.6–v1.6.10 間 S3、S6、S8 各跳一號，
   同段的 review 修正 commit 不另跳）。CI「dd-init 蓋章區塊改了就要跳 dd-loop-rev」只是下限：拿最新的 `v*` tag 比，
   區塊內容變了而 rev 沒變（或 rev 變小）才紅燈 —— 發版後已經跳過一次，下一段再改區塊沒跳，它擋不到，
@@ -388,7 +360,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 3 | **事實驗證（不只 CLI）** | 任何靠名稱推論不出來的東西都要實跑證實：`npm install` / CLI args / 套件名（`npm view <pkg>` 或官方 README），以及**路徑算式、編碼規則、目錄命名**（實際跑一次拿真實輸出對照）。2026-09-12 踩過：self-improving-agent 五處 `%2F` 編碼算出的記憶體目錄從來不存在，收編時沒人跑過一次 | 無法證實 → 不收 |
 | 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
 | 5 | **跨平台冪等** | 無硬編碼絕對路徑、無單一 OS 假設，重跑安裝結果一致；設定與狀態分離 | 不冪等 → 改寫 |
-| 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如下節「殘留清理」所述） | 重疊 → 評估取代或不收 |
+| 6 | **撞名 / 重疊** | 與既有 skill 比 `description`，功能不重複、命名不衝突（避免污染如 `README.zh-TW.md`「清理外部殘留（手動）」所述） | 重疊 → 評估取代或不收 |
 | 7 | **納管** | 全過後：加進 `install-dd-pipeline.sh` 的 `PROMOTED_*` 部署陣列 → **同批**同步兩份 README 的 Promoted Skills 表格與數字、本檔「目錄結構」的總數、`DD_PIPELINE_ARCHITECTURE.md` 的元件數字、以及三處授權段的 vendored 清單 → 跑 `--force` → 納入 source of truth | — |
 
 > **典型踩雷**（實際評估）：某第三方 UI/UX skill 需要 `npm -g` 安裝的 binary 外加 Python runtime，
@@ -407,21 +379,3 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 > 要知道 port 哪個 commit 加的，用 `git log -S '<原句>'` 看 commit 訊息；作者欄看不出來（上游的句子也是 port 的維護者 commit 進來的）。
 > ⚠️ **shallow clone 先 `git fetch --unshallow`**：邊界之前就有的句子，`git log -S` 會算在邊界那個不相干的 commit 頭上，
 > exit 0、看起來有答案；邊界之後加的才查得對（2026-10-19 depth 1 與 depth 50 實測）。
-
-## 殘留清理（手動）
-
-`install-dd-pipeline.sh` 只「部署」`BUILTIN_SKILLS`，**不會清掉**外部來源（如 tresor、舊版安裝包）放進 `~/.claude/skills/` 的殘留。已知會污染目錄的型態：
-
-| 類型 | 範例 | 風險 |
-|---|---|---|
-| 安裝包 zip | `~/.claude/skills/*.zip` | 純垃圾，不會載入但佔空間 |
-| 分類子目錄 | `~/.claude/skills/{communication,development,documentation,git,security}/` | 內含同名 skill（如 `code-reviewer`、`security-auditor`），與 DD 的同名 agent 撞名 |
-
-排查指令：
-
-```bash
-find ~/.claude/skills -maxdepth 1 -name '*.zip'                    # 查 zip 殘留（zsh 下 glob 無匹配會直接報錯，故用 find）
-ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null  # 查分類目錄殘留
-```
-
-確認非 DD pipeline 內容後手動 `rm` / `rm -rf` 清掉。

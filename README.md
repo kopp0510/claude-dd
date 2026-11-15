@@ -279,7 +279,21 @@ claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp@latest
 
 ## Cleaning up foreign leftovers (manual)
 
-The installer only manages what **this repo deployed**. Leftovers written into `~/.claude/skills/` by other sources — third-party skill installers, older install bundles — have to be cleaned up by hand. The known shapes and the commands to find them are documented in [CLAUDE.md, "殘留清理（手動）"](CLAUDE.md#殘留清理手動) *(Traditional Chinese)*, kept there as the single maintenance source so two documents can't go stale independently.
+The installer only manages what **this repo deployed**. Leftovers written into `~/.claude/skills/` by other sources — third-party skill installers, older install bundles — have to be cleaned up by hand. The known shapes:
+
+| Type | Example | Risk |
+|---|---|---|
+| Install-bundle zip | `~/.claude/skills/*.zip` | Pure junk: never loaded, just takes up space |
+| Category subdirectories | `~/.claude/skills/{communication,development,documentation,git,security}/` | Contain skills with the same names as this repo's agents (e.g. `code-reviewer`, `security-auditor`) and collide with them |
+
+To find them:
+
+```bash
+find ~/.claude/skills -maxdepth 1 -name '*.zip'                    # zip leftovers (in zsh an unmatched glob is an error, hence find)
+ls -d ~/.claude/skills/{communication,development,documentation,git,security} 2>/dev/null  # category-directory leftovers
+```
+
+Once you have confirmed they are not DD pipeline content, remove them by hand with `rm` / `rm -rf`.
 
 ## License
 
