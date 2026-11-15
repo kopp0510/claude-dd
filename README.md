@@ -295,6 +295,7 @@ Vendored content, each shipping its own upstream licence file:
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | attribution/NOTICE terms apply |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors (style rules only; see the file for exactly which parts) |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `agents/LICENSE.txt` | Apache-2.0 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) — `agents/code-simplifier.md` is byte-identical to the file of the same name in the official `code-simplifier` plugin; `agents/code-reviewer.md` is a modified file that shares only some lines with the files of the same name in the official `pr-review-toolkit` and `feature-dev` plugins (the file lists the comparison commands and line counts) |
 | `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) (Cloudflare, Inc.) |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) (rules only; see the file for where each section went) |
 | `commands/workflow-review/` | **Not stated** | Alireza Rezvani — vendored in `7248a15`. No LICENSE file came with it and the upstream repo was never recorded, so no licence can be assumed. Attribution is kept in `review.md`'s header |

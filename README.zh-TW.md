@@ -311,6 +311,7 @@ vendored 內容，各自附上游授權檔：
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | 有歸屬／NOTICE 要求 |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
+| `agents/LICENSE.txt` | Apache-2.0 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) —— `agents/code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔逐字相同；`agents/code-reviewer.md` 是改過的檔，只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同（比對指令與行數見該檔） |
 | `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（Cloudflare, Inc.） |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（只借規則，逐節去向見該檔） |
 | `commands/workflow-review/` | **未標示** | Alireza Rezvani —— 於 `7248a15` 收編。未隨附 LICENSE、上游 repo 從未記錄，因此不可假設其授權。歸屬記在 `review.md` 檔頭 |

@@ -130,6 +130,15 @@
 - **`/dd-init` Phase 4：plugin 有沒有啟用看值，不提示「安裝腳本會裝」**：原本寫「`enabledPlugins` 是否含」，停用（鍵在、值為 `false`）會被當成已啟用；
   原本的提示「`./install-dd-pipeline.sh --force`（腳本會裝）」也不對，安裝腳本不下載 plugin。現在指令裡直接附一條 `jq`（判法跟安裝腳本的 `plugin_enabled_state()` 相同：剛好一個 JSON 物件、值是布林 `true` 才算啟用），停用提示 `claude plugin enable`、沒有鍵提示 `claude plugin install`，
   檔案壞了、是空的、頂層不是物件說「無從判定」；只讀 `~/.claude/settings.json` 一個檔，提示不講成確定沒裝。蓋章區塊沒動，`dd-loop-rev` 不跳
+- **`skills/self-improving-agent`：拿掉指不到東西的安裝小節**：`SKILL.md` 與 `README.md` 的「OpenClaw」「Codex CLI」兩個安裝小節、Platform Support 表對應的兩列刪掉 ——
+  Codex 那條指向的 `./scripts/` 安裝腳本不在這個目錄，兩條路這個 repo 都不部署。上游的出處連結與 `clawhub publish` 那兩處沒動
+- **`skills/self-improving-agent`：評分表只留一份**：`agents/memory-analyst.md` 自己的分數定義（Scope：整個專案 3、單檔 1、一次性 0）跟
+  `reference/promotion-rules.md` 的 Scoring Guide（單檔 0、單一目錄 1、整個專案 2、所有專案 3）對不上，現在只指到 Scoring Guide。
+  ⚠️ 行為改變：整個專案適用的條目 Scope 從 3 變 2，總分可能跌破「≥ 6 才建議升級」的門檻（同一條記憶乾跑：新版 2／2／2 = 6、舊版 3／2／3 = 8）。
+  兩項與上游的差異記在 `skills/self-improving-agent/CLAUDE.md` 檔尾
+- **`agents/` 兩個官方備份補上授權檔 `agents/LICENSE.txt`**：寫明 `code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔逐字相同、
+  `code-reviewer.md` 是改過的檔（只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同），附官方 plugin 目錄的 Apache License 2.0 全文。
+  兩份 README 的授權表與 `DD_PIPELINE_ARCHITECTURE.md` 的授權段各加一筆。這個檔不部署
 
 ## 1.6.14 — 2026-10-30
 
