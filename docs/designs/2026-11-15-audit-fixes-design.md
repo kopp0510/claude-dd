@@ -31,7 +31,7 @@
 | S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
 | S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0..0227f5b |
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
-| S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | TODO | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | |
+| S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | IN_PROGRESS | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea.. |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -164,6 +164,8 @@ S3 的步驟 3–5（2026-11-15）：
 ### S4 vendored 內容與授權
 
 開工前提：①查 GitHub 上游的 `code-simplifier` plugin 目錄有沒有 LICENSE（repo 名稱從本機 `~/.claude/plugins/known_marketplaces.json` 讀，讀不到就不查、照 A10 寫）②讀 `skills/self-improving-agent/CLAUDE.md` 有沒有記「與上游的差異」，有就同批更新。
+
+開工前提的結果（2026-11-15）：①`known_marketplaces.json` 記的 repo 是 `anthropics/claude-plugins-official`；`gh api repos/anthropics/claude-plugins-official/contents/plugins/code-simplifier --jq '.[].name'` 回 `.claude-plugin`、`LICENSE`、`agents` —— 上游線上版有 LICENSE。本機官方副本（`~/.claude/plugins/marketplaces/claude-plugins-official/`）的 `plugins/code-simplifier/LICENSE`、`plugins/feature-dev/LICENSE`、`plugins/pr-review-toolkit/LICENSE` 與根目錄 `LICENSE` 用 `cmp` 比都相同（Apache License 2.0，202 行）。②`skills/self-improving-agent/CLAUDE.md` 沒有記與上游差異的段落（`grep -n '上游\|差異\|upstream'` 0 筆），S4-1 在檔尾新開一節。
 
 - S4-1 拿掉 self-improving-agent 指不到東西的安裝小節
   - 檔案：`skills/self-improving-agent/SKILL.md`、`skills/self-improving-agent/README.md`（刪 `### Codex CLI` 與 `### OpenClaw` 兩個安裝小節、Platform Support 表對應的兩列）、`skills/self-improving-agent/CLAUDE.md`（記這次與上游的差異）。上游的出處連結保留；`clawhub publish` 那兩處不動（A1）
