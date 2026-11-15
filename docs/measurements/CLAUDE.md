@@ -43,7 +43,7 @@ prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**
 
 ## 已知的坑
 
-（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步最後的「量測前先關掉 advisor」、「開發本 repo」的「沙盒用 `claude -p` 測行為前」一條，與「注意事項」裡跑實驗才遇到的幾條）
+（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步最後的「量測前先關掉 advisor」、「開發本 repo」的「沙盒用 `claude -p` 測行為前」一條，與「注意事項」裡跑實驗才遇到的幾條；最後一條「同一個對話派出的 subagent」是 2026-11-16 新加的，不是搬來的）
 
 - **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型），
   assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發。
@@ -72,3 +72,8 @@ prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**
   `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`（2.1.325 實測；2026-11-15 `docs/measurements/2026-11-15-reviewer-effort/run.sh`）；跑完 grep stderr 有沒有那句（那支 `run.sh` 用 `2>&1` 把 stderr 併進父 log；stderr 另存的要 grep 那個檔）
 - **受測 session 的快照放在 scratchpad 底下時，它找得到 scratchpad 裡別的檔**：2026-11-15 有個審查者 `cd` 到快照的上三層（暫存區的根）去 `find` 計畫提到的探針腳本。
   洩題檢查要掃「快照以外的暫存區絕對路徑」，只認家目錄、`../` 會漏（那個目錄的 `outside.py`）；答案檔不要跟快照放在同一棵暫存樹下
+- **同一個對話派出的 subagent，context 裡的 CLAUDE.md 是對話開始時載入的那一版**：改了 CLAUDE.md（搬內容、加指路句）之後，不能在同一個對話派 subagent 來驗「照新版走不走得到」。
+  2026-11-16 三個乾跑的 general-purpose subagent 都回報 context 裡的根目錄 CLAUDE.md 是改之前的內容、沒有指路句；它們會去讀新檔，線索是 gitStatus 裡 commit 標題寫了新檔的路徑。
+  要驗就開全新的 `claude -p`，而且不要在 repo 的 cwd 跑（gitStatus 一樣帶 commit 標題；設計文件與 CHANGELOG 也點名新檔，這兩處會不會被讀到沒測）：
+  用 `git archive HEAD | tar -x -C <目錄>` 解出沒有 git 歷史的快照，拿掉點名答案的檔。判定挑只在目標檔才有的字串（先 `grep -cF` 確認別的常駐檔是 0 次），另記第一次碰到目標檔之前跑過哪些工具；
+  沒有「拿掉指路句」的對照臂時只能寫「拿得到」，不能寫「是指路造成的」（做法與結果見 `docs/designs/2026-11-15-audit-fixes-design.md` 的 S6「步驟 5 補測」）
