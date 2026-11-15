@@ -51,6 +51,7 @@
   上限取自最新 `v*` tag 那一版的上限檔：在 commit 裡把數字調高不會生效，要等發下一版。
   ⚠️ 這一點要等帶上限檔的版本發出去之後才成立。在那之前 pre-commit 讀 `HEAD` 那一版（同一個 commit 調高沒有用，但先單獨 commit 調高、下一個 commit 再加字就過得去）、
   CI 讀 push 上來的那一份；每次檢查都印出上限取自哪裡。取不到上限或上限檔內容不合法一律不通過。
+  `tests/test-gate.sh` 加 ⑯：在拋棄式 repo 裡經過真的 `scripts/githooks/pre-commit` 跑情境，ubuntu 與 macOS（`/bin/bash` 3.2）兩個 job 都跑；第二、三個參數可以換成改壞的腳本做變異對照。
   起因與各時間點量到的大小在 `docs/designs/2026-11-15-audit-fixes-design.md` 的 S7；兩種跑法各擋什麼、繞得過的路、變異對照在 `scripts/githooks/CLAUDE.md`
 
 ### Changed
