@@ -27,6 +27,7 @@ jobs:
             scripts/check-claude-md.sh \
             scripts/dd-init-upgrade.sh \
             scripts/githooks/pre-commit \
+            scripts/githooks/claude-md-size.sh \
             skills/self-improving-agent/hooks/error-capture.sh \
             skills/self-improving-agent/hooks/test-error-capture.sh \
             skills/gate-guard/hooks/guard-no-verify.sh \
@@ -543,6 +544,18 @@ jobs:
 
           [ $fail -eq 0 ] && echo "✅ 兩類文案都與 $n 步一致"
           exit $fail
+
+      # 腳本與上限檔在 scripts/githooks/（本 repo 自用、不部署），說明在那一層的 CLAUDE.md。
+      # 同一支腳本帶 --staged 是 pre-commit 在跑的那一半；這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone）
+      - name: 根目錄 CLAUDE.md 大小上限（以最新 v* tag 那一版的上限為準）
+        run: |
+          # 腳本自己遇到「沒有 v* tag」會退回去讀工作目錄的上限檔。這個 repo 有 v* tag，
+          # 在這裡遇到代表 checkout 沒帶 tag：上限會變成這次 push 自己寫的數字，所以先擋下
+          if [ -z "$(git tag --list 'v*')" ]; then
+            echo "❌ 找不到任何 v* tag —— 可能是 checkout 沒設 fetch-depth: 0（shallow clone 不帶 tag），或 tag 還沒推上來"
+            exit 1
+          fi
+          scripts/githooks/claude-md-size.sh
 
       # 情境本體在 tests/test-gate.sh（2026-10-01 從這裡搬出去，macOS 那個 job 才能共用同一份）
       - name: gate 段落起點（SKIP 跳過的目錄，之後的正常 commit 要補上 CLAUDE.md）

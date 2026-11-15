@@ -131,7 +131,8 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 全部 commit 完，整段才跑 3–8），進度表寫進專案 `docs/designs/` 的設計文件，換 session 照表接手。
 
 本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md
-「開發本 repo」一節。
+「開發本 repo」一節。同一支 hook 在呼叫 gate 之前先查根目錄 CLAUDE.md 的大小上限（2026-11-16 加的，
+只有本 repo 有、不部署），說明在 `scripts/githooks/CLAUDE.md`。
 
 gate 怎麼掛、SKIP 怎麼算（這段 2026-11-16 從根目錄 CLAUDE.md 搬來，與上面「配套：」那段講同一件事，改的時候兩段一起改）：
 
@@ -147,7 +148,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 
 | 檢查 | 防什麼 |
 |---|---|
-| bash -n（安裝腳本）+ shellcheck（warning 級，11 支腳本） | 語法與常見 bash 陷阱 |
+| bash -n（安裝腳本）+ shellcheck（warning 級，12 支腳本） | 語法與常見 bash 陷阱 |
 | `--help` smoke test | 腳本連起碼的執行都掛掉 |
 | Skill hook 路徑驗證（`validate_skill_hooks`） | vendored skill 帶相對路徑 hook 混進部署 |
 | tech-diagram-gif 幾何閘門自我測試（`test-verify-geometry.py`） | 檢查腳本自己壞掉而不自知 —— 全判通過（漏檢）與全判失敗（假陽性）外觀上都像正常結果 |
@@ -163,6 +164,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 部署內容裡的 `~/.claude/` 路徑要指得到東西（scripts／tests／commands／skills／agents／output-styles／templates） | 指向只有作者本機才有的檔（例如 `~/.claude/rules/<本機檔>`）的死指標：第一層不是本 repo 部署的目錄、也不是 Claude Code 自己的就紅燈；部署目錄則部署後要真的有（repo 有那個檔，且不是 `scripts/` 第一層以外、`output-styles/` 非 `.md`、`commands/` 第一層非 `dd-*.md`、命名空間 `README.md` 這幾類不部署的）。`projects/`、`plugins/` 與含 `<` `*` `{` `$` `...` 的佔位寫法只驗第一層；路徑字元不列舉 ASCII（中文檔名不會被截斷成目錄本身）；零命中時紅燈而不是放過 |
 | 現行蓋章區塊的每一行都在升級清單裡（`commands/dd-init.md` 區塊與區塊外的 React 片段 ↔ `scripts/dd-init-upgrade.sh --list`） | 改了蓋章區塊卻沒更新升級腳本的清單 —— 下次升級時改過的行被當成專案自己的內容留下、新舊並存，不報錯。抽到空區塊、第一行不是 `## 開發流程`、沒有以 `## CLAUDE.md 維護` 的內容結尾（被第 0 欄的 ``` 截斷）時紅燈而不是放過 |
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
+| 根目錄 CLAUDE.md 大小上限（`scripts/githooks/claude-md-size.sh`；上限取自最新 `v*` tag 那一版的 `scripts/githooks/claude-md-max-bytes`，那個 tag 還沒有這個檔時取自這次 push 的那一份） | 根目錄 CLAUDE.md 超過上限。pre-commit 跑的是同一支腳本，這一步補它擋不到的：`--no-verify`、沒設 `core.hooksPath` 的 clone。先查有沒有 `v*` tag —— shallow clone 不帶 tag，上限會變成這次 push 自己寫的數字 |
 | gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳） | SKIP 跳過的目錄之後被放過；中文、根目錄路徑漏查 |
 | dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個；`--apply` 跟著 symlink 寫到專案外。要 `fetch-depth: 0`（兩個 job 都設了） |
 | Sandbox 端到端非互動安裝（`tests/test-install.sh`） | 只有執行期才會出現的安裝 bug；jq 與 python3 兩條路徑對同一份設定檔結論不同；覆蓋或清除前沒備份（含 symlink 目標）；plugin 登記寫錯或移除不乾淨；完成訊息把沒做的講成做了；`--check` 把過期的 skill、agent 印成「已安裝」。互動選單測不到 |

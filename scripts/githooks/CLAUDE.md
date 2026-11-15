@@ -14,7 +14,8 @@ claude-dd 這個 repo 自己用的 pre-commit（dogfood）與它呼叫的大小�
 2026-11-16（S7）加的。只管根目錄那一份 `CLAUDE.md`，量整個檔的 bytes。來由與當時量到的大小在
 `docs/designs/2026-11-15-audit-fixes-design.md`「S7 根目錄 CLAUDE.md 大小上限」一節。
 
-CI 那一半（`.github/workflows/ci.yml` 裡呼叫它的 step）在 S7-2 接上；下面寫「CI」的地方，在那之前還不成立。
+CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上限」那一步（`lint` job）：先查有沒有任何 `v*` tag，沒有就不通過
+（shallow clone 不帶 tag，腳本會退回去讀工作目錄的上限檔，上限就變成這次 push 自己寫的數字），再跑不帶參數的那一種。
 
 | | `claude-md-size.sh --staged`（pre-commit 跑） | `claude-md-size.sh`（不帶參數，給 CI 跑） |
 |---|---|---|
