@@ -133,6 +133,17 @@
     實跑確認:全新 repo `--start-segment` → `--segment-base` 印 `4b825dc…`、exit 0。
     ⚠️ **而「空樹起點 + `--segment-base`」目前沒有任何測試覆蓋**(既有的 `--segment-base` 斷言,base 都是真 commit 或不存在)。
 
+    **`--segment-base` 硬失敗時,stderr 講的下一步分四種**(2026-11-15;四種都是 exit 1、stdout 不印東西):
+    - 起點檔不存在 → 「沒記過」,叫人段落開始前先跑 `--start-segment`
+    - 起點不在目前分支的歷史裡、有共同祖先 → 印出共同祖先的完整 sha,說範圍可以從它算(只會比原本寬),並寫明這一段還沒做完時不要重跑 `--start-segment`
+    - 起點不在歷史裡、連共同祖先都沒有 → 叫人改用進度表 commits 欄的起點,沒有進度表就問使用者
+    - 起點檔在、內容不是 commit(物件被 git 清掉,或檔案壞了)→ 同上一種的下一步
+
+    修的洞:原本四種共用一句「段落開始前先跑 `--start-segment`」。起點那個 commit 被 `git commit --amend` 掉之後照做,起點移到現在的 HEAD,
+    `git diff <起點> --stat` 是 0 行 —— 這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡(拋棄式 repo 實跑)。
+    ⚠️ **共同祖先只印在 stderr**:印到 stdout 的話,`base=$(… --segment-base)` 的呼叫端會把它當成起點拿去用,等於把硬失敗改成軟退化。
+    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次(它照這幾句分情況)。
+
     **前兩處「往寬退」是刻意的** —— 退窄會把欠帳 / review 要求洗掉，而那正是這兩個檢查要擋的事。
     **`--segment-base` 必須硬失敗**：它的輸出要餵 `git diff`，印空字串或錯的 base 是文件點名的地雷。
     ⚠️ **所以 `resolve_fork_base` 只抽「機制」不抽「政策」** —— 共用的是
@@ -154,6 +165,8 @@
     | `resolve_fork_base` 的 fork-point 整支拿掉 | 情境 7 的三則(`owed_dirs`)**與** ⑩ 的三則(`reviews_missing`)**各自獨立** —— 這才是「共用函式對兩個呼叫端都承重」的證據(3 + 3,不是「總共 N 紅」) |
     | 只拿掉 `resolve_fork_base` 共用那句警告 | 情境 7 與 ⑩ 的 `said` 各一則 ⚠️ **它只證明共用那句被釘住,不證明各呼叫端自己那句被釘住** |
     | 只打 `reviews_missing` 的「沒有共同祖先」那一支(改成擋 / 拿掉它的警告) | ⑪ 的兩則。⚠️ **修正前這兩個變異各 0 紅** —— ⑪ 把 `docs/reviews` 連目錄刪了,opt-in 判準不成立、那一支根本沒執行到;而 `said "找不到共同祖先"` 是被 `owed_dirs` 的訊息頂掉的 |
+    | `--segment-base` 那一支整段改回 2026-11-15 之前的寫法(四種共用一句「段落開始前先跑」) | ⑪ 的 `said "進度表"` 與 `not_said "段落開始前先跑"`;⑭ 的 `said <共同祖先 sha>`、`said "不要重跑"`、`not_said`,與壞起點檔那則的兩個 `said`、一個 `not_said`。各則 expect(block)照樣綠 —— 舊版一樣是硬失敗 |
+    | 有共同祖先那一支多一行 `echo "$fork"`(印到 stdout) | 只有 ⑭ 的「起點被 amend 掉:stdout 是空的」 |
     ⚠️ 修法與三個空洞斷言陷阱見 `tests/CLAUDE.md`。
   - ⚠️ **`shellcheck -S warning` clean 不代表變數有局部化**:
     曾有函式宣告了**死的** `local`,真正用的變數卻是**漏宣告的全域** —— shellcheck 乾淨,一個字都沒說。

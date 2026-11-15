@@ -11,7 +11,8 @@
 # 段落起點：SKIP 不是豁免。起點記在 .git/dd-segment-base（worktree 各自一份），之後的正常
 #   commit 會連「起點以來跳過檢查、到現在還沒補記憶檔」的目錄一起查
 #   --start-segment  段落開始前記起點（還有欠帳時拒絕：起點往後移會把欠帳洗掉）
-#   --segment-base   印出起點，給迴圈步驟 3、4、8 算整段範圍（沒記過或已失效就失敗，不印空字串）
+#   --segment-base   印出起點，給迴圈步驟 3、4、8 算整段範圍（沒記過或已失效就失敗、stdout 不印東西；
+#                    失效時 stderr 講下一步：有共同祖先就印出來，沒有就叫人用進度表的起點或問使用者）
 # review 報告：專案有 docs/reviews/ 目錄時（= 採用了這個慣例），--start-segment 會要求
 #   「上一段的 commit 範圍內有新增 docs/reviews/S*.md」。沒有那個目錄的專案完全不受影響。
 #   目的不是讓說謊變不可能（報告內容真偽驗不出來），是把「靜默省略步驟 4」這個選項拿掉
@@ -246,11 +247,32 @@ case "$1" in
         exit 0
         ;;
     --segment-base)
-        if read_base && { [ "$base" = "$EMPTY_TREE" ] || git merge-base --is-ancestor "$base" HEAD 2>/dev/null; }; then
-            echo "$base"
-            exit 0
+        # 失敗的三種情況下一步不同，訊息分開講（2026-11-15）。原本只有一句「段落開始前先跑 --start-segment」：
+        # 起點被 amend 掉時照做，起點移到現在的 HEAD，這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡。
+        # ⚠️ 三種都維持 exit 1、stdout 空：共同祖先只印在 stderr，印到 stdout 的話 `base=$(… --segment-base)`
+        #    的呼叫端會把它當成起點拿去用（退化政策見上方 resolve_fork_base 的註解）
+        if [ ! -f "$BASE_FILE" ]; then
+            echo "❌ 沒有可用的段落起點（沒記過）：段落開始前先跑 $0 --start-segment" >&2
+            exit 1
         fi
-        echo "❌ 沒有可用的段落起點（沒記過，或起點已不在目前分支的歷史裡）：段落開始前先跑 $0 --start-segment" >&2
+        if read_base; then
+            if [ "$base" = "$EMPTY_TREE" ] || git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
+                echo "$base"
+                exit 0
+            fi
+            if fork=$(git merge-base "$base" HEAD 2>/dev/null); then
+                echo "❌ 沒有可用的段落起點：記下的起點 ${base} 不在目前分支的歷史裡（換過分支或改寫過歷史？）" >&2
+                echo "   它與 HEAD 的共同祖先是 ${fork}：這一段的範圍可以從它算，只會比原本寬" >&2
+                echo "   （多含被改寫的那個 commit，或換分支後這條線上起點之前的 commit），不會漏" >&2
+                echo "   這一段還沒做完時不要重跑 --start-segment：起點會移到現在的 HEAD，已經 commit 的就不在範圍裡了" >&2
+                exit 1
+            fi
+            echo "❌ 沒有可用的段落起點：記下的起點 ${base} 不在目前分支的歷史裡，也找不到共同祖先" >&2
+        else
+            echo "❌ 沒有可用的段落起點：起點檔 ${BASE_FILE} 的內容不是 commit（那個物件可能已經被 git 清掉）" >&2
+        fi
+        echo "   範圍算不出來：改用進度表 commits 欄的起點；沒有進度表就問使用者這一段從哪個 commit 開始" >&2
+        echo "   這一段還沒做完時不要重跑 --start-segment：起點會移到現在的 HEAD，已經 commit 的就不在範圍裡了" >&2
         exit 1
         ;;
 esac

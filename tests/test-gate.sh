@@ -42,6 +42,11 @@ expect() {  # $1=說明 $2=預期（pass / block） 其餘=指令
 commit() { git add -A && git commit -qm "$1"; }
 skip_commit() { git add -A && SKIP_DOC_CHECK=1 git commit -qm "$1"; }
 said() { grep -qF "$1" "$OUT" || { echo "❌ 輸出沒提到：$1"; sed 's/^/    /' "$OUT"; fail=1; }; }
+not_said() { if grep -qF "$1" "$OUT"; then echo "❌ 輸出不該提到：$1"; sed 's/^/    /' "$OUT"; fail=1; fi; }
+stdout_empty() {  # $1=說明 其餘=指令。stderr 丟掉，只看 stdout（`expect` 把兩者併在一起，分不出來）
+  desc="$1"; shift
+  if [ -z "$("$@" 2>/dev/null)" ]; then echo "✅ $desc"; else echo "❌ ${desc}：stdout 不是空的"; fail=1; fi
+}
 base_is() { [ "$(cat "$BASE_FILE" 2>/dev/null)" = "$1" ] || { echo "❌ 起點應為 ${1}，實際是 $(cat "$BASE_FILE" 2>/dev/null)"; fail=1; }; }
 
 # 1. rental-line 段落 1：起點在第一個 commit 之前（還沒有 HEAD）
@@ -440,6 +445,10 @@ expect "無關歷史上的第一個 commit" pass commit r7
 base_is "$BASE_BEFORE"
 
 expect "沒有共同祖先:--segment-base 照樣硬失敗" block "$GATE" --segment-base
+# 2026-11-15:這一支要講「範圍算不出來、改用進度表的起點或問使用者」,不可以叫人重記起點
+#   (照做的話起點移到現在,這一段已經 commit 的就不在範圍裡)。
+said "進度表"
+not_said "段落開始前先跑"
 expect "沒有共同祖先:放行,但要講出來(不可靜默)" pass "$GATE" --start-segment
 said "只檢查 staged"             # owed_dirs 那一處
 said "跳過 review 報告檢查"       # reviews_missing 那一處
@@ -551,6 +560,47 @@ git config dd.docfile AGENTS.txt
 expect "dd.docfile=AGENTS.txt:--start-segment 照常" pass "$GATE" --start-segment
 echo doc > a/AGENTS.txt
 expect "dd.docfile=AGENTS.txt:a/AGENTS.txt 同批 staged 就過關" pass commit c2
+
+# ⑭ **起點失效時 `--segment-base` 講得出下一步**(2026-11-15)。
+# 修的洞:記好起點 → `git commit --amend` 掉起點那個 commit → `--segment-base` exit 1,訊息只有一句
+#   「段落開始前先跑 --start-segment」。照做的話起點移到現在的 HEAD,`git diff <起點>` 是 0 行 ——
+#   這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡(拋棄式 repo 實跑)。
+# 「連共同祖先都沒有」那一支的斷言在 ⑪(那裡已經有孤兒分支的狀態)。
+# ⚠️ 這一段只 commit `.txt` 與 CLAUDE.md:要測的是起點,不要讓「缺 CLAUDE.md」那條路混進來。
+mkdir "$WORK/segbase" && cd "$WORK/segbase" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+echo root > CLAUDE.md
+expect "⑭ 第一個 commit" pass commit s0
+# 對照:從沒記過起點時照舊叫人先記(修之前就是綠的)
+expect "沒記過起點:--segment-base 失敗" block "$GATE" --segment-base
+said "段落開始前先跑"
+echo 1 > a.txt
+expect "⑭ 起點要用的 commit" pass commit s1
+expect "⑭ 記起點(= s1)" pass "$GATE" --start-segment
+OLD_BASE=$(cat "$BASE_FILE")
+FORK=$(git rev-parse HEAD^)
+echo 2 > a.txt
+expect "amend 掉起點那個 commit" pass git commit -qa --amend -m s1b
+echo 3 > a.txt
+expect "amend 之後再一個 commit" pass commit s2
+expect "起點被 amend 掉:--segment-base 硬失敗" block "$GATE" --segment-base
+said "$FORK"                 # 共同祖先要印出來(完整 sha),範圍從它算
+said "不要重跑"               # 明講不要重記起點
+not_said "段落開始前先跑"     # 舊訊息那句不可以再出現在這一支
+# ⚠️ 共同祖先只能印在 stderr:stdout 一有東西,`base=$(… --segment-base)` 的呼叫端就會拿去餵 `git diff`
+stdout_empty "起點被 amend 掉:stdout 是空的" "$GATE" --segment-base
+base_is "$OLD_BASE"          # --segment-base 只讀,起點檔不可以被動到
+# 起點檔在、但內容不是 commit(那個物件被 git 清掉、或檔案壞了):修之前併在「沒記過」那句裡,一樣叫人重記
+echo not-a-commit > "$BASE_FILE"
+expect "起點檔內容不是 commit:--segment-base 硬失敗" block "$GATE" --segment-base
+said "內容不是 commit"
+said "進度表"
+not_said "段落開始前先跑"
 
 exit $fail
 
