@@ -40,7 +40,7 @@
       | 把 `case "$DOC_FILE" in …` 整段驗證拿掉 | ⑫④ 的「帶路徑」「含空白」兩則 expect + `said "必須是單純檔名"` |
       | `--local` 改回 `--get`（吃得到 global） | ⑫⑤ 的 expect 與 `said "c/CLAUDE.md"` |
       | 驗證的 `case` 拿掉 `-*` 那一條 | ⑫④ 的「以 - 開頭」expect 與 `said "不以 - 開頭"` |
-      | 拿掉「不可以是程式碼檔名」那段 `if` | ⑬ 的「main.py:--start-segment 拒絕執行」「改 a/main.py 的 commit 不可以自己當記憶檔」兩則 expect 與三則 `said "不可以是程式碼檔名"`；「AGENTS.txt:--start-segment 照常」也跟著紅（前面那個 commit 進了歷史、變成欠帳，是連鎖不是它自己的斷言壞了） |
+      | 拿掉「不可以是程式碼檔名」那段 `if` | ⑬ 的三則 expect(「main.py:--start-segment 拒絕執行」「notes.sh:--start-segment 拒絕執行」「改 a/main.py 的 commit 不可以自己當記憶檔」)與三則 `said "不可以是程式碼檔名"`;「AGENTS.txt:--start-segment 照常」也跟著紅(前面那個 commit 進了歷史、變成欠帳,是連鎖不是它自己的斷言壞了)。notes.sh 那則排在 commit 之前才有牙:排在後面時它會被那筆欠帳頂住、照樣 block |
 
       ⚠️ **第二個變異第一版是 0 紅** —— 當時 ③ 的最後一則是「補上 `c/GEMINI.md` 後放行」。
       `owed_dirs` 其實跑了、也確實把 `c` 算成欠帳,**是 `[ -f "$md" ] && grep -qxF "$md" && continue`
@@ -85,7 +85,7 @@
       修的洞:有 `docs/reviews/` 的專案,一段做到一半要開別段時 `--start-segment` 擋在這裡,原本印的兩條路都不適用(還沒做完所以沒有報告、也不是「不需要審」),
       `skills/task-planner/SKILL.md` 規則區塊的 `BLOCKED` 那條也只交代補 CLAUDE.md(拋棄式 repo 實跑:記起點 → 一個程式碼 commit → 再跑 `--start-segment` 回 1)。
       **判定沒改,只多印這幾行** —— `S1-BLOCKED.md` 本來就命中 `S[0-9][^/]*\.md`;`tests/test-gate.sh` ⑮ 把「只建檔沒 commit 照樣擋、commit 之後放行」釘住。
-      變異:拿掉第 3 條那幾行 → 只有 ⑮ 的兩則 `said`(`S<段落>-BLOCKED.md`、`S<段落>-BLOCKED-2.md`)紅。
+      變異:拿掉第 3 條那四行 → 只有 ⑮ 的三則 `said`(`S<段落>-BLOCKED.md`、`它只是申報`、`S<段落>-BLOCKED-2.md`)紅。
       ⚠️ **同一段第二次先停要另建 `S<段落>-BLOCKED-2.md`**:gate 用 `--diff-filter=A`,改既有那份不算新增,照「建 `S1-BLOCKED.md`」做會再被擋一次
       (2026-11-15 拋棄式 repo 實跑:只改既有的回 1、新增 `-2` 回 0;訊息多印一行講這件事,⑮ 後半釘住)。
       ⚠️ **gate 只看檔名(跟 `-SKIP.md` 同類,使用者 2026-11-15 選定這個做法)**:拿 `-BLOCKED.md` 當成一段已經做完的段落的報告,gate 分不出來。
@@ -105,8 +105,8 @@
       拿 `-BLOCKED.md` 當成一段已經做完的段落的報告,gate 分不出來(細節見上面「第 3 條」那個條目)。
       ⇒ 它買到的是「**要繼續往前走就得先結清上一段**」,不是閉環(`skills/dd-loop/SKILL.md`「報告一律落地」那條也寫明了這點)。
       **①②③ 都有特性測試**(2026-10-19):`tests/test-gate.sh` 裡說明以「繞過①」「繞過②」「繞過③」開頭的那幾則,
-      各配一則對照(同一個狀態、只差那個繞過動作,結果相反)。④ 的是 ⑮ 的「S1-BLOCKED.md 已 commit:開下一段放行」,對照是它前面那則「只建檔沒 commit 照樣擋」。**變紅時先分清是哪一種**:
-      繞過①③變紅 = gate 堵上了那條路,是刻意的就先改上面那句、再照新行為改測試。
+      各配一則對照(同一個狀態、只差那個繞過動作,結果相反)。④ 的是 ⑮ 裡說明以「繞過④」開頭的那一則,對照是它前面那則「只建檔沒 commit 照樣擋」。**變紅時先分清是哪一種**:
+      繞過①③④變紅 = gate 堵上了那條路(④ 是 gate 開始看申報檔的內容、或不收那個檔名了),是刻意的就先改上面那句、再照新行為改測試。
       ⚠️ **繞過②以 gate 現在看得到的東西堵不掉**:它跟「報告 commit 之後還有步驟 6、7、8 的 commit」這個正常流程,在 gate 眼裡是同一個形狀
       (gate 只看起點..HEAD 有沒有新增報告,沒有「段落」的概念)。所以②變紅時先看區塊開頭的「正常流程」那則 ——
       它也紅了就是回歸,改回 gate,不要改文件(`docs/reviews/2026-10-18-pstack-gaps/S1-a.md` 的 A1)。
@@ -145,16 +145,18 @@
     實跑確認:全新 repo `--start-segment` → `--segment-base` 印 `4b825dc…`、exit 0。
     ⚠️ **而「空樹起點 + `--segment-base`」目前沒有任何測試覆蓋**(既有的 `--segment-base` 斷言,base 都是真 commit 或不存在)。
 
-    **`--segment-base` 硬失敗時,stderr 講的下一步分四種**(2026-11-15;四種都是 exit 1、stdout 不印東西):
+    **`--segment-base` 硬失敗時,stderr 講的下一步分四種**(2026-11-15;四種都是 exit 1、stdout 不印東西,`tests/test-gate.sh` 四種各有一則 `stdout_empty`):
     - 起點檔不存在 → 「沒記過」,叫人段落開始前先跑 `--start-segment`
     - 起點不在目前分支的歷史裡、有共同祖先 → 印出共同祖先的完整 sha,說範圍可以從它算(目前分支上這一段的 commit 不會漏、只會多;amend、rebase、換分支、`reset --hard` 到起點之前四種都在拋棄式 repo 比過 `git rev-list`,原範圍裡沒被涵蓋的都是 0 個),並寫明這一段還沒做完時不要重跑 `--start-segment`
     - 起點不在歷史裡、連共同祖先都沒有 → 叫人改用進度表 commits 欄的起點,沒有進度表就問使用者
-    - 起點檔在、內容不是 commit(物件被 git 清掉,或檔案壞了)→ 同上一種的下一步
+    - 起點檔在、內容不是 commit 也不是空樹(物件被 git 清掉、檔案壞了,或內容是一個不是空樹的 tree —— `read_base` 連 tree 都收,這一支自己再判一次)→ 同上一種的下一步
 
     修的洞:原本四種共用一句「段落開始前先跑 `--start-segment`」。起點那個 commit 被 `git commit --amend` 掉之後照做,起點移到現在的 HEAD,
     `git diff <起點> --stat` 是 0 行 —— 這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡(拋棄式 repo 實跑)。
     ⚠️ **共同祖先只印在 stderr**:印到 stdout 的話,`base=$(… --segment-base)` 的呼叫端會把它當成起點拿去用,等於把硬失敗改成軟退化。
-    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次(它照這幾句分情況)。
+    訊息改了字,`skills/dd-loop/SKILL.md`「段落起點與 `<起點>`」講取不到起點怎麼辦的那段要跟著對一次。
+    ⚠️ **「stdout 不印東西」只講這四種**:`dd.docfile` 不合法時整支在更前面就 exit 1,那句錯誤印在 stdout(既有的字元集檢查與 2026-11-15 加的程式碼檔名檢查都是)。
+    呼叫端要看 exit code,不能只看輸出是不是空的 —— `skills/dd-loop/SKILL.md` 步驟 8 那段寫的是 `base=$(…) && [ -n "$base" ]`,擋得住。
 
     **前兩處「往寬退」是刻意的** —— 退窄會把欠帳 / review 要求洗掉，而那正是這兩個檢查要擋的事。
     **`--segment-base` 必須硬失敗**：它的輸出要餵 `git diff`，印空字串或錯的 base 是文件點名的地雷。
@@ -177,8 +179,13 @@
     | `resolve_fork_base` 的 fork-point 整支拿掉 | 情境 7 的三則(`owed_dirs`)**與** ⑩ 的三則(`reviews_missing`)**各自獨立** —— 這才是「共用函式對兩個呼叫端都承重」的證據(3 + 3,不是「總共 N 紅」) |
     | 只拿掉 `resolve_fork_base` 共用那句警告 | 情境 7 與 ⑩ 的 `said` 各一則 ⚠️ **它只證明共用那句被釘住,不證明各呼叫端自己那句被釘住** |
     | 只打 `reviews_missing` 的「沒有共同祖先」那一支(改成擋 / 拿掉它的警告) | ⑪ 的兩則。⚠️ **修正前這兩個變異各 0 紅** —— ⑪ 把 `docs/reviews` 連目錄刪了,opt-in 判準不成立、那一支根本沒執行到;而 `said "找不到共同祖先"` 是被 `owed_dirs` 的訊息頂掉的 |
-    | `--segment-base` 那一支整段改回 2026-11-15 之前的寫法(四種共用一句「段落開始前先跑」) | ⑪ 的 `said "進度表"` 與 `not_said "段落開始前先跑"`;⑭ 的 `said <共同祖先 sha>`、`said "不要重跑"`、`not_said`,與壞起點檔那則的兩個 `said`、一個 `not_said`。各則 expect(block)照樣綠 —— 舊版一樣是硬失敗 |
+    | `--segment-base` 那一支整段改回 2026-11-15 之前的寫法(四種共用一句「段落開始前先跑」) | ⑪ 的 `said "也找不到共同祖先"`、`said "進度表"`、`said "不要重跑"`、`not_said "段落開始前先跑"`;⑭ 的 `said <共同祖先 sha>`、`said "不要重跑"`、`not_said`,壞起點檔那則的三個 `said` 與一個 `not_said`,tree 那則的 `said "內容不是 commit"`。各則 expect(block)與三則 `stdout_empty` 照樣綠 —— 舊版一樣是硬失敗、stdout 一樣是空的 |
     | 有共同祖先那一支多一行 `echo "$fork"`(印到 stdout) | 只有 ⑭ 的「起點被 amend 掉:stdout 是空的」 |
+    | 「沒有共同祖先」與「內容不是 commit」共用的尾段多一行 `echo "$base"`(印到 stdout) | ⑪ 的「沒有共同祖先:stdout 是空的」與 ⑭ 的「起點檔內容不是 commit:stdout 是空的」 |
+    | 拿掉共用尾段的「這一段還沒做完時不要重跑」那一行 | ⑪ 與 ⑭ 壞起點檔那則的 `said "不要重跑"` 各一則 |
+    | 拿掉「…也找不到共同祖先」那一行 | 只有 ⑪ 的 `said "也找不到共同祖先"` |
+    | 「沒記過」那一支多一行 `echo "HEAD"`(印到 stdout) | 只有 ⑭ 的「沒記過起點:stdout 是空的」 |
+    | `--segment-base` 那一支的 `[ "$(git cat-file -t "$base" …)" = commit ]` 改成 `true`(不是空樹的 tree 也走 merge-base 那幾支) | ⑭ tree 那則的 `said "內容不是 commit"` 與 `not_said "也找不到共同祖先"` |
     ⚠️ 修法與三個空洞斷言陷阱見 `tests/CLAUDE.md`。
   - ⚠️ **`shellcheck -S warning` clean 不代表變數有局部化**:
     曾有函式宣告了**死的** `local`,真正用的變數卻是**漏宣告的全域** —— shellcheck 乾淨,一個字都沒說。

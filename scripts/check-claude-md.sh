@@ -39,7 +39,7 @@ export DOC_RE="(^|/)${DOC_FILE//./\\.}\$"
 # 視為「程式碼」的副檔名（改動這些才要求文件同步；純文件/設定/資產不觸發）
 CODE_EXT='js|jsx|ts|tsx|mjs|cjs|py|go|rs|java|kt|rb|php|sh|bash|c|h|cpp|hpp|cs|swift|sql|vue|svelte'
 # 記憶檔名不可以是程式碼檔名（2026-11-15）：`dd.docfile=main.py` 時，改 a/main.py 的 commit 自己就算
-# 「記憶檔同批 staged」，owed_dirs 也把它當成銷帳 —— 欠帳被洗掉、沒有記憶檔的改碼 commit 照過，git 裡零痕跡。
+# 「記憶檔同批 staged」，owed_dirs 也把它當成銷帳 —— 欠帳被洗掉、沒有記憶檔的改碼 commit 照過，`git status` 是乾淨的（設定只留在 .git/config）。
 # 放在這裡而不是上面那段驗證裡，是因為要用 CODE_EXT。
 # 只擋得到副檔名在 CODE_EXT 裡的值：Makefile、Dockerfile 這類沒副檔名的檔，以及清單沒列的副檔名照樣設得進來
 if printf '%s\n' "$DOC_FILE" | grep -qE "\.($CODE_EXT)\$"; then
@@ -251,16 +251,23 @@ case "$1" in
         exit 0
         ;;
     --segment-base)
-        # 失敗的三種情況下一步不同，訊息分開講（2026-11-15）。原本只有一句「段落開始前先跑 --start-segment」：
+        # 失敗有四種（沒記過／不在歷史裡但有共同祖先／連共同祖先都沒有／內容不是 commit 也不是空樹），
+        # 下一步不同，訊息分開講（2026-11-15）。原本只有一句「段落開始前先跑 --start-segment」：
         # 起點被 amend 掉時照做，起點移到現在的 HEAD，這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡。
-        # ⚠️ 三種都維持 exit 1、stdout 空：共同祖先只印在 stderr，印到 stdout 的話 `base=$(… --segment-base)`
-        #    的呼叫端會把它當成起點拿去用（退化政策見上方 resolve_fork_base 的註解）
+        # ⚠️ 四種都維持 exit 1、stdout 空：共同祖先只印在 stderr，印到 stdout 的話 `base=$(… --segment-base)`
+        #    的呼叫端會把它當成起點拿去用（退化政策見上方 resolve_fork_base 的註解）。
+#    不在這四種裡的：dd.docfile 不合法時整支在更前面就 exit 1，那句錯誤印在 stdout —— 呼叫端要看 exit code，不能只看輸出是不是空的
         if [ ! -f "$BASE_FILE" ]; then
             echo "❌ 沒有可用的段落起點（沒記過）：段落開始前先跑 $0 --start-segment" >&2
             exit 1
         fi
-        if read_base; then
-            if [ "$base" = "$EMPTY_TREE" ] || git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
+        # read_base 連 tree 都收（空樹是合法起點）；不是空樹的 tree 跟壞掉的內容同一類，不可以走到 merge-base 那幾支
+        if read_base && [ "$base" = "$EMPTY_TREE" ]; then
+            echo "$base"
+            exit 0
+        fi
+        if read_base && [ "$(git cat-file -t "$base" 2>/dev/null)" = commit ]; then
+            if git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
                 echo "$base"
                 exit 0
             fi
@@ -273,7 +280,7 @@ case "$1" in
             fi
             echo "❌ 沒有可用的段落起點：記下的起點 ${base} 不在目前分支的歷史裡，也找不到共同祖先" >&2
         else
-            echo "❌ 沒有可用的段落起點：起點檔 ${BASE_FILE} 的內容不是 commit（那個物件可能已經被 git 清掉）" >&2
+            echo "❌ 沒有可用的段落起點：起點檔 ${BASE_FILE} 的內容不是 commit、也不是空樹（那個物件可能已經被 git 清掉，或檔案被改過）" >&2
         fi
         echo "   範圍算不出來：改用進度表 commits 欄的起點；沒有進度表就問使用者這一段從哪個 commit 開始" >&2
         echo "   這一段還沒做完時不要重跑 --start-segment：起點會移到現在的 HEAD，已經 commit 的就不在範圍裡了" >&2

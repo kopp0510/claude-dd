@@ -86,6 +86,15 @@
   - 驗證（其他方式，純文件）：本機逐 step 跑 ci.yml；每句新增的敘述用 `grep -n` 對回 gate 原始碼
   - commit：`docs: gate 三項修補的說明（S1-4）`
 
+S1 的步驟 3–5（2026-11-15）：
+
+- 步驟 3：code-simplifier 只改一處註解（「三種」→「四種」）。步驟 4：3 個 `code-reviewer`，0 條 Critical、3 條 Important、8 條 Smells（去掉重複），全部採納；報告在 `docs/reviews/2026-11-15-audit-fixes/S1-{a,b,c,judge}.md`
+- 步驟 4 帶出的程式碼改動：不是空樹的 tree 當起點時改走「內容不是 commit、也不是空樹」那一句；測試補四種的 `stdout_empty`、各支自己那一行的 `said`、`notes.sh` 那則移到 commit 之前
+- 步驟 5（修完之後重跑）：`/bin/bash tests/test-gate.sh` macOS（bash 3.2）rc=0、150 個 ✅、0 個 ❌；ubuntu:24.04 容器（bash 5.2.21）rc=0、150 個 ✅、0 個 ❌；
+  拋棄式 repo 設 `dd.docfile=main.py` 後 commit 與 `--start-segment` 都 rc=1、印「不可以是程式碼檔名」、沒有產生 commit；本機照 ci.yml 逐 step 跑 26 個全部 rc=0；
+  變異九個（各只改一處，固定版與變異版判定行數相同），紅的都只落在對應的斷言，對照記在 `scripts/CLAUDE.md`
+- S2 開工時要接的事：`scripts/CLAUDE.md` 那句「`skills/dd-loop/SKILL.md`…要跟著對一次」—— S2-1 落地後在那裡補上 dd-loop 已經照訊息分情況
+
 ### S2 流程文字（依賴 S1：文字要引用 S1 改好的 gate 訊息）
 
 - S2-1 `skills/dd-loop/SKILL.md`：`--segment-base` exit 非 0 之後的下一步
