@@ -80,6 +80,8 @@ scripts / output-styles 會在下次安裝時被覆蓋（覆蓋前自動備份�
   `--uninstall` 只移除本 repo 部署過的檔案，另外會取消登記 `OFFICIAL_PLUGINS` 列的官方 plugin（不管當初是誰裝的）；
   安裝時被換掉的同名檔不會放回去，只在備份裡。`settings.json` 與 `installed_plugins.json` 是就地改寫、不備份。
 
+下面兩段 2026-11-16 從根目錄 CLAUDE.md 搬來；第二段與上面「`--check` 看得出部署版過期」那條講同一件事，改的時候兩處一起改。
+
 環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**：tech-diagram-gif 的
 GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill 退化交付 SVG。
 只偵測提示、不代裝系統套件。最後一行報**自動壓縮視窗**有沒有設（`autocompact_state`，讀 `~/.claude/settings.json`
@@ -131,6 +133,8 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md
 「開發本 repo」一節。
 
+gate 怎麼掛、SKIP 怎麼算（這段 2026-11-16 從根目錄 CLAUDE.md 搬來，與上面「配套：」那段講同一件事，改的時候兩段一起改）：
+
 搭配巢狀 CLAUDE.md 堆疊維護（依賴 `claude-md-management` plugin，安裝腳本管理），
 並由 **pre-commit gate 強制**（block 版）：`scripts/check-claude-md.sh` 部署到
 `~/.claude/scripts/`，`/dd-init` 掛進專案 `.git/hooks/pre-commit`（專案設有
@@ -168,6 +172,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 
 CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 
+上表「迴圈步數四方一致」「迴圈步數第五方」兩列的補充（這段 2026-11-16 從根目錄 CLAUDE.md 搬來）：
+
 **迴圈步數**已有 CI 兩道防線。**四方一致**（全域模板 §3.9 ↔ `/dd-init` 蓋章版 ↔
 兩份 README 清單 ↔ `dd-loop-version` 標記）只數**編號清單**；**第五方**（2026-09-04 補）
 管它看不到的兩類使用者可見文案 — ①安裝腳本印出的「N 步開發迴圈」（排除註解行，
@@ -175,7 +181,7 @@ CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 與 review 才認定；CHANGELOG／UPGRADING 為歷史敘述故排除）。兩次踩雷都是靜默失效
 不報錯：2026-08-31 迴圈 6→7→8 時標記停在 `6step`（舊專案跑 `/dd-init` 會被誤判為
 最新）、README 清單漏補一項；2026-09-04 在第五方範圍內抓到 9 處殘留，其中
-`DD_PIPELINE_ARCHITECTURE.md` 那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
+本檔那處是人工逐檔翻完仍漏掉、靠檢查腳本才抓到的
 
 ## 授權
 

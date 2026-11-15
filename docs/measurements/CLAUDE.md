@@ -1,7 +1,7 @@
 # docs/measurements
 
-實測的原始數字與實驗輸入；每次實驗一個 `<日期>-<主題>/` 目錄，各有自己的 CLAUDE.md，另有幾份彙整的 `<日期>-<主題>.md`。
-這一份是跑 `claude -p` 實驗的共通做法與已知的坑，2026-11-16 從根目錄 CLAUDE.md 逐字搬來（每節開頭註明原本在哪一節）。
+實測的原始數字與實驗輸入。底下每個 `<日期>-<主題>/` 目錄各有自己的 CLAUDE.md（一次實驗可能拆成 inputs、outputs 兩個目錄）；第一層的 `<日期>-<主題>.md` 是量測紀錄，有的有同名的目錄、有的沒有。
+這一份是跑 `claude -p` 實驗的共通做法與已知的坑，2026-11-16 從根目錄 CLAUDE.md 逐字搬來（每節開頭註明原本在哪一節）。不管要做哪一節的事，「已知的坑」一節都要看。
 
 ## 測 skill 會不會自己叫
 
@@ -24,7 +24,7 @@ prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不�
 
 ## 量 agent 指令本體
 
-（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步）
+（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步；那一步最後的「量測前先關掉 advisor」每一種量測都用得到，放在「已知的坑」）
 
 改 agent 指令本體想知道有沒有變好，用 A/B 實測：`jq -n --rawfile` 把去掉 frontmatter 的新舊兩份塞成
 `{名字:{description,prompt}}`，`claude -p --agents <json> --agent <名字> --model opus` 各跑一發，素材挑
@@ -40,14 +40,14 @@ prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**
 沒有時間；subagent 的訊息靠 `parent_tool_use_id != null` 認（每則有 `timestamp`）；**父 session 會有兩筆
 `result`**（`result_index` 0 與 1 —— subagent 在背景跑，父層先結束一輪、它完成後再被喚起），
 只取第一筆會少算整體時間；要讓 subagent 的文字進 jsonl 加 `--forward-subagent-text`。
-**量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型），
-assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發。
-`--disallowedTools advisor` 擋不掉，要加 `--settings '{"advisorModel":""}'`；跑完再讀 `modelUsage` 的鍵核一次
 
 ## 已知的坑
 
-（原根目錄 CLAUDE.md「開發本 repo」的「沙盒用 `claude -p` 測行為前」一條，與「注意事項」裡跑實驗才遇到的幾條）
+（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步最後的「量測前先關掉 advisor」、「開發本 repo」的「沙盒用 `claude -p` 測行為前」一條，與「注意事項」裡跑實驗才遇到的幾條）
 
+- **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型），
+  assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發。
+  `--disallowedTools advisor` 擋不掉，要加 `--settings '{"advisorModel":""}'`；跑完再讀 `modelUsage` 的鍵核一次
 - **沙盒用 `claude -p` 測行為前，先 `./install-dd-pipeline.sh --force`**：headless session 載入的是
   `~/.claude/` 的部署版，不是 repo 這份。2026-10-02 踩過：dd-init 的 rev 跳 5 → 6 後直接去沙盒跑
   `/dd-init`，它回「含 `dd-loop-rev: 5` → 已是現行版，跳過」—— 那是**舊版的正確行為**，看起來卻像

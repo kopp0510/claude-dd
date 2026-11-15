@@ -71,9 +71,9 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
    要動檔的臂派 general-purpose（agent 清單上 Explore、Plan 沒有 Edit、Write）
 4. 執行 `./install-dd-pipeline.sh --force` 部署
 5. 動到 description 或觸發條件時，裝好後測「會不會自己叫」—— 同一個 session 裡推論不算數，要開全新的：
-   做之前先 Read `docs/measurements/CLAUDE.md`，照「測 skill 會不會自己叫」做（`claude -p` 的指令、旗標、怎麼判定、費用都在那裡）
+   做之前先 Read `docs/measurements/CLAUDE.md` 整份：`claude -p` 的指令、旗標、怎麼判定、費用與各種分支在「測 skill 會不會自己叫」一節，跑之前要避開的在「已知的坑」一節（含先關掉 advisor）
 6. 只有 hook、沒有 skill 的元件也放 `skills/<名字>/`（`.claude-plugin/plugin.json` + `hooks/hooks.json`，不放 SKILL.md），
-   會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時，`--allowedTools` 要放行
+   會以 `<名字>@skills-dir` 載入（gate-guard，2026-09-30 用 `claude -p` 實測）。測 PreToolUse 擋不擋時（`claude -p` 的指令底稿在 `docs/measurements/CLAUDE.md`「測 skill 會不會自己叫」，先 Read 整份），`--allowedTools` 要放行
    被管的工具（例如 `Bash`），被 hook 擋下的呼叫才會在 tool_result 以「PreToolUse:Bash hook error: <理由>」出現、並列進 `permission_denials`
 
 7. SKILL.md 與 `commands/*.md` 內文不要出現 `$<數字>`：帶參數呼叫時會被換成第 N 個參數、不報錯
@@ -100,7 +100,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
    promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
 4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
-5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：做之前先 Read `docs/measurements/CLAUDE.md`，照「量 agent 指令本體」做（怎麼組兩個 arm、看哪個欄位、量 Task 派出的 subagent、先關掉 advisor 都在那裡）
+5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：做之前先 Read `docs/measurements/CLAUDE.md` 整份：怎麼組兩個 arm、看哪個欄位、量 Task 派出的 subagent 在「量 agent 指令本體」一節，跑之前要避開的在「已知的坑」一節（含先關掉 advisor）
 
 ## 新增 Command 步驟
 
@@ -247,9 +247,9 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   第五方只認箭頭行與安裝腳本輸出，標題與內文的步數字樣五道防線一道都碰不到；要改步數時自己
   `grep -c '8 步' README.zh-TW.md` 與 `grep -c '8-step' README.md` 數一遍，不要在這裡寫死數量）、
   **「核心工作法」的迴圈說明段與 task-planner 段**、**授權段的 vendored 清單**；
-  以及 `DD_PIPELINE_ARCHITECTURE.md` 的 **CI 防線表**與**授權清單**。
+  以及 `DD_PIPELINE_ARCHITECTURE.md` 的 **CI 防線表**與**授權清單**、**「安裝腳本」一節講環境檢查與 `--check` 輸出的段落**、**「核心工作法」一節講 gate 的兩段**、**「CI 防線」一節最後講迴圈步數兩道防線的那段**（這幾處各有一段是 2026-11-16 從本檔搬過去的，本檔不再有副本）。
   （該檔的**數字**有 CI 驗：元件數、安裝編號步驟數、shellcheck 腳本數都在「數字宣稱一致性」裡比對。）
-  **觸發時機**：動到部署陣列、MCP、plugin、CI step、**gate 行為**、**迴圈步數或 §3.9 文案（含 `skills/dd-loop/SKILL.md`）**、
+  **觸發時機**：動到部署陣列、MCP、plugin、CI step、**安裝腳本的環境檢查或 `--check` 輸出**、**gate 行為**、**迴圈步數或 §3.9 文案（含 `skills/dd-loop/SKILL.md`）**、
   **收編新的 vendored 元件**時，逐項巡一遍
 - **安裝選項**已有 CI 防線：flag 三方對照驗「腳本 case 分支 ↔ `--help` 輸出 ↔
   兩份 README 指令範例」名稱完全一致，新增/刪除 flag 忘了同步文件會被擋。
@@ -322,7 +322,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 - 可選 MCP 推薦名單比照使用率盤點制：上游 deprecated／改名（如 cipher → byterover-cli，
   2026-08-11 移除）或本機實際使用紀錄已斷即移除；後繼品未經實證使用不自動遞補
 
-- **跑任何 `claude -p` 實驗、或拿另一個 session 當受測對象之前，先 Read `docs/measurements/CLAUDE.md`「已知的坑」**：實驗前先部署、權限模式會擋什麼、輸出進 repo 前去識別、fixture 的巢狀 CLAUDE.md、背景 subagent 被停掉、快照放哪裡都在那裡
+- **跑任何 `claude -p` 實驗、或拿另一個 session 當受測對象之前，先 Read `docs/measurements/CLAUDE.md` 整份**，「已知的坑」一節每一條都要看：先部署、先關掉 advisor、權限模式會擋什麼、輸出進 repo 前去識別等（這裡只舉幾項，不是全部）
 - **同一則訊息裡派的幾個 subagent 不一定同時開跑**：2026-11-15 四發 `claude -p`（2.1.325）裡，opus 裁決者在一則訊息派 4 個審查者，每個 Agent 呼叫的 prompt 約 1.48 萬字元，
   審查者一個隔約 75 秒才開始（`P-med-2` 是第 84、159、234、312 秒，另外三發差 3 秒以內）—— 第 4 個開跑時已經過了整發 455–614 秒的一半以上。這是不是 Claude Code 一般的行為沒查文件。
   量「等的時間花在哪」要看每個 subagent 在時間軸上的起訖（`docs/measurements/2026-11-15-reviewer-effort/timeline.py`），拿整發秒數減最慢的 subagent 會算錯；

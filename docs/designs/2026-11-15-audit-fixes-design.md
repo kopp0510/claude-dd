@@ -321,7 +321,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 
 假設：
 
-- 「搬」= 原文逐字搬。搬的塊由腳本從 `git show bf7e654:CLAUDE.md` 依行號切出來（切之前比對每塊開頭的字），不是重打。新寫的字只有：根目錄留下的指路句與三條約束句、新檔的標題與各節的出處註記、gate 段裡一處指代（「見下方「開發本 repo」」→「見根目錄 CLAUDE.md「開發本 repo」」）、`README.zh-TW.md` 那一段的銜接句、`README.md` 的英文翻譯
+- 「搬」= 原文逐字搬。搬的塊由腳本從 `git show bf7e654:CLAUDE.md` 依行號切出來（切之前比對每塊開頭的字），不是重打。新寫或改過的字：根目錄留下的指路句（Skill 步驟 5、6，Agent 步驟 5，「注意事項」一條）與三條約束句；根目錄的行內改字（「目錄結構」`docs/` 那行、「CI 不驗、只能手動同步的區塊」那條補的清單項與觸發時機、收編清單第 6 項的指代）；新檔的標題、開頭兩句與各節的出處註記；搬來的字裡因為換檔而改的三處（gate 段「見下方「開發本 repo」」→「見根目錄 CLAUDE.md「開發本 repo」」、迴圈步數段尾「`DD_PIPELINE_ARCHITECTURE.md` 那處」→「本檔那處」、「量測前先關掉 advisor」三行改成一條 bullet）；架構文件三段前面的銜接句；`README.zh-TW.md` 那一段的銜接句、`README.md` 的英文翻譯；兩份 measurements 子目錄 CLAUDE.md 與 `scripts/CLAUDE.md` 各一句指路；`CHANGELOG.md` 的條目（步驟 4 的審查指出原本列得比實際少，2026-11-16 補齊）
 - B1 的去處是新檔 `docs/measurements/CLAUDE.md`（檔名是我選的）。根目錄的指路寫「做之前先 Read」；巢狀 CLAUDE.md 什麼時候自動載入沒有實測過，不靠它
 - 「安裝 / 更新」兩段整段搬到架構文件，其中三句是改安裝輸出時要守的約束，根目錄留著（兩邊各一份）：沒有驗證測得到 B2 的指路有沒有用，約束句不離開每輪都載入的檔
 - 「核心工作法」根目錄留三段：dd-loop 與模板 §3.9 怎麼分工、§3.10 為什麼放在 §3.9 之外、task-planner 規則區塊照抄後不會跟著更新。開頭兩行與箭頭圖刪掉不搬（架構文件同名一節有自己的）；講 gate 的那段搬到架構文件同名一節的最後，與那裡既有的「配套：…」段並存、不合併
@@ -350,6 +350,36 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - 原句本身不寫在這裡（寫進 repo 等於把答案放到 agent grep 得到的地方），臂回來之後才補
 - 三臂都拿到 → 只能寫「全新 agent 從這個 repo 拿得到搬走的內容（每臂 n=1）」，並照實寫它是照根目錄的指路去讀、還是自己搜到的；context 裡沒有根目錄 CLAUDE.md 的臂沒測到指路。**這不證明主對話做到那一步時會主動去讀**
 - 有臂沒拿到 → 讀它的 Read 順序，改指路句的位置後重跑那一臂一次；還是沒拿到就停下回報
+
+步驟 4 的修正（2026-11-16，逐條在 `docs/reviews/2026-11-15-audit-fixes/S6-{a,b,c,judge}.md`）：
+
+- 「量測前先關掉 advisor」原本跟著 Agent 第 5 步搬進「量 agent 指令本體」一節，三個審查者都指出做 skill 觸發測試或一般實驗的人照指路走讀不到它 → 移到新檔「已知的坑」的第一條；根目錄三句指路改成「Read 整份」並點名它
+- 「新增 Skill 步驟」第 6 步（測 hook 擋不擋）靠的指令底稿在搬走的第 5 步 → 第 6 步加一句指路。這一步本身沒有搬，仍照 plan-review 駁回的那條
+- 搬到架構文件的三段不在根目錄的巡檢清單 → 補進「CI 不驗、只能手動同步的區塊」那條；三段前各加一句銜接句（跟同一節既有的哪一段講同一件事、要一起改）。兩段並存、不合併的決定不變
+- CHANGELOG 的 45,731 是「刪掉進度指路句之後才會有」的數字，當時寫成量到的 → 改成最終版實際的大小並寫明量的是哪一版
+- 新檔開頭兩句不準（有實驗拆成兩個目錄、第一層的 `.md` 不都是彙整）→ 照 `ls docs/measurements` 的結果改寫
+
+步驟 5 乾跑的結果（2026-11-16，三臂都在步驟 4 的修正之前派出，讀的是 `69f0e65`）：
+
+- 三臂的答案都引到 `docs/measurements/CLAUDE.md` 指定的那一條，引的原句對得上：①「測 skill 會不會自己叫」的指令、判定與「每次約 US$0.4–1.6」那句 ②「已知的坑」講 auto mode 的那一條 ③「測 skill 會不會自己叫」裡「測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`…」那一句
+- **但這三臂沒測到指路**：三臂都回報開始時 context 裡的根目錄 CLAUDE.md 是舊版（搬走的內容還在裡面、沒有指路句）。同一個對話派出的 subagent 帶的是對話開始時載入的那一份，不是磁碟上改過的。三臂去讀新檔的線索都是 gitStatus 裡 `2b23dd9` 的 commit 標題（標題寫了新檔的路徑）
+- 所以這三臂只證明：新檔裡找得到搬走的內容、引文逐字對得上。指路有沒有用改用下面的做法測
+- 兩臂另外指出「測 skill 會不會自己叫」一節沒寫要不要關 advisor（那句當時在另一節）—— 跟步驟 4 的第一條修正是同一件事
+
+步驟 5 補測：全新 session 測指路（判定在這裡先寫死，這個 commit 之後才跑）：
+
+- 受測目錄：`git archive HEAD` 解到暫存區的快照。不是 git repo（沒有 gitStatus 的 commit 標題），路徑不同所以也沒有這個專案的 memory。快照拿掉會直接點名新檔的三處：`docs/designs/`、`docs/reviews/`、`CHANGELOG.md`；根目錄 CLAUDE.md 用拿掉進度指路句的版本（標 `DONE` 之後的樣子，由核對腳本的同一份清單組出來）。其餘的檔不動
+- 指令：旗標照 `docs/measurements/CLAUDE.md`「測 skill 會不會自己叫」，差別是 `--allowedTools "Read Glob Grep"`（這次不是測 skill 觸發，不放 Skill），另加「已知的坑」的 `--settings '{"advisorModel":""}'`。不用先部署：測的是專案的根目錄 CLAUDE.md 與 repo 裡的檔，不是 `~/.claude/` 的部署內容
+- 三題各 1 發，題目都不提新檔與節名：Q1 調整了 dd-loop 這個 skill 的 description，怎麼確認它還會不會被自動叫到 Q2 要確認 gate-guard 的 PreToolUse hook 擋得住 `git commit --no-verify`，用什麼指令開全新 session 測、怎麼判定 Q3 調整了 `agents/code-reviewer.md` 的指令本體，怎麼量有沒有變好、開跑前要注意什麼。Q1、Q2 是審查者 A 點名的兩個漏讀情境
+- 判定（每發，看最後的答案文字有沒有這些字串；它們在快照的根目錄 CLAUDE.md 都是 0 次、新檔才有，`grep -cF` 核過）：Q1 `dontAsk`、`Launching skill`、`advisorModel`；Q2 `dontAsk`、`no-session-persistence`；Q3 `duration_api_ms`、`advisorModel`
+- 另外記錄、不算過不過：第一次碰到 `docs/measurements/CLAUDE.md` 之前跑過哪些工具（第一個工具就是 Read 那個檔 = 路徑只可能來自根目錄 CLAUDE.md；先 Grep／Glob 才找到 = 可能是搜到的）；`permission_denials`（全域 CLAUDE.md §7 可能讓它想叫 Skill 而被擋）；`modelUsage` 的鍵（核 advisor 真的關了）；有沒有工具呼叫指到快照以外的路徑
+- 三發都過，只能寫「帶著新版根目錄 CLAUDE.md 的全新 session，被問到這三件事時拿得到搬走的內容（每題 n=1）」。沒有「拿掉指路句」的對照臂，**不證明是指路句造成的**；**不證明主對話在長對話中途做到那一步時會主動去讀**；受測 session 一讀 `docs/measurements/` 底下的檔，那份 CLAUDE.md 可能當巢狀記憶自動進 context，stream-json 看不出來（新檔「已知的坑」有這一條）
+- 有一發沒過 → 讀它的工具順序與答案，改指路句後那一題重跑一次；還是沒過就停下回報
+
+沒驗證的事：
+
+- 以後用這個 commit 之後的 rev 做快照實驗（`--add-dir` 加進來的那種），快照裡的 `docs/measurements/CLAUDE.md` 會不會被受測 session 當巢狀記憶讀進去、把實驗手法洩給它（審查者 C 列的，要跑對照臂才知道）
+- 新檔「已知的坑」的「fixture 有子目錄時」那條寫「`run.sh` …跑 `find "$WORK" -mindepth 2 -name CLAUDE.md -delete`」，`git grep -n 'mindepth 2'` 只命中這一句自己，沒有任何 run.sh 有這行。這是逐字搬來的既有句子，這一段沒有改
 
 步驟 3 不跑 code-simplifier（diff 只有 Markdown）。步驟 4 照樣派 3 個 code-reviewer。要新增的測試：沒有。
 
