@@ -225,6 +225,9 @@ S2 跑的結果（細節在量測文件「結果」）：
 小任務：
 - **S3-1 判準與實驗輸入**。檔案：量測文件（方法、判準）、`fill.py`、`readcheck.py`、目錄 CLAUDE.md、本節與進度表、根目錄 CLAUDE.md 的指路句。驗證（不寫測試，理由：一次性的量測腳本）：`fill.py check` 回「相同」，把輪次改填 2 會紅。commit：`docs: 計畫審查材料放檔的實驗輸入與判準（S3-1）`
 - **S3-2 改 SKILL.md 與 CHANGELOG**。驗證：`grep -rn '\$[0-9]' skills/plan-review/SKILL.md` 沒有輸出；`git diff` 裡貼的那條路的句子沒被刪改（只有新增）；`gen_review.py` 逐框對過；本機照 CI 逐 step 跑全過。commit：`feat: plan-review 的計畫與事實改成放檔、審查者只拿路徑（S3-2）`
+  S3-2 做完的紀錄：SKILL.md 新增 12 行、刪 0 行（`git diff` 沒有 `-` 開頭的內容行）。`diagrams/src/gen_review.py` 中文那組 7 個框逐框對過：
+  ①「計畫寫好／附查到的事實，推測要標明是推測」、②「派 ≥3 個審查者／haiku，同一則訊息平行派」都沒有講怎麼交計畫，③–⑦ 與「例外」「什麼算重大」跟這次改的句子無關 → 不用重出圖。
+  CHANGELOG 與這段紀錄比 SKILL.md 晚一個 commit（改檔的腳本在 CHANGELOG 那一步找錯位置而中斷，`e3c7fd1` 只帶到 SKILL.md）
 - **S3-3 跑驗證、寫結果**。真跑 2 發（必要時補 1 發）、大檔臂、乾跑三臂、貼的那條路一臂；報告去識別後進 `out/`，commit 前 `grep -rnE -- '-Users-|/Users/|-private-tmp-|/private/tmp' docs/measurements/2026-11-15-plan-review-pack*` 要 0 筆。不採用時在這裡還原 SKILL.md 與 CHANGELOG。commit：`docs: 計畫審查材料放檔的實驗結果（S3-3）`
 
 ### 要新增的測試清單（全部在 `tests/test-install.sh`）
