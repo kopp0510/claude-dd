@@ -24,7 +24,8 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 
 `--check` 的 skills、agents 兩段除了看在不在，還比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`）：部署版與 repo 這份不同，
 那一行印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行計數；只提示、不改檔、不影響結束碼（`tests/test-install.sh` 的 T11）。
-`--check` 只跑 skills、agents、MCP、plugin 四段，commands、scripts（gate 住在這層）、output styles、全域 CLAUDE.md 過期了它看不出來。
+`diff`／`cmp` 回 2 以上（例如部署的檔讀不到）另外印「無法比對」，不併進「不同」：那時重跑安裝會在覆蓋前的備份那一步失敗（2026-11-15 沙盒實跑 rc=1）。
+內容比對只有這兩段有：commands、scripts（gate 住在這層）、output styles、全域 CLAUDE.md 過期了 `--check` 看不出來。
 
 ## 部署清單（使用率盤點制）
 
