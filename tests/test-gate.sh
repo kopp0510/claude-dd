@@ -632,6 +632,17 @@ expect "只建 S1-BLOCKED.md 沒 commit:照樣擋" block "$GATE" --start-segment
 base_is "$S1_BASE"            # 擋下不寫入
 expect "⑮ commit S1-BLOCKED.md" pass commit b2
 expect "S1-BLOCKED.md 已 commit:開下一段放行" pass "$GATE" --start-segment
+# 同一段第二次先停(回頭做了一點又要停):gate 用 `--diff-filter=A`,改既有的 S1-BLOCKED.md 不算新增 ——
+#   照第 3 條路「建 S1-BLOCKED.md」做會再被擋一次,所以訊息要講另建 `-BLOCKED-2.md`(2026-11-15 拋棄式 repo 實跑)
+echo 2 > a/x.sh && echo doc2 > a/CLAUDE.md
+expect "⑮ 回頭做 S1 的 commit" pass commit b3
+echo '又停一次' >> docs/reviews/S1-BLOCKED.md
+expect "⑮ 只改既有的 S1-BLOCKED.md" pass commit b4
+expect "第二次先停:只改既有的 S1-BLOCKED.md 照樣擋" block "$GATE" --start-segment
+said "S<段落>-BLOCKED-2.md"
+echo '第二次先停' > docs/reviews/S1-BLOCKED-2.md
+expect "⑮ commit S1-BLOCKED-2.md" pass commit b5
+expect "第二次先停:新增 S1-BLOCKED-2.md 之後放行" pass "$GATE" --start-segment
 
 exit $fail
 

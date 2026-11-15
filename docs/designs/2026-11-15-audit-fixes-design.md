@@ -78,6 +78,7 @@
   - commit：`fix: 起點失效時 --segment-base 講出共同祖先、不再叫人重記（S1-2）`
 - S1-3 「上一段沒有附 review 報告」的擋下訊息加第 3 條路（A5）
   - 檔案：`scripts/check-claude-md.sh`、`tests/test-gate.sh`、`scripts/CLAUDE.md`（「擋下時印的兩條路」那條、已知繞過補一條）、`tests/CLAUDE.md`、`docs/reviews/CLAUDE.md`（申報格式補 `S<段落>-BLOCKED.md`）
+  - 實作時的三處調整：①`said` 的字串改成 `S<段落>-BLOCKED.md`（`-` 開頭會被 grep 當成選項，永遠紅）②同一段第二次先停時改既有的檔不算新增、會再被擋，訊息與 `docs/reviews/CLAUDE.md` 加「另建 `-BLOCKED-2.md`」，⑮ 多兩則特性測試（修 bug 時發現的同類缺陷，一起釘住）③「已知繞過」寫成 `scripts/CLAUDE.md` 那份清單的 ④，清單標題不再寫「三條」
   - 驗證（測試）：有 `docs/reviews/`、上一段有 commit 沒報告 → block 且 `said "-BLOCKED.md"`（現況紅）；新增並 commit `docs/reviews/S1-BLOCKED.md` 之後 `--start-segment` pass（特性測試，現況就綠，這一則把它釘住）
   - commit：`fix: gate 擋下訊息補上段落先停時的申報方式（S1-3）`
 - S1-4 同步文件

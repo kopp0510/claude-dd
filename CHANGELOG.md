@@ -111,11 +111,11 @@
   沒有 CLAUDE.md 的改碼 commit 照過（拋棄式 repo 實跑）。現在副檔名在 gate 程式碼清單裡的值一律 `exit 1`；`GEMINI.md`、`AGENTS.txt` 這類照舊可設。
   擋不到的：`Makefile`、`Dockerfile` 這類沒副檔名的檔，以及清單沒列的副檔名
 - **gate：起點失效時 `--segment-base` 的訊息分開講下一步**：原本不管哪種失敗都印「段落開始前先跑 `--start-segment`」。起點那個 commit 被 `git commit --amend` 掉之後照做，
-  起點移到現在的 HEAD，這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡。現在：沒記過 → 照舊；起點不在目前分支的歷史裡 → 印出共同祖先（範圍從它算，只會比原本寬），
+  起點移到現在的 HEAD，這一段已經 commit 的全部不在步驟 3、4、8 的範圍裡。現在：沒記過 → 照舊；起點不在目前分支的歷史裡 → 印出共同祖先（範圍從它算，目前分支上這一段的 commit 不會漏、只會多），
   並寫明這一段還沒做完時不要重跑 `--start-segment`；連共同祖先都沒有、或起點檔的內容不是 commit → 改用進度表 commits 欄的起點，沒有進度表就問使用者。
   四種都維持 exit 1、stdout 不印東西（共同祖先只印在 stderr）
-- **gate：「上一段沒有附 review 報告」的擋下訊息多列第 3 條路**：這一段還沒做完、要先停下來做別段（進度表標 `BLOCKED`）時，建 `docs/reviews/S<段落>-BLOCKED.md` 並 commit。
-  原本印的兩條路（跑步驟 4、`SKIP.md` 申報）在這個情況都不適用。gate 的判定沒改，只多印這幾行；這個檔只是申報、不算審查報告，寫法見 `docs/reviews/CLAUDE.md`
+- **gate：「上一段沒有附 review 報告」的擋下訊息多列第 3 條路**：這一段還沒做完、要先停下來做別段（進度表標 `BLOCKED`）時，建 `docs/reviews/S<段落>-BLOCKED.md` 並 commit
+  （同一段第二次先停另建 `-BLOCKED-2.md`：gate 要的是新增的檔，改既有那份不算）。原本印的兩條路（跑步驟 4、`SKIP.md` 申報）在這個情況都不適用。gate 的判定沒改，只多印這幾行；這個檔只是申報、不算審查報告，寫法見 `docs/reviews/CLAUDE.md`
 - **`tests/test-gate.sh` 加 ⑬⑭⑮**，釘住上面三條；`said` 的字串以 `-` 開頭時會被 grep 當成選項、永遠紅，記在 `tests/CLAUDE.md`
 
 ## 1.6.14 — 2026-10-30

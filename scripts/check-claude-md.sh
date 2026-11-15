@@ -240,6 +240,7 @@ case "$1" in
             echo "      （緊接在 Co-Authored-By 那一行前面，中間不能空行，不然 git 不認它是 trailer）"
             echo "   3. 這一段還沒做完、要先停下來做別段（進度表標 BLOCKED）："
             echo "      建 docs/reviews/S<段落>-BLOCKED.md 寫明停在哪、為什麼停，commit 之後再重跑"
+            echo "      （同一段第二次先停：另建 S<段落>-BLOCKED-2.md —— 這裡要的是新增的檔，改既有那份不算）"
             echo "      （它只是申報、不是審查報告：回頭做完這一段時步驟 4 照跑、報告照落地）"
             echo ""
             echo "   （不想採用這個慣例：刪掉 docs/reviews/ 目錄，本檢查就完全不啟用）"
@@ -265,8 +266,8 @@ case "$1" in
             fi
             if fork=$(git merge-base "$base" HEAD 2>/dev/null); then
                 echo "❌ 沒有可用的段落起點：記下的起點 ${base} 不在目前分支的歷史裡（換過分支或改寫過歷史？）" >&2
-                echo "   它與 HEAD 的共同祖先是 ${fork}：這一段的範圍可以從它算，只會比原本寬" >&2
-                echo "   （多含被改寫的那個 commit，或換分支後這條線上起點之前的 commit），不會漏" >&2
+                echo "   它與 HEAD 的共同祖先是 ${fork}：這一段的範圍可以從它算，目前分支上這一段的 commit 不會漏，只會多" >&2
+                echo "   （多出來的是被改寫的那個 commit，或 rebase、換分支之後這條線上不屬於這一段的 commit）" >&2
                 echo "   這一段還沒做完時不要重跑 --start-segment：起點會移到現在的 HEAD，已經 commit 的就不在範圍裡了" >&2
                 exit 1
             fi
