@@ -4,7 +4,8 @@
 用法：
   python3 -I fill.py check <claude-dd repo>
       拿 b1935bb 的範本照「貼」的填法填 2026-11-14 那份素材，跟 ../2026-11-15-reviewer-effort/judge.txt 逐位元組比。
-      相同才代表下面的 make 填的是範本、不是我另外寫的 prompt。
+      相同代表 make 也會用到的那幾步（切出範本、填共同欄位、貼的填法）填的是範本、不是我另外寫的 prompt。
+      pack 獨有的部分（兩處替換、審查包的內容）這裡比不到，靠 pack() 裡的 assert 與對填出來的檔做的檢查。
   python3 -I fill.py make <claude-dd repo> <工作目錄> pack|paste <發代號>…
       先用 ../2026-11-15-reviewer-effort/prepare.py 建好快照。讀 repo 工作目錄現在這份 SKILL.md。
       pack：寫審查包 prompts/<發代號>.pack.md，照 SKILL.md 第 2 步換兩處：計畫與事實那一段換成讀檔指示，
@@ -74,12 +75,22 @@ def half_sentence(skill):
     assert len(hit) == 1, f"第二處的替換句有 {len(hit)} 行"
     return hit[0]
 
+def pack(t, skill, path, plan, facts):
+    """寫審查包，再照 SKILL.md 第 2 步換兩處：標記那一段換成讀檔指示、HALF 換成第二處的替換句。"""
+    body = f"審查範圍：整份計畫\n\n<<<計畫開始>>>\n{plan}\n<<<計畫結束>>>\n\n<<<事實開始>>>\n{facts}\n<<<事實結束>>>\n{END}\n"
+    write(path, body)
+    a, b = block(t)
+    t = t[:a] + pack_sentence(skill, path, body.count("\n")) + t[b:]
+    assert t.count(HALF) == 1, f"範本裡要換掉的半句有 {t.count(HALF)} 處"
+    return t.replace(HALF, half_sentence(skill))
+
 def check(repo):
     old = subprocess.run(["git", "-C", repo, "show", "b1935bb:skills/plan-review/SKILL.md"], capture_output=True, check=True).stdout.decode()
     judge = read(os.path.join(OLD, "judge.txt"))
     got = paste(fill_common(template(old)), *material(judge))
     if got == judge:
-        print(f"相同：{len(judge.encode())} 位元組、{judge.count(chr(10))} 行"); return 0
+        print(f"相同：{len(judge.encode())} 位元組、{judge.count(chr(10))} 行")
+        return 0
     g, j = got.split("\n"), judge.split("\n")
     print(f"不同：填出來 {len(g)} 行、judge.txt {len(j)} 行")
     for i, (x, y) in enumerate(zip(g, j), 1):
@@ -96,13 +107,7 @@ def make(repo, w, mode, runs):
         assert os.path.isdir(snap), f"沒有快照 {snap}：先跑 reviewer-effort/prepare.py"
         t = fill_common(template(skill))
         if mode == "pack":
-            pk = os.path.join(P, run + ".pack.md")
-            body = f"審查範圍：整份計畫\n\n<<<計畫開始>>>\n{plan}\n<<<計畫結束>>>\n\n<<<事實開始>>>\n{facts}\n<<<事實結束>>>\n{END}\n"
-            write(pk, body)
-            a, b = block(t)
-            t = t[:a] + pack_sentence(skill, pk, body.count("\n")) + t[b:]
-            assert t.count(HALF) == 1, f"範本裡要換掉的半句有 {t.count(HALF)} 處"
-            t = t.replace(HALF, half_sentence(skill))
+            t = pack(t, skill, os.path.join(P, run + ".pack.md"), plan, facts)
         else:
             t = paste(t, plan, facts)
         assert t.count("{ROOT}") == 1 and t.count("{EFFORT}") == 1
