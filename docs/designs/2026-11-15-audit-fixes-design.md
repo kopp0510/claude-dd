@@ -31,7 +31,7 @@
 | S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
 | S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0..0227f5b |
 | S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
-| S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | IN_PROGRESS | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea.. |
+| S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -200,6 +200,10 @@ S4 的步驟 3–5（2026-11-15）：
 - 步驟 5 的結果見 `S4-judge.md`「處置」
 - 沒做、沒驗證的：沒有重新部署，部署版的 `memory-analyst.md`、`code-reviewer.md` 還是舊的；加了那一行說明的 `code-reviewer.md` 沒有拿去實際審查過；授權標示夠不夠沒有人驗證過；
   `skills/self-improving-agent/settings.json` 的 `platforms` 仍列 `openclaw`、`codex`；skill 裡 review／promote 兩個子 skill 的候選條件與 Scoring Guide 是兩套說法、`memory-analyst.md` 的 Output Format 指到沒有分數欄位的格式（都是既有的，審查者 A 列在 Not reported）
+- 步驟 7：沒有寫檔。候選（等使用者同意才寫進根目錄 CLAUDE.md）：①收編檢查清單第 1 項「授權相容」只查授權檔在不在、相不相容；補一句「把那份授權的散布條件逐條對被收的檔 —— Apache-2.0 改過的檔要在檔內寫明改過（第 4 條 (b)）」
+  ②寫「行為改變」的說明時重新比對新舊兩份定義的每一項，不沿用計畫裡的一句話；舉的例子要示範得出那個結論
+- 步驟 8：範圍是根目錄 `CLAUDE.md` 與 `skills/self-improving-agent/CLAUDE.md`。根目錄修了一處：「新增 Agent 步驟」寫官方備份「維持上游的 `opus`」，官方 `feature-dev` 版的 code-reviewer 其實是 `sonnet`，改成寫明哪幾份是什麼；
+  同一句補上「改這兩個官方備份之後重跑 `agents/LICENSE.txt` 列的比對指令」。skill 那份的差異清單逐句對回 git 與檔案都成立，沒有改
 
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 

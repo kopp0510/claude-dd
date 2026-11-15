@@ -2,8 +2,6 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
-進度以 docs/designs/2026-11-15-audit-fixes-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
-
 ## 安裝 / 更新
 
 ```bash
@@ -110,7 +108,9 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 ## 新增 Agent 步驟
 
 1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model` —
-   自製 agent 用 `inherit`；官方備份（code-reviewer / code-simplifier）維持上游的 `opus`，不要改齊）
+   自製 agent 用 `inherit`；官方備份（code-reviewer / code-simplifier）維持 `opus`，不要改齊 —— 官方 `code-simplifier` 與 `pr-review-toolkit` 版的 code-reviewer 是 `opus`，
+   `feature-dev` 版的 code-reviewer 是 `sonnet`（2026-11-15 讀本機官方副本）。改這兩個官方備份之後，重跑 `agents/LICENSE.txt` 開頭列的比對指令，
+   把檔裡的行數與「逐字相同」那句改成實際結果：`code-simplifier.md` 只要動一個字，那句就變假）
 2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱，並**同批**同步兩份 README 的
    promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
