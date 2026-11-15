@@ -408,6 +408,10 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **範本裡要換掉一條指示時，把那一句整個換掉，不要留著舊句再加一條條件句蓋它**：2026-11-15 plan-review 第一版留著「貼兩組標記之間的內容」、另加「只有讀檔指示時就貼那一句」，
   真跑 2 發有 1 發的裁決者照舊句做（`docs/measurements/2026-11-15-plan-review-pack.md`「第一次修正」）。會原樣進 subagent prompt 的句子只要改了字，之前真跑的證據就不算它的：
   先把補跑的判定寫死、commit，再跑（同一份文件的「第二次修正」）
+- **寫進 subagent prompt 的約束句：條件要跟著每一個子句走，括號舉例要寫明是不是全部**。2026-11-15 code-simplifier 包裝器的第一版寫
+  「agent 定義裡列的偏好（import 排序、`function` 與箭頭函式的取捨）…專案 CLAUDE.md 沒寫就不套用，不重排 import」：句尾那句不帶條件的「不重排 import」，
+  實測 2 發都因此連同一個模組的重複 import 也不合併；括號只舉了兩項，審查指出會被讀成完整清單（agent 那一節列了六項；這一點沒有實測）。
+  改法：禁令寫明範圍與例外（「只合併重複行、不改順序，專案有寫規則時照它」）、括號寫「列的每一項（…等）」。經過見 `docs/reviews/2026-11-15-audit-fixes/S5-judge.md`
 - **要 subagent 交回「它會送給下一層的 prompt 全文」可能被模型的安全機制擋下**（2026-11-15 請 opus subagent 照裁決者範本交回它會給審查者的 prompt，沒跑成）：不重試、不換句話再問。
   改用不經過模型的比法：範本與舊版逐字相同（`docs/measurements/2026-11-15-plan-review-pack/fill.py check`）、腳本填出的 prompt 檔互相 `diff`
 - **`commands/*.md` 的安全檢查不可以只靠 `scripts/` 的新行為**：`--commands-only` 只跑 `create_commands`、不跑 `create_scripts`
@@ -428,7 +432,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 
 | # | 檢查項 | 怎麼驗 | 不過的處置 |
 |---|---|---|---|
-| 1 | **授權相容** | LICENSE 存在且相容（MIT/Apache 可；GPL/未標需評估）。frontmatter 若寫 `license: … LICENSE.txt`，該檔**必須同目錄存在** | 補齊 LICENSE 或移除懸空 frontmatter |
+| 1 | **授權相容** | LICENSE 存在且相容（MIT/Apache 可；GPL/未標需評估）。frontmatter 若寫 `license: … LICENSE.txt`，該檔**必須同目錄存在**。附上全文不算完：把那份授權的散布條件逐條對一次（Apache-2.0 第 4 條 (b) 要求改過的檔在檔內寫明改過；2026-11-15 `agents/code-reviewer.md` 第一次漏了，審查才抓到） | 補齊 LICENSE 或移除懸空 frontmatter；照條件補上缺的標示 |
 | 2 | **hook 路徑絕對化** | grep `hooks/hooks.json`，`command` 路徑須以 `/`、`$HOME/`、`~/` 或 `${CLAUDE_PLUGIN_ROOT}` 開頭（validator 會先剝掉 `bash`/`node` 等直譯器前綴再判斷）；相對路徑（`./`）不合格。詳見上方「Skill hook 路徑規範」 | 併入前改寫（`validate_skill_hooks()` 也會擋） |
 | 3 | **事實驗證（不只 CLI）** | 任何靠名稱推論不出來的東西都要實跑證實：`npm install` / CLI args / 套件名（`npm view <pkg>` 或官方 README），以及**路徑算式、編碼規則、目錄命名**（實際跑一次拿真實輸出對照）。2026-09-12 踩過：self-improving-agent 五處 `%2F` 編碼算出的記憶體目錄從來不存在，收編時沒人跑過一次 | 無法證實 → 不收 |
 | 4 | **runtime 依賴** | 讀 SKILL.md / scripts，確認是否需 Python / Node / 全域 binary | 需額外 runtime → 違反「不塞二進制」，不收或改純設定 |
