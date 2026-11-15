@@ -123,6 +123,11 @@ S1 的步驟 3–5（2026-11-15）：
   - 檔案：`commands/dd-init.md`（Phase 4，蓋章區塊之外）
   - 驗證（乾跑）：三個 subagent 各拿一份假的 settings.json（值 true／值 false／沒有那個鍵）照 Phase 4 這段文字判斷，交回結論與它會給使用者的提示；結論依序要是已啟用／未啟用／未啟用。本機逐 step 跑 ci.yml 確認兩道蓋章區塊檢查照綠
   - commit：`fix: dd-init Phase 4 判斷 plugin 啟用看值、不講安裝腳本會下載（S2-3）`
+  - 乾跑結果（2026-11-15，sonnet subagent 各拿一份假的 settings.json，不准讀真的、不准跑 `claude plugin`）：值 true → 已啟用、無提示；值 false → 未啟用、提示 `claude plugin enable …`；沒有鍵 → 未啟用、提示 `claude plugin install …`；
+    檔案截斷（計畫外加的第四臂）→ 無從判定、不提示安裝。假檔的真值另用 `jq` 與 `python3` 各讀一次核對
+  - 與計畫不同的三處：①第一版照計畫寫「未啟用 → 先 `claude plugin install`」，值 false 那臂回報「停用與沒登記要不要給不同提示」沒寫 —— 分成兩條，停用給 `claude plugin enable`（`claude plugin --help` 列有 `enable [options] <plugin>  Enable a disabled plugin`，2.1.325 本機實跑）
+    ②計畫寫的「已經下載、只是沒登記時重跑安裝腳本會登記並啟用」沒有寫進指令：讀 `install_plugins()` 後，它的條件是 marketplace 目錄有那個 plugin 的 `plugin.json` 而且取得到版本字串，一句話講不準，改成只寫「安裝腳本不下載 plugin 的檔案，不要提示跑它就會裝」
+    ③加一句 `jq` 的 `//` 會把 `false` 當成沒有值（沒有鍵那臂回報的，`echo '{"a":false}' | jq -r '.a // "無鍵"'` 印「無鍵」）；改字之後 true／false／沒有鍵／壞檔四臂重跑過，加 `//` 那句之後 false 臂再跑一次，結論都相同
 - S2-4 `CHANGELOG.md` `## 未發布` 補 S2 的條目（含 A7 那句）；commit：`docs: 流程文字三項修補的 CHANGELOG（S2-4）`
 
 ### S3 安裝腳本 `--check`
