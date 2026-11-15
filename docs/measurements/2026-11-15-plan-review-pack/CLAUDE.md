@@ -19,4 +19,9 @@
 - `fill.py` 的兩句替換文字不寫在腳本裡，從 SKILL.md 抓：以「材料在這個檔：」開頭的那一行、以「《計畫與事實》貼上面「材料在這個檔：」」開頭的那一行；SKILL.md 裡這樣開頭的行各只能有一行
 - 工作目錄放 scratchpad、用新的（不要用舊實驗那個，裡面的 `dump/` 有講到答案的報告）；`out/` 只放 `timeline.py`、`readcheck.py` 的輸出、`stats.py` 經 `pubstats.py` 整理過的輸出、`deid.py` 處理過的報告。
   `deid.py` 換掉使用者名稱之後，家目錄那一層的字樣還在，寫死的掃描仍會命中，進 repo 前再換掉；暫存路徑的掃描樣式寫到 `private/t` 就停，把目錄名寫完整的話，原文被截斷在路徑中間時比對不到。
-  這兩支腳本與本檔不要逐字寫出掃描樣式，不然掃描會命中描述它的那一行
+  `pubstats.py` 與本檔不要逐字寫出掃描樣式，不然掃描會命中描述它的那一行
+- 跑一發的順序（`E=../2026-11-15-reviewer-effort`、`W=<工作目錄>`、`R=<repo 根目錄>`；2026-11-15 `P-med-7` 就是這樣跑的）：
+  `python3 -I $E/prepare.py $R $W <發代號>` → `python3 -I fill.py make $R $W pack <發代號>` → `bash $E/run.sh $W <發代號>` →
+  `python3 -I $E/stats.py $W <發代號> --dump $W/dump > <暫存檔>`（先看 errors）→ `python3 -I $E/outside.py $W <發代號>` →
+  `python3 -I $E/timeline.py $W <發代號>`（最後一行接到 `out/timeline.md`）→ `python3 -I readcheck.py $W <發代號> >> out/readcheck.txt` →
+  `python3 -I pubstats.py <每一發的暫存檔>… > out/stats.jsonl`（整份重出）→ `python3 -I $E/deid.py $W/dump out/reports $W`

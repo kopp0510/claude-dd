@@ -30,7 +30,7 @@
 |---|---|---|---|---|---|
 | S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7..fd96d69 |
 | S2 | 審查者思考強度實驗（medium 對 low） | DONE | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I table.py` 能從存下的 stats 重印出表（原本寫 `stats.py`：它要讀不在 repo 的原始紀錄，從存下的 stats 重印的是 `table.py`） | 58fc4ba..024546e |
-| S3 | 計畫審查的計畫與事實放成檔、審查者只拿路徑 | IN_PROGRESS | S2 | 量測文件有真跑的結果：每一發最後一個審查者開始的秒數與 prompt 字元數、每個 subagent 有沒有把審查包讀到結尾、那條重大幾發中幾發；照跑之前寫死的三個關卡寫出「採用／不採用」；不採用時 SKILL.md 與 CHANGELOG 已還原 | dd570e7.. |
+| S3 | 計畫審查的計畫與事實放成檔、審查者只拿路徑 | DONE | S2 | 量測文件有真跑的結果：每一發最後一個審查者開始的秒數與 prompt 字元數、每個 subagent 有沒有把審查包讀到結尾、那條重大幾發中幾發；照跑之前寫死的三個關卡寫出「採用／不採用」；不採用時 SKILL.md 與 CHANGELOG 已還原 | dd570e7..163ad26 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段

@@ -2,8 +2,6 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
-進度以 docs/designs/2026-11-15-speed-cost-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
-
 ## 安裝 / 更新
 
 ```bash
@@ -339,7 +337,8 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
   以及「與 tag 有差異卻既沒有 `## 未發布` 也沒有新版本區塊」。
   **拿腳本改 Markdown 區塊時錨在標題字串，不用行號／索引**（`L.index('### Changed')` 抓的是
   第一個，整份檔案有好幾個同名小節時要先切出目標版本區塊再找）—— 曾因索引差一位把條目寫進已發布的 `## 1.2.0`，
-  `git diff` 只看得到「CHANGELOG 多了幾行」，當時所有檢查都綠
+  `git diff` 只看得到「CHANGELOG 多了幾行」，當時所有檢查都綠。錨要帶行首（`re.search(r"^## 未發布\n", s, re.M)`）：
+  2026-11-15 `s.index("## 未發布")` 先命中檔頭發版步驟說明裡的同一串字，腳本在 assert 停下、沒有寫檔，那個 commit 的訊息卻寫了有改 CHANGELOG（下一個 commit 補上並更正）
 - **ci.yml 的 `run: |` 是 YAML block scalar，裡面不能用 heredoc**：`EOF` 寫在第 0 欄會提早結束 scalar、
   整份 YAML 壞掉（縮排到 block 內才算內容）。要把多行餵給 `while` 就先寫檔再 `done < 檔案`，順便避開
   `grep ... | while` 的 subshell 把 `fail=1` 丟掉（那種壞法是靜默變綠）。改完先驗 YAML：本機沒有 pyyaml，
@@ -394,7 +393,13 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 - **同一則訊息裡派的幾個 subagent 不一定同時開跑**：2026-11-15 四發 `claude -p`（2.1.325）裡，opus 裁決者在一則訊息派 4 個審查者，每個 Agent 呼叫的 prompt 約 1.48 萬字元，
   審查者一個隔約 75 秒才開始（`P-med-2` 是第 84、159、234、312 秒，另外三發差 3 秒以內）—— 第 4 個開跑時已經過了整發 455–614 秒的一半以上。這是不是 Claude Code 一般的行為沒查文件。
   量「等的時間花在哪」要看每個 subagent 在時間軸上的起訖（`docs/measurements/2026-11-15-reviewer-effort/timeline.py`），拿整發秒數減最慢的 subagent 會算錯；
-  要給好幾個 subagent 同一份長內容時放成檔、prompt 只給路徑（步驟 4 的 diff 檔就是這樣做，見 `skills/dd-loop/SKILL.md`「派工前先準備一個 diff 檔」）
+  要給好幾個 subagent 同一份長內容時放成檔、prompt 只給路徑（步驟 4 的 diff 檔就是這樣做，見 `skills/dd-loop/SKILL.md`「派工前先準備一個 diff 檔」；plan-review 的審查包也是，2026-11-15 改的，
+  照做的三發裡 4 個審查者的 Agent 呼叫到第 56–60 秒都出現了，見 `docs/measurements/2026-11-15-plan-review-pack.md`）
+- **範本裡要換掉一條指示時，把那一句整個換掉，不要留著舊句再加一條條件句蓋它**：2026-11-15 plan-review 第一版留著「貼兩組標記之間的內容」、另加「只有讀檔指示時就貼那一句」，
+  真跑 2 發有 1 發的裁決者照舊句做（`docs/measurements/2026-11-15-plan-review-pack.md`「第一次修正」）。會原樣進 subagent prompt 的句子只要改了字，之前真跑的證據就不算它的：
+  先把補跑的判定寫死、commit，再跑（同一份文件的「第二次修正」）
+- **要 subagent 交回「它會送給下一層的 prompt 全文」可能被模型的安全機制擋下**（2026-11-15 請 opus subagent 照裁決者範本交回它會給審查者的 prompt，沒跑成）：不重試、不換句話再問。
+  改用不經過模型的比法：範本與舊版逐字相同（`docs/measurements/2026-11-15-plan-review-pack/fill.py check`）、腳本填出的 prompt 檔互相 `diff`
 - **`commands/*.md` 的安全檢查不可以只靠 `scripts/` 的新行為**：`--commands-only` 只跑 `create_commands`、不跑 `create_scripts`
   （`install-dd-pipeline.sh` 的 `if [ "$COMMANDS_ONLY" = false ]` 那段），使用者手上會是新指令配舊腳本。
   2026-11-14 dd-init 把 `CLAUDE.md.dd-upgrade` 交給升級腳本的 exit 6 擋，舊腳本照樣寫出；指令文字要自己先查
