@@ -4,9 +4,11 @@
 #
 # 用法：docs/measurements/2026-11-16-adhd-length/run.sh <拋棄式工作目錄> <批次編號>
 #   工作目錄要在 repo 與家目錄的 CLAUDE.md 鏈之外（例如 session scratchpad 底下）。
-#   它必須不存在，或是本腳本之前建的（裡面有 .adhd-length-work 標記）；否則拒跑，因為每發之前會整個刪掉重建。
+#   它必須不存在，或是本腳本之前建的（裡面有 .dd-sandbox 標記）；否則拒跑，因為每發之前會整個刪掉重建。
+#   受測 session 的 cwd 是它底下的 proj/，標記檔放在 proj/ 外面：第 1 批標記檔放在 cwd 裡、檔名又帶實驗主題，
+#   受測 session 看得到（P3 四發的 outside 都是 1，原始紀錄已刪，推測是去讀了那個檔，沒有證實）。
 #   輸出寫進 out/batch<批次編號>/；那個目錄已經存在就拒跑（上一批的數字不蓋掉）。
-# 不需要先部署：兩臂的風格檔都放在工作目錄的 .claude/output-styles/（專案層），不動 ~/.claude/。
+# 不需要先部署：每發只把自己那一臂的風格檔放進 proj/.claude/output-styles/（專案層），不動 ~/.claude/。
 #   OLD = git 裡 BASE 那一版的 output-styles/adhd.md，NEW = repo 工作樹現在的 output-styles/adhd.md；
 #   各自只把 frontmatter 的 name 改成 ADHDOLD、ADHDNEW（避免跟已部署的 ADHD 撞名），其餘逐字相同。
 # 順序：先跑兩發載入探針，任一臂答錯就停，不跑後面 12 發。
@@ -17,7 +19,8 @@ REPO=$(cd "$HERE/../../.." && pwd)
 WORK="${1:?用法：run.sh <拋棄式工作目錄> <批次編號>}"
 BATCH="${2:?用法：run.sh <拋棄式工作目錄> <批次編號>}"
 OUT="$HERE/out/batch$BATCH"
-MARK=.adhd-length-work
+PROJ="$WORK/proj"
+MARK=.dd-sandbox
 BASE=7e1ff44
 
 if [ -e "$WORK" ] && [ ! -f "$WORK/$MARK" ]; then
@@ -58,13 +61,13 @@ printf '%s\n' "$prompt_2" > "$OUT/p2.prompt.txt"
 printf '%s\n' "$prompt_3" > "$OUT/p3.prompt.txt"
 
 # 每發之前整個重建工作目錄與 fixture（fixture 當場寫出來，不從 repo 複製）
-setup() { # $1 = prompt 編號
+setup() { # $1 = prompt 編號，$2 = 臂
     rm -rf "$WORK"
-    mkdir -p "$WORK/.claude/output-styles"
+    mkdir -p "$PROJ/.claude/output-styles"
     touch "$WORK/$MARK"
-    cp "$STYLES/ADHDOLD.md" "$STYLES/ADHDNEW.md" "$WORK/.claude/output-styles/"
+    cp "$STYLES/ADHD$2.md" "$PROJ/.claude/output-styles/"
     (
-        cd "$WORK"
+        cd "$PROJ"
         git init -q
         case "$1" in
         1)
@@ -116,15 +119,15 @@ FIXTURE
 }
 
 run_one() { # $1 = 臂（OLD|NEW），$2 = prompt 編號（0 是探針），$3 = 輸出檔名
-    local arm="$1" p="$2" name="$3" prompt tools real raw actual outside
-    setup "$p"
+    local arm="$1" p="$2" name="$3" prompt tools real raw actual hits outside denied
+    setup "$p" "$arm"
     eval "prompt=\$prompt_$p"
     tools="Read Edit Write Glob Grep"
     [ "$p" = 3 ] && tools="$tools Bash(bash test.sh)"
-    real=$(cd "$WORK" && pwd -P)
+    real=$(cd "$PROJ" && pwd -P)
     raw="$WORK.raw.jsonl"
     # dontAsk 沿用 2026-10-29 那支；被擋的話 permission_denials 不為 0，check.sh 會紅
-    ( cd "$WORK" && perl -e 'alarm 300; exec @ARGV or exit 127' \
+    ( cd "$PROJ" && perl -e 'alarm 300; exec @ARGV or exit 127' \
         claude -p "$prompt" \
         --settings "{\"outputStyle\":\"ADHD$arm\",\"advisorModel\":\"\"}" \
         --output-format stream-json --verbose \
@@ -132,24 +135,33 @@ run_one() { # $1 = 臂（OLD|NEW），$2 = prompt 編號（0 是探針），$3 =
         --max-budget-usd 2 --no-session-persistence \
         < /dev/null > "$raw" 2>&1 ) || echo "⚠️ ${name}：claude 回非 0（照樣保留輸出）"
     actual=""
-    [ "$p" = 3 ] && actual=$(cd "$WORK" && bash test.sh 2>&1 | tail -1)
-    # outside：受測 session 有沒有碰工作目錄以外的東西（判準、審查包都在同一棵暫存樹）。
-    # 一定要在刪掉原始檔之前、從原始檔算；工作目錄的路徑本身含專案名，先換掉再比
-    outside=$(jq -rR --arg real "$real" --arg work "$WORK" '
+    [ "$p" = 3 ] && actual=$(cd "$PROJ" && bash test.sh 2>&1 | tail -1)
+    # outside：受測 session 有沒有碰 proj/ 以外的東西（判準、審查包都在同一棵暫存樹）。
+    # 一定要在刪掉原始檔之前、從原始檔算；路徑本身含專案名，先換掉再比（proj 換成 <work>，它的上一層換成 <sandbox>）。
+    # 命中的那幾筆工具輸入也留下來（hits），不然事後看不出是哪個呼叫
+    hits=$(jq -rR --arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME" '
         fromjson? | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use")
-        | (.input | tostring) | split($real) | join("<work>") | split($work) | join("<work>")' "$raw" \
-        | grep -cE ':"/|~/|\.\./|/pr/|pack-r|adhd-length|claude-dd|check\.sh|selftest|scratchpad' || true)
+        | (.input | tostring) | split($real) | join("<work>") | split($proj) | join("<work>")
+        | split($work) | join("<sandbox>") | split($home) | join("<home>") | .[0:300]' "$raw" \
+        | grep -E ':"/|~/|<home>|\.\./|<sandbox>|/pr/|pack-r|adhd-length|claude-dd|check\.sh|selftest|scratchpad' || true)
+    outside=$(printf '%s' "$hits" | awk 'NF { n++ } END { print n + 0 }')
+    denied=$(jq -rR --arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME" '
+        fromjson? | select(.type=="result") | .permission_denials[]?
+        | ((.tool_name // "") + " " + (.tool_input | tostring)) | split($real) | join("<work>") | split($proj) | join("<work>")
+        | split($work) | join("<sandbox>") | split($home) | join("<home>") | .[0:300]' "$raw" || true)
     # 原始 stream-json 不進 repo（init 裡有編碼過的家目錄路徑、連接器清單、plugin 路徑），只留判定要用的欄位。
     # 回覆文字裡的路徑先換實體路徑再換傳入路徑（順序反了會留下半截）
-    jq -cR --arg real "$real" --arg work "$WORK" --arg home "$HOME" --arg actual "$actual" --argjson outside "${outside:-null}" '
+    jq -cR --arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME" --arg actual "$actual" \
+        --argjson outside "${outside:-null}" --arg hits "$hits" --arg denied "$denied" '
         fromjson? | select((.type=="system" and .subtype=="init") or .type=="result")
         | if .type=="system" then {kind:"init", output_style}
           else {kind:"result", num_turns, total_cost_usd,
                 permission_denials:(.permission_denials | length),
                 models:((.modelUsage // {}) | keys),
-                outside:$outside, actual:$actual,
-                result:((.result // "") | split($real) | join("<work>")
-                        | split($work) | join("<work>") | split($home) | join("<home>"))}
+                outside:$outside, outside_hits:($hits | split("\n") | map(select(length > 0))),
+                denied:($denied | split("\n") | map(select(length > 0))), actual:$actual,
+                result:((.result // "") | split($real) | join("<work>") | split($proj) | join("<work>")
+                        | split($work) | join("<sandbox>") | split($home) | join("<home>"))}
           end' "$raw" > "$OUT/$name.jsonl"
     rm -f "$raw"
     echo "跑完 $name"
