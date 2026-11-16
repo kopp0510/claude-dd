@@ -63,7 +63,7 @@ CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上�
 - 沒設 `core.hooksPath` 的 clone：hook 不存在，要等 CI 擋
 - 不經過 pre-commit 的 commit：`git cherry-pick`、`git merge --no-ff` 自動合併出來的那個 commit、`git rebase` 重放的 commit、`git revert`、`git am`（這幾種都讓 `HEAD` 的 CLAUDE.md 超過上限，大小檢查沒有跑到；`git merge --squash` 之後的 `git commit`、`git commit --amend` 有跑到、被擋下）。這是試過的幾種，不是完整清單。一樣要等 CI 擋
 - 根目錄 `CLAUDE.md` 換成 symlink：`--staged` 量的是 index 裡那個 blob，symlink 的 blob 是連結目標的路徑字串（幾個 bytes），所以放行；不帶參數那一種的 `wc -c <` 會跟著連結量到目標的內容（連到 500 bytes 的檔、上限 100：commit 過了，直接跑不通過）。要等 CI 擋
-- 本機打一個 `v*` tag：調高上限檔的 commit 進去之後，再打一個版本號更大的 `v*` tag（不必 push、不必真的發版），下一個加字的 commit 就照新數字放行（打 tag 前擋、印「取自 v1.0.0」；`git tag v1.0.1` 之後同一個改動放行、印「取自 v1.0.1」）。這個 tag 被 `git push --tags` 帶上去之後，CI 也照它算。
+- 本機打一個 `v*` tag：調高上限檔的 commit 進去之後，再打一個版本號更大的 `v*` tag（不必 push、不必真的發版），下一個加字的 commit 就照新數字放行（打 tag 前擋、印「取自 v1.0.0」；`git tag v1.0.1` 之後同一個改動放行、印「取自 v1.0.1」）。這個 tag 被 `git push --tags` 帶上去之後，CI 也照它算（這一句是照 `ci.yml` 推的：checkout 設了 `fetch-depth: 0`、跑的是同一支腳本；沒有真的 push 驗過）。
   腳本分不出「發版」與「打了一個 tag」，gate-guard 也不管 `git tag`；擋這條路的只有「調高之前先問使用者」這條規則，與每次印出來的「取自 …」
 - `v` 開頭、但不是這條 branch 發版的 tag 也算：tag 打在別條 branch 上（不是 `HEAD` 的祖先）照樣被拿來當上限；`vendor-snap` 這種名字照版本號排會排在所有 `v<數字>…` 前面，`v1.0.0-rc1` 也排在 `v1.0.0` 前面。
   這個 repo 的 tag 只有 `v<x.y.z>` 與 `pre-prune-2026-08-04`（`git tag --list`）；要打別種 tag 就不要用 `v` 開頭 —— 上面第 1 條提到的 `ci.yml` 那兩步也拿同一個寫法當「最新發版」
@@ -141,7 +141,7 @@ CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上�
 
 ### ⑯ 抓不到的變異（2026-11-16 審查時在拋棄式副本實跑：三個都是 rc=0、沒有一則變 ❌）
 
-- 不帶參數那一種改成讀 `HEAD` 那一版的上限檔（原本讀工作目錄那一份）：⑯ 每次直接跑的時候，工作目錄與 `HEAD` 的上限檔內容都一樣。
+- 不帶參數那一種改成讀 `HEAD` 那一版的上限檔（原本讀工作目錄那一份）：⑯ 走到這一支的直接跑只有 B、D 兩則（還沒有帶上限檔的 tag 的時候；之後的直接跑都取自 tag），兩則的工作目錄與 `HEAD` 上限檔內容都一樣。
   所以「上限取自哪一版」第 2 條的「不帶參數：工作目錄有」與「第 2 條擋不住的」講不帶參數的那一條，沒有情境釘住
 - `git tag --list 'v*'` 拿掉 `'v*'`：⑯ 裡沒有不是 `v` 開頭的 tag。真 repo 的 `pre-prune-2026-08-04` 照版本號倒排排在 `v…` 後面，拿掉了也選不到它；
   名字排在 `v` 後面的 tag（實跑：`wip-x`）才會被選到

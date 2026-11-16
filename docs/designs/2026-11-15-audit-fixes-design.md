@@ -568,6 +568,21 @@ S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣�
 - 本機照 ci.yml 逐 step 跑：兩個 job 的每個 step 都 rc=0（跑的腳本在有 step 沒過時會回非 0，這次回 0）
 - 真 repo 直接跑 `scripts/githooks/claude-md-size.sh`：印 ✅、46554 bytes、上限 48000、「取自工作目錄：v1.6.14 還沒有這個檔，發下一版之後改以 tag 為準」，rc=0
 
+步驟 6（2026-11-16）：`7dd3d25`（審查修正與五份報告）。
+
+步驟 7（2026-11-16，`dd803d3`）：三條寫進巢狀 CLAUDE.md，根目錄沒有加字 —— `tests/CLAUDE.md` 兩條（表格列別用箭頭符號，CI「迴圈步數第五方」會把它當成迴圈摘要；
+拿 gate 的變異版看 ⑯ 之前先確認 ⑯ 有跑到）、`scripts/githooks/CLAUDE.md` 一條（「繞得過的路」是唯一一份清單，另外三處只舉例並指到它）。
+
+步驟 8（2026-11-16）：範圍照表上的起點算出四份（根目錄 `CLAUDE.md`、`scripts/CLAUDE.md`、`scripts/githooks/CLAUDE.md`、`tests/CLAUDE.md`），用 `claude-md-improver` 只審這四份。
+`scripts/githooks/CLAUDE.md` 在步驟 4 之後才改的句子逐句對程式碼，沒實跑過的在拋棄式 repo 補跑（工作目錄的上限檔改了沒 commit 就算數；上限檔三種改壞法直接跑都不通過、只改上限檔的 commit 都放行；
+不帶 `'v*'` 時 `wip-x` 排第一、`pre-prune-2026-08-04` 排在 `v…` 後面）。改了兩句：「⑯ 抓不到的變異」第一條原本寫「⑯ 每次直接跑的時候」，實際走到那條分支的直接跑只有 B、D 兩則；
+「本機打一個 `v*` tag」那條的「CI 也照它算」是照 `ci.yml` 推的、沒有 push 驗過，補上標註。另外三份這一段改到的地方沒有與實際不符的。
+
+**S7 還沒標 DONE，只差一個使用者決定**（2026-11-16 問）：⑯ 抓不到的三個變異要不要補情境 —— 清單以外的測試，照進度表規則要先問。
+答「補」：加三則（還沒有帶上限檔的 tag 時，工作目錄的上限檔改了沒 commit、直接跑要照工作目錄的數字；排在 `v` 後面的非 `v` tag 不算；不在 git repo 裡跑回 2），
+每則先確認對應的變異版會變 ❌、原版照樣綠，變異表加三列、刪掉 `scripts/githooks/CLAUDE.md` 檔尾那一節，`tests/CLAUDE.md` 的代號清單與下面的測試清單跟著改，步驟 5 整套重跑。
+答「不補」：缺口照現在記在 `scripts/githooks/CLAUDE.md` 檔尾，直接標 DONE。
+
 ### 測試清單（使用者 2026-11-15 選定「照這份清單加」）
 
 1. `tests/test-gate.sh` ⑬（S1-1）：`dd.docfile` 設 `main.py`、`notes.sh` 要拒絕，`AGENTS.txt` 照常（對照）
