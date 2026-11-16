@@ -84,6 +84,10 @@
     前一發過是因為帶了「4 項」；`8368e8d` 的兩發是「另有 6 項不急（I1、I2、M1 到 M4），細節：`review.md`。」「另有 I1、I2 與 M1 到 M4 不急，要看再說。」。各 n=2，這一格分不出兩份的差別；退回確定會丟掉的是審查的修正
   - 選退回時不能只還原 `adhd.md`：`output-styles/LICENSE.txt`（規則 4 那句、break 6 的註記）與 CHANGELOG 那一條（必留清單、哪一份過）寫的都是 `8368e8d`，要一起改回
   - 不管選哪一份，步驟 6 要把 CHANGELOG 那一條裡「等使用者決定」那句改成實際的決定，並刪掉根目錄 CLAUDE.md 的指路句、進度表標 `DONE`
+- 決定（2026-11-17）：使用者選「接受審查後這一份」（blob `8368e8d`），`output-styles/adhd.md`、`LICENSE.txt` 不用再動。上面「現況」那一條是決定之前寫的，留著當紀錄。
+  驗收欄的 `check.sh out/batch<最後一批>` exit 0 **沒有達成**（第 4 批 exit 1，紅在 `NEW-p1-r2` 的「沒講還有幾項」）：沒有重跑、沒有改措辭、判準沒改，段落標 `DONE` 靠的是使用者的決定，不是那一條通過。
+  其餘三條在決定之後重跑過：`selftest.sh` 最後一行「✅ 自測 29 例全部如預期」；`LICENSE.txt` 的 23 個「」引句在 `adhd.md` 用字串比對全找得到；`tests/test-install.sh` 在 macOS（`/bin/bash` 3.2）與 ubuntu:24.04 容器都 exit 0。
+  步驟 6：CHANGELOG 那一條與量測目錄 CLAUDE.md 補上這個決定。步驟 7：根目錄 CLAUDE.md「新增 Output Style 步驟」第 4 步補上這一段學到的。步驟 8：審這一段動過的兩份 CLAUDE.md（根目錄、量測目錄）
 - 步驟 4 的報告放 `docs/reviews/2026-11-16-adhd-length/S1-*.md`；步驟 6、7、8 的 commit 訊息結尾 `（S1）`
 
 ## 計畫審查紀錄
