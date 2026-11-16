@@ -146,3 +146,6 @@ CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上�
 - `git tag --list 'v*'` 拿掉 `'v*'`：⑯ 裡沒有不是 `v` 開頭的 tag。真 repo 的 `pre-prune-2026-08-04` 照版本號倒排排在 `v…` 後面，拿掉了也選不到它；
   名字排在 `v` 後面的 tag（實跑：`wip-x`）才會被選到
 - `top=$(git rev-parse --show-toplevel) || exit 2` 改成 `|| exit 0`：exit code 那一條的「不在 git repo 裡 2」沒有情境
+
+使用者 2026-11-16 選定不補這三則，「繞得過的路」那兩條（別條 branch 上的 `v*` tag、不是版本號形狀的 `v` 開頭 tag）也不加特性測試：三個變異當時都不會讓 pre-commit 或 CI 的結果不同。
+逐條的理由在 `docs/designs/2026-11-15-audit-fixes-design.md` S7「最後一個決定」那一段。
