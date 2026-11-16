@@ -9,7 +9,7 @@ adhd.md 的部分內容改寫自 i-have-adhd（https://github.com/ayghri/i-have-
 - Rules 1 Lead with the next action —— 改寫（規則 1）：加一句，CLAUDE.md 規定要寫在回覆最前面的表態排在它前面
 - Rules 2 Number multi-step tasks —— 照借（規則 2）
 - Rules 3 End with one concrete next action —— 改寫（規則 3）：固定寫成 `下一步：` 一行
-- Rules 4 Suppress tangents —— 改寫（規則 4）：加一句，順便發現的其他事最多用一行帶過
+- Rules 4 Suppress tangents —— 改寫（規則 4）：加一句，順便發現的其他事每件最多一行、要寫出是什麼事
 - Rules 5 Restate state every turn —— 改寫（規則 5）：限成一行
 - Rules 6 Give specific time estimates —— 照借（規則 6）
 - Rules 7 Make completed work visible —— 改寫（規則 7）：限成一行
@@ -23,7 +23,9 @@ adhd.md 的部分內容改寫自 i-have-adhd（https://github.com/ayghri/i-have-
 - When to break the rules 5（a rule fights the task）—— 改寫，併入「說話方式」第二點的「真的超過兩個選項時照實說」（那句同時也來自 ELI5），
   以及「誰優先」第三段的「只管寫出來的字有多少、怎麼排，不管事實」（上游的 the shape stays）
 - When to break the rules 6（a rule fights the harness）—— 改寫，併入「誰優先」：第二段的「CLAUDE.md 要求出現的每一樣照樣要有」（上游的 system prompt outranks），
-  第四段的「決定好的下一步就直接做」（上游的 do the work instead of asking "want me to"）與「時間估計估的是實際動手的人」
+  第四段的「決定好的下一步就直接做」（上游的 do the work instead of asking "want me to"）與「時間估計估的是實際動手的人」。
+  ⚠️ 第二段後半的「每一樣都寫到最短」是本 repo 加的，跟上游 outranks 的意思不一樣：CLAUDE.md 要求的項目都留著、固定寫法照它，
+  但每一樣寫多長由這份風格管（「長度」第 4 條列的那幾樣除外）。起點那一版開頭寫的是 CLAUDE.md 的規則優先於這份風格，2026-11-16 拿掉了那句
 - Pre-send check —— 不借
 
 「長度」「範例」兩節不是來自上游，是本 repo 2026-11-16 到 17 加的（起因與實測見 `docs/measurements/2026-11-16-adhd-length/`）。
