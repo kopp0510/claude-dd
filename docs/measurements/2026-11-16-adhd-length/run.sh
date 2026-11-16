@@ -146,14 +146,20 @@ FIXTURE
     )
 }
 
+# 工具輸入、被擋的呼叫、回覆文字共用的路徑代換（變數由 run_one 的 redact_args 傳入）。
+# 先換實體路徑再換傳入路徑（順序反了會留下半截）：proj 換成 <work>，它的上一層換成 <sandbox>
+REDACT='def redact: split($real) | join("<work>") | split($proj) | join("<work>")
+    | split($work) | join("<sandbox>") | split($home) | join("<home>");'
+
 run_one() { # $1 = 臂（OLD|NEW），$2 = prompt 編號（0 是探針），$3 = 輸出檔名
-    local arm="$1" p="$2" name="$3" prompt tools real raw actual hits outside denied
+    local arm="$1" p="$2" name="$3" prompt tools real raw redact_args actual hits outside denied
     setup "$p" "$arm"
     eval "prompt=\$prompt_$p"
     tools="Read Edit Write Glob Grep"
     [ "$p" = 3 ] && tools="$tools Bash(bash test.sh)"
     real=$(cd "$PROJ" && pwd -P)
     raw="$WORK.raw.jsonl"
+    redact_args=(--arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME")
     # dontAsk 沿用 2026-10-29 那支；被擋的話 permission_denials 不為 0，check.sh 會紅
     ( cd "$PROJ" && perl -e 'alarm 300; exec @ARGV or exit 127' \
         claude -p "$prompt" \
@@ -167,20 +173,17 @@ run_one() { # $1 = 臂（OLD|NEW），$2 = prompt 編號（0 是探針），$3 =
     # outside：受測 session 有沒有碰 proj/ 以外的東西（判準、審查包都在同一棵暫存樹）。
     # 一定要在刪掉原始檔之前、從原始檔算；路徑本身含專案名，先換掉再比（proj 換成 <work>，它的上一層換成 <sandbox>）。
     # 命中的那幾筆工具輸入也留下來（hits），不然事後看不出是哪個呼叫
-    hits=$(jq -rR --arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME" '
+    hits=$(jq -rR "${redact_args[@]}" "$REDACT"'
         fromjson? | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use")
-        | (.input | tostring) | split($real) | join("<work>") | split($proj) | join("<work>")
-        | split($work) | join("<sandbox>") | split($home) | join("<home>") | .[0:300]' "$raw" \
+        | (.input | tostring) | redact | .[0:300]' "$raw" \
         | grep -E ':"/|~/|<home>|\.\./|<sandbox>|/pr/|pack-r|adhd-length|claude-dd|check\.sh|selftest|scratchpad' || true)
     outside=$(printf '%s' "$hits" | awk 'NF { n++ } END { print n + 0 }')
-    denied=$(jq -rR --arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME" '
+    denied=$(jq -rR "${redact_args[@]}" "$REDACT"'
         fromjson? | select(.type=="result") | .permission_denials[]?
-        | ((.tool_name // "") + " " + (.tool_input | tostring)) | split($real) | join("<work>") | split($proj) | join("<work>")
-        | split($work) | join("<sandbox>") | split($home) | join("<home>") | .[0:300]' "$raw" || true)
+        | ((.tool_name // "") + " " + (.tool_input | tostring)) | redact | .[0:300]' "$raw" || true)
     # 原始 stream-json 不進 repo（init 裡有編碼過的家目錄路徑、連接器清單、plugin 路徑），只留判定要用的欄位。
-    # 回覆文字裡的路徑先換實體路徑再換傳入路徑（順序反了會留下半截）
-    jq -cR --arg real "$real" --arg proj "$PROJ" --arg work "$WORK" --arg home "$HOME" --arg actual "$actual" \
-        --argjson outside "${outside:-null}" --arg hits "$hits" --arg denied "$denied" '
+    jq -cR "${redact_args[@]}" --arg actual "$actual" \
+        --argjson outside "${outside:-null}" --arg hits "$hits" --arg denied "$denied" "$REDACT"'
         fromjson? | select((.type=="system" and .subtype=="init") or .type=="result")
         | if .type=="system" then {kind:"init", output_style}
           else {kind:"result", num_turns, total_cost_usd,
@@ -188,8 +191,7 @@ run_one() { # $1 = 臂（OLD|NEW），$2 = prompt 編號（0 是探針），$3 =
                 models:((.modelUsage // {}) | keys),
                 outside:$outside, outside_hits:($hits | split("\n") | map(select(length > 0))),
                 denied:($denied | split("\n") | map(select(length > 0))), actual:$actual,
-                result:((.result // "") | split($real) | join("<work>") | split($proj) | join("<work>")
-                        | split($work) | join("<sandbox>") | split($home) | join("<home>"))}
+                result:((.result // "") | redact)}
           end' "$raw" > "$OUT/$name.jsonl"
     rm -f "$raw"
     echo "跑完 $name"

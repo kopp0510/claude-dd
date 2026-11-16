@@ -132,6 +132,8 @@ $PAD
 $PAD
 $PAD
 \`\`\`" "$1"; }
+b_noC1()      { m_new NEW-p1-r1 "" '先處理 C2：`auth.ts` 管理員 API 少權限檢查，沒重現，只是推測。
+- 另有 8 項不急，要看再說。' "$1"; }
 b_noC2()      { m_new NEW-p1-r1 "" '先處理 C1：`refund.ts` 退款沒檢查上限，已重現。
 - 有一條沒重現，只是推測。
 - 另有 7 項不急，要看再說。' "$1"; }
@@ -139,6 +141,7 @@ b_nounsure()  { m_new NEW-p1-r1 "" '先處理 C1：`refund.ts`，再處理 C2：
 - 另有 7 項不急，要看再說。' "$1"; }
 b_nomarker()  { m_new NEW-p1-r1 "" '先處理 C1：`refund.ts` 退款沒檢查上限。
 - C2 `auth.ts`：沒重現，只是推測。' "$1"; }
+b_nocause()   { m_new NEW-p2-r1 "" '`deploy.sh` 用到沒定義的變數，`set -u` 就中止了。(已讀 deploy.sh:4)' "$1"; }
 b_nosource()  { m_new NEW-p2-r1 "" '`config.env` 定義的是 `DEPLOY_ENVIRONMENT`，`deploy.sh` 用的是 `DEPLOY_ENV`。' "$1"; }
 b_noverify()  { m_new NEW-p3-r1 "$OK3" '## 變更
 - `a.txt`、`b.txt` 改好了；`e.txt` ～ `j.txt` 不存在
@@ -184,9 +187,11 @@ case_ '11 行' red 'NEW-p2-r1 .*L✗\[ +行數' b_11lines
 case_ '501 字以上（行數沒超過）' red 'NEW-p2-r1 行 [0-9] .*L✗\[ +字數' b_501chars
 case_ '長說明包在圍欄裡（7 行）' red 'NEW-p2-r1 .*L✗\[ +圍欄' b_fence7
 case_ '圍欄 6 行但字數超過' red 'NEW-p2-r1 .*圍欄 6 .*L✗\[ +字數 \]' b_fence6long
+case_ '漏 C1' red 'NEW-p1-r1 .*守門✗\[.*缺C1' b_noC1
 case_ '漏 C2' red 'NEW-p1-r1 .*守門✗\[.*缺C2' b_noC2
 case_ '沒帶不確定' red 'NEW-p1-r1 .*守門✗\[.*缺不確定' b_nounsure
 case_ '沒講還有幾項' red 'NEW-p1-r1 .*守門✗\[.*沒講還有幾項' b_nomarker
+case_ '沒寫病因' red 'NEW-p2-r1 .*守門✗\[.*缺病因' b_nocause
 case_ '沒有已讀' red 'NEW-p2-r1 .*守門✗\[.*無來源標註' b_nosource
 case_ '沒有「驗證」' red 'NEW-p3-r1 .*守門✗\[.*無§4.5結構' b_noverify
 case_ '回覆沒有 RESULT 那一行' red 'NEW-p3-r1 .*守門✗\[.*缺實際輸出' b_nooutput
