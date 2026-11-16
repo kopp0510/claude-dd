@@ -1,0 +1,1 @@
+deploy.sh 跑了就失敗（訊息在 deploy.log），為什麼？不要改任何檔案，也不要執行 shell 指令。
