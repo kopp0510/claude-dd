@@ -674,7 +674,8 @@ expect "第二次先停:新增 S1-BLOCKED-2.md 之後放行" pass "$GATE" --star
 #   （本 repo 自用、不部署；兩種跑法各擋什麼、已知繞得過的路在 scripts/githooks/CLAUDE.md）。
 # 拋棄式 repo 照這個 repo 的配置：scripts/githooks/ 放 hook 與大小檢查、scripts/check-claude-md.sh 放 gate、
 #   core.hooksPath 指到 scripts/githooks。沒寫「直接跑」的都是真的 git commit，經過 pre-commit（大小檢查 → gate）。
-# 代號 A–R 對應 scripts/githooks/CLAUDE.md「情境與變異對照」那張表。上限用小數字、tag 用 v0.0.N。
+# 代號 A–R 的清單在 tests/CLAUDE.md（test-gate.sh 那一列）；scripts/githooks/CLAUDE.md「情境與變異對照」那張表用同一組代號。
+# 上限用小數字、tag 用 v0.0.N。
 # ⚠️ 情境一路接下去（後面的靠前面留下的 HEAD、tag、上限檔）：變異版讓前面一則該擋的放行，後面會跟著紅，
 #   那些連鎖不算那個變異自己的證據。
 # ⚠️ E 的「下一個 commit…放行」是發版前的已知缺口、N 的「只 commit 別的檔」是 git 本來的行為，兩則都是特性測試：
