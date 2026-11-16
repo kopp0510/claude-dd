@@ -13,12 +13,13 @@
 
 ## 跟 2026-10-29 那支不一樣的地方
 
-- 不用先部署。兩臂的風格檔都放在拋棄式目錄的 `.claude/output-styles/`（專案層）：OLD 是 `git show 7e1ff44:output-styles/adhd.md`，NEW 是 repo 工作樹的 `output-styles/adhd.md`，
+- 不用先部署。每發只把自己那一臂的風格檔放進拋棄式目錄的 `proj/.claude/output-styles/`（專案層）：OLD 是 `git show 7e1ff44:output-styles/adhd.md`，NEW 是 repo 工作樹的 `output-styles/adhd.md`，
   各自只把 `name:` 改成 `ADHDOLD`、`ADHDNEW`，`run.sh` 會用 `diff` 確認只差那一行。專案層風格檔會被載入是 2026-11-16 在 Claude Code 2.1.325 用 haiku 實測的（做法在設計文件「動手前量到的」）
 - init 的 `output_style` 只照抄 `--settings` 給的值，證明不了風格檔有載入，所以另跑載入探針：問「第一個 `##` 標題是什麼」，NEW 要回「長度」、OLD 要回「誰優先」
 - P3 允許 `Bash(bash test.sh)`，讓受測 session 真的跑一次驗證指令
 - 每發多記三個欄位：`models`（`modelUsage` 的鍵，確認 advisor 沒被叫）、`actual`（P3 跑完後 `run.sh` 自己在沙盒跑 `bash test.sh` 的最後一行）、
-  `outside`（受測 session 的工具呼叫裡，碰到工作目錄以外的筆數；在刪掉原始 stream-json 之前算）
+  `outside`（受測 session 的工具呼叫裡，碰到 `proj/` 以外的筆數；在刪掉原始 stream-json 之前算）。
+  第 2 批起再多兩個只供事後查看、`check.sh` 不讀的欄位：`outside_hits`（命中的那幾筆工具輸入）、`denied`（被權限擋下的呼叫）
 
 ## 三個 prompt
 
@@ -35,7 +36,7 @@
 
 1. `docs/measurements/2026-11-16-adhd-length/selftest.sh`，要印「自測 … 例全部如預期」
 2. `docs/measurements/2026-11-16-adhd-length/run.sh <session scratchpad 底下、還不存在的目錄> <批次編號>`。
-   那個目錄每發之前會整個刪掉重建，所以只接受不存在、或裡面有 `.adhd-length-work` 標記的目錄
+   那個目錄每發之前會整個刪掉重建，所以只接受不存在、或裡面有 `.dd-sandbox` 標記的目錄。受測 session 的 cwd 是它底下的 `proj/`
 3. `docs/measurements/2026-11-16-adhd-length/check.sh docs/measurements/2026-11-16-adhd-length/out/batch<N> > docs/measurements/2026-11-16-adhd-length/out/batch<N>/check.out`
 4. `grep -rlE '/Users/|/private/tmp|/Volumes/|-Users-|-private-tmp-|-Volumes-' docs/measurements/2026-11-16-adhd-length/out` 要回 0 筆
 
@@ -55,6 +56,15 @@
 - 指令失敗時的回報（全域 §6.2 的格式）在這份風格下長什麼樣
 - 模型會不會把長說明塞進程式碼區塊：只有這幾發的圍欄行數可看
 - `outside` 只認幾種寫法（絕對路徑、`~/`、`../`、幾個檔名字串），受測 session 用別的寫法讀到工作目錄以外的檔會漏
+
+## 各批結果
+
+- 第 1 批（2026-11-16，風格檔 blob 見 `out/batch1/styles.txt`）：不通過。
+  新版比舊版短（P1 內容行 10、9 對 12、15；P2 8、10 對 11、11），但 NEW 臂 6 發裡 2 發超過 500 字（513、539）。
+  P3 四發的 `outside` 都是 1、OLD 臂有 1 發 `permission_denials` 是 1；原始紀錄已刪，看不出是哪個呼叫。
+  事後單跑 1 發 P3 留原始紀錄（沒有標記檔的目錄）：受測 session 先跑了一條 `ls -la && cat … && ls -laR .claude && git status --short`，沒被擋、也沒命中 `outside` 的樣式 ——
+  dontAsk 下這類只讀的 shell 指令不在 `--allowedTools` 裡照樣放行。第 1 批的標記檔放在 cwd 裡、檔名帶實驗主題，推測受測 session 去讀了它才命中，沒有證實。
+  之後 `run.sh` 改三處：標記檔移到 cwd 外面並改名、每發只放自己那一臂的風格檔（原本兩臂的檔都在，`ls -laR .claude` 看得到另一臂）、留下 `outside_hits` 與 `denied`
 
 ## 約束
 
