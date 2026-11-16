@@ -546,7 +546,8 @@ jobs:
           exit $fail
 
       # 腳本與上限檔在 scripts/githooks/（本 repo 自用、不部署），說明在那一層的 CLAUDE.md。
-      # 同一支腳本帶 --staged 是 pre-commit 在跑的那一半；這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone）
+      # 同一支腳本帶 --staged 是 pre-commit 在跑的那一半；這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone、
+      # cherry-pick／merge／rebase 這類不經過 pre-commit 的 commit；清單在 scripts/githooks/CLAUDE.md「繞得過的路」）
       - name: 根目錄 CLAUDE.md 大小上限（以最新 v* tag 那一版的上限為準）
         run: |
           # 腳本自己遇到「沒有 v* tag」會退回去讀工作目錄的上限檔。這個 repo 有 v* tag，

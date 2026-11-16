@@ -6,12 +6,15 @@
 #   claude-md-size.sh            CI 用：看工作目錄那一份。超過上限就不通過
 #
 # 上限寫在 scripts/githooks/claude-md-max-bytes。取哪一版的數字：
-#   1. 最新的 v* tag 那一版有這個檔 → 用它（在 commit 裡調高不會生效，要等發下一版）
+#   1. 最新的 v* tag 那一版有這個檔 → 用它（在 commit 裡調高不會生效，要等下一個 v* tag，也就是發下一版）
 #   2. 否則（沒有 v* tag，或最新的 tag 還沒有這個檔）：
 #      --staged 讀 HEAD 那一版；HEAD 也沒有才讀 index（加進上限檔的那個 commit 自己要過得去）
 #      不帶參數讀工作目錄那一份
 # 第 2 種情況擋不住「先單獨 commit 調高、下一個 commit 再加字」，CI 也擋不住同一次 push 裡的調高，
-# 所以每次取上限都印出取自哪裡。取不到上限或內容不合法一律不通過。
+# 所以每次取上限都印出取自哪裡。要取上限的時候取不到、或內容不合法，一律不通過
+# （不帶參數每次都取；--staged 只在 CLAUDE.md 變大時才取，沒變大的 commit 不查上限檔、直接放行）。
+# 「最新的 v* tag」是本機所有 v 開頭的 tag 裡照版本號排最大的那一個：不管它推上去了沒、是不是版本號的形狀、
+# 在不在這條 branch 的歷史裡。打一個 tag 就算數，見同目錄 CLAUDE.md「繞得過的路」。
 DOC=CLAUDE.md
 LIMIT_FILE=scripts/githooks/claude-md-max-bytes
 
@@ -41,7 +44,7 @@ parse_limit() {
 resolve_limit() {
     local tag why raw
     # 取最新的版本 tag 用 --sort=-v:refname（跟 ci.yml「CHANGELOG 已發布區塊不可改動」同一個寫法）：
-    # 不排序拿到的是最舊的，照字典序排 v0.0.10 會輸給 v0.0.2
+    # 不排序是照名稱的字典序由小到大，head -1 拿到的是字典序最前面的（不是最新的）；字典序倒排 v0.0.10 會輸給 v0.0.2
     tag=$(git tag --list 'v*' --sort=-v:refname | head -1)
     if [ -n "$tag" ]; then
         why="${tag} 還沒有這個檔，發下一版之後改以 tag 為準"
@@ -67,7 +70,7 @@ resolve_limit() {
         return 1
     fi
     if ! limit=$(printf '%s\n' "$raw" | parse_limit); then
-        echo "❌ 根目錄 ${DOC} 大小上限：上限檔內容不合法（${src}）。# 開頭的行與空行不算，其餘要剛好一行整數"
+        echo "❌ 根目錄 ${DOC} 大小上限：上限檔內容不合法（${src}）。# 開頭的行與空行不算，其餘要剛好一行整數、最多 12 位"
         return 1
     fi
 }
