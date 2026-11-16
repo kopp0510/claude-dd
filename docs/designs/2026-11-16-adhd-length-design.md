@@ -42,7 +42,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 風格檔加長度上限並實測 | IN_PROGRESS | — | `docs/measurements/2026-11-16-adhd-length/selftest.sh` 全部如預期；`check.sh out/batch<最後一批>` exit 0；LICENSE 引句 `grep -F` 全中；`tests/test-install.sh` 過 | 7e1ff44.. |
+| S1 | 風格檔加長度上限並實測 | DONE | — | `docs/measurements/2026-11-16-adhd-length/selftest.sh` 全部如預期；`check.sh out/batch<最後一批>` exit 0；LICENSE 引句 `grep -F` 全中；`tests/test-install.sh` 過 | 7e1ff44..2f2b1fc |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
