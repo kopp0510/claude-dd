@@ -212,7 +212,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | 指令 | 說明 |
 |------|------|
 | `/dd-init` | 初始化專案：蓋章 8 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`（僅在專案有前端時；純後端/CLI 跳過）、檢查 plugin 依賴 |
-| `/output-style ADHD` | 開啟 ADHD 回覆風格（第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
+| `/output-style ADHD` | 開啟 ADHD 回覆風格（先求短、預設一則最多 10 行，第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
 
 ## Promoted Skills（預設部署，13 個）
 

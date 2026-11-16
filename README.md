@@ -201,7 +201,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | Command | Description |
 |---------|-------------|
 | `/dd-init` | Initialise a project: stamp the 8-step cycle into `CLAUDE.md`, hook up the pre-commit gate, create `.screenshots/` (only when the project has a frontend — pure backend/CLI skips it), verify plugin dependencies |
-| `/output-style ADHD` | Turn on the ADHD response style (action first, numbered steps, progress every turn, short lists, no preamble or closers; written in Traditional Chinese); `/output-style default` turns it off. Claude Code reads style files at startup, so restart after installing. It applies to the current project only (saved to `.claude/settings.local.json`); for a default everywhere, set `"outputStyle": "ADHD"` in `~/.claude/settings.json` — a project's own `.claude/settings*.json` `outputStyle` still wins |
+| `/output-style ADHD` | Turn on the ADHD response style (short first — 10 lines per reply by default — then action first, numbered steps, progress every turn, short lists, no preamble or closers; written in Traditional Chinese); `/output-style default` turns it off. Claude Code reads style files at startup, so restart after installing. It applies to the current project only (saved to `.claude/settings.local.json`); for a default everywhere, set `"outputStyle": "ADHD"` in `~/.claude/settings.json` — a project's own `.claude/settings*.json` `outputStyle` still wins |
 
 ## Promoted Skills (13, deployed by default)
 
