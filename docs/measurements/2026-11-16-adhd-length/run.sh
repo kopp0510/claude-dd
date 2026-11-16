@@ -11,6 +11,7 @@
 # 不需要先部署：每發只把自己那一臂的風格檔放進 proj/.claude/output-styles/（專案層），不動 ~/.claude/。
 #   OLD = git 裡 BASE 那一版的 output-styles/adhd.md，NEW = repo 工作樹現在的 output-styles/adhd.md；
 #   各自只把 frontmatter 的 name 改成 ADHDOLD、ADHDNEW（避免跟已部署的 ADHD 撞名），其餘逐字相同。
+# 只跑一發：ONLY="<臂> <prompt 編號>" run.sh <工作目錄> <批次編號>（prompt 4、5 是保留題）。
 # 順序：先跑兩發載入探針，任一臂答錯就停，不跑後面 12 發。
 # 花費：每發上限 2 美元，共 2 + 12 發
 set -e
@@ -54,11 +55,14 @@ done
 prompt_0='你的 output style 指示裡，第一個 `##` 標題是什麼？只回標題那幾個字。'
 prompt_1='讀 review.md，告訴我現在狀況怎樣、我該先處理什麼。不要改任何檔案，也不要執行 shell 指令。'
 prompt_2='deploy.sh 跑了就失敗（訊息在 deploy.log），為什麼？不要改任何檔案，也不要執行 shell 指令。'
-prompt_3='照 todo.md 把事情做完，再用 `bash test.sh` 驗證（指令照這樣打，不要加別的）。做完照你的規則回報。'
-printf '%s\n' "$prompt_0" > "$OUT/probe.prompt.txt"
-printf '%s\n' "$prompt_1" > "$OUT/p1.prompt.txt"
-printf '%s\n' "$prompt_2" > "$OUT/p2.prompt.txt"
-printf '%s\n' "$prompt_3" > "$OUT/p3.prompt.txt"
+# 第 3 批起 P3 多一句「除了這一條，不要執行其他 shell 指令」：前兩批有 3 發被擋，第 2 批的 denied 欄顯示被擋的是
+# for 迴圈串起來的只讀指令（單純的 ls、cat、git status 在 dontAsk 下沒列進 --allowedTools 也會放行，迴圈不會）
+prompt_3='照 todo.md 把事情做完，再用 `bash test.sh` 驗證（指令照這樣打，不要加別的）。除了這一條，不要執行其他 shell 指令。做完照你的規則回報。'
+# 保留題（調措辭用，不是判定用；內容與 P1 到 P3 不同）。只在 ONLY 模式跑，check.sh 不讀它們的輸出
+# shellcheck disable=SC2034  # prompt_4、prompt_5 由 run_one 與 ONLY 模式用 eval 取用
+prompt_4='讀 inbox.md，今天我該先回哪幾張？不要改任何檔案，也不要執行 shell 指令。'
+# shellcheck disable=SC2034
+prompt_5='build 為什麼失敗（訊息在 build.log）？不要改任何檔案，也不要執行 shell 指令。'
 
 # 每發之前整個重建工作目錄與 fixture（fixture 當場寫出來，不從 repo 複製）
 setup() { # $1 = prompt 編號，$2 = 臂
@@ -114,6 +118,30 @@ done
 echo "RESULT ok=$ok missing=$missing"
 FIXTURE
             ;;
+        4)
+            cat > inbox.md << 'FIXTURE'
+# 客服信箱（待回）
+
+## 急
+- T1 重複扣款：三位客戶同一筆訂單被扣兩次，金流後台查得到兩筆。
+- T2 SSO 登入失敗：只有一位客戶回報，還沒重現，不確定是不是他們自己的設定。
+
+## 一般
+- T3 發票抬頭要改。
+- T4 匯出 CSV 亂碼。
+- T5 想加一個子帳號。
+
+## 不急
+- T6 問有沒有深色模式。
+- T7 建議改通知信的標題。
+- T8 問下次改版時間。
+FIXTURE
+            ;;
+        5)
+            printf '18\n' > .nvmrc
+            printf '{\n  "name": "web",\n  "engines": { "node": ">=20" },\n  "scripts": { "build": "vite build" }\n}\n' > package.json
+            printf 'error web@1.0.0: The engine "node" is incompatible with this module. Expected version ">=20". Got "18.19.0"\n' > build.log
+            ;;
         esac
     )
 }
@@ -166,6 +194,21 @@ run_one() { # $1 = 臂（OLD|NEW），$2 = prompt 編號（0 是探針），$3 =
     rm -f "$raw"
     echo "跑完 $name"
 }
+
+# ONLY="<臂> <prompt 編號>"：只跑那一發就結束（環境檢查、保留題用），不跑探針與整批
+if [ -n "${ONLY:-}" ]; then
+    # shellcheck disable=SC2086
+    set -- $ONLY
+    eval "printf '%s\\n' \"\$prompt_$2\"" > "$OUT/p$2.prompt.txt"
+    run_one "$1" "$2" "$1-p$2-only"
+    rm -rf "$WORK" "$STYLES"
+    exit 0
+fi
+
+printf '%s\n' "$prompt_0" > "$OUT/probe.prompt.txt"
+printf '%s\n' "$prompt_1" > "$OUT/p1.prompt.txt"
+printf '%s\n' "$prompt_2" > "$OUT/p2.prompt.txt"
+printf '%s\n' "$prompt_3" > "$OUT/p3.prompt.txt"
 
 # 載入探針：答錯就不花後面 12 發的錢
 for arm in NEW OLD; do run_one "$arm" 0 "$arm-probe"; done
