@@ -2,8 +2,6 @@
 
 可攜式 Claude Code 設定庫，透過 `install-dd-pipeline.sh` 安裝到 `~/.claude/` 全域。
 
-進度以 docs/designs/2026-11-16-adhd-length-design.md 的「進度表」為準：開工先讀表，照表下方的規則做。
-
 ## 安裝 / 更新
 
 ```bash
@@ -146,7 +144,10 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 4. 新增或改了風格檔內文，要有行為驗收：開一個新的 `docs/measurements/<日期>-<風格>/`，照 `docs/measurements/2026-10-29-adhd-style/` 的 `run.sh`／`check.sh` 改出那個風格的臂與斷言
    （那個目錄的腳本寫死 ADHD 與 default 兩臂，而且它的 `out/` 是被引用的證據，不要在原處重跑蓋掉）。
    只看 `/output-style` 清單有沒有它不算 —— 那只證明檔案被讀到，證明不了回覆真的照規則走、也證明不了沒把全域 CLAUDE.md 的規則壓掉
-   `claude -p` init 訊息的 `output_style` 也不算：它只回傳 `--settings` 給的值，給一個不存在的風格照樣回、不報錯（2026-10-29 實測）；證據只有回覆內容的鑑別斷言
+   `claude -p` init 訊息的 `output_style` 也不算：它只回傳 `--settings` 給的值，給一個不存在的風格照樣回、不報錯（2026-10-29 實測）；證據只有回覆內容的鑑別斷言。
+   要量整則回覆的長度、或比新舊兩版風格檔時，改照 `docs/measurements/2026-11-16-adhd-length/`（2026-10-29 那支不量長度）：不用先部署，每臂的風格檔放拋棄式專案的 `.claude/output-styles/`，另跑載入探針確認真的讀到。
+   審查之後風格檔只要再改字，之前通過的那一批就不算它的，要照先寫死的規則再跑一批（同一目錄「第 4 批」，那一批沒過）。
+   寫長度上限時：只給整則的行數與字數上限，行變少、每行變長、總字數沒降（同一目錄第 2 批）
 
 ## 核心工作法：8 步開發迴圈
 
