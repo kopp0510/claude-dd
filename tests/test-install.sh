@@ -44,10 +44,12 @@ source ./install-dd-pipeline.sh
 [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "${#PROMOTED_SKILLS[@]}" ]
 [ "$(ls "$SANDBOX"/.claude/agents/*.md | wc -l)" -eq "${#PROMOTED_AGENTS[@]}" ]
 [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
+[ -f "$SANDBOX/.claude/commands/dd-stop.md" ]
 # 2026-11-15 起沒有命名空間 command（NS_COMMANDS 是空的）：commands/ 底下不該有子目錄。
 # 加回命名空間 command 時，把「目錄在、README.md 沒被部署」那兩條斷言加回來
 [ -z "$(find "$SANDBOX/.claude/commands" -mindepth 1 -maxdepth 1 -type d)" ]
 [ -x "$SANDBOX/.claude/scripts/check-claude-md.sh" ]
+[ -x "$SANDBOX/.claude/scripts/dd-stop.sh" ]
 [ "$(ls "$SANDBOX"/.claude/output-styles/*.md | wc -l)" -eq "${#DD_OUTPUT_STYLES[@]}" ]
 grep -qx 'name: ADHD' "$SANDBOX/.claude/output-styles/adhd.md"
 echo "✅ 首次安裝部署內容正確"
@@ -71,6 +73,7 @@ skills_before=$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)
 HOME="$SANDBOX" ./install-dd-pipeline.sh --commands-only < /dev/null
 [ "$(ls -d "$SANDBOX"/.claude/skills/*/ | wc -l)" -eq "$skills_before" ]
 [ -f "$SANDBOX/.claude/commands/dd-init.md" ]
+[ -f "$SANDBOX/.claude/commands/dd-stop.md" ]
 echo "✅ --commands-only 未動到既有 skills"
 
 # --commands-only 在乾淨 HOME：不得部署 output style（上面那個 SANDBOX 已經有了，驗不出來）
@@ -512,7 +515,9 @@ HOME="$T5_HOME" ./install-dd-pipeline.sh < /dev/null > "$T5_HOME/out1.txt" 2>&1 
 T5_FILES="skills/code-simplifier/SKILL.md|skills/code-simplifier/SKILL.md|skills/code-simplifier/SKILL.md
 agents/code-reviewer.md|agents/code-reviewer.md|agents/code-reviewer.md
 commands/dd-init.md|commands/dd-init.md|commands/dd-init.md
+commands/dd-stop.md|commands/dd-stop.md|commands/dd-stop.md
 scripts/check-claude-md.sh|scripts/check-claude-md.sh|scripts/check-claude-md.sh
+scripts/dd-stop.sh|scripts/dd-stop.sh|scripts/dd-stop.sh
 output-styles/adhd.md|output-styles/adhd.md|output-styles/adhd.md"
 echo "$T5_FILES" | while IFS='|' read -r dep src bak; do
     [ -f "$T5_HOME/.claude/$dep" ] || { echo "❌ T5：安裝後找不到 ${dep}"; exit 1; }
