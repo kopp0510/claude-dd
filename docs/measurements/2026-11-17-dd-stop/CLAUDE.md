@@ -51,7 +51,7 @@
     實際的 stream-json 裡它長什麼樣沒有查
   - 會誤判成沒通過或無效的（不會漏放）：commit 訊息內文有「 -n 」；判定要的那串字落在 Bash 輸出的 1500 字之後
   - `selftest-model.sh` 沒有測到上面前兩種，也沒有測 `Task` 這個工具名、`Skill code-review`、`dd-stop.sh on`、`revise-claude-md`、不認得的臂；`.json` 壞掉時 `check-model.sh` 以 jq 的 exit 碼結束，不在檔頭寫的 0／1／2 裡
-  - `run-model.sh` 的去識別把路徑與帳號當正規式用（路徑有 `+`、`(`、`.` 時可能換錯）、`final.subjects` 沒有經過替換；第 1 批的 `out/` 用 `grep -rl` 查過帳號名稱、`/Users/`、`/Volumes/`、`/private/tmp`、`Volumes-T7` 都是 0 個檔
+  - `run-model.sh` 的去識別把路徑與帳號當正規式用（路徑有 `+`、`(`、`.` 時可能換錯）、`final.subjects` 沒有經過替換；第 1 批的 `out/` 用 `grep -rl` 查過帳號名稱、`/Users/`、`/Volumes/`、`/private/tmp`、編碼過的專案路徑 都是 0 個檔
 - 第 1 批的六個 `.json` 跑完之後補做了一次替換：`ls -la` 的輸出帶著系統帳號名稱，換成 `<user>`（`run-model.sh` 的 `reduce` 當時還沒有這個替換，之後補上了）。
   換完重跑 `check-model.sh`，輸出與 `check.out` 逐位元組相同
 
