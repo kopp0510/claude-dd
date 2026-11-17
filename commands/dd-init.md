@@ -30,7 +30,7 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 3. **檢查 CLAUDE.md 是否存在**（判斷之前先照下面「寫檔前：先看目標是不是 symlink」那節檢查 `CLAUDE.md`；
    懸空的 symlink 也要問、不能當成不存在；使用者答「不要」就跳過 Phase 1，答「要」就拿連結目標判斷存不存在）：
    - 存在 → 補充模式（加在哪、要不要升級，照 Phase 1 的判斷）
-   - 不存在 → 建立模式（現有專案先派 **Task**（subagent_type: `Explore`）分析技術棧與目錄結構，新專案用 **AskUserQuestion** 問專案類型/技術棧/名稱）
+   - 不存在 → 建立模式（現有專案先用 **Agent** 工具派（subagent_type: `Explore`）分析技術棧與目錄結構，新專案用 **AskUserQuestion** 問專案類型/技術棧/名稱）
 
 ### 寫檔前：先看目標是不是 symlink
 
@@ -338,7 +338,7 @@ else
 fi
 ```
 
-三個寫法都是必要的，任一省略都會出事（都實測過）：
+下面這幾個寫法都是必要的，任一省略都會出事（都實測過）：
 
 - **不可寫成 `git add CLAUDE.md .gitignore`**：`git add` 是全有全無，純後端/CLI 專案沒有
   `.gitignore`（Phase 2 只在有前端時建），整條會以 exit 128 失敗、**連 CLAUDE.md 也不會被 stage**，
