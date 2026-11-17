@@ -150,7 +150,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 | S1-d-7 被停掉的四發沒查 `permission_denials`，設計文件沒提 | Smell | 採納。設計文件 S1-4 的結果與量測目錄 CLAUDE.md 各補一句 |
 | S1-d-8 `-n` 的比對式會被 commit 訊息誤判 | Smell | 查證：手造 `git commit -m "feat: 支援 -n 參數"` 判成沒通過。方向是假紅。寫進「判準已知的洞」；判準沒改 |
 | S1-d-9 Bash 輸出只留 1500 字 | Smell | 讀 `run-model.sh` 確認（`.[0:1500]`）；第 1 批至少有三次輸出剛好 1500 字。寫進「判準已知的洞」；沒有手造重現 |
-| S1-d-10 去識別把路徑當正規式、`final.subjects` 沒換 | Smell | 讀 `run-model.sh` 確認。第 1 批的 `out/` 重新 `grep -rl` 帳號名稱、`/Users/`、`/Volumes/`、`/private/tmp`、`Volumes-T7`：0 個檔。寫進「判準已知的洞」；腳本沒改 |
+| S1-d-10 去識別把路徑當正規式、`final.subjects` 沒換 | Smell | 讀 `run-model.sh` 確認。第 1 批的 `out/` 重新 `grep -rl` 帳號名稱、`/Users/`、`/Volumes/`、`/private/tmp`、編碼過的專案路徑：0 個檔。寫進「判準已知的洞」；腳本沒改 |
 | S1-d-11 「結果」沒寫對應哪一版腳本 | Smell | 採納。量測目錄 CLAUDE.md 與設計文件寫明受測的是 `65e1fb9` 版，之後步驟 3、4 改過的 `dd-stop.sh` 模型層沒有重跑 |
 | S1-d-12 自測沒測到的分支、`.json` 壞掉時的 exit 碼 | Smell | 查證：`selftest-model.sh` 裡 `"Task"`、`dd-stop.sh on`、`revise-claude-md`、「不認得的臂」都是 0 筆；壞掉的 `.json` 讓 `check-model.sh` exit 5。寫進「判準已知的洞」；自測沒改（判準沒動，自測跟著不動） |
 
