@@ -20,7 +20,7 @@
 #   而且一看到判定要的工具呼叫就把那一發停掉（不必讓它把整圈迴圈、三個審查者都跑完）。正式一批最壞 2×5 + 4×3 = 22 美元。
 # 每發最長 25 分鐘，超過就停掉（判成無效）。
 #
-# 輸出：out/model-<批次>/<臂>-<n>.json（只留判定要用的欄位，家目錄與工作目錄的路徑換成 <home>、<work>）與 prompt 原文。
+# 輸出：out/model-<批次>/<臂>-<n>.json（只留判定要用的欄位，家目錄與工作目錄的路徑換成 <home>、<work>，系統帳號名稱換成 <user>）與 prompt 原文。
 #   原始 stream-json 留在工作目錄、不進 repo（init 訊息有編碼過的家目錄路徑與連接器清單）。
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -156,8 +156,8 @@ PY
 
 # 原始 stream-json 轉成判定要用的那幾個欄位。$1=raw $2=專案目錄
 reduce() {
-    jq -c -R 'fromjson? // empty' "$1" | jq -s -c --arg home "$HOME" --arg work "$WORK" '
-        def clean: tostring | gsub($work; "<work>") | gsub($home; "<home>");
+    jq -c -R 'fromjson? // empty' "$1" | jq -s -c --arg home "$HOME" --arg work "$WORK" --arg user "$(id -un)" '
+        def clean: tostring | gsub($work; "<work>") | gsub($home; "<home>") | gsub($user; "<user>");
         def text: if type == "string" then . elif type == "array" then (map(.text? // "") | join("\n")) else "" end;
         ( [ .[] | select(.type == "assistant" and .parent_tool_use_id == null) | .message.content[]?
             | select(.type == "tool_use") ] ) as $uses

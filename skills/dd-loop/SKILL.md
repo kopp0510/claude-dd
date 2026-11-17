@@ -15,8 +15,9 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 沒有新增 `docs/reviews/S*.md`。兩者都會 `exit 1` 並印出該怎麼做 —— 照它印的做，不要繞過。
 剛採用第二個慣例、而且上一段的起點檔存在又不是空樹時，第一次會被擋（上一段本來就沒報告；從沒記過起點、或上一段從空樹開始的專案不會被擋）。
 出路是補一份 `docs/reviews/S<上一段>-SKIP.md`（沒有段落編號就用 `S1`，理由寫「採用 review 留痕之前的段落」）並**連同 trailer 一起 commit** —— 只建檔不 commit 還是會被擋。
-印的是「迴圈暫停中」（使用者用 `/dd-stop on` 暫停了這個專案）也算沒記好，但不用修：照它印的只做步驟 1、2，不跑步驟 3–8，不要為了記起點去清旗標；恢復由使用者下 `/dd-stop off`。
-其他沒印出這行的情況就是沒記好。舊版 gate 的徵兆是**什麼都不印、exit 0**（沒有 staged 時）或印「commit 已擋下」（有 staged 時）；
+印的是「迴圈暫停中」（使用者用 `/dd-stop on` 暫停了這個專案；這時 exit 0）也算沒記好，但不用修：照它印的只做步驟 1、2（commit 照平常下，不加 `SKIP_DOC_CHECK=1`），不跑步驟 3–8，不要為了記起點去清旗標，
+回報時講一句這個工作因為暫停沒跑步驟 3–8；恢復由使用者下 `/dd-stop off`，恢復之後再跑 `--start-segment` 時照常查（暫停期間欠的 CLAUDE.md 沒補完會被擋）。
+其他沒印出「段落起點：…」的情況就是沒記好。舊版 gate 的徵兆是**什麼都不印、exit 0**（沒有 staged 時）或印「commit 已擋下」（有 staged 時）；
 用 `grep -q -- --start-segment ~/.claude/scripts/check-claude-md.sh || echo 舊版` 確認（少了 `--` 會被當成 grep 的選項）。
 是舊版就不要照它印的補檔或 commit：到本機的 claude-dd clone（沒有就 `git clone https://github.com/kopp0510/claude-dd`）跑 `git pull && ./install-dd-pipeline.sh --force`，再重跑一次 `--start-segment`。
 一段常有好幾個 commit,
