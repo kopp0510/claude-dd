@@ -34,10 +34,14 @@ A learning should be promoted when **all three** are true:
 - The rule needs detailed explanation (multiple paragraphs)
 - You want it to load only when relevant files are open
 
-### Use ~/.claude/CLAUDE.md when:
+### Use the global CLAUDE.md when:
 - The rule applies to all your projects
 - It's a personal preference, not a project convention
 - Examples: "Prefer explicit returns over implicit", "Use descriptive variable names"
+
+Write it to `templates/global/CLAUDE.md` in the claude-dd checkout, not to `~/.claude/CLAUDE.md`:
+`install-dd-pipeline.sh --force` overwrites `~/.claude/CLAUDE.md` with that template whenever the two
+differ (after a backup). Ask the user before writing, then redeploy with `./install-dd-pipeline.sh --force`.
 
 ## Distillation Rules
 

@@ -45,9 +45,13 @@ Show the matching entries and confirm they're what the user means.
 |---|---|---|
 | Applies to entire project | `./CLAUDE.md` | "Use pnpm, not npm" |
 | Applies to specific file types | `.claude/rules/<topic>.md` | "API handlers need validation" |
-| Applies to all your projects | `~/.claude/CLAUDE.md` | "Prefer explicit error handling" |
+| Applies to all your projects | `templates/global/CLAUDE.md` in the claude-dd checkout (not `~/.claude/CLAUDE.md`) | "Prefer explicit error handling" |
 
 If the user didn't specify a target, recommend one based on scope.
+
+For an all-projects rule, ask the user before writing anything. Do not edit `~/.claude/CLAUDE.md` directly:
+`install-dd-pipeline.sh --force` overwrites it with `templates/global/CLAUDE.md` whenever the two differ
+(the old file is backed up first). Edit the template, then redeploy with `./install-dd-pipeline.sh --force`.
 
 ### Step 4: Distill into a concise rule
 
@@ -64,9 +68,10 @@ Transform the learning from auto-memory's note format into CLAUDE.md's instructi
 
 **Rules for distillation:**
 - One line per rule when possible
-- Imperative voice ("Use X", "Always Y", "Never Z")
+- An imperative sentence plus a one-clause reason ("Use `pnpm install` — the lock file is `pnpm-lock.yaml`")
 - Include the command or example, not just the concept
-- No backstory — just the instruction
+- Keep the reason to one clause; leave out the story of how it was found
+- Avoid shouting with "Always" / "Never" / all caps; the reason carries the weight
 
 ### Step 5: Write to target
 
@@ -121,7 +126,7 @@ The pattern is now an enforced instruction. Claude will follow it in all future 
 ## Promotion Decision Guide
 
 ### Promote when:
-- Pattern appeared 3+ times in auto-memory
+- It meets "Promotion Criteria" and the "Scoring Guide" threshold in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md` (the only definition; the other bullets here are signals, not a separate threshold)
 - You corrected Claude about it more than once
 - It's a project convention that any contributor should know
 - It prevents a recurring mistake

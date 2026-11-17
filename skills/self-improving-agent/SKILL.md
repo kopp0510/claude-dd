@@ -42,11 +42,9 @@ Claude Code's auto-memory (v2.1.32+) automatically records project patterns, deb
 
 ## Installation
 
-### Claude Code (Plugin)
-```
-/plugin marketplace add alirezarezvani/claude-skills
-/plugin install self-improving-agent@claude-code-skills
-```
+This copy is deployed by the claude-dd repo's `install-dd-pipeline.sh` (it is in the `PROMOTED_SKILLS`
+list and is copied to `~/.claude/skills/self-improving-agent/`). Do not also install it from the upstream
+marketplace.
 
 ## Memory Architecture
 
@@ -64,7 +62,7 @@ Claude Code's auto-memory (v2.1.32+) automatically records project patterns, deb
 
 ```
 1. Claude discovers pattern → auto-memory (MEMORY.md)
-2. Pattern recurs 2-3x → /self-improving-agent:review flags it as promotion candidate
+2. Pattern meets the Promotion Criteria and scores high enough (both in reference/promotion-rules.md) → /self-improving-agent:review flags it as promotion candidate
 3. You approve → /self-improving-agent:promote graduates it to CLAUDE.md or rules/
 4. Pattern becomes an enforced rule, not just a note
 5. MEMORY.md entry removed → frees space for new learnings

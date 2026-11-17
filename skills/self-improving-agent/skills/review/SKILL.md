@@ -61,10 +61,9 @@ Analyze each entry for:
    - Multiple entries about the same topic (e.g., three lines about testing)
    - Entries that could merge into one concise rule
 
-4. **Promotion candidates** — entries that meet ALL criteria:
-   - Appeared in 2+ sessions (check wording patterns)
-   - Not project-specific trivia (broadly useful)
-   - Actionable (can be written as a concrete rule)
+4. **Promotion candidates** — the criteria and the score threshold are defined in one place only:
+   "Promotion Criteria" and "Scoring Guide" in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`.
+   Read that file and apply it as written; do not restate the thresholds from memory. In addition:
    - Not already in CLAUDE.md or `.claude/rules/`
 
 ### Step 3: Read topic files
