@@ -16,6 +16,25 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Added
+
+- **`/dd-stop on`／`off`／`status`：暫停與恢復一個專案的 8 步迴圈（步驟 3–8）與 CLAUDE.md gate**。給已經跑過 `/dd-init`、想暫時不走流程的專案用。
+  `on` 做兩件事：設 `git config --local dd.stopped true`（gate 讀它），並把一段暫停聲明寫進 repo 根目錄的 `CLAUDE.local.md`（Claude 讀它；列進 `.git/info/exclude`，不進版控）。
+  暫停中 commit 照平常下，gate 放行並印「gate 暫停中」；`--start-segment` 不記新起點、不查欠帳與 review 報告。
+  **暫停是延後、不是豁免**：暫停期間改了程式碼而沒更新 `CLAUDE.md` 的目錄，`off` 的時候列出來，之後的 commit 沒補上一樣擋；有 `docs/reviews/` 的專案，下次 `--start-segment` 照樣要報告或 `S<段落>-SKIP.md`。
+  `off` 清掉旗標、拿掉聲明（`CLAUDE.local.md` 還原成 `on` 之前的樣子）。`CLAUDE.local.md` 是 symlink 或已經進版控時不寫；`~/.claude/scripts/` 的 gate 是不認得這個旗標的舊版時不暫停。
+  新腳本 `scripts/dd-stop.sh`（部署到 `~/.claude/scripts/`）、新測試 `tests/test-dd-stop.sh`、`tests/test-gate.sh` 的 ⑰。設計與實測：`docs/designs/2026-11-17-dd-stop-design.md`、`docs/measurements/2026-11-17-dd-stop/`
+  - 已知限制：只在這個 clone 生效；同一個 repo 的其他 worktree 的 gate 會一起暫停，但那邊的 Claude 讀不到聲明；已經開著的對話要重開才會跟著暫停或恢復；暫停中自己在終端機的 commit 一樣放行；
+    `--commands-only` 更新的人拿到指令、沒有腳本，指令會叫他重跑完整安裝
+  - `dd-stop` 這個名字以前是另一個指令（2026-04 退場，安裝時會清掉舊檔）。這次把它從清理清單拿掉：機器上還留著舊 `dd-stop.md` 的，重跑安裝時會被新版換掉（先備份）
+
+### Changed
+
+- `skills/dd-loop/SKILL.md`「段落起點」多一句：`--start-segment` 印「迴圈暫停中」時不算記好起點，照它印的只做步驟 1、2
+- 安裝完成訊息的「快速開始」多一行 `/dd-stop` 的用法；`--help` 的安裝內容那一行列出兩個指令
+
 ## 1.6.15 — 2026-11-17
 
 ### Added

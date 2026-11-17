@@ -73,6 +73,7 @@ ALL_AGENTS=("${PROMOTED_AGENTS[@]}")
 # （dd-start/arch/approve/dev/test/dx）已於 2026-08-04 刪除，見 git 歷史
 DD_COMMANDS=(
     "dd-init"
+    "dd-stop"
 )
 
 ALL_DD_COMMANDS=("${DD_COMMANDS[@]}")
@@ -293,7 +294,7 @@ show_help() {
     echo "  - ${#PROMOTED_SKILLS[@]} 個 Skills（實證常用）"
     echo "  - ${#PROMOTED_AGENTS[@]} 個 Agents（2 個實證 + 2 個官方備份）"
     echo "  - ${#OFFICIAL_PLUGINS[@]} 個官方 Plugin（claude-md-management：巢狀 CLAUDE.md 維護依賴；skill-creator：skill 建立與 eval）"
-    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：8 步開發迴圈初始化）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
+    echo "  - ${#DD_COMMANDS[@]} 個 DD Command（dd-init：8 步開發迴圈初始化；dd-stop：暫停與恢復迴圈）+ ${#NS_COMMANDS[@]} 個命名空間 Command"
     local style_list
     style_list=$(printf '%s ' "${DD_OUTPUT_STYLES[@]}")
     echo "  - ${#DD_OUTPUT_STYLES[@]} 個 Output Style（${style_list% }；用 /output-style 開關）"
@@ -1084,8 +1085,9 @@ create_commands() {
 
     mkdir -p "$COMMANDS_DIR"
 
-    # 清理已移除的 DD Commands（2026-04 精簡）
-    local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status" "dd-stop")
+    # 清理已移除的 DD Commands（2026-04 精簡）。dd-stop 原本也在這份清單裡，2026-11-17 這個名字給了新的指令
+    # （暫停與恢復 8 步迴圈），所以拿掉：留著的話每次安裝都先刪掉它、再裝回去。舊機器上那份舊的 dd-stop.md 會被下面的部署覆蓋（先備份）
+    local deprecated_dd=("dd-help" "dd-docs" "dd-revise" "dd-status")
     for old in "${deprecated_dd[@]}"; do
         if [ -f "$COMMANDS_DIR/$old.md" ]; then
             # 使用者可能改過這個檔：跟覆蓋一樣先備份，完成訊息會印備份位置
@@ -1451,6 +1453,7 @@ show_completion() {
     echo "   1. cd your-project"
     echo "   2. /dd-init  （蓋章 8 步開發迴圈 + 專案 CLAUDE.md）"
     echo "   3. 開發：實作+測試 → commit → 簡化 → review → 再測 → commit → 沉澱所學 → 評分修正"
+    echo "   暫時不跑迴圈、不讓 gate 擋：/dd-stop on；恢復：/dd-stop off（暫停期間欠的 CLAUDE.md 恢復後要補）"
     echo ""
     # agent、plugin、output style 三段只在這次真的跑過那幾步時才印（--commands-only 三步都沒跑）
     if [ "$COMMANDS_ONLY" = false ]; then

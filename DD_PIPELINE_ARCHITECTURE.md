@@ -97,14 +97,15 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 ## 部署清單（使用率盤點制）
 
 依全 transcript 使用率盤點，repo 只保留有實證使用紀錄的元件並全數預設部署
-（清單 = 腳本頂部的部署陣列：`PROMOTED_*` 的 13 個 promoted Skills、4 個 promoted Agents，加上 dd-init，以及 `DD_OUTPUT_STYLES` 的 `adhd.md`；
+（清單 = 腳本頂部的部署陣列：`PROMOTED_*` 的 13 個 promoted Skills、4 個 promoted Agents，加上 dd-init、dd-stop 兩個指令，以及 `DD_OUTPUT_STYLES` 的 `adhd.md`；
 2026-08-04 盤點留存 9 skills，2026-08-10 新增自製 tech-diagram-gif（實證來源為當次對話的完整管線驗證），2026-09-30 新增只有 hook 的 gate-guard ——
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞；2026-10-23 新增自製 plan-review，
 實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，
 實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑（2026-11-17 加長度上限，實測在 `docs/measurements/2026-11-16-adhd-length/`）；2026-10-30 新增自製 dd-loop，
 內容是從全域 §3.9 原文搬出的迴圈做法細則，實證來源為 `docs/measurements/2026-10-30-dd-loop-trigger/` 的觸發實測；2026-11-14 收編 vendored security-audit（user-invoked），
 實證來源為 `docs/measurements/2026-11-14-security-audit-trial/` 的試跑；2026-11-15 `review` skill 與它包的 `workflow-review` 命名空間指令退場 ——
-後者沒有隨附 LICENSE、查不出上游，前者只是包它的一層，取回與清理見 `UPGRADING.md`「已退場的元件」）。
+後者沒有隨附 LICENSE、查不出上游，前者只是包它的一層，取回與清理見 `UPGRADING.md`「已退場的元件」；2026-11-17 新增 `/dd-stop` 指令與它呼叫的 `scripts/dd-stop.sh`（暫停與恢復迴圈與 gate），
+起因是使用者要一個開關，腳本那一半的依據是 `tests/test-dd-stop.sh`，模型那一半的實測在 `docs/measurements/2026-11-17-dd-stop/`）。
 零使用的 misc 桶與 deprecated 桶已於 2026-08-04 刪除，git 歷史可回溯。
 
 目的：控制每個 session 的 context 稅（skill 清單載入 system prompt 有
@@ -124,6 +125,7 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 （`scripts/check-claude-md.sh`）強制 — 改碼目錄缺 CLAUDE.md 或未同批更新
 即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`，但 SKIP 不是豁免：
 段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit 一樣擋。
+`/dd-stop on` 可以把整個 gate 與迴圈的步驟 3–8 暫停（`git config --local dd.stopped true` 加上 `CLAUDE.local.md` 裡的聲明），一樣不是豁免：暫停期間欠的照記，`/dd-stop off` 之後照追。
 記憶檔名可設（`git config --local dd.docfile <檔名>`，預設 `CLAUDE.md`、只讀 local、不收程式碼檔名），
 給只准放特定檔名的 repo 用；三處使用點與驗證規則見 `scripts/CLAUDE.md`。
 
@@ -143,6 +145,7 @@ gate 怎麼掛、SKIP 怎麼算（這段 2026-11-16 從根目錄 CLAUDE.md 搬�
 CLAUDE.md 或未同批更新即擋 commit；檢查點 commit 逃生口 `SKIP_DOC_CHECK=1`。
 SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit
 （就算沒改程式碼）一樣擋；細節見 `scripts/CLAUDE.md`。
+`/dd-stop on` 暫停期間 gate 放行並記帳、`--start-segment` 不記新起點，`/dd-stop off` 之後照追（`scripts/CLAUDE.md` 的「暫停旗標」條目）。
 
 ## CI 防線（.github/workflows/ci.yml）
 

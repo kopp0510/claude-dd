@@ -34,7 +34,7 @@ repo 只保留**有實證使用紀錄**的元件，全部預設部署；清單�
 
 - `skills/` — 13 個 Skills（全數部署；除了 gate-guard，每個子目錄含 SKILL.md 定義檔；writing-great-skills 為 vendored 自 mattpocock/skills 的 skill 撰寫參考、tech-diagram-gif 的風格規範 vendored 自 fireworks-tech-graph、security-audit 為 vendored 自 cloudflare/security-audit-skill 的安全稽核（user-invoked）；gate-guard 是只有 hook、沒有 skill 的 plugin，擋 Claude 用 `--no-verify` 繞過 gate，見 `skills/gate-guard/hooks/CLAUDE.md`）
 - `agents/` — 4 個 Agents（code-simplifier、code-reviewer 官方備份 + senior-devops、security-auditor）；`LICENSE.txt` 記兩個官方備份與官方檔的比對結果、附 Apache-2.0 全文，不部署
-- `commands/` — 1 個 dd-* 指令（dd-init，.md 平面檔） + 0 個命名空間 command 目錄（2026-11-15 `workflow-review` 退場後沒有了；部署它的程式碼還在）
+- `commands/` — 2 個 dd-* 指令（dd-init、dd-stop，.md 平面檔） + 0 個命名空間 command 目錄（2026-11-15 `workflow-review` 退場後沒有了；部署它的程式碼還在）
 - `output-styles/` — Output Style（`adhd.md`，部署到 `~/.claude/output-styles/`，使用者用 `/output-style ADHD`／`/output-style default` 自己開關；安裝不改任何 `outputStyle` 設定）。`LICENSE.txt` 記上游 i-have-adhd 的逐節去向、不部署；這層別放其他 `.md`，CI 會把它當成要部署的風格
 - `templates/global/` — 全域 CLAUDE.md 模板（經互動比對部署到 `~/.claude/CLAUDE.md`）
 - `scripts/` — 輔助腳本（部署清單由 `install-dd-pipeline.sh` 頂部的 `DD_SCRIPTS` 陣列決定，部署到 `~/.claude/scripts/`；含 check-claude-md.sh pre-commit gate 與本 repo 自用的 `githooks/`，後者不部署）

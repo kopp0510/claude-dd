@@ -56,16 +56,16 @@ cd claude-dd
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）
 5. 登記官方 Plugin（claude-md-management — 巢狀 CLAUDE.md 維護依賴；skill-creator — skill 撰寫與 eval 測試）。plugin 不在磁碟上時印「Plugin 檔案不存在」後跳過；讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令；`installed_plugins.json` 或 `settings.json` 更新不了時（檔案是空的、壞掉、或內容不是剛好一個物件）印警告後跳過。先登記、再啟用，所以登記失敗時不會接著去啟用它
-6. 安裝 `/dd-init` Command 到 `~/.claude/commands/`
+6. 安裝 `/dd-init`、`/dd-stop` 兩個 Command 到 `~/.claude/commands/`
 7. **比對全域 CLAUDE.md**（`~/.claude/CLAUDE.md`）：若與 repo 模板不同，顯示 diff 並詢問是否覆蓋（預設保留本地）。**全新機器上本機還沒有全域 CLAUDE.md 時，這步是詢問是否安裝且預設「否」**（非互動環境同樣採預設值）— 要拿到完整 profile 得答 `y` 或帶 `--force`。`--force` 同時會跳過 diff 詢問直接覆蓋，見[升級](#升級)
 
-另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）與 `dd-init-upgrade.sh`（`/dd-init` 升級舊蓋章區塊時分出範本行與自己加的內容）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
+另有不編號的附加步驟：步驟 2 之前檢查每個 skill 的 `hooks.json` 指令路徑（有相對路徑就中止），步驟 6、7 之間部署 `check-claude-md.sh`（gate 本體）、`dd-init-upgrade.sh`（`/dd-init` 升級舊蓋章區塊時分出範本行與自己加的內容）與 `dd-stop.sh`（`/dd-stop` 的本體）到 `~/.claude/scripts/`、`adhd.md`（ADHD 回覆風格）到 `~/.claude/output-styles/`。
 
 ### 安裝會改到什麼
 
 跑之前值得先知道的事：
 
-- **同名的檔會被換掉，帶不帶 `--force` 都一樣。** `~/.claude/` 底下已經有跟這個 repo 同名、內容不同的 skill、agent、指令、腳本或輸出風格時，會換成 repo 的版本；舊的先備份到 `~/.claude/backups/pre-install-<時間>/`，結束時印出位置。安裝也會刪掉舊版這個 repo 部署過的指令檔（`~/.claude/commands/` 底下的 `dd-help.md`、`dd-docs.md`、`dd-revise.md`、`dd-status.md`、`dd-stop.md`），同樣先備份；你自己剛好有同名的檔也會被刪。`--force` 多做的是全域 `CLAUDE.md`：不問直接覆蓋。
+- **同名的檔會被換掉，帶不帶 `--force` 都一樣。** `~/.claude/` 底下已經有跟這個 repo 同名、內容不同的 skill、agent、指令、腳本或輸出風格時，會換成 repo 的版本；舊的先備份到 `~/.claude/backups/pre-install-<時間>/`，結束時印出位置。安裝也會刪掉舊版這個 repo 部署過的指令檔（`~/.claude/commands/` 底下的 `dd-help.md`、`dd-docs.md`、`dd-revise.md`、`dd-status.md`），同樣先備份；你自己剛好有同名的檔也會被刪。`dd-stop.md` 以前也是其中一個，現在這個名字是新的 `/dd-stop`：舊的那份會被換成新版（先備份）。`--force` 多做的是全域 `CLAUDE.md`：不問直接覆蓋。
 - **兩個設定檔是就地改寫、不備份**：`~/.claude/settings.json` 的 `enabledPlugins`，以及 `~/.claude/plugins/installed_plugins.json` 裡兩個官方 plugin 的登記。只改這幾個鍵，但整個檔會重新輸出，排版可能跟原本不同。
 - **全域模板會改變 Claude 用的語言。** 模板一旦寫入（全新機器在第 7 步答 `y`；本機已有不同版本時選 `o`，或選 `s` 之後答 `y`；或帶 `--force`），它要求 Claude 用繁體中文回覆，commit 訊息也用繁體中文（專案另有規定時照專案）。`/dd-init` 也會用一筆中文訊息的 commit 把它的改動送進你的專案。
 - **有兩個 hook 會變成全域的**，因為它們跟著 skill 一起裝：`gate-guard`（每次 Bash 呼叫之前；它要靠 `jq` 或 `python3` 讀出指令，兩個都沒裝時一律放行；見下方 gate 的規則）與 `self-improving-agent` 的錯誤擷取（每次 Bash 呼叫之後 —— 它比對的是指令輸出的文字、不是結束碼，所以成功的指令只要印了 `error:` 或 `failed`，也會被插一段提醒進對話）。
@@ -123,7 +123,7 @@ git pull && ./install-dd-pipeline.sh --force
 8. 評分 & 修正本輪動過的 `CLAUDE.md` — 先算範圍，再讓 `claude-md-improver` 只審那幾份
 ```
 
-步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：gate 逼著更新的 `CLAUDE.md` 一樣要審，gate 只確認「有寫」、不確認「寫得對」。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出；有 `task-planner` 進度表時以表上記的起點為準），只看最後一個 commit 會漏掉大半。
+步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：gate 逼著更新的 `CLAUDE.md` 一樣要審，gate 只確認「有寫」、不確認「寫得對」。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出；有 `task-planner` 進度表時以表上記的起點為準），只看最後一個 commit 會漏掉大半。用 `/dd-stop on` 暫停期間 `--start-segment` 不記新起點（印「迴圈暫停中」）：那時只做步驟 1、2。
 
 三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據。要派時，主對話在同一則訊息裡**直接平行派最少 3 個審查者**（一發只挖到一部分，五發實驗見 [CHANGELOG.md](CHANGELOG.md)，搜「兩發聯集平均」），全部回來後逐條讀程式碼查證；中間不另派裁決者（比較見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。派工要附什麼、報告怎麼落地，見 `skills/dd-loop/SKILL.md`（全域 §3.9 只留步驟清單與關卡，並明寫呼叫這個 skill）。
 
@@ -172,6 +172,7 @@ git pull && ./install-dd-pipeline.sh --force
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 - `git commit --no-verify`／`-n` 會讓 gate 整個不跑。Claude 這樣下指令時，`gate-guard` 會擋下並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude，你自己在終端機打 `--no-verify` 擋不到；它是全域安裝，沒裝 gate 的專案也會擋
+- 暫時不要 gate 擋、也不要 Claude 跑步驟 3–8：`/dd-stop on`，恢復用 `/dd-stop off`，`/dd-stop status` 看現況。只在這個 clone 生效（旗標在 `.git/config`，給 Claude 看的暫停聲明寫在沒進版控的 `CLAUDE.local.md`）。暫停是延後、不是豁免：暫停期間改了程式碼而沒更新 `CLAUDE.md` 的目錄，恢復時會列出來，之後的 commit 沒補上一樣擋。gate 那一半是腳本擋的；Claude 那一半靠它照聲明做，已經開著的對話要重開才讀得到。暫停中你自己在終端機的 commit 一樣放行；同一個 repo 的其他 worktree 的 gate 也會一起暫停
 
 ## 為什麼要巢狀 CLAUDE.md
 
@@ -205,13 +206,14 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
   *對策*：要改那個目錄的程式碼就得先讀檔，一讀就重新載入。
   *殘餘*：只剩 compact 後完全沒讀檔就憑記憶改碼這種情況。
 
-如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要掛 gate：gate 只在 `/dd-init` 掛過 hook 的專案才會跑，那個專案不要跑 `/dd-init` 就好。8 步迴圈照樣由全域模板 §3.9 帶著走。有兩件事不管怎樣都還在：`gate-guard` 在每個專案都會擋 Claude 用 `--no-verify` commit（機器上要有 `jq` 或 `python3`）；§3.9 仍會要求更新巢狀 `CLAUDE.md`（只是文字，沒有東西強制）。
+如果這些取捨聽起來仍比你手上的問題更糟，那就用單一根目錄 `CLAUDE.md`、不要掛 gate：gate 只在 `/dd-init` 掛過 hook 的專案才會跑，那個專案不要跑 `/dd-init` 就好。已經掛過的專案只想暫時停一陣子，用 `/dd-stop on`（恢復後要補欠下的 `CLAUDE.md`）。8 步迴圈照樣由全域模板 §3.9 帶著走。有兩件事不管怎樣都還在：`gate-guard` 在每個專案都會擋 Claude 用 `--no-verify` commit（機器上要有 `jq` 或 `python3`）；§3.9 仍會要求更新巢狀 `CLAUDE.md`（只是文字，沒有東西強制）。
 
 ## 指令一覽
 
 | 指令 | 說明 |
 |------|------|
 | `/dd-init` | 初始化專案：蓋章 8 步迴圈到 CLAUDE.md、掛 pre-commit gate、建 `.screenshots/`（僅在專案有前端時；純後端/CLI 跳過）、檢查 plugin 依賴 |
+| `/dd-stop on`／`off`／`status` | 暫停、恢復這個專案的 8 步迴圈（步驟 3–8）與 pre-commit gate，或看現況。暫停期間只做實作、測試與 commit；欠下的 `CLAUDE.md` 恢復後要補 |
 | `/output-style ADHD` | 開啟 ADHD 回覆風格（先求短、預設一則最多 10 行，第一句是動作、步驟編號、每輪講進度、清單短、無開場收尾、繁中白話）；`/output-style default` 關閉。Claude Code 啟動時才讀風格檔，裝好要重開。只對目前專案生效（寫進 `.claude/settings.local.json`）；要全專案預設，在 `~/.claude/settings.json` 設 `"outputStyle": "ADHD"` —— 但專案層 `.claude/settings*.json` 的 `outputStyle` 會蓋過它 |
 
 ## Promoted Skills（預設部署，13 個）
