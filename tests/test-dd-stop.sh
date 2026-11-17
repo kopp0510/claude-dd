@@ -71,6 +71,7 @@ absent() { [ ! -e "$1" ] && [ ! -L "$1" ]; }
 same() { cmp -s "$1" "$2"; }
 differs() { ! cmp -s "$1" "$2"; }
 before() { [ "$1" -gt 0 ] && [ "$1" -lt "$2" ]; }      # 兩個都是行號；0 = 沒找到
+line_of() { grep -n -F -- "$1" "$OUT" | sed -n '1s/:.*//p'; }   # $1 在 $OUT 第一次出現的行號；沒有就印空字串
 content_is() { [ "$(cat "$1"; echo x)" = "$2" ]; }   # $2 = 預期內容後面接一個 x（保住結尾的換行）
 
 # A 原本沒有 CLAUDE.local.md：on、重跑 on、status、off
@@ -87,7 +88,9 @@ ck "A 聲明有日期" grep -q "（$(date +%Y-%m-%d) 起" "$LF"
 for s in '8 步開發迴圈暫停中' '不呼叫 `dd-loop`' '不跑 `--start-segment`' '不要加 `SKIP_DOC_CHECK=1`' '`--no-verify`' '恢復：`/dd-stop off`' '全域 CLAUDE.md §3.9'; do
   ck "A 聲明裡有「${s}」" grep -qF -- "$s" "$LF"
 done
-cp "$LF" "$WORK/block-sample.md"      # 後面 symlink、已進版控的情境拿它當「檔裡已經有標記段」的素材
+# 後面 symlink、已進版控的情境拿它當「檔裡已經有標記段」的素材。包在 ck 裡：on 沒建出檔時裸跑的 cp 會讓 set -e 把整支停在這裡
+ck "A 留一份有標記段的檔當素材" cp "$LF" "$WORK/block-sample.md"
+[ -f "$WORK/block-sample.md" ] || : > "$WORK/block-sample.md"
 run "A 再跑一次 on" 0 "$STOP" on
 ck "A 重跑 on：標記段仍一份" blocks_is 1
 ck "A 重跑 on：info/exclude 仍一行" exclude_is 1
@@ -132,10 +135,12 @@ printf '# 我的筆記\n第二行' > "$WORK/orig-nonl"; roundtrip nonl "原本�
 # C 暫停期間使用者自己在標記段後面加字：off 之後那些字留著
 newrepo c1
 printf '原本\n' > "$LF"
+chmod 600 "$LF"
 run "C on（結尾有換行的原檔）" 0 "$STOP" on
 echo '暫停期間加的' >> "$LF"
 run "C off" 0 "$STOP" off
 ck "C 標記段沒了" blocks_is 0
+ck "C 原檔的權限沒變（600）" [ "$(ls -l "$LF" | cut -c1-10)" = "-rw-------" ]
 ck "C 原本的與暫停期間加的都在、順序不變" content_is "$LF" "$(printf '原本\n暫停期間加的\nx')"
 newrepo c2
 printf '原本' > "$LF"
@@ -196,6 +201,15 @@ not_said "8 步迴圈已恢復"
 ck "E off：旗標照樣清掉" flag_unset
 ck "E off：檔案沒被動" same "$LF" "$WORK/e1.withblock"
 
+# E2 存在而不是一般檔（目錄）
+newrepo e2
+mkdir "$LF"
+run "E2 ${LF} 是目錄：on 拒絕" 4 "$STOP" on
+said "不是一般檔"
+not_said "8 步迴圈已暫停"
+ck "E2 on 被拒：旗標沒設" flag_unset
+ck "E2 on 被拒：目錄裡沒有多出東西" [ -z "$(ls -A "$LF")" ]
+
 # F 同目錄的 gate 是舊版（不認得 dd.stopped）或不在
 mkdir "$WORK/oldbin" "$WORK/nogatebin"
 cp "$STOP" "$WORK/oldbin/dd-stop.sh"
@@ -210,6 +224,14 @@ ck "F 舊版 gate：旗標沒設" flag_unset
 ck "F 舊版 gate：沒有建 ${LF}" absent "$LF"
 run "F 同目錄沒有 gate：on 拒絕" 3 "$WORK/nogatebin/dd-stop.sh" on
 ck "F 沒有 gate：旗標沒設" flag_unset
+# 用有 gate 的那一份暫停，再拿沒有 gate 的那一份恢復：照樣恢復，欠帳那一段講明沒有查（不可以印「沒有要補的」）
+run "F on（有 gate 的那一份）" 0 "$STOP" on
+run "F 同目錄沒有 gate：off 照樣恢復" 0 "$WORK/nogatebin/dd-stop.sh" off
+said "欠帳沒有查"
+said "8 步迴圈已恢復"
+not_said "沒有要補的"
+ck "F 沒有 gate 的 off：旗標沒了" flag_unset
+ck "F 沒有 gate 的 off：${LF} 不存在" absent "$LF"
 
 # G 暫停期間的欠帳：off 列出來，之後 gate 真的恢復擋
 newrepo g
@@ -223,14 +245,21 @@ said "以下是 gate 的欠帳檢查（這次沒有 commit 被擋）"
 said "a/CLAUDE.md"
 not_said "沒有要補的"
 said "8 步迴圈已恢復"
-h=$(grep -n -F '以下是 gate 的欠帳檢查' "$OUT" | sed -n '1s/:.*//p')
-d=$(grep -n -F 'a/CLAUDE.md' "$OUT" | sed -n '1s/:.*//p')
-r=$(grep -n -F '8 步迴圈已恢復' "$OUT" | sed -n '1s/:.*//p')
+h=$(line_of '以下是 gate 的欠帳檢查')
+d=$(line_of 'a/CLAUDE.md')
+r=$(line_of '8 步迴圈已恢復')
 ck "G 順序：說明那一行在欠帳清單之前" before "${h:-0}" "${d:-0}"
 ck "G 順序：已恢復在欠帳清單之後" before "${d:-0}" "${r:-0}"
 echo note > note.txt && git add note.txt
 run "G off 之後：沒碰 a/ 的 commit 被擋（gate 恢復了）" 1 git commit -qm after
 said "a/CLAUDE.md"
+# 補上之後要再一個完全不碰 a/ 的 commit：補的那個 commit 放行是因為 a/CLAUDE.md 同批 staged，證明不了欠帳銷掉了
+echo doc > a/CLAUDE.md
+git add a/CLAUDE.md
+run "G 補上 a/CLAUDE.md：commit 放行" 0 git commit -qm owed
+echo note2 > note2.txt
+git add note2.txt
+run "G 補完之後：沒碰 a/ 的 commit 放行（欠帳銷掉了）" 0 git commit -qm clear
 # 環境裡留著 SKIP_DOC_CHECK=1 時，off 的欠帳檢查照樣要查
 newrepo g2
 run "G2 on" 0 "$STOP" on
@@ -278,6 +307,11 @@ ck "J status 不自己修：標記段還在" blocks_is 1
 git config --local dd.stopped false
 run "J status：dd.stopped=false 算沒有暫停" 0 "$STOP" status
 said "沒有暫停"
+# status 跟 gate 一樣只讀 --local（GIT_CONFIG_GLOBAL 要 git 2.32 以上才認；更舊的 git 上這一則恆綠）
+git config --local --unset dd.stopped
+printf '[dd]\n\tstopped = true\n' > "$WORK/global.cfg"
+run "J status：dd.stopped 只設在 global 不算暫停" 0 env GIT_CONFIG_GLOBAL="$WORK/global.cfg" "$STOP" status
+said "沒有暫停"
 
 # K repo 路徑有空白與中文；從子目錄跑
 newrepo "我的 專案"
@@ -312,6 +346,53 @@ run "M 標記段沒有結尾行：off 回 5" 5 "$STOP" off
 not_said "8 步迴圈已恢復"
 ck "M 檔案沒被動" same "$LF" "$WORK/m.orig"
 ck "M 旗標照樣清掉" flag_unset
+
+# M2 寫不進去（唯讀的檔、不能寫的目錄）：on 不可以留下旗標，off 不可以卡住
+# 被測的指令包在 perl 的 alarm 裡：2026-11-17 修之前，off 寫回失敗後下一圈又找到同一個標記段、永遠重跑，沒有 alarm 整支測試停不下來
+limit() { perl -e 'alarm 10; exec @ARGV or exit 127' "$@"; }
+if [ "$(id -u)" = 0 ]; then
+  ok "M2 寫不進去的情境沒跑（root 寫得進唯讀的檔與目錄）"
+else
+  newrepo m2a
+  printf '筆記\n' > "$LF"
+  cp "$LF" "$WORK/m2a.orig"
+  chmod 444 "$LF"
+  run "M2 ${LF} 唯讀：on 拒絕" 4 limit "$STOP" on
+  said "寫不進"
+  not_said "8 步迴圈已暫停"
+  ck "M2 on 寫不進：旗標沒設" flag_unset
+  ck "M2 on 寫不進：檔案沒被動" same "$LF" "$WORK/m2a.orig"
+  newrepo m2b
+  printf '筆記\n' > "$LF"
+  run "M2 on（之後把 ${LF} 改成唯讀）" 0 "$STOP" on
+  cp "$LF" "$WORK/m2b.paused"
+  chmod 444 "$LF"
+  run "M2 ${LF} 唯讀：off 回 5、沒有卡住" 5 limit "$STOP" off
+  said "寫不進"
+  not_said "8 步迴圈已恢復"
+  ck "M2 off 寫不進：旗標照樣清掉" flag_unset
+  ck "M2 off 寫不進：檔案沒被動" same "$LF" "$WORK/m2b.paused"
+  chmod 644 "$LF"
+  run "M2 改回可寫之後重跑 off" 0 "$STOP" off
+  ck "M2 重跑 off：與原檔逐位元組相同" content_is "$LF" "$(printf '筆記\nx')"
+  newrepo m2c
+  run "M2 on（${LF} 是它建的，之後把 repo 根目錄改成不能寫）" 0 "$STOP" on
+  chmod 555 .
+  run "M2 目錄不能寫：off 刪不掉自己建的檔，回 5、沒有卡住" 5 limit "$STOP" off
+  chmod 755 .
+  said "寫不進"
+  not_said "8 步迴圈已恢復"
+  ck "M2 目錄不能寫：檔還在、標記段一份" blocks_is 1
+  newrepo m2d
+  chmod 555 .git
+  run "M2 .git 不能寫（旗標設不了）：on 回 1" 1 limit "$STOP" on
+  chmod 755 .git
+  said "旗標設不了"
+  not_said "8 步迴圈已暫停"
+  ck "M2 旗標設不了：旗標沒設" flag_unset
+  run "M2 旗標設不了之後：off 把已經寫的聲明拿掉" 0 "$STOP" off
+  ck "M2 off 之後 ${LF} 不存在" absent "$LF"
+fi
 
 # N 用法與不在 git repo
 newrepo n

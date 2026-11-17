@@ -722,6 +722,9 @@ said "a/CLAUDE.md"
 said "段落起點之後有 commit 跳過檢查"
 echo doc2 > a/CLAUDE.md
 expect "⑰ 恢復後：補上 a/CLAUDE.md 就放行" pass commit s3
+# 上一則放行是因為 a/CLAUDE.md 同批 staged；要釘住欠帳銷掉了，得再一個完全不碰 a/ 的 commit（同 ⑫③）
+echo 3 > b/y.sh && echo doc3 > b/CLAUDE.md
+expect "⑰ 恢復後：a/ 的欠帳已銷，只動 b/ 的 commit 放行" pass commit s4
 
 # 第二個 repo：有 docs/reviews/ 的專案，以及起點檔內容壞掉
 mkdir "$WORK/stop2" && cd "$WORK/stop2" || exit 2
