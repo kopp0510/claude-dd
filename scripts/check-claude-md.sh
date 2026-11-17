@@ -8,6 +8,8 @@
 # 部署：claude-dd/scripts/ → ~/.claude/scripts/（source of truth 在 claude-dd repo）
 # 掛載：由 /dd-init 寫入專案 .git/hooks/pre-commit 呼叫本腳本
 # 逃生口：SKIP_DOC_CHECK=1 git commit（僅供迴圈步驟 2 的檢查點 commit；最終 commit 必須全過）
+# 暫停：`git config --local dd.stopped true`（由 dd-stop.sh on 設、off 清；值不是 true 一律當成沒暫停）。
+#   暫停中 pre-commit 放行並記帳（跟 SKIP 一樣不是豁免：恢復後 owed_dirs 照樣追），--start-segment 不記新起點、不查欠帳與 review 報告
 # 段落起點：SKIP 不是豁免。起點記在 .git/dd-segment-base（worktree 各自一份），之後的正常
 #   commit 會連「起點以來跳過檢查、到現在還沒補記憶檔」的目錄一起查
 #   --start-segment  段落開始前記起點（還有欠帳時拒絕：起點往後移會把欠帳洗掉）
@@ -50,6 +52,9 @@ fi
 EXCLUDE_DIRS='(^|/)(\.git|node_modules|dist|build|out|coverage|vendor|\.next|\.screenshots|__pycache__|\.venv|venv|tmp|test-data|migrations)(/|$)'
 # 同一組規則給 awk 用：從環境變數讀，awk 才不會再處理一次反斜線
 export CODE_RE="\\.($CODE_EXT)\$" EXCLUDE_RE="$EXCLUDE_DIRS"
+
+# 暫停旗標（見檔頭）。⚠️ 跟 dd.docfile 一樣只讀 `--local`：設成 global 會一次關掉這台機器上所有 repo 的 gate
+STOPPED=$(git config --local --get dd.stopped 2>/dev/null)
 
 BASE_FILE=$(git rev-parse --git-path dd-segment-base)
 case "$BASE_FILE" in /*) ;; *) BASE_FILE="$top/$BASE_FILE" ;; esac
@@ -217,6 +222,12 @@ reviews_missing() {
 
 case "$1" in
     --start-segment)
+        # 暫停中不記新起點：暫停期間沒有人寫 review 報告，照下面的檢查，有 docs/reviews/ 的專案會被要求補報告；
+        # 起點也不能動 —— 它是恢復後追討暫停期間欠帳的依據
+        if [ "$STOPPED" = "true" ]; then
+            echo "迴圈暫停中（dd.stopped）：沒有記新起點。這個工作只做步驟 1、2；恢復用 /dd-stop off"
+            exit 0
+        fi
         owed=""
         read_base && owed=$(owed_dirs)
         if [ -n "$owed" ]; then
@@ -287,6 +298,20 @@ case "$1" in
         exit 1
         ;;
 esac
+
+# 暫停中：放行並記帳。跟下面 SKIP 那一支只差一處 —— 起點檔在而內容讀不出來時**不覆寫**：
+# SKIP 是偶爾一個 commit，暫停期間每個 commit 都走這裡，覆寫等於把起點推到暫停中途、前面的欠帳全部消失
+if [ "$STOPPED" = "true" ]; then
+    echo "${DOC_FILE} gate 暫停中（dd.stopped）；這次沒檢查，恢復後要補"
+    if [ ! -f "$BASE_FILE" ]; then
+        head_or_empty > "$BASE_FILE"
+        echo "記下段落起點 $(cat "$BASE_FILE")，恢復後的正常 commit 會補查暫停期間改過的目錄"
+    elif ! read_base; then
+        echo "⚠️ 起點檔 ${BASE_FILE} 的內容不是 commit、也不是空樹：沒有覆寫它，暫停期間的欠帳現在追不到" >&2
+        echo "   恢復之前先跑 $0 --segment-base，照它印的處理" >&2
+    fi
+    exit 0
+fi
 
 if [ "$SKIP_DOC_CHECK" = "1" ]; then
     # 忘了記起點也追得到：第一個跳過檢查的 commit 自動記下（已有起點就不動，舊起點不會變寬鬆）

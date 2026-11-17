@@ -670,6 +670,86 @@ echo '第二次先停' > docs/reviews/S1-BLOCKED-2.md
 expect "⑮ commit S1-BLOCKED-2.md" pass commit b5
 expect "第二次先停:新增 S1-BLOCKED-2.md 之後放行" pass "$GATE" --start-segment
 
+# ⑰ **暫停旗標 dd.stopped**（2026-11-17）。`git config --local dd.stopped true` 由 scripts/dd-stop.sh on 設、off 清。
+# 暫停中：pre-commit 放行並記帳（恢復後 owed_dirs 照樣追）、--start-segment 不記新起點也不查欠帳與 review 報告。
+# 自己開兩個乾淨 repo（第二個有 docs/reviews/）。每一則的說明都以「⑰」開頭：做變異對照之前先 `grep -c '^✅ ⑰'` 確認這一段有跑到。
+# ⚠️ 「恢復後要補 a/」那兩則靠的是暫停中第一個 commit 自動記下的起點，中間不可以手動寫起點檔（壞起點檔那一則因此放在第二個 repo）。
+mkdir "$WORK/stop" && cd "$WORK/stop" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+echo root > CLAUDE.md
+mkdir -p a b && echo 1 > a/x.sh && echo doc > a/CLAUDE.md && echo 1 > b/y.sh && echo doc > b/CLAUDE.md
+expect "⑰ 第一個 commit" pass commit s0
+S0=$(git rev-parse HEAD)
+
+# 對照，以及三種「不算暫停」：值不是 true、只設在 global
+echo 2 > a/x.sh
+expect "⑰ 沒暫停：改 a/ 不補文件要擋（對照）" block commit s1
+git config --local dd.stopped false
+expect "⑰ dd.stopped=false 不算暫停：照樣擋" block commit s1
+git config --local dd.stopped 1
+expect "⑰ dd.stopped=1 不算暫停：照樣擋" block commit s1
+git config --local --unset dd.stopped
+printf '[dd]\n\tstopped = true\n' > "$WORK/fakeglobal-stop"
+export GIT_CONFIG_GLOBAL="$WORK/fakeglobal-stop"
+expect "⑰ dd.stopped 只設在 global：不算暫停，照樣擋" block commit s1
+unset GIT_CONFIG_GLOBAL
+if [ -e "$BASE_FILE" ]; then echo "❌ ⑰ 被擋下的 commit 不該留下起點檔"; fail=1; fi
+
+# 暫停中：放行、講得出自己在暫停、沒有起點檔時記下這個 commit 之前的 HEAD
+git config --local dd.stopped true
+expect "⑰ 暫停中：改 a/ 不補文件的 commit 放行" pass commit s1
+said "gate 暫停中"
+base_is "$S0"
+echo 3 > a/x.sh
+expect "⑰ 暫停中：再一個 commit 放行" pass commit s2
+base_is "$S0"                 # 起點檔已經在：不動
+# 暫停中 --start-segment：這時 a/ 有欠帳，沒暫停的話會被「先補完再記新起點」擋下
+expect "⑰ 暫停中 --start-segment：不擋" pass "$GATE" --start-segment
+said "迴圈暫停中"
+not_said "段落起點："
+base_is "$S0"                 # 不記新起點
+
+# 恢復：暫停期間改過的 a/ 要補，連沒碰 a/ 的 commit 也擋
+git config --local --unset dd.stopped
+echo 2 > b/y.sh && echo doc2 > b/CLAUDE.md
+expect "⑰ 恢復後：只動 b/（有補文件）的 commit 被擋" block commit s3
+said "a/CLAUDE.md"
+said "段落起點之後有 commit 跳過檢查"
+echo doc2 > a/CLAUDE.md
+expect "⑰ 恢復後：補上 a/CLAUDE.md 就放行" pass commit s3
+
+# 第二個 repo：有 docs/reviews/ 的專案，以及起點檔內容壞掉
+mkdir "$WORK/stop2" && cd "$WORK/stop2" || exit 2
+git init -q
+git config user.email ci@example.com
+git config user.name ci
+printf '#!/bin/sh\nexec "%s"\n' "$GATE" > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+BASE_FILE="$(git rev-parse --git-path dd-segment-base)"
+mkdir -p docs/reviews && echo '格式說明' > docs/reviews/CLAUDE.md && echo root > CLAUDE.md
+expect "⑰ 第二個 repo 的第一個 commit（有 docs/reviews/）" pass commit r0
+expect "⑰ 第二個 repo 記起點" pass "$GATE" --start-segment
+R_BASE=$(cat "$BASE_FILE")
+mkdir -p a && echo 1 > a/x.sh && echo doc > a/CLAUDE.md
+expect "⑰ 第二個 repo：有補文件的 commit" pass commit r1
+expect "⑰ 沒暫停、上一段沒有 review 報告：--start-segment 擋（對照）" block "$GATE" --start-segment
+said "上一段沒有附 review 報告"
+git config --local dd.stopped true
+expect "⑰ 暫停中、沒有 review 報告：--start-segment 不擋" pass "$GATE" --start-segment
+said "迴圈暫停中"
+base_is "$R_BASE"
+# 起點檔在、內容讀不出來：放行但不覆寫（SKIP 那一支會覆寫；暫停期間每個 commit 都走這裡，覆寫等於把前面的欠帳洗掉）
+echo not-a-sha > "$BASE_FILE"
+echo 2 > a/x.sh
+expect "⑰ 暫停中、起點檔內容壞掉：commit 放行" pass commit r2
+said "沒有覆寫它"
+base_is "not-a-sha"
+
 # ⑯ **根目錄 CLAUDE.md 大小上限**（2026-11-16）。被測的是 scripts/githooks/ 的 pre-commit 與 claude-md-size.sh
 #   （本 repo 自用、不部署；兩種跑法各擋什麼、已知繞得過的路在 scripts/githooks/CLAUDE.md）。
 # 拋棄式 repo 照這個 repo 的配置：scripts/githooks/ 放 hook 與大小檢查、scripts/check-claude-md.sh 放 gate、
