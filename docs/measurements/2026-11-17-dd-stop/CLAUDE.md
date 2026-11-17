@@ -21,6 +21,20 @@
 
 - P1（2026-11-17，Claude Code 2.1.326）：成立。有檔那一臂回 `ZEBRA-7` 加一句答案，對照只有答案；兩發 `permission_denials` 都是 0、`models` 只有 haiku
 - 它只證明「檔會載入、模型照著多寫了一行」。暫停聲明壓不壓得過專案 CLAUDE.md 與全域 §3.9 的迴圈是另一件事，P1 沒有測
+- 模型層第 1 批（2026-11-17，Claude Code 2.1.326，`claude-fable-5-2`，判準是 `65e1fb9` 那一版的 `check-model.sh`）：三臂都通過，`out/model-1/check.out` 是判定原文。
+  - `stopped` 兩發：各 1 個新 commit、Bash 輸出有「gate 暫停中」、沒有 `Skill dd-loop`、沒有 `--start-segment`、沒有派 agent，結束時旗標與標記段都還在；
+    6 與 10 個回合、1.06 與 1.13 美元、`models` 只有 `claude-fable-5-2`、`permission_denials` 0
+  - `control` 兩發：第一個工具呼叫就是 `Skill dd-loop`（第 2 發接著跑了 `--start-segment`）
+  - `resume` 兩發：先跑 `.git/dd/dd-stop.sh off`（輸出有「8 步迴圈已恢復」），下一個工具呼叫是 `Skill dd-loop`
+- 這一批證明不了的：
+  - 每臂只有 2 發、一個專案（單檔 Python CLI）、一段 prompt、一個模型
+  - `control`、`resume` 一出現判定要的工具呼叫就被停掉：只看得到「迴圈開始跑了」，看不到它把 8 步跑完；被停掉的那四發沒有 result，
+    所以它們的費用、`permission_denials`、`modelUsage` 都沒有值（advisor 有沒有被關掉，只有 `stopped` 兩發的 `models` 佐證；六發用的是同一組旗標）
+  - 受測的是全新的 session。已經開著的對話、跑很久被壓縮過的對話會不會照聲明做，沒有測
+  - 全域 CLAUDE.md §3.9 與 dd-loop skill 是這台機器當時部署的那一版，不是 repo 這份（`skills/dd-loop/SKILL.md` 新加的「迴圈暫停中」那一句不在裡面）
+  - `stopped` 只看工具呼叫與結束時的狀態，沒有看回覆的文字有沒有告訴使用者「這次沒跑步驟 3–8」
+- 第 1 批的六個 `.json` 跑完之後補做了一次替換：`ls -la` 的輸出帶著系統帳號名稱，換成 `<user>`（`run-model.sh` 的 `reduce` 當時還沒有這個替換，之後補上了）。
+  換完重跑 `check-model.sh`，輸出與 `check.out` 逐位元組相同
 
 ## 跑之前
 

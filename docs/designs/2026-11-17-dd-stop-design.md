@@ -121,6 +121,19 @@
   headless session 載入的是部署版的 `dd-loop`（這次不部署），所以模型層驗不到 `skills/dd-loop/SKILL.md` 新加的那一句。
   任何一臂沒通過 → 照實寫「模型層沒驗證通過（哪一臂）」，停下來問使用者，不改判定。
   commit 訊息結尾 `（S1-4）`
+  - **結果（2026-11-17）**
+    - ①乾跑第一輪六臂都照做得完，結束狀態用指令核對（不看回報）：`on` 那個 repo 旗標是 `true`、標記段一份；`off` 旗標沒了、`CLAUDE.local.md` 不在；
+      無參數（走 `status`）、腳本不在、symlink 三個 repo 的旗標與檔案都沒變（symlink 指到的檔 `cmp` 相同、仍是 symlink）；dd-loop 那一臂旗標仍是 `true`、起點檔沒變。
+    - 乾跑指出、已改進 `commands/dd-stop.md` 的：`off` 的欠帳那一段印的是 `<目錄>/CLAUDE.md` 不是目錄；那一段裡 gate 的固定文字「AI agent 執行時：…不要問使用者…git add 後重新 commit」
+      與指令的「問要不要現在補」相反，現在寫明那幾行這次不照做；使用者說要補時怎麼補（原本沒寫）；`status` 印的建議是腳本路徑，對使用者改講 slash 指令；
+      輸出已經有的不用重講；非 0 時腳本印的處理方式由使用者做。改進 `skills/dd-loop/SKILL.md` 那一句的：「這行」指哪一行、暫停時 exit 0、commit 不加 `SKIP_DOC_CHECK=1`、回報時講一句沒跑步驟 3–8。
+    - 改完重跑三臂（`off`、無參數、dd-loop）照做得完；再補「使用者說要補時」那一句後跑一臂 `off` 加補帳：它只改了 `src/CLAUDE.md`、另開一個 commit，之後不帶參數跑 gate 是 exit 0。
+      最後加的兩句（補帳的 commit 不算功能段落、沒被擋就是補齊了）沒有再乾跑。
+    - 乾跑提了、沒有處理的：第 1 步用 `-x` 判斷，檔在而沒有執行權限時也印「不在」；「claude-dd 的 clone」在哪裡沒給找法；補帳時上層 CLAUDE.md 要不要一起看；
+      暫停期間做到一半的工作，恢復後 `<起點>` 怎麼算（只寫了再跑 `--start-segment` 時照常查欠帳）。
+    - ②模型層第 1 批三臂都通過（每臂 2 發，`claude-fable-5-2`），判準在跑之前 commit（`65e1fb9`）。數字與這一批證明不了的事寫在 `docs/measurements/2026-11-17-dd-stop/CLAUDE.md`「結果」。
+      跟上面計畫不一樣的地方：pre-commit 呼叫的不是 repo 路徑上的 gate，是 `run-model.sh` 當場複製到拋棄式專案 `.git/dd/` 的那一份（內容相同；恢復臂的 `dd-stop.sh off` 要在 cwd 裡才跑得了，兩支放在一起）；
+      對照與恢復兩臂一出現判定要的工具呼叫就停掉那一發，沒有等花費上限
 
 ## 計畫審查紀錄
 

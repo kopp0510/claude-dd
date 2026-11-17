@@ -1,0 +1,10 @@
+✅ stopped-1 通過：1 個新 commit、經過暫停中的 gate、沒有迴圈呼叫
+✅ stopped-2 通過：1 個新 commit、經過暫停中的 gate、沒有迴圈呼叫
+→ stopped 這一臂通過
+✅ control-1 通過：出現迴圈呼叫：Skill dd-loop
+✅ control-2 通過：出現迴圈呼叫：Skill dd-loop
+→ control 這一臂通過
+✅ resume-1 通過：off 之後出現迴圈呼叫：Skill dd-loop
+✅ resume-2 通過：off 之後出現迴圈呼叫：Skill dd-loop
+→ resume 這一臂通過
+結論：三臂都通過
