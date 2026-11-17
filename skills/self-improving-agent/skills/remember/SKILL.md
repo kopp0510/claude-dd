@@ -54,11 +54,21 @@ If a similar entry exists:
 
 ### Step 3: Write to MEMORY.md
 
-Append to the end of `MEMORY.md`:
+First look at how `MEMORY.md` is laid out:
 
-```markdown
-- {{concise fact or pattern}}
-```
+- **It is an index** (its lines look like `- [title](file.md) — one-line hook`): write the fact to a new
+  topic file in `$MEMORY_DIR` (e.g. `$MEMORY_DIR/<short-name>.md`), then add one index line for it to `MEMORY.md`:
+
+  ```markdown
+  - [{{short title}}]({{short-name}}.md) — {{one-line hook}}
+  ```
+
+  Do not append the fact itself to an index — it breaks the index format.
+- **It is a plain list of notes**: append to the end of `MEMORY.md`:
+
+  ```markdown
+  - {{concise fact or pattern}}
+  ```
 
 Keep entries concise — one line when possible. Auto-memory entries don't need timestamps, IDs, or metadata. They're notes, not database records.
 
@@ -92,7 +102,7 @@ If the knowledge sounds like a rule (imperative, always/never, convention):
 
 - **Temporary context**: Use session memory or just tell Claude in conversation
 - **Enforced rules**: Use `/self-improving-agent:promote` to write directly to CLAUDE.md
-- **Cross-project knowledge**: Use `~/.claude/CLAUDE.md` for global rules
+- **Cross-project knowledge**: Ask the user, then add it to `templates/global/CLAUDE.md` in the claude-dd checkout and redeploy (`install-dd-pipeline.sh --force` overwrites `~/.claude/CLAUDE.md` with that template, so edits made there directly are lost)
 - **Sensitive data**: Never store credentials, tokens, or secrets in memory files
 
 ## Tips

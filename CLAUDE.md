@@ -324,8 +324,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   2026-08-11 移除）或本機實際使用紀錄已斷即移除；後繼品未經實證使用不自動遞補
 
 - **跑任何 `claude -p` 實驗、或拿另一個 session 當受測對象之前，先 Read `docs/measurements/CLAUDE.md` 整份**，「已知的坑」一節每一條都要看：先部署、先關掉 advisor、權限模式會擋什麼、輸出進 repo 前去識別等（這裡只舉幾項，不是全部）
-- **同一則訊息裡派的幾個 subagent 不一定同時開跑**：2026-11-15 四發 `claude -p`（2.1.325）裡，opus 裁決者在一則訊息派 4 個審查者，每個 Agent 呼叫的 prompt 約 1.48 萬字元，
-  審查者一個隔約 75 秒才開始（`P-med-2` 是第 84、159、234、312 秒，另外三發差 3 秒以內）—— 第 4 個開跑時已經過了整發 455–614 秒的一半以上。這是不是 Claude Code 一般的行為沒查文件。
+- **同一則訊息裡派的幾個 subagent 不一定同時開跑**：2026-11-15 四發 `claude -p`（2.1.325）實測一個隔約 75 秒（每發的秒數見 `docs/measurements/2026-11-15-reviewer-effort.md`）。這是不是 Claude Code 一般的行為沒查文件。
   量「等的時間花在哪」要看每個 subagent 在時間軸上的起訖（`docs/measurements/2026-11-15-reviewer-effort/timeline.py`），拿整發秒數減最慢的 subagent 會算錯；
   要給好幾個 subagent 同一份長內容時放成檔、prompt 只給路徑（步驟 4 的 diff 檔就是這樣做，見 `skills/dd-loop/SKILL.md`「派工前先準備一個 diff 檔」；plan-review 的審查包也是，2026-11-15 改的，
   照做的三發裡 4 個審查者的 Agent 呼叫到第 56–60 秒都出現了，見 `docs/measurements/2026-11-15-plan-review-pack.md`）

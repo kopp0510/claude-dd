@@ -26,18 +26,16 @@ Promoting a pattern from memory to rules fundamentally changes how Claude treats
 
 ## Install
 
-### Claude Code
-```
-/plugin marketplace add alirezarezvani/claude-skills
-/plugin install self-improving-agent@claude-code-skills
-```
+This copy is deployed by the claude-dd repo's `install-dd-pipeline.sh` (it is in the `PROMOTED_SKILLS`
+list and is copied to `~/.claude/skills/self-improving-agent/`). Do not also install it from the upstream
+marketplace.
 
 ## How It Works
 
 ```
 Claude discovers pattern → auto-memory (MEMORY.md)
          ↓
-Pattern recurs 2-3x → /self-improving-agent:review flags it
+Pattern meets reference/promotion-rules.md → /self-improving-agent:review flags it
          ↓
 You approve → /self-improving-agent:promote graduates it to CLAUDE.md
          ↓

@@ -46,10 +46,8 @@
       `owed_dirs` 其實跑了、也確實把 `c` 算成欠帳,**是 `[ -f "$md" ] && grep -qxF "$md" && continue`
       這條「同批 staged 就過關」的短路把結果蓋掉**。要測銷帳必須**再加一個完全不碰該目錄的 commit**,
       詳見 `tests/CLAUDE.md`
-    - **上游文件已同步**（2026-10-16 同日推上游）：專案 CLAUDE.md 把「動到 gate 行為」列為
-      要手動巡一遍的觸發時機，巡完動到的是**兩份 README 的「CLAUDE.md 維護規則」**、
-      **`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段**、**CHANGELOG 的 `## 未發布`**。
-      `commands/dd-init.md` **刻意不動**，理由分兩半：
+    - **動到 gate 的檔名判斷時，要巡的文件照專案 CLAUDE.md「觸發時機」那條**（2026-10-16 加 `dd.docfile` 時巡過的見 `29726db`）；
+      `commands/dd-init.md` **不用跟著改**，理由分兩半：
       - **區塊外**（Phase 3，`grep -n '^### Phase 3' commands/dd-init.md`）：它寫進 hook 的那一行
         只是轉呼叫 gate、**不判檔名**，所以行為正確。改它**不需要**跳 rev（蓋章區塊是
         ``grep -n '^```' commands/dd-init.md | head -2`` 夾出來的那段，Phase 3 在它之後）

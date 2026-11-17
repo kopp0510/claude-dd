@@ -99,3 +99,15 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   and Durability and Impact now follow the table instead of the agent's own reading of a question.
   Totals can move either way, and some entries will drop below the `≥ 6` promotion threshold.
   One dry run on 2026-11-15 (one entry, one run per version): old wording 3/2/3 = 8, new wording 2/2/2 = 6.
+- 2026-11-18 (`3637c92`, `31dd5bb`, from a prompt audit): `skills/remember/SKILL.md` description no longer says
+  "with timestamp and context" (the body says timestamps are not needed); `agents/memory-analyst.md` and
+  `agents/skill-extractor.md` got `name` / `description` frontmatter (upstream had none); `skills/extract/SKILL.md`
+  says "Agent tool" instead of "Task tool".
+- 2026-11-18 (same audit, this commit): `skills/remember/SKILL.md` Step 3 writes a topic file plus one index line when
+  `MEMORY.md` is an index, and its cross-project line points at `claude-dd/templates/global/CLAUDE.md`;
+  `skills/promote/SKILL.md` and `reference/promotion-rules.md` do the same for global rules and ask the user first
+  (`install-dd-pipeline.sh --force` overwrites `~/.claude/CLAUDE.md` from that template);
+  `SKILL.md` and `README.md` say the skill is deployed by `install-dd-pipeline.sh` instead of giving marketplace install steps;
+  `SKILL.md`, `README.md`, `skills/review/SKILL.md` and `skills/promote/SKILL.md` point at the Promotion Criteria in
+  `reference/promotion-rules.md` instead of stating their own thresholds; `skills/promote/SKILL.md` distillation rules
+  ask for an imperative plus a one-clause reason instead of "Always / Never" with no backstory.

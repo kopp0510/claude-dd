@@ -1,7 +1,7 @@
 # Composition Quality Contract
 
 > Vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，LICENSE.txt 見上層目錄）。
-> **適用範圍**：量化預算表與 layout grammar 供 SKILL.md 第 3 步撰寫時遵循、第 4 步照「產出前檢查清單（Taste Gate）」判定；文末 `validate_svg.py` 驗證指令屬其 Python 管線，不適用本 skill。
+> **適用範圍**：量化預算表與 layout grammar 供 SKILL.md 第 3 步撰寫時遵循、第 4 步照「產出前檢查清單（Taste Gate）」判定；文末 `validate_svg.py` 驗證指令屬其 Python 管線，不適用本 skill。「Visual effects never create a second business connector」那段的原則照用，但屬性名不照抄：本 skill 的 `scripts/verify-geometry.py` 只讀 `data-role`、不讀 `data-graph-role` 與 `data-owner` —— 那條唯一的連線標 `data-role="edge"`，裝飾層標別的值（例如 `data-role="decoration"`，腳本不把它算成連線），其餘元素照 SKILL.md 第 3 步全部標 `data-role`（只標一部分時沒標的會被整批略過，見 `scripts/CLAUDE.md`）。
 
 This contract applies to every visual style. Style references control color,
 typography, material, corner radius, and decorative treatment. They never
