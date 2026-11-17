@@ -1,6 +1,6 @@
 ---
 name: remember
-description: "Explicitly save important knowledge to auto-memory with timestamp and context. Use when a discovery is too important to rely on auto-capture."
+description: "Explicitly save an important fact or gotcha to auto-memory. Use when a discovery is too important to rely on auto-capture."
 command: /self-improving-agent:remember
 ---
 
