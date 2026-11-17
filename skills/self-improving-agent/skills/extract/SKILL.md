@@ -62,7 +62,7 @@ Rules for naming:
 
 ### Step 4: Create the skill files
 
-**Spawn the skill-extractor agent** for the actual file generation — Task tool with
+**Spawn the skill-extractor agent** for the actual file generation — Agent tool with
 `subagent_type: self-improving-agent:skill-extractor`. The namespace is the **plugin** name
 plus the agent name; the bare `skill-extractor` and the doubled `skill-extractor:skill-extractor`
 both resolve to nothing. If it returns `Agent type not found`, read

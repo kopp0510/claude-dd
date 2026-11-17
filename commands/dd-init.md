@@ -7,9 +7,6 @@ description: 初始化專案的 8 步開發迴圈 — 蓋章專案 CLAUDE.md、�
 初始化專案的開發慣例：蓋章「8 步開發迴圈」到專案 CLAUDE.md、建立截圖目錄、
 確認巢狀 CLAUDE.md 維護依賴。支援**新專案**（空目錄）和**現有專案**（已有程式碼）。
 
-> 2026-07 重整：原多階段 DD Pipeline（dd-start/arch/approve/dev/test）已封存、
-> 2026-08-04 刪除（見 git 歷史）。本指令改為部署經實際專案實戰驗證的輕量開發迴圈。
-
 ---
 
 ## 執行步驟
@@ -391,7 +388,7 @@ fi
 | 工具 | 用途 |
 |------|------|
 | **Glob** | 偵測專案類型與 CLAUDE.md 存在性 |
-| **Task** (Explore) | 現有專案的技術棧與結構分析 |
+| **Agent** (Explore) | 現有專案的技術棧與結構分析 |
 | **AskUserQuestion** | 新專案的類型/技術棧詢問 |
 | **Read / Write / Edit** | 讀寫 CLAUDE.md、.gitignore |
 | **Bash** | 建目錄、git commit、plugin 檢查 |
