@@ -244,21 +244,28 @@
   - **它找的是跟自己同目錄的 gate**（`$(dirname "$0")/check-claude-md.sh`），不是專案 pre-commit 實際掛的那一份。`on` 先 `grep 'dd\.stopped'` 那份 gate，找不到（舊版或不在）就 exit 3、什麼都不做：
     旗標設了而 gate 不認得的話，Claude 照聲明不補 CLAUDE.md、commit 卻被擋。專案的 hook 掛的是別處的 gate 副本時（例如本 repo 的 `core.hooksPath` 跑 repo 這份、而使用者跑部署版的 `dd-stop.sh`），這個檢查看的不是同一份
   - **`CLAUDE.local.md` 是 symlink、不是一般檔、或已經進版控時不寫**：`on` exit 4、旗標沒設；`off` 在檔裡有標記段時 exit 5、旗標照樣清掉、不印「8 步迴圈已恢復」（檔裡沒有標記段就照常恢復）。
-    不進版控靠 `git rev-parse --git-path info/exclude` 加一行 `/CLAUDE.local.md`（已經被別的規則忽略就不加）；`off` 不拿掉那一行
+    不進版控靠 `git rev-parse --git-path info/exclude` 加一行 `/CLAUDE.local.md`（已經被別的規則忽略就不加）；`off` 不拿掉那一行。
+    寫不進去（唯讀的檔、不能寫的目錄）走同一組 exit 碼，訊息是「寫不進」：`on` exit 4、這次沒有動旗標；`off` exit 5、標記段還在。
+  - **`on` 先寫 `info/exclude` 與聲明、最後才設旗標**（2026-11-17 步驟 4 審查後改的；原本先設旗標）：寫聲明失敗時不可以留下「旗標設了、聲明沒寫」——
+    gate 已經放行每個 commit，而 `commands/dd-stop.md` 回報的是失敗、Claude 也讀不到聲明，要等有人跑 `status` 才看得出來（拋棄式 repo 實跑：唯讀的 `CLAUDE.local.md`，舊順序跑完旗標是 `true`、標記段 0 份）。
+    旗標設不了（`git config --local` 寫不進去）是 exit 1：這時聲明已經寫了，訊息叫人跑 `off` 拿掉。這一種留下的是「聲明在、旗標沒設」，gate 照擋，看得出來
+  - **`remove_blocks` 是在 `do_off` 的 `if !` 裡被呼叫的，bash 在那種位置不套用 `set -e`**：裡面寫檔的每一步用 `&&` 接成一組，有一步不成就印「寫不進」回 1。
+    原本沒有接：寫回失敗時檔案沒變，`while` 下一圈又找到同一個標記段，永遠重跑（唯讀的檔與不能寫的目錄各實跑一次，都要靠 alarm 砍掉）。在這個函式裡加寫檔的步驟時照樣接進那一組
   - **`off` 之後 `CLAUDE.local.md` 要跟 `on` 之前逐位元組相同**：原本不存在的刪掉，原本就在的（含 0 bytes）留著。原檔結尾沒有換行時 `on` 多補一個換行（`sep=1`），`off` 一起拿掉 ——
     但標記段後面有使用者暫停期間自己加的字時留著那個換行，不然原檔最後一行會跟他加的第一行黏在一起。切檔用 `head -n`／`tail -n +`／`head -c`（照原樣搬位元組），不用 awk：awk 會替最後一行補換行
   - **`off` 的欠帳清單是不帶參數跑一次同目錄的 gate**，輸出縮排兩格原樣印，前面先印「以下是 gate 的欠帳檢查（這次沒有 commit 被擋）：」—— gate 那段輸出的第一行是「commit 已擋下」，沒有這一行說明會被讀成有 commit 失敗。
     gate 的 exit code 不當成 `off` 的失敗。跑的時候把 `SKIP_DOC_CHECK` 清成空的（留在環境裡的話 gate 直接跳過、還會記起點）。
+    gate 不帶參數時看的是「現在 staged 的」加「起點以來的欠帳」，所以這份清單也會列出暫停中已經 `git add`、還沒 commit 的改碼目錄，比「暫停期間欠的」寬。
     起點檔在而內容不是 commit 也不是空樹時，gate 不帶參數、沒有 staged 是靜靜 exit 0，所以 `off` 自己另外查一次，印「起點檔壞了，暫停期間的欠帳算不出來」，不印「沒有要補的」
   - **已知限制**：①`git config --local` 在同一個 repo 的所有 worktree 共用，`CLAUDE.local.md` 每個 worktree 各一份：在 A worktree 暫停，B 的 gate 也停、B 的 Claude 卻讀不到聲明
     ②已經開著的對話不會重讀 `CLAUDE.local.md`：暫停前開的要重開才會停，暫停期間開的要重開才會恢復（會不會中途重讀沒有查，設計不依賴它）③使用者自己在終端機的 commit 一樣被放行
     ④`--commands-only` 更新的人有新指令、沒有這支：`commands/dd-stop.md` 第 1 步會停下叫他重跑安裝
-  - 情境測試 `tests/test-dd-stop.sh`（每個情境自己開一個 repo；第一個參數換成改壞的副本做變異對照，第二個參數換 gate）。變異對照（2026-11-17，30 個變異都有紅；每個都跑到最後一則「N 不在 git repo」）：
+  - 情境測試 `tests/test-dd-stop.sh`（每個情境自己開一個 repo；第一個參數換成改壞的副本做變異對照，第二個參數換 gate）。變異對照（2026-11-17；步驟 4 審查修正之後整張重跑：表上每個變異都有紅、都跑到最後一則「N 不在 git repo」、判定行數與固定版相同；步驟 4 加的那幾列（「不認『不是一般檔』」到「找不到 gate」）另在 ubuntu:24.04 容器以一般帳號跑過，紅在同樣幾則。刻意不記個數，加一列就會過期）：
 
     | 變異 | 紅在哪 |
     |---|---|
-    | `on` 不設旗標 | A「on 之後旗標是 true」、A status 的兩則、G 與 G2 暫停中的 commit、K「旗標是 true」 |
-    | `on` 不查舊版 gate | F 的六則 |
+    | `on` 不設旗標 | A「on 之後旗標是 true」、A status 的兩則、G 與 G2 暫停中的 commit、K「旗標是 true」、M2「.git 不能寫」的三則（設不了也不報） |
+    | `on` 不查舊版 gate | F 裡 `on` 拒絕的那六則（舊版 gate 四則、沒有 gate 兩則） |
     | 不認 symlink | D：`on` 拒絕那五則、`off` 回 5 那幾則、「symlink 還是 symlink」 |
     | 不認已進版控 | E：`on` 拒絕那五則、`off` 回 5、不印已恢復、「檔案沒被動」 |
     | `on` 每次都加標記段 | A「重跑 on：標記段仍一份」「內容與第一次相同」「off 之後不存在」 |
@@ -268,15 +275,15 @@
     | `info/exclude` 不補換行 | L 兩則 |
     | `off` 不拿掉補的換行 | B 兩種結尾沒有換行的原檔與 K 的「逐位元組相同」 |
     | `off` 在後面有字時也拿掉補的換行 | 只有 C「結尾沒有換行的原檔：兩行沒有黏在一起」 |
-    | `off` 不刪自己建的檔 | 只有 A「off 之後不存在」 |
+    | `off` 不刪自己建的檔 | A「off 之後不存在」、F「沒有 gate 的 off：不存在」、M2「目錄不能寫」那幾則（刪檔那一步沒跑，就沒有失敗可報）與 M2 最後的「off 之後不存在」 |
     | `off` 空檔一律刪 | B「原本 0 bytes」的兩則 |
-    | `off` 不清旗標 | A、D、E、M 的「旗標沒了／照樣清掉」、G「off 之後 commit 被擋」等（gate 還在暫停，欠帳清單印不出來） |
+    | `off` 不清旗標 | A、D、E、F、M、M2 的「旗標沒了／照樣清掉」、G「off 之後 commit 被擋」等（gate 還在暫停，欠帳清單印不出來） |
     | `off` 不跑 gate | A「沒有要補的」、G 與 G2 的 `a/CLAUDE.md`、G 兩則順序、H「算不出來」 |
     | `off` 不清 `SKIP_DOC_CHECK` | 只有 G2 的兩則 |
     | `off` 不認壞起點檔 | 只有 H 的兩則 |
     | `off` 一律印 review 那行／不印 | A 的 `not_said "docs/reviews"`／I 的兩則 |
     | `off` 只拿第一份標記段 | C「兩份標記段」的兩則 |
-    | `off` 聲明還在也往下印已恢復 | D、E、M 的 exit 5 與不印已恢復 |
+    | `off` 聲明還在也往下印已恢復 | D、E、M、M2 兩種寫不進的 exit 5 與不印已恢復 |
     | `off` 不擋 symlink／版控 | D、E 的 `off` 那幾則 |
     | `off` 沒有結尾行照樣切 | M 的三則 |
     | `status` 不報不一致／值不是 `true` 也算暫停 | J 的兩則「不一致」／J「dd.stopped=false 算沒有暫停」 |
@@ -284,8 +291,18 @@
     | 不 `cd` 到 repo 根目錄 | K「標記段寫在 repo 根目錄」「子目錄沒有多出」 |
     | 聲明沒寫日期 | A「聲明有日期」 |
     | `off` 欠帳清單沒有說明行／已恢復印在欠帳之前 | A 與 G 的說明行、G 的順序／G「已恢復在欠帳清單之後」 |
+    | 不認「不是一般檔」 | 只有 E2 的 `said "不是一般檔"`：`on` 改成先寫聲明之後，寫進目錄會失敗，照樣 exit 4、旗標沒設，另外三則照綠 |
+    | `off` 寫回改用 `mv` | C「原檔的權限沒變（600）」、M2 唯讀檔的 `off` 那四則（`mv` 換得掉唯讀的檔，於是印了已恢復） |
+    | `status` 不加 `--local` | 只有 J「只設在 global」的 `said "沒有暫停"` |
+    | `on` 改回先設旗標才寫聲明 | M2「on 寫不進：旗標沒設」、M2「.git 不能寫」的 exit 碼與 `said "旗標設不了"` |
+    | `on` 聲明寫不進去照樣往下 | M2 唯讀檔的 `on` 三則（exit 碼、不印已暫停、旗標沒設） |
+    | `on` 旗標設不了不報 | M2「.git 不能寫」的三則 |
+    | `off` 寫不進之後不回 1／寫檔各步的結果不接（改回修之前） | M2 兩種 `off`：被 `limit` 的 alarm 砍掉，判成「輸出裡有 shell 錯誤」；後者另紅兩則 `said "寫不進"` |
+    | `off` 找不到 gate 時印「沒有要補的」／直接失敗 | F 的 `said "欠帳沒有查"` 與 `not_said "沒有要補的"`／F「off 照樣恢復」的 exit 碼與 `said "8 步迴圈已恢復"` |
 
-    ⚠️ 測不到的：聲明對 Claude 有沒有用（那是 `docs/measurements/2026-11-17-dd-stop/` 的實測）、worktree、`off` 途中被中斷留下的 `dd-stop.tmp`（在 git 目錄裡，下次 `off` 會覆寫）
+    ⚠️ 測不到的：聲明對 Claude 有沒有用（那是 `docs/measurements/2026-11-17-dd-stop/` 的實測）、worktree、`off` 途中被中斷留下的 `dd-stop.tmp`（在 git 目錄裡，下次 `off` 會覆寫）。
+    沒有測試的：`on` 寫不進 `info/exclude`（拋棄式 repo 實跑過一次：一行 shell 錯誤、exit 1、旗標與聲明都沒動）；以 root 跑時 M2 整節不跑（見 `tests/CLAUDE.md`）。
+    ⑰ 與 G 最後那則「欠帳銷掉了」的對照是 gate 的變異：把 `owed_dirs` 銷帳那一行的條件改成恆假，⑰「a/ 的欠帳已銷」與 G「補完之後」變紅，兩邊原本的「補上就放行」照樣綠（它們放行是因為記憶檔同批 staged）
 - `githooks/pre-commit` — 本 repo 自用（dogfood）：先跑 `githooks/claude-md-size.sh --staged`（根目錄 CLAUDE.md 的大小上限，2026-11-16 加的；
   `SKIP_DOC_CHECK=1` 不跳過它），非 0 就擋下，再轉呼叫上面的 gate。那一層三個檔（hook、大小檢查、上限檔）的說明在 `githooks/CLAUDE.md`。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。

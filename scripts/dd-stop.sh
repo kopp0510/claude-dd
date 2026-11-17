@@ -10,9 +10,13 @@
 #     CLAUDE.local.md 每個 session 一開始就載入、不進版控、只在這個 clone 生效，跟旗標的範圍一樣
 # 暫停是延後、不是豁免：暫停期間改了程式碼而沒更新 CLAUDE.md 的目錄，off 之後 gate 照樣追（off 會先印一次清單）。
 #
-# exit：0 正常；1 不在 git repo；2 用法錯；3 同目錄的 gate 是不認得 dd.stopped 的舊版（on 不做事）；
-#       4 CLAUDE.local.md 不是可以安全改的檔（symlink、已進版控、不是一般檔），on 不做事、旗標沒設；
-#       5 off 已清掉旗標，但聲明還留在 CLAUDE.local.md（同 4 的三種情況，或標記段沒有結尾行）—— 不印「已恢復」
+# exit：0 正常；1 不在 git repo，或 on 設不了旗標（git config 寫不進去；這時聲明已經寫了，訊息會叫人跑 off 拿掉）；
+#         on 寫不進 info/exclude 也是 1：只印一行 shell 錯誤，這時聲明與旗標都還沒動；
+#       2 用法錯；3 同目錄的 gate 是不認得 dd.stopped 的舊版（on 不做事）；
+#       4 CLAUDE.local.md 不是可以安全改的檔（symlink、已進版控、不是一般檔），或聲明寫不進去（唯讀、目錄不能寫）：on 沒有動旗標；
+#       5 off 已清掉旗標，但聲明還留在 CLAUDE.local.md（symlink、已進版控、不是一般檔、標記段沒有結尾行，或寫不回去）—— 不印「已恢復」
+# on 的順序是先寫聲明、最後才設旗標：反過來的話，寫聲明失敗會留下「旗標設了、聲明沒寫」——
+# gate 已經放行每個 commit，而使用者看到的是失敗、Claude 也讀不到聲明，沒有人知道要 off。
 #
 # 標記段的開頭行記兩個旗標，off 靠它們把檔案還原成 on 之前的樣子（逐位元組）：
 #   created=1  檔案是 on 建的（原本不存在）：拿掉標記段之後是 0 bytes 就刪檔。原本就在的檔（含 0 bytes）一律不刪
@@ -47,7 +51,7 @@ flag_on() { [ "$(git config --local --get dd.stopped 2>/dev/null)" = "true" ]; }
 # 標記段開頭行的行號（第一個）；沒有就印空字串
 begin_line() {
     [ -f "$LOCAL_FILE" ] || return 0
-    grep -n -F -- "$BEGIN_PREFIX" "$LOCAL_FILE" | grep -E '^[0-9]+:<!-- dd-stop:begin ' | sed -n '1s/:.*//p'
+    grep -n -- "^${BEGIN_PREFIX}" "$LOCAL_FILE" | sed -n '1s/:.*//p'
 }
 
 # CLAUDE.local.md 為什麼不能改：能改就印空字串
@@ -78,8 +82,6 @@ do_on() {
         exit 4
     fi
 
-    git config --local dd.stopped true
-
     # 不進版控、也不動 .gitignore：只寫這個 clone 自己的 info/exclude
     if ! git check-ignore -q -- "$LOCAL_FILE"; then
         exclude=$(git rev-parse --git-path info/exclude)
@@ -94,16 +96,29 @@ do_on() {
             created=1
         elif [ -s "$LOCAL_FILE" ] && ! last_byte_is_newline "$LOCAL_FILE"; then
             sep=1
-            echo >> "$LOCAL_FILE"
         fi
         today=$(date +%Y-%m-%d)
-        cat >> "$LOCAL_FILE" <<EOF
+        # 寫不進去（唯讀的檔、不能寫的目錄）要自己接：交給 set -e 的話只印一行 shell 錯誤就結束
+        if ! {
+            if [ "$sep" = 1 ]; then echo >> "$LOCAL_FILE"; fi &&
+            cat >> "$LOCAL_FILE" <<EOF
 ${BEGIN_PREFIX}created=${created} sep=${sep} 由 /dd-stop on 寫入，/dd-stop off 會移除 -->
 **8 步開發迴圈暫停中**（${today} 起，使用者用 \`/dd-stop on\` 開的）。恢復之前，這個專案只做步驟 1、2（實作與測試跑綠、commit）：
 不跑步驟 3–8，不呼叫 \`dd-loop\`，不跑 \`--start-segment\`，不開新段落、不動設計文件的進度表，改程式碼時不必同批更新 CLAUDE.md。commit 照平常下，不要加 \`SKIP_DOC_CHECK=1\`、不要用 \`--no-verify\`（gate 暫停中自己會放行並記帳，恢復後再補）。
 這一句優先於本專案 CLAUDE.md 的「開發流程」「CLAUDE.md 維護」、設計文件進度表的開工與標 DONE 規則、全域 CLAUDE.md §3.9 的迴圈；其他規則照舊（動手前的佐證、測試要跑綠、破壞性操作先確認）。恢復：\`/dd-stop off\`；看到 \`dd-stop.sh off\` 印出「8 步迴圈已恢復」之後，這一段作廢。
 ${END_LINE}
 EOF
+        } 2>/dev/null; then
+            echo "❌ 寫不進 ${top}/${LOCAL_FILE}（檔案唯讀，或它所在的目錄不能寫）：聲明沒寫，這次沒有動旗標"
+            echo "   讓它可以寫之後再重跑"
+            exit 4
+        fi
+    fi
+
+    if ! git config --local dd.stopped true; then
+        echo "❌ 旗標設不了（git config --local dd.stopped 寫不進去）：gate 沒有暫停"
+        echo "   聲明已經在 ${top}/${LOCAL_FILE}，Claude 開新對話會讀到「暫停中」：跑 $0 off 把它拿掉"
+        exit 1
     fi
 
     echo "8 步迴圈已暫停（${top}）"
@@ -114,7 +129,7 @@ EOF
 
 # 拿掉 CLAUDE.local.md 裡的標記段。回傳 0 = 檔裡已經沒有標記段；1 = 還有、沒辦法拿（原因已印出）
 remove_blocks() {
-    local b e rel line created sep total tmp size
+    local b e rel line created sep total tmp size reason
     tmp=$(git rev-parse --git-path dd-stop.tmp)
     while b=$(begin_line) && [ -n "$b" ]; do
         reason=$(unsafe_reason)
@@ -134,22 +149,30 @@ remove_blocks() {
         case "$line" in *" sep=1 "*) sep=1 ;; esac
         total=$(awk 'END { print NR }' "$LOCAL_FILE")
 
-        # b 是 1 時不可以寫 head -n 0：舊的 BSD head 把 0 當成不合法的行數
-        if [ "$b" -gt 1 ]; then head -n "$((b - 1))" "$LOCAL_FILE" > "$tmp"; else : > "$tmp"; fi
-        if [ "$e" -ge "$total" ]; then
-            # 標記段後面沒有東西：on 補的那個換行一起拿掉
-            if [ "$sep" = 1 ] && [ -s "$tmp" ]; then
-                size=$(wc -c < "$tmp" | tr -d ' ')
-                head -c "$((size - 1))" "$tmp" > "$tmp.2"
-                mv "$tmp.2" "$tmp"
+        # 這個函式是在 do_off 的 `if !` 裡被呼叫的，bash 在那種位置不套用 set -e：寫檔的每一步用 && 接起來，
+        # 有一步不成就停下回 1。不接的話寫回失敗時檔案沒變，下一圈又找到同一個標記段，永遠跑不完
+        if ! {
+            # b 是 1 時不可以寫 head -n 0：舊的 BSD head 把 0 當成不合法的行數
+            if [ "$b" -gt 1 ]; then head -n "$((b - 1))" "$LOCAL_FILE" > "$tmp"; else : > "$tmp"; fi &&
+            if [ "$e" -ge "$total" ]; then
+                # 標記段後面沒有東西：on 補的那個換行一起拿掉
+                if [ "$sep" = 1 ] && [ -s "$tmp" ]; then
+                    size=$(wc -c < "$tmp" | tr -d ' ') &&
+                    head -c "$((size - 1))" "$tmp" > "$tmp.2" &&
+                    mv "$tmp.2" "$tmp"
+                fi
+            else
+                tail -n "+$((e + 1))" "$LOCAL_FILE" >> "$tmp"
+            fi &&
+            if [ "$created" = 1 ] && [ ! -s "$tmp" ]; then
+                rm -f "$LOCAL_FILE"
+            else
+                cat "$tmp" > "$LOCAL_FILE"     # 不用 mv：保留原檔的權限
             fi
-        else
-            tail -n "+$((e + 1))" "$LOCAL_FILE" >> "$tmp"
-        fi
-        if [ "$created" = 1 ] && [ ! -s "$tmp" ]; then
-            rm -f "$LOCAL_FILE"
-        else
-            cat "$tmp" > "$LOCAL_FILE"     # 不用 mv：保留原檔的權限
+        } 2>/dev/null; then
+            rm -f "$tmp" "$tmp.2"
+            echo "⚠️ 寫不進 ${top}/${LOCAL_FILE}（檔案唯讀，或它所在的目錄不能寫）：標記段沒有拿掉"
+            return 1
         fi
         rm -f "$tmp"
     done
@@ -174,23 +197,20 @@ do_off() {
             *) base_broken=1 ;;
         esac
     fi
-    gate_ran=0
-    owed_out=""
     if [ -x "$GATE" ]; then
-        gate_ran=1
         # SKIP_DOC_CHECK 留在環境裡的話 gate 會直接跳過，這裡要的是真的檢查
         owed_out=$(SKIP_DOC_CHECK="" "$GATE" 2>&1) || true
-    fi
-    if [ -n "$owed_out" ]; then
-        printf '%s\n' "$owed_out" | sed 's/^/  /'
-    fi
-    if [ "$gate_ran" = 0 ]; then
+        if [ -n "$owed_out" ]; then
+            printf '%s\n' "$owed_out" | sed 's/^/  /'
+        fi
+        if [ "$base_broken" = 1 ]; then
+            echo "  ⚠️ 起點檔壞了，暫停期間的欠帳算不出來（${base_file} 的內容不是 commit、也不是空樹）"
+            echo "     跑 ${GATE} --segment-base，照它印的處理"
+        elif [ -z "$owed_out" ]; then
+            echo "  沒有要補的"
+        fi
+    else
         echo "  ⚠️ 找不到可執行的 ${GATE}：欠帳沒有查"
-    elif [ "$base_broken" = 1 ]; then
-        echo "  ⚠️ 起點檔壞了，暫停期間的欠帳算不出來（${base_file} 的內容不是 commit、也不是空樹）"
-        echo "     跑 ${GATE} --segment-base，照它印的處理"
-    elif [ -z "$owed_out" ]; then
-        echo "  沒有要補的"
     fi
 
     if [ -d docs/reviews ]; then
