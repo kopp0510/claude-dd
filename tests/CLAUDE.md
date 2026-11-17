@@ -25,7 +25,7 @@
 - ⚠️ **`said`／`not_said` 的字串不可以用 `-` 開頭**：它們是 `grep -qF "$1"`，`-BLOCKED.md` 會被當成 grep 的選項（回 2；macOS 的 grep 印 `grep: Invalid argument`，ubuntu:24.04 的 GNU grep 3.11 印 `grep: LOCKED.md: invalid context length argument`），
   `said` 就永遠紅、`not_said` 永遠綠。2026-11-15 踩到：`said "-BLOCKED.md"` 修之前紅（看起來像正確的紅燈），修好 gate 之後還是紅才發現。
   「紅了」之外要看紅的內容：那次 `❌` 上面一行就是 grep 自己的錯誤訊息
-- 兩支都在暫存目錄裡跑、`trap` 跑完清掉（本機會拿來重跑與做變異測試）
+- 四支（`test-install.sh`、`test-gate.sh`、`test-dd-init-upgrade.sh`、`test-dd-stop.sh`）都在暫存目錄裡跑、`trap` 跑完清掉（本機會拿來重跑與做變異測試）
 - 腳本開頭是 `set -e`（2026-10-01 從 ci.yml 內嵌 step 搬出來時照 GitHub Actions 預設的 `bash -e` 保留）：
   預期會被擋的 commit 一律包在 `expect` 的 `if` 裡，新增情境時別讓會回非 0 的指令裸跑
   - ⚠️ **預期放行、但會觸發 hook 的指令（`git commit --amend` 這類）也要包進 `expect`**：裸跑的話，
@@ -63,7 +63,7 @@
     —— 映像沒有 git，也沒有 `/bin/bash`（bash 在 `/usr/local/bin/bash`，gate 的 shebang 寫 `#!/bin/bash`），兩步都不能省。
     少裝 git，一則情境都沒跑就 `git: command not found`；少了 `ln`，gate 跑不起來 ——
     直接叫印 `/bin/bash: bad interpreter`，從 hook 叫印的卻是 `…/check-claude-md.sh: not found`（檔案明明在，缺的是直譯器；`apk add git` 也不會順便帶來 `/bin/bash`）
-- 要通過 `shellcheck -S warning`（CI 的 ShellCheck 清單逐檔寫死，這支已列入）
+- 要通過 `shellcheck -S warning`（CI 的 ShellCheck 清單逐檔寫死，四支都已列入）
 - **`test-install.sh` 要直接呼叫安裝腳本的函式時，交給另一個 bash 行程**（T2、T7 的 `drive.sh`：先把 `HOME` 換成沙盒再 `source`）。兩個理由：
   ①測試檔上面那行 `source` 是在真實 HOME 下跑的，`CLAUDE_DIR` 當下就定死，主 shell 直接呼叫會寫進真的 `~/.claude`
   ②寫成 `函式 || rc=$?`（包成子 shell 也一樣）時，bash 會讓函式裡的 `set -e` 失效，測到的不是真的安裝行為。
