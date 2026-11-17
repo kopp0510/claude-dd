@@ -26,6 +26,7 @@ jobs:
             install-dd-pipeline.sh \
             scripts/check-claude-md.sh \
             scripts/dd-init-upgrade.sh \
+            scripts/dd-stop.sh \
             scripts/githooks/pre-commit \
             scripts/githooks/claude-md-size.sh \
             skills/self-improving-agent/hooks/error-capture.sh \
@@ -34,6 +35,7 @@ jobs:
             skills/gate-guard/hooks/test-guard-no-verify.sh \
             tests/test-gate.sh \
             tests/test-dd-init-upgrade.sh \
+            tests/test-dd-stop.sh \
             tests/test-install.sh
 
       - name: help smoke test
@@ -566,6 +568,10 @@ jobs:
       - name: dd-init 升級分類腳本情境測試
         run: tests/test-dd-init-upgrade.sh
 
+      # 拋棄式 repo 配 repo 裡真的 gate：暫停旗標、CLAUDE.local.md 的標記段、off 之後逐位元組還原
+      - name: dd-stop 腳本情境測試
+        run: tests/test-dd-stop.sh
+
       # 情境本體在 tests/test-install.sh（2026-10-01 從這裡搬出去，macOS 那個 job 才能共用同一份）
       - name: Sandbox 端到端安裝測試（非互動）
         run: tests/test-install.sh
@@ -602,6 +608,9 @@ jobs:
 
       - name: dd-init 升級分類腳本情境測試
         run: /bin/bash tests/test-dd-init-upgrade.sh
+
+      - name: dd-stop 腳本情境測試
+        run: /bin/bash tests/test-dd-stop.sh
 
       # 每個 macOS 使用者真正會跑的部署路徑（首次安裝、冪等、--force、--uninstall…）
       - name: Sandbox 端到端安裝測試（非互動）

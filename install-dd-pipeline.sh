@@ -87,6 +87,7 @@ ALL_NS_COMMANDS=("${NS_COMMANDS[@]}")
 DD_SCRIPTS=(
     "check-claude-md.sh"
     "dd-init-upgrade.sh"
+    "dd-stop.sh"
 )
 
 # Output styles（部署到 ~/.claude/output-styles/；使用者用 /output-style 自己開關，安裝不改任何 outputStyle 設定）

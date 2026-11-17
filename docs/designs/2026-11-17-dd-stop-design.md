@@ -51,6 +51,10 @@
   - 標記段怎麼加、怎麼拿掉（`off` 之後原檔要逐位元組還原）：開頭那行註解記兩個旗標。`created=1`：這個檔是 `on` 建立的（原本不存在）；`sep=1`：原檔不是空的、而且結尾沒有換行，`on` 在標記段前面多補了一個換行。`off` 拿掉標記段的那幾行；`sep=1` 就連前面補的那個換行一起拿掉；`created=1` 而且拿掉之後檔案是 0 bytes 才刪檔。原本就存在的檔（含 0 bytes、只有空白的）一律不刪。暫停期間使用者在標記段前後自己加的字，`off` 之後原樣留著
   - `off`：①`git config --local --unset dd.stopped`（本來就沒有也算成功）②照上一條拿掉標記段。檔是 symlink 或進了版控時不動它：印「旗標已清除，但聲明還在 CLAUDE.local.md，手動處理後重跑」、exit 5，**不印「已恢復」** ③先印一行「以下是 gate 的欠帳檢查（這次沒有 commit 被擋）：」，再不帶參數跑一次同目錄的 gate，把它印的原樣印出來（它的 exit code 不當成 `off` 的失敗）。起點檔在而內容讀不出來（同目錄 gate 的 `--segment-base` 失敗、而且起點檔存在）時印「起點檔壞了，暫停期間的欠帳算不出來」；gate 沒有輸出、起點也沒壞才印「沒有要補的」④專案有 `docs/reviews/` 目錄時多印一行：「下次 `--start-segment` 之前，起點以來的 commit 要有 review 報告或 `S<段落>-SKIP.md` 申報」⑤印「8 步迴圈已恢復：從現在起照專案 CLAUDE.md 與全域 §3.9 跑完整 8 步。這個對話讀過的暫停聲明作廢；暫停期間開的、現在還開著的其他對話要重開」。`info/exclude` 加的那一行留著
   - `status`：印旗標（暫停中／沒有暫停）與標記段在不在；兩者不一致時照實各印一行，不自己修
+  - 實作時跟上面幾條不一樣的地方（2026-11-17 S1-2，都有測試）：①`off` 遇到 symlink 或已進版控的檔，只有檔裡真的有標記段才 exit 5；沒有標記段就沒有聲明留著，照常恢復
+    ②`CLAUDE.local.md` 存在而不是一般檔（例如目錄）也算 exit 4 ③標記段沒有結尾行時 `off` 不動檔、exit 5 ④`sep=1` 而標記段後面有使用者自己加的字時，`off` 留著補的那個換行（拿掉會把兩行黏在一起；這時本來就不可能逐位元組還原）
+    ⑤「起點檔壞了」不看 `--segment-base` 的 exit code（它在起點不是祖先時也失敗、那時欠帳算得出來），改成直接看起點檔第一行是不是 commit 或 tree，跟 gate 的 `read_base` 同一個判法
+    ⑥同目錄的 gate 不在或不能執行時 `off` 照樣恢復，欠帳那一段印「欠帳沒有查」⑦`off` 跑 gate 時把 `SKIP_DOC_CHECK` 清成空的 ⑧參數多於一個也是 exit 2
   - 沒有參數或不認得的參數：印用法、exit 2。不在 git repo：exit 1
   - 標記段（`<日期>` 是 `on` 當天）：
 
@@ -107,7 +111,7 @@
   變異對照（各記「哪個變異 → 哪幾則紅」；每個變異先確認 `grep -c '^✅ ⑰'` 不是 0、固定版與變異版的判定行數一樣）：拿掉 pre-commit 那一支、拿掉 `--start-segment` 那一支、`--local` 改 `--get`、暫停那一支不記起點、暫停那一支遇到壞起點檔照樣覆寫。
   commit 訊息結尾 `（S1-1）`
 - S1-2 `scripts/dd-stop.sh` 與 `tests/test-dd-stop.sh`。動：這兩個新檔、`install-dd-pipeline.sh` 的 `DD_SCRIPTS`、`.github/workflows/ci.yml`（ShellCheck 清單加兩個檔；lint job 與 bash32 job 各加一個跑 `tests/test-dd-stop.sh` 的 step）、`DD_PIPELINE_ARCHITECTURE.md`（「12 支腳本」→ 14、CI 防線表加一列）、`scripts/CLAUDE.md`、`tests/CLAUDE.md`、根目錄 CLAUDE.md「目錄結構」`tests/` 那行。
-  測試用拋棄式 repo 配 repo 裡真的 gate：`on` 之後旗標在、標記段恰好一份、`info/exclude` 有那一行、`git status --porcelain` 看不到 `CLAUDE.local.md`；`on` 跑兩次標記段仍一份；`on` 再 `off` 之後 `CLAUDE.local.md` 與原本逐位元組相同（`cmp`），各一則：原本不存在（`off` 後檔不存在）、0 bytes、只有空白、有內容且結尾有換行、有內容且結尾沒有換行；暫停期間在標記段後面加一行字，`off` 之後那行還在、標記段沒了；`off` 之後旗標沒了；symlink 與已進版控：`on` 各拒絕、旗標沒設、連結目標沒被寫，`off` 各回非 0、不印「已恢復」；舊版 gate（沒有 `dd.stopped` 字樣的副本）拒絕；`off` 印出 gate 的欠帳清單與前面那一行說明；起點檔壞掉時 `off` 印「算不出來」而不印「沒有要補的」；有 `docs/reviews/` 時 `off` 多印 review 那一行、沒有時不印；`status` 四種組合；repo 路徑含空白與中文。第二個參數可換成改壞的腳本做變異對照。
+  測試用拋棄式 repo 配 repo 裡真的 gate：`on` 之後旗標在、標記段恰好一份、`info/exclude` 有那一行、`git status --porcelain` 看不到 `CLAUDE.local.md`；`on` 跑兩次標記段仍一份；`on` 再 `off` 之後 `CLAUDE.local.md` 與原本逐位元組相同（`cmp`），各一則：原本不存在（`off` 後檔不存在）、0 bytes、只有空白、有內容且結尾有換行、有內容且結尾沒有換行；暫停期間在標記段後面加一行字，`off` 之後那行還在、標記段沒了；`off` 之後旗標沒了；symlink 與已進版控：`on` 各拒絕、旗標沒設、連結目標沒被寫，`off` 各回非 0、不印「已恢復」；舊版 gate（沒有 `dd.stopped` 字樣的副本）拒絕；`off` 印出 gate 的欠帳清單與前面那一行說明；起點檔壞掉時 `off` 印「算不出來」而不印「沒有要補的」；有 `docs/reviews/` 時 `off` 多印 review 那一行、沒有時不印；`status` 四種組合；repo 路徑含空白與中文。第一個參數可換成改壞的 `dd-stop.sh` 做變異對照（第二個換 gate）。
   commit 訊息結尾 `（S1-2）`
 - S1-3 `commands/dd-stop.md` 與同批文件。動：新檔、`install-dd-pipeline.sh`（`DD_COMMANDS`、`deprecated_dd` 拿掉 `dd-stop`、印「N 個 DD Command（dd-init：…）」的那句、`show_completion()` 的後續步驟）、`tests/test-install.sh`（比照 `dd-init.md` 加部署斷言）、根目錄 CLAUDE.md（「1 個 dd-* 指令（dd-init…」→ 2 個）、兩份 README（指令一覽、安裝步驟第 6 步與不編號附加步驟那句、「同名的檔會被換掉」那一條拿掉 `dd-stop.md`、「CLAUDE.md 維護規則」加一條暫停、「為什麼要巢狀」底下不掛 gate 那段、「核心工作法」迴圈說明段講 `--start-segment` 的那一句補上暫停時不記起點）、`DD_PIPELINE_ARCHITECTURE.md`（「核心工作法」講 gate 的段落；「部署清單」點名列 dd-init 的那一段加上 `/dd-stop` 與 `dd-stop.sh`、加入日期 2026-11-17、實證來源寫 S1-4 的結果）、`CHANGELOG.md` 新開 `## 未發布`（`## 1.6.15` 不動；註明 `dd-stop` 這個名字以前是退場的舊指令）、`skills/dd-loop/SKILL.md`「段落起點」加一句（`--start-segment` 印「迴圈暫停中」時不算記好起點、照它印的做）。
   commit 訊息結尾 `（S1-3）`

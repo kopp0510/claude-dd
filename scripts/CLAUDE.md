@@ -237,6 +237,55 @@
     awk 的 `print > out` 會跟著 symlink 寫到它指的地方，clone 帶進來的 symlink 可以指到專案外
     （security-audit 試跑找到）。檢查放在建 `WORK` 之前，`--plan` 不受影響
   - 情境測試 `tests/test-dd-init-upgrade.sh`（變異對照見 `tests/CLAUDE.md`）
+- `dd-stop.sh` — `/dd-stop` 的本體（2026-11-17；設計與使用者的決定在 `docs/designs/2026-11-17-dd-stop-design.md`）：`on`／`off`／`status`，暫停與恢復一個專案的 8 步迴圈（步驟 3–8）與 gate。
+  用法、exit 碼、標記段開頭行兩個旗標（`created`、`sep`）的意思寫在檔頭。在專案的哪一層跑都可以，一律到 `git rev-parse --show-toplevel` 那一層做事。
+  - **暫停有兩半，少一半就不算暫停**：旗標 `git config --local dd.stopped true`（gate 讀它，見上面 `check-claude-md.sh` 的「暫停旗標」條目）與
+    repo 根目錄 `CLAUDE.local.md` 裡的標記段（Claude 讀它 —— `.git/config` 不在 context 裡）。`status` 兩邊各印一行，不一致時多印一行、不自己修
+  - **它找的是跟自己同目錄的 gate**（`$(dirname "$0")/check-claude-md.sh`），不是專案 pre-commit 實際掛的那一份。`on` 先 `grep 'dd\.stopped'` 那份 gate，找不到（舊版或不在）就 exit 3、什麼都不做：
+    旗標設了而 gate 不認得的話，Claude 照聲明不補 CLAUDE.md、commit 卻被擋。專案的 hook 掛的是別處的 gate 副本時（例如本 repo 的 `core.hooksPath` 跑 repo 這份、而使用者跑部署版的 `dd-stop.sh`），這個檢查看的不是同一份
+  - **`CLAUDE.local.md` 是 symlink、不是一般檔、或已經進版控時不寫**：`on` exit 4、旗標沒設；`off` 在檔裡有標記段時 exit 5、旗標照樣清掉、不印「8 步迴圈已恢復」（檔裡沒有標記段就照常恢復）。
+    不進版控靠 `git rev-parse --git-path info/exclude` 加一行 `/CLAUDE.local.md`（已經被別的規則忽略就不加）；`off` 不拿掉那一行
+  - **`off` 之後 `CLAUDE.local.md` 要跟 `on` 之前逐位元組相同**：原本不存在的刪掉，原本就在的（含 0 bytes）留著。原檔結尾沒有換行時 `on` 多補一個換行（`sep=1`），`off` 一起拿掉 ——
+    但標記段後面有使用者暫停期間自己加的字時留著那個換行，不然原檔最後一行會跟他加的第一行黏在一起。切檔用 `head -n`／`tail -n +`／`head -c`（照原樣搬位元組），不用 awk：awk 會替最後一行補換行
+  - **`off` 的欠帳清單是不帶參數跑一次同目錄的 gate**，輸出縮排兩格原樣印，前面先印「以下是 gate 的欠帳檢查（這次沒有 commit 被擋）：」—— gate 那段輸出的第一行是「commit 已擋下」，沒有這一行說明會被讀成有 commit 失敗。
+    gate 的 exit code 不當成 `off` 的失敗。跑的時候把 `SKIP_DOC_CHECK` 清成空的（留在環境裡的話 gate 直接跳過、還會記起點）。
+    起點檔在而內容不是 commit 也不是空樹時，gate 不帶參數、沒有 staged 是靜靜 exit 0，所以 `off` 自己另外查一次，印「起點檔壞了，暫停期間的欠帳算不出來」，不印「沒有要補的」
+  - **已知限制**：①`git config --local` 在同一個 repo 的所有 worktree 共用，`CLAUDE.local.md` 每個 worktree 各一份：在 A worktree 暫停，B 的 gate 也停、B 的 Claude 卻讀不到聲明
+    ②已經開著的對話不會重讀 `CLAUDE.local.md`：暫停前開的要重開才會停，暫停期間開的要重開才會恢復（會不會中途重讀沒有查，設計不依賴它）③使用者自己在終端機的 commit 一樣被放行
+    ④`--commands-only` 更新的人有新指令、沒有這支：`commands/dd-stop.md` 第 1 步會停下叫他重跑安裝
+  - 情境測試 `tests/test-dd-stop.sh`（每個情境自己開一個 repo；第一個參數換成改壞的副本做變異對照，第二個參數換 gate）。變異對照（2026-11-17，30 個變異都有紅；每個都跑到最後一則「N 不在 git repo」）：
+
+    | 變異 | 紅在哪 |
+    |---|---|
+    | `on` 不設旗標 | A「on 之後旗標是 true」、A status 的兩則、G 與 G2 暫停中的 commit、K「旗標是 true」 |
+    | `on` 不查舊版 gate | F 的六則 |
+    | 不認 symlink | D：`on` 拒絕那五則、`off` 回 5 那幾則、「symlink 還是 symlink」 |
+    | 不認已進版控 | E：`on` 拒絕那五則、`off` 回 5、不印已恢復、「檔案沒被動」 |
+    | `on` 每次都加標記段 | A「重跑 on：標記段仍一份」「內容與第一次相同」「off 之後不存在」 |
+    | `on` 不寫 `info/exclude` | A 的四則（有那一行、`git status` 看不到、重跑仍一行、`off` 後留著）、K、L「新的那一行自成一行」 |
+    | `on` 不看是否已被忽略 | L「已經被忽略：不再寫」、A 兩則（重跑變兩行） |
+    | `on` 不補換行 | B 兩種結尾沒有換行的原檔各三則、C「兩行沒有黏在一起」、K 兩則 |
+    | `info/exclude` 不補換行 | L 兩則 |
+    | `off` 不拿掉補的換行 | B 兩種結尾沒有換行的原檔與 K 的「逐位元組相同」 |
+    | `off` 在後面有字時也拿掉補的換行 | 只有 C「結尾沒有換行的原檔：兩行沒有黏在一起」 |
+    | `off` 不刪自己建的檔 | 只有 A「off 之後不存在」 |
+    | `off` 空檔一律刪 | B「原本 0 bytes」的兩則 |
+    | `off` 不清旗標 | A、D、E、M 的「旗標沒了／照樣清掉」、G「off 之後 commit 被擋」等（gate 還在暫停，欠帳清單印不出來） |
+    | `off` 不跑 gate | A「沒有要補的」、G 與 G2 的 `a/CLAUDE.md`、G 兩則順序、H「算不出來」 |
+    | `off` 不清 `SKIP_DOC_CHECK` | 只有 G2 的兩則 |
+    | `off` 不認壞起點檔 | 只有 H 的兩則 |
+    | `off` 一律印 review 那行／不印 | A 的 `not_said "docs/reviews"`／I 的兩則 |
+    | `off` 只拿第一份標記段 | C「兩份標記段」的兩則 |
+    | `off` 聲明還在也往下印已恢復 | D、E、M 的 exit 5 與不印已恢復 |
+    | `off` 不擋 symlink／版控 | D、E 的 `off` 那幾則 |
+    | `off` 沒有結尾行照樣切 | M 的三則 |
+    | `status` 不報不一致／值不是 `true` 也算暫停 | J 的兩則「不一致」／J「dd.stopped=false 算沒有暫停」 |
+    | 多一個參數照跑 | N「多一個參數」「用法錯時旗標沒設」 |
+    | 不 `cd` 到 repo 根目錄 | K「標記段寫在 repo 根目錄」「子目錄沒有多出」 |
+    | 聲明沒寫日期 | A「聲明有日期」 |
+    | `off` 欠帳清單沒有說明行／已恢復印在欠帳之前 | A 與 G 的說明行、G 的順序／G「已恢復在欠帳清單之後」 |
+
+    ⚠️ 測不到的：聲明對 Claude 有沒有用（那是 `docs/measurements/2026-11-17-dd-stop/` 的實測）、worktree、`off` 途中被中斷留下的 `dd-stop.tmp`（在 git 目錄裡，下次 `off` 會覆寫）
 - `githooks/pre-commit` — 本 repo 自用（dogfood）：先跑 `githooks/claude-md-size.sh --staged`（根目錄 CLAUDE.md 的大小上限，2026-11-16 加的；
   `SKIP_DOC_CHECK=1` 不跳過它），非 0 就擋下，再轉呼叫上面的 gate。那一層三個檔（hook、大小檢查、上限檔）的說明在 `githooks/CLAUDE.md`。
   **不部署**到 `~/.claude/`；啟用方式：`git config core.hooksPath scripts/githooks`。
