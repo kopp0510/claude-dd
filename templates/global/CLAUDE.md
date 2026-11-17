@@ -266,19 +266,7 @@
 
 規則:
 - 驗證不過 → 修完重跑步驟 5,不可帶著紅燈進步驟 6
-- ⚠️⚠️ **要擋 read-then-write 的 race,「包進交易」通常是錯的修法 —— 先查隔離級別。**
-  在 `read committed`(Postgres 預設)下**交易只保證原子性,不保證「我讀到的 pre-image
-  到我寫入時還沒變」** —— 兩個交易讀到同一份 pre-image、各寫自己那一欄,照樣落成要擋的狀態。
-  **要先取鎖再讀**:`SELECT … FOR UPDATE` 可以,**但它鎖不住不存在的列**
-  (「首次建立」那條路完全沒有序列化,而 upsert 的 `ON CONFLICT DO UPDATE` 會安靜地蓋上去)。
-  **列可能不存在時用 advisory lock**,兩者都不需要 migration。
-  ⚠️ 另一個前提要自己 grep:**那張表的寫入端只有這一處嗎** —— 多一個繞過它的寫入路徑,
-  這道鎖就只保護一半。
-- ⚠️ **併發 bug 不要用「同時打兩發」來驗 —— 窗通常是次毫秒級,打不到**(裸打十幾輪可以完全沒踩到)。
-  **做法是可控實驗**:在讀與寫之間**臨時插一個 sleep 把窗拉寬**,修前 / 修後各跑一次,
-  驗完拆掉並確認 `grep` 回 0、程式碼與實驗前逐字相同。
-  ⚠️ **而且要先確認「資料集真的能觸發」** —— 否則被擋下的可能是那支自己的輸入驗證、跟鎖無關,
-  而那個錯誤碼會被讀成「鎖生效了」。**資料設錯 + 結果讀錯,疊起來剛好長得像成功。**
+- 併發 race、資料庫鎖、git 進行中狀態的驗法見 `dd-loop` skill 的「領域陷阱」一節(碰到這類修改時讀)
 - ⚠️⚠️ **寫一個「擋誤用」或「讓 X 可偵測」的機制之前,先驗三件事**(實測三項各自獨立出錯):
   ①**誤用發生的那一刻,這個機制存在嗎** —— 只存在某個 branch 的檔案,切到別的 branch 就從
   工作目錄消失,它檔頭描述的情境**永遠到不了它**(實證:一支只在 `company` branch 的 wrapper,
@@ -291,11 +279,6 @@
   「什麼都沒做」蓋章成「做成功了」。
   ⚠️ 而**先 grep 既有的痕跡有沒有更強的**:曾有一次新造的雜湊記錄,被既有的
   「覆蓋前備份整份內容並印出路徑」完全蓋過 —— 新機制只該補既有痕跡**真正缺的那一格**。
-- ⚠️⚠️ **驗 git「進行中」狀態(rebase / merge / cherry-pick)不可以手動造 `.git` 內部目錄。**
-  真實 rebase 衝突時 HEAD 是 **detached**,`git rev-parse --abbrev-ref HEAD` 回 `HEAD` ——
-  所以任何「先比對 branch 名」的檢查都會先命中,後面那段 rebase 判斷**永遠不可達**。
-  而「branch 還掛著 + `rebase-merge` 目錄存在」這個組合**現實中不存在**,手動 `mkdir` 造出來
-  測到的是假綠(實測)。做法:用真的 `git rebase` / `git merge` 製造衝突。
 - **鑑別力測試(改回舊版確認會紅)的判定式要比對「固定版的完整輸出」,不要斷言某個預期的壞結果**:
   實測 —— 變異版掉進**第三種**狀態(我預期它停在 A、實際變成 C),判定式於是回報
   「變異沒被抓到」,而**測試其實有鑑別力**。
@@ -707,18 +690,18 @@ C) 先停下討論
 2. 對照 §7.2 表格的 prompt pattern
 3. **命中 §7.2 → 第一個 tool_use 必須是 `Skill`**;後續 Read/Edit/Bash 都要在 Skill 之後
 4. 命中其他 skill description(非 §7.2)→ 同上原則,優先呼叫 Skill
-5. 模糊 → 用 ExitPlanMode 或 AskUserQuestion 列選項
+5. 模糊 → 照 §6.1 判斷:有 ≥80% 把握就動手並寫明假設,否則用 AskUserQuestion 問
 6. 無命中 → 直接動手
 
 ### 7.2 預設觸發 prompt pattern(命中即呼叫)
 
 | User prompt 含這類字 | 呼叫 |
 |---|---|
-| `fix` / `修` / `改` / `改善` / `audit` / `審查` **+ 任何 `.md` 檔** | `claude-md-management:claude-md-improver` |
+| `fix` / `修` / `改` / `改善` / `audit` / `審查` **+ `CLAUDE.md`** | `claude-md-management:claude-md-improver` |
 | `把學到的寫進 CLAUDE.md` / `這輪學到的記進文件` / `收工更新 CLAUDE.md` | `claude-md-management:revise-claude-md` |
 | `簡化` / `降複雜度` / `清冗餘` / `refactor 簡化` + (code/檔案) | `code-simplifier` |
 | `review` / `審查` + (PR / code / 變更 / commit) | `code-reviewer`(agent,用 Agent 工具派) |
-| `整理 memory` / `沉澱規則` / `把學到的寫成 skill` / `優化 skill` | `self-improving-agent` |
+| `整理 memory` / `沉澱規則` / `把學到的寫成 skill` | `self-improving-agent` |
 | `拆任務` / `微任務` / `task breakdown` / `工作分解` | `task-planner` |
 | `做網站` / `做網頁` / `切版` / `頁面設計` / `版面` / `樣式` / `UI 介面` / `視覺設計` | `frontend-design` |
 | `CI/CD` / `Dockerfile` / `Kubernetes` / `K8s` / `部署 pipeline` / `IaC` | `senior-devops`(agent,用 Agent 工具派) |
@@ -746,5 +729,4 @@ C) 先停下討論
 
 ### 7.6 觸發原則
 
-觸發成本低(可隨時退出 skill flow),under-trigger 比 over-trigger 嚴重。
-已有具體計畫、prompt 很短、上一輪沒觸發、使用者沒明說要用 skill — 都不是跳過 §7.2 的理由;每輪獨立判斷。
+每輪獨立判斷:prompt 要的工作正是某個 skill 管的事,就呼叫它;只是字面碰到關鍵字、實際要的不是那件事,就不呼叫。
