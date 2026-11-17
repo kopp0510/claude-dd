@@ -83,7 +83,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | `/dd-stop` 指令、腳本與 gate 的暫停旗標 | IN_PROGRESS | — | `/bin/bash tests/test-gate.sh` 與 `/bin/bash tests/test-dd-stop.sh` 全綠、變異對照如表；`tests/test-install.sh` 全綠；`shellcheck -S warning` 過；CI lint job 本機逐 step 全過；S1-4 兩組的結果照實寫；根目錄 CLAUDE.md 不超過 48000 bytes | 925d0b8.. |
+| S1 | `/dd-stop` 指令、腳本與 gate 的暫停旗標 | DONE | — | `/bin/bash tests/test-gate.sh` 與 `/bin/bash tests/test-dd-stop.sh` 全綠、變異對照如表；`tests/test-install.sh` 全綠；`shellcheck -S warning` 過；CI lint job 本機逐 step 全過；S1-4 兩組的結果照實寫；根目錄 CLAUDE.md 不超過 48000 bytes | 925d0b8..083ef82 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -147,6 +147,10 @@
   `off` 寫不進 `CLAUDE.local.md` 時永遠重跑、`on` 先設旗標而寫聲明失敗時旗標留著（兩個審查者都報）、本檔寫「都有測試」而「不是一般檔」那一支沒有測試。
   模型層判準的五條 Important：文件講得比判準實際擋的多的地方改掉了；判準本身沒有改，等使用者決定要不要補了重跑（理由在 `S1-judge.md`）。
   修完拿 HEAD 版（步驟 3、4 之前）與現行版的 `dd-stop.sh` 跑同一串沒有寫檔失敗的情境（`status`、`on`、重跑 `on`、暫停中 commit、有欠帳的 `off`、同目錄沒有 gate 的 `off`），輸出逐位元組相同
+- 步驟 5 到 8（2026-11-17）：步驟 5 的結果在 `docs/reviews/2026-11-17-dd-stop/S1-judge.md` 的處置與 `083ef82` 的訊息。步驟 7 沒有另外寫：這一輪學到的（`if !` 裡的函式不套用 `set -e`、`on` 的順序、root 跑不到 M2）已經隨修正寫進 `scripts/CLAUDE.md` 與 `tests/CLAUDE.md`。
+  步驟 8 的範圍是四份（根目錄、`scripts/`、`tests/`、`docs/measurements/2026-11-17-dd-stop/` 的 CLAUDE.md），只看這一段改的段落：檔案清單、取代號的指令、第 1 批的回合數與費用、`check.out` 重跑、
+  gate 暫停旗標那張變異表（用加了新斷言的 `tests/test-gate.sh` 重跑五個變異）都對得上，沒有要改的
+- 留給使用者的：部署（`./install-dd-pipeline.sh --force`，裝了之後 `/dd-stop` 才用得到）、push、模型層判準要不要補了再跑一批
 
 ## 計畫審查紀錄
 
