@@ -111,3 +111,11 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   `SKILL.md`, `README.md`, `skills/review/SKILL.md` and `skills/promote/SKILL.md` point at the Promotion Criteria in
   `reference/promotion-rules.md` instead of stating their own thresholds; `skills/promote/SKILL.md` distillation rules
   ask for an imperative plus a one-clause reason instead of "Always / Never" with no backstory.
+- 2026-11-18 (same audit, low-severity findings): removed the GitHub Copilot row of the Platform Support table from
+  `SKILL.md` and `README.md` (claude-dd does not deploy to Copilot; same reason as the 2026-11-15 OpenClaw / Codex removal);
+  `skills/status/SKILL.md` Step 2 names the CLAUDE.md row as the project's `./CLAUDE.md` and says `~/.claude/CLAUDE.md`
+  is reported as a plain line count, not scored against that table.
+- 2026-11-18 (same audit, follow-up): `reference/promotion-rules.md` Actionable example is "Use X — Y breaks otherwise"
+  instead of "Never Y"; `skills/remember/SKILL.md` and `skills/promote/SKILL.md` grep the whole memory directory
+  (topic files too) instead of only `MEMORY.md`, and promote removes the entry from whichever file holds it;
+  `reference/memory-architecture.md` no longer says worktrees get separate memory directories (the docs say they share one).

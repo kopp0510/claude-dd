@@ -47,9 +47,12 @@ ls .claude/rules/*.md 2>/dev/null | wc -l
 | Metric | Healthy | Warning | Critical |
 |--------|---------|---------|----------|
 | MEMORY.md lines | < 120 | 120-180 | > 180 |
-| CLAUDE.md lines | < 150 | 150-200 | > 200 |
+| `./CLAUDE.md` lines | < 150 | 150-200 | > 200 |
 | Topic files | 0-3 | 4-6 | > 6 |
 | Stale entries | 0 | 1-3 | > 3 |
+
+The CLAUDE.md row covers the project's `./CLAUDE.md` only. `~/.claude/CLAUDE.md` is reported as a
+plain line count ("User global" in Step 4) and is not scored against this table.
 
 ### Step 3: Quick stale check
 

@@ -34,7 +34,7 @@
 <rect x="x+3" y="y+3" width="w-6" height="h-6" rx="8" fill="none" stroke="stroke-inner" stroke-width="0.8" opacity="0.5"/>
 <!-- Spark icon (⚡) as text or small lightning path -->
 <text x="cx" y="cy-6" text-anchor="middle" font-size="14">⚡</text>
-<text x="cx" y="cy+10" text-anchor="middle" fill="text-color" font-size="13" font-weight="600">GPT-4o</text>
+<text x="cx" y="cy+10" text-anchor="middle" fill="text-color" font-size="13" font-weight="600">Model Name</text>
 ```
 
 ### Agent / Orchestrator (hexagon)

@@ -140,7 +140,6 @@ no exit code field, so a command that succeeded while printing `failed` or `erro
 | Platform | Memory System | Plugin Works? |
 |----------|--------------|---------------|
 | Claude Code | Auto-memory (MEMORY.md) | ✅ Full support |
-| GitHub Copilot | `.github/copilot-instructions.md` | ⚠️ Manual promotion only |
 
 ## Related
 

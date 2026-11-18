@@ -45,7 +45,9 @@ A complete reference for how Claude Code's memory systems work together.
 - Only the first 200 lines of MEMORY.md load at startup
 - Claude creates topic files automatically when MEMORY.md gets long
 - Git repo root determines the project path
-- Git worktrees get separate memory directories
+- Worktrees and subdirectories of the same git repo share one memory directory
+  (code.claude.com/docs/en/memory.md, read 2026-11-18). The skills here still compute the
+  path from `pwd -P`, which only matches when the session starts at the repo root — not yet tested from a subdirectory.
 - Local only — not shared via git
 - Toggle with `/memory`, settings, or `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`
 - Subagents can have their own auto memory

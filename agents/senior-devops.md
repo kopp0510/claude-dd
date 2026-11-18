@@ -48,7 +48,7 @@ model: inherit
 - 鎖版本(Docker tag、Terraform provider、GitHub Action SHA)
 - 避免 `latest` tag
 - 環境差異透過變數控制,不透過條件分支
-- IaC state 遠端存放(S3 + DynamoDB lock)
+- IaC state 遠端存放,用支援 state lock 的 backend(例如 GCS、S3)
 
 ## 技術棧判斷
 

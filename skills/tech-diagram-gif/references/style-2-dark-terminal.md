@@ -1,7 +1,7 @@
 # Style 2: Dark Terminal
 
 > Vendored 自 [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph)（MIT，LICENSE.txt 見上層目錄）。
-Neon-on-dark hacker aesthetic. Matches CLAUDE.md standard tech diagram style.
+Neon-on-dark hacker aesthetic.
 
 ## Colors
 
