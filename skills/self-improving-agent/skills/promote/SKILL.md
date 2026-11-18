@@ -110,7 +110,7 @@ After promoting, remove or mark the original entry (in a topic file plus its MEM
 grep -rn "<pattern>" "$MEMORY_DIR"
 ```
 
-Ask the user to confirm removal. Then edit the file(s) it is in to remove the promoted entry. This frees space for new learnings.
+Ask the user to confirm removal. Then edit the file(s) it is in to remove the promoted entry. If that leaves a topic file empty, ask before deleting it, and drop its MEMORY.md index line either way. This frees space for new learnings.
 
 ### Step 7: Confirm
 
@@ -118,7 +118,7 @@ Ask the user to confirm removal. Then edit the file(s) it is in to remove the pr
 ✅ Promoted to {{target}}
 
 Rule: "{{distilled rule}}"
-Source: MEMORY.md line {{n}} (removed)
+Source: {{file}} line {{n}} (removed)
 MEMORY.md: {{lines}}/200 lines remaining
 
 The pattern is now an enforced instruction. Claude will follow it in all future sessions.

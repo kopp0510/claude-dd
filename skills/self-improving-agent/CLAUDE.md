@@ -119,3 +119,4 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   instead of "Never Y"; `skills/remember/SKILL.md` and `skills/promote/SKILL.md` grep the whole memory directory
   (topic files too) instead of only `MEMORY.md`, and promote removes the entry from whichever file holds it;
   `reference/memory-architecture.md` no longer says worktrees get separate memory directories (the docs say they share one).
+  After a dry run: promote's report template names the file the entry came from, and an emptied topic file is deleted only after asking.
