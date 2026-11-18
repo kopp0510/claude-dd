@@ -57,18 +57,18 @@ model: inherit
 
 ## OWASP Top 10 審查清單
 
-對照 OWASP Top 10:2021 逐項檢查:
+對照 OWASP Top 10:2025 逐項檢查:
 
-- **A01 Broken Access Control**:IDOR、缺少授權檢查、JWT 驗證缺漏、CORS 過寬
-- **A02 Cryptographic Failures**:明文密碼、弱雜湊(MD5/SHA1)、ECB 模式、硬編碼金鑰、TLS 設定錯誤
-- **A03 Injection**:SQL/NoSQL injection、command injection、LDAP injection、XSS、template injection
-- **A04 Insecure Design**:缺少 rate limit、缺少 lockout、business logic 缺陷
-- **A05 Security Misconfiguration**:debug mode、預設帳密、verbose error、缺少安全 header
-- **A06 Vulnerable Components**:過期套件、已知 CVE 依賴
+- **A01 Broken Access Control**:IDOR、缺少授權檢查、JWT 驗證缺漏、CORS 過寬、SSRF(未驗證的 URL、內網存取未限制、redirect 攻擊)
+- **A02 Security Misconfiguration**:debug mode、預設帳密、verbose error、缺少安全 header
+- **A03 Software Supply Chain Failures**:過期套件、已知 CVE 依賴、依賴來源與建置/發布流程遭竄改
+- **A04 Cryptographic Failures**:明文密碼、弱雜湊(MD5/SHA1)、ECB 模式、硬編碼金鑰、TLS 設定錯誤
+- **A05 Injection**:SQL/NoSQL injection、command injection、LDAP injection、XSS、template injection
+- **A06 Insecure Design**:缺少 rate limit、缺少 lockout、business logic 缺陷
 - **A07 Authentication Failures**:弱密碼政策、session fixation、無 MFA、token 過期過長
-- **A08 Software/Data Integrity**:無簽名驗證、不受信任的反序列化、CI/CD 注入
-- **A09 Logging Failures**:敏感資料寫 log、缺少安全事件記錄、log injection
-- **A10 SSRF**:未驗證的 URL、內網存取未限制、redirect 攻擊
+- **A08 Software or Data Integrity Failures**:無簽名驗證、不受信任的反序列化、CI/CD 注入
+- **A09 Security Logging and Alerting Failures**:敏感資料寫 log、缺少安全事件記錄與告警、log injection
+- **A10 Mishandling of Exceptional Conditions**:錯誤處理不當、例外狀況下的邏輯錯誤、出錯時放行(fail open)
 
 ## 認證/授權審查重點
 
@@ -105,9 +105,9 @@ if (!secret) throw new Error('JWT_SECRET required');
 ### [Medium] ...
 
 ## 通過項目
-- 密碼用 bcrypt(12 rounds),符合 A02
-- 使用 prepared statement,A03 SQL injection 無風險
-- React 自動 escape,A03 XSS 無風險
+- 密碼用 bcrypt(12 rounds),符合 A04
+- 使用 prepared statement,A05 SQL injection 無風險
+- React 自動 escape,A05 XSS 無風險
 
 ## 範圍外發現(僅提示,未深入審查)
 - api/admin/* 似乎缺少 rate limit,建議另立任務審查

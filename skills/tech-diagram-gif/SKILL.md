@@ -18,8 +18,10 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
    不會就別畫，直接寫清楚。純清單、簡單前後對照、單一形狀的「圖」一律退回文字。
    使用者明確指定要圖時跳過此閘門，但仍可提一句更省的做法（提一次，不反覆）。
 2. **結構未確認前，不寫任何 SVG** — 先用純文字把節點/分組/連線定案（工作流程第 1 步）。
-3. **交付物只有 GIF**（使用者硬規則）。SVG 僅為中間產物：GIF 產出並驗證後**即刪除，
-   不留在交付目錄**。唯一例外：環境無 ffmpeg 時依第 5 步退化交付 SVG 並附裝法與資安說明
+3. **交付物只有 GIF**（使用者硬規則）。SVG 與逐幀截圖是中間產物：從一開始就寫在暫存目錄
+   （session 的 scratchpad；沒有就 `mktemp -d`），**不寫進交付目錄**，交付目錄因此只會有 GIF、不必刪檔。
+   暫存目錄留著不刪；要刪任何檔（含交付目錄裡原有的、使用者給的）都先問使用者。
+   唯一例外：環境無 ffmpeg 時依第 5 步退化交付 SVG（從暫存目錄複製到交付目錄）並附裝法與資安說明
    （SVG 格式可含 script，收件方有信任成本；本 skill 產的 SVG 零 script，交付前必驗證）。
 4. **渲染自檢不可省** — 沒親眼看過渲染結果不得宣稱完成。
 
@@ -103,7 +105,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 | 動畫是否真的在動 | `setCurrentTime(t)` 定格兩個時間點各截一張，肉眼比對位移 |
 | 延遲啟動的球停在畫面左上角 (0,0) | 錯開相位一律用**負值 `begin`**（如 `-3.6s`），不用正延遲 |
 | 瀏覽器捲軸被截進畫面（成品出現假捲軸） | 包裝頁 CSS 加 `overflow:hidden`，截圖加 `clip` 限定 SVG 區域，交付前抽查四邊像素應為背景色 |
-| 截圖輸出路徑受限 | `browser_take_screenshot` 只能寫入其 allowed roots（通常是專案根/`.playwright-mcp`）；截完移出並清理，勿留在 repo。`run_code` 裡的 `page.screenshot({path})` 可直接寫任意路徑（實測寫進 scratchpad 成功），連拍時用這條 |
+| 截圖輸出路徑受限 | `browser_take_screenshot` 只能寫入其 allowed roots（通常是專案根/`.playwright-mcp`）；截完把本次截的檔移到暫存目錄（見硬閘門 3），勿留在 repo。`run_code` 裡的 `page.screenshot({path})` 可直接寫任意路徑（實測寫進 scratchpad 成功），連拍時用這條 |
 
 檢查項一律走下方「**產出前檢查清單（Taste Gate）**」中標示為第 4 步的兩組，逐項打勾，不憑印象。
 **先跑腳本、再看截圖**：
@@ -145,7 +147,7 @@ exit 1 表示未通過，結尾會列出它自己沒涵蓋的項目。
 - SVG 零 script：`grep -cEi "<script|\bon[a-z]+[[:space:]]*=|javascript:|foreignObject" <svg>` 必須為 0
   （涵蓋事件處理器 on* 與 foreignObject，不只 onload）
 - GIF 抽 2 幀（`ffmpeg -fps_mode passthrough -vf "select=eq(n\,K)"`）確認小球位置不同（動畫真的燒進去了）
-- 暫存幀目錄與中間產物 SVG 清理乾淨（交付目錄只留 GIF）
+- 暫存幀與中間產物 SVG 都在暫存目錄、沒有寫進交付目錄（交付目錄只有 GIF；見硬閘門 3）
 - **成品輸出到使用者專案的當下目錄 `./diagrams/`**（使用者硬規則，不放 /tmp 揮發區）；
   目錄不存在時 `mkdir -p ./diagrams` 自動建立；
   該目錄若在 git repo 內且未被追蹤，提醒一句可加入 .gitignore 或自行 commit，不代決定
@@ -203,7 +205,7 @@ exit 1 表示未通過，結尾會列出它自己沒涵蓋的項目。
 
 - [ ] SVG 零 script 檢查通過？（第 6 步）
   **不過 → 改 SVG 並重出 GIF**，這是交付組唯一會逼你回頭的項目
-- [ ] 暫存幀與中間產物已清理、成品在 `./diagrams/`、原尺寸未壓縮？（第 6 步）
+- [ ] 暫存幀與中間產物在暫存目錄、沒進交付目錄，成品在 `./diagrams/`、原尺寸未壓縮？（第 6 步）
   不過 → 補做該步驟，不必改 SVG
 
 ---
@@ -216,5 +218,5 @@ exit 1 表示未通過，結尾會列出它自己沒涵蓋的項目。
 | 動畫週期隨意設 | 全部整除同一總循環長，GIF 才無縫 |
 | 只驗 `getAnimations()` 不看畫面 | 定格截圖親眼比對（API 只證明在跑，不證明可見） |
 | 交付 SVG 給外部收件人 | 一律 GIF；SVG 附資安說明留內部 |
-| 截圖留在 repo 根目錄 | 移到暫存目錄並清理 |
+| 截圖留在 repo 根目錄 | 移到暫存目錄（見硬閘門 3） |
 | 機器特定路徑寫進產出流程 | 用相對/暫存路徑，保持可攜 |

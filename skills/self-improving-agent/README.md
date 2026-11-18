@@ -68,7 +68,6 @@ Space freed for new learnings
 | Platform | Memory System | Support |
 |----------|--------------|---------|
 | Claude Code | Auto-memory (MEMORY.md) | ✅ Full |
-| GitHub Copilot | copilot-instructions.md | ⚠️ Manual |
 
 ## Credits
 

@@ -45,7 +45,8 @@ MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify before writing — a wrong path loses the entry silently while still looking saved.
 # Under LC_ALL=C sed goes per byte, so glob as a fallback:
 #   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
-grep -ni "<keywords>" "$MEMORY_DIR/MEMORY.md" 2>/dev/null
+# MEMORY.md may only be an index; search the topic files too.
+grep -rni "<keywords>" "$MEMORY_DIR" 2>/dev/null
 ```
 
 If a similar entry exists:

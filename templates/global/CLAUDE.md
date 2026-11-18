@@ -671,6 +671,8 @@ C) 先停下討論
   **做法:輸出先導進檔案(`cmd > /tmp/x 2>&1`)、再從檔案抽**,而且**對 `cmd` 本身設硬逾時**。
   macOS 沒有 `timeout` / `gtimeout`,用 `perl -e 'alarm 60; exec @ARGV or exit 127' cmd …`
   (被砍掉時 exit 142 —— 那個碼本身就是「它真的會掛住」的證據)。
+  ⚠️ **`docker` 指令例外**:perl alarm 砍不掉它(2026-11-15 實測 `alarm 20` 包住的 `docker logs` 跑了快 3 分鐘);
+  在 Claude Code 裡優先用 Bash 工具自己的 `timeout` 參數。
   ⚠️ **判準不是「輸出會不會很長」,是「這個指令保證會自己結束嗎」** ——
   跑測試、跑 server、`docker compose exec`、任何會開 socket 或 worker 的東西都不保證。
   ⚠️ **而掛住會跨 session 活下去**:實測抓過一支 `node --test … | tail -20` 卡了 **16 小時**(0% CPU、沒有任何錯誤訊息)。

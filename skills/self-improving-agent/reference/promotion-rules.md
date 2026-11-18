@@ -7,7 +7,7 @@ When to promote a learning from auto-memory (MEMORY.md) to the project's rule sy
 A learning should be promoted when **all three** are true:
 
 1. **Proven** — appeared in 2+ sessions or confirmed correct after testing
-2. **Actionable** — can be written as a concrete instruction ("Use X", "Never Y")
+2. **Actionable** — can be written as a concrete instruction with a one-clause reason ("Use X — Y breaks otherwise")
 3. **Durable** — will still be true in 30+ days
 
 ## Scoring Guide

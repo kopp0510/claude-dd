@@ -34,7 +34,8 @@ MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify first; a missing directory means "wrong path", not "nothing to promote".
 # Under LC_ALL=C sed goes per byte, so glob as a fallback:
 #   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
-grep -ni "<keywords>" "$MEMORY_DIR/MEMORY.md"
+# MEMORY.md may only be an index; search the topic files too.
+grep -rni "<keywords>" "$MEMORY_DIR"
 ```
 
 Show the matching entries and confirm they're what the user means.
@@ -102,14 +103,14 @@ paths:
 
 ### Step 6: Clean up auto-memory
 
-After promoting, remove or mark the original entry in MEMORY.md:
+After promoting, remove or mark the original entry (in a topic file plus its MEMORY.md index line, or in MEMORY.md itself):
 
 ```bash
 # Show what will be removed
-grep -n "<pattern>" "$MEMORY_DIR/MEMORY.md"
+grep -rn "<pattern>" "$MEMORY_DIR"
 ```
 
-Ask the user to confirm removal. Then edit MEMORY.md to remove the promoted entry. This frees space for new learnings.
+Ask the user to confirm removal. Then edit the file(s) it is in to remove the promoted entry. This frees space for new learnings.
 
 ### Step 7: Confirm
 
