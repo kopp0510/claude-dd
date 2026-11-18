@@ -132,10 +132,12 @@ exit 1 表示未通過，結尾會列出它自己沒涵蓋的項目。
 
 - **有 ffmpeg**：逐幀定格（`pauseAnimations()` + `setCurrentTime(i*DUR/N)` + 截圖，**20fps** × 總循環長）→
   ```bash
-  ffmpeg -framerate 20 -i f%03d.png \
+  mkdir -p diagrams
+  ffmpeg -framerate 20 -i "$TMP/f%03d.png" \
     -vf "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" \
-    -loop 0 out.gif
+    -loop 0 diagrams/<名稱>.gif
   ```
+  在使用者專案的當下目錄執行；`$TMP` 是硬閘門 3 的暫存目錄（幀在那裡），GIF 直接寫進第 6 步的 `./diagrams/`。
   - **fps 用 20（或 25），不用 10**：10fps 小球每格跳動明顯，使用者回饋「卡卡的」；GIF 幀延遲單位
     是 1/100 秒，fps 須整除 100，且 50fps 會被多數播放器強制放慢，20/25 是流暢與相容的平衡
   - 幀數多時分兩段 `run_code` 截（單次呼叫有逾時上限）
