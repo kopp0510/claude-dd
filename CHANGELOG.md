@@ -43,6 +43,15 @@
 
 ### Changed
 
+- **self-improving-agent 乾跑留下、要新訂規則才消得掉的含糊處**。同一個 skill 的檔裡找不到答案，所以這些是本地的決定，都記在 `skills/self-improving-agent/CLAUDE.md`「Differences from upstream」：
+  - promote 沒給 `--target` 時自己挑目標、寫檔前說選了哪個、不等回答（使用者 2026-11-19 的決定；上游只寫「recommend one」）。rules 檔的 `paths` 取自條目說這條規則適用的路徑（只是觸發規則的那個檔不算）、寫成 glob，條目沒提路徑就寫進 `./CLAUDE.md`。其他要問的照問。
+  - promote 第 2 步找到條目後先對照 Promotion Decision Guide：判準或分數沒過、或屬於「Don't promote」清單，就講哪一條沒過並問要不要照樣升級（三條判準缺一條、分數不到、或屬於清單，任一個都算沒過；判斷前先讀完整個條目，搜尋只印出命中的那幾行）；含憑證的條目一律不升級、不問（秀條目時遮掉值，並提醒值還留在記憶檔）；使用者答不要就停、什麼都不寫。
+  - 和 CLAUDE.md 寫的不一樣的那一點只報在 Conflicts，不再同時算過期。
+  - review 與 memory-analyst：「已寫在 CLAUDE.md」指主要指示寫在那裡，只是同主題不算；屬於 Anti-Patterns「Don't promote」清單的不算候選；重複訊號詞也算記憶所用語言的同義說法；
+    條目自己寫明已搬走的路徑不算過期，相對路徑在 checkout 根目錄底下任何一層找得到就算存在（放好幾個 repo 的父目錄裡，記憶寫的是相對於某個 repo 的路徑；`find` 跳過 `node_modules` 與 `.git`，搜尋前去掉路徑結尾的 `/`、把 `{a,b}` 拆成各自的路徑），版本、工具、相依套件對專案自己的檔查，沒東西可對就不叫過期。status 寫明它的過期數是機械檢查。
+  - `reference/promotion-rules.md` 補上 Proven 怎麼從條目判斷（記了兩次以上的發生，或實際跑過的檢查結果）、專案是放好幾個 repo 的父目錄時 Scope 怎麼算、Scope 量的是規則適用的範圍（不是在哪裡學到的，也不是觸發它的那一個檔）。
+  - review 範本的候選行改列分數（原本的 `seen {{n}}x` 沒有來源），範本下補各格的說明；`{{names}}` 照字母順序。memory-analyst 的報告順序照 review 的格式，拿掉沒定義的 freshness、organization。
+  - promote 改寫的規則用目標檔的語言寫；promote、extract 的搜尋指令補上 remember 那三行「關鍵字怎麼挑」。
 - **全域模板 §6.2 的「不做：自動重試」補上範圍、理由與例外**：指的是沒讀錯誤訊息就原樣重跑；對方那一側的暫時性失敗（連線中斷、服務忙或被限流、檔案被鎖），
   而且指令重跑不會造成第二次副作用（讀取、查詢）時，可以等一下重試一次；本機指令跑到硬逾時不算（§6.7）。原句沒有範圍。
   來源是 2026-11-19 的 prompt audit（目標模型 Fable 5.2）。同日補了行為探針（新舊各 25 發，`docs/measurements/2026-11-19-global-6.2-retry.md`）：請求數沒有差別，失敗後的第一個動作有差別。

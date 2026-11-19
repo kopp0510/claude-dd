@@ -150,5 +150,29 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   `skills/promote/SKILL.md` Step 6 no longer says "or mark" (no way to mark was defined), says an empty topic file is one with nothing but
   frontmatter, and Step 7 names both files when the entry was a topic file plus an index line. `skills/status/SKILL.md` Step 3 recomputes
   `MEMORY_DIR` and `PROJ` (a new command starts without Step 1's variables; the old block ran `grep` on `/MEMORY.md`).
-  Not changed, because no file in this directory answers them (new rules, not alignments): what replaces `seen {{n}}x`, whether promote waits
-  when no target is given, where the Decision Guide gates the workflow, stale versus conflict, the language of signal words and of the distilled rule.
+- 2026-11-19 (same audit, the dry-run ambiguities that needed a new rule; no file in this directory answered them, so these are local decisions, not alignments):
+  - `skills/review/SKILL.md` template: a candidate line shows its score (`score {{total}} (durability, impact, scope)`) instead of `seen {{n}}x`, which had no source;
+    notes under the template say candidates are listed by score, what `CLAUDE.md:` and `Line {{n}}` mean, and where a "remove from memory" entry goes.
+    `{{names}}` is alphabetical in review and status.
+  - `skills/promote/SKILL.md` Step 3: with no `--target` it picks a target, says which, and does not wait (the user's decision, 2026-11-19; upstream said
+    "recommend one" without saying whether to wait). `paths` of a rules file come from the paths the entry says the rule applies to (not a file that only triggers it), written as globs; an entry that names none goes to
+    `./CLAUDE.md`. Every other question still asks (Step 1, Step 2, Step 6, the Decision Guide, an all-projects rule).
+  - `skills/promote/SKILL.md` Step 2 checks the entry against the Promotion Decision Guide and asks before promoting one that fails; an entry holding a credential or
+    secret is refused without asking (the user is told it is still in memory); a "no" stops with nothing written. It reads the whole entry before judging
+    (the search prints only matching lines), fails an entry that misses any criterion, the threshold, or a "Don't promote when" item, and masks a credential value wherever it shows an entry. "Don't promote when" points at the Anti-Patterns list of `reference/promotion-rules.md`.
+  - A disagreement with CLAUDE.md is reported as a conflict only, not also as stale for that same point: "contradicts CLAUDE.md" is gone from the staleness lists of review and memory-analyst.
+  - Review and memory-analyst: "already in CLAUDE.md" means the main instruction is stated there; an entry matching the Anti-Patterns "Don't promote" list is not a
+    candidate; signal words also count in the memory's own language; a path the entry says was moved is not stale, a relative path counts as existing when it is found anywhere below the checkout root
+    (a memory in a parent directory of several repos records paths relative to one repo; found by a read-only run on a real workspace;
+    the `find` skips `node_modules` and `.git`, and the path is searched without a trailing "/" and with `{a,b}` split, since `find` matches neither as written), and versions, tools and dependencies are checked against the project's own files. `skills/status/SKILL.md` says its stale count is a mechanical existence check.
+  - `reference/promotion-rules.md`: how to judge "Proven" from the entry (two or more recorded occurrences, or a check that was run), how Scope reads when the
+    project is a parent directory of several repos, and that Scope is where the rule applies (not where it was learned, and not the one file that triggers it; the same dry runs
+    gave one entry 0 and 2, or 1 and 3, on the two readings). `agents/memory-analyst.md` points there instead of restating "2+ sessions".
+  - `agents/memory-analyst.md` lists its report sections in the review format's order; "freshness" and "organization" are gone from Health metrics (neither was defined,
+    and the review format has no slot for them).
+  - promote Step 4 writes the rule in the target file's language; promote Step 2 and extract carry remember's three comment lines on how to pick search keywords.
+  Still not changed, because they are judgment calls no rule here settles: how fine-grained "the same topic" is for consolidation, "top 3 actions" against the template's
+  two example lines, whether a topic file that mixes several records is scored as one entry, where Impact 2 ends and 3 begins and what the Durability cells mean,
+  what "vague" means in promote Step 1, where a recurrence signal goes in the report, which strings with a "/" are file paths (URL routes, slash commands, image names),
+  whether two occurrences in one session are "separate", which instruction of a multi-instruction topic file is its "main" one, a `[[name]]` link, and a same-named file
+  in another repo satisfying the path check.

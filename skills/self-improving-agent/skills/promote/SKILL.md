@@ -38,10 +38,19 @@ MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[
 # Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
 #   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
 # MEMORY.md may only be an index; search the topic files too.
-for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done   # one search per keyword
+# Search once per keyword, not one phrase: a phrase misses entries worded differently.
+# Pick 2-4 distinctive words from the description (tool, file or command names, error text);
+# skip common words that would match everything. -F keeps dots and brackets literal.
+for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done
 ```
 
-Show the matching entries and confirm they're what the user means.
+Show the matching entries (mask any credential or secret value) and confirm they're what the user means.
+
+Then read the whole entry (the full topic file, not only the lines `grep` printed) and check it against "Promotion Decision Guide" below. Score it with the Scoring Guide in `reference/promotion-rules.md`.
+It fails if it misses any of the three Promotion Criteria, scores below the threshold, or matches a "Don't promote when" item.
+If it fails, say which point fails and ask whether to promote anyway; on "no", stop there: write nothing and leave the memory entry as it is.
+One exception: an entry that holds a credential or secret is never promoted. Do not ask whether to promote anyway: say so,
+tell the user the value is still in the memory file (this skill does not remove it), and stop.
 
 ### Step 3: Determine the right target
 
@@ -54,7 +63,12 @@ Show the matching entries and confirm they're what the user means.
 `./CLAUDE.md` and `.claude/rules/` mean the checkout root (`git rev-parse --show-toplevel`, or the cwd
 outside a git repo), not the directory the session was opened in.
 
-If the user didn't specify a target, recommend one based on scope.
+If the user didn't specify a target, pick one from the table by scope and say what you picked before writing; do not wait for an answer on the target.
+For a rules file, say its name and its `paths` too: take `paths` from the files or directories the entry says the rule applies to
+(not every path it mentions, and not a file that only triggers the rule, as in "after editing X, run Y"), written as globs like the example in Step 5 (a directory becomes `<dir>/**/*`); if the entry names none, write the rule to `./CLAUDE.md` instead of a rules file
+(a rules file without `paths` loads always anyway). This only removes the wait for a target. Everything else that asks still asks:
+the clarifying question in Step 1 when the description is vague, the confirmations in Step 2 and Step 6, an entry that fails the
+Promotion Decision Guide (Step 2), and an all-projects rule (below).
 
 For an all-projects rule, ask the user before writing anything. Do not edit `~/.claude/CLAUDE.md` directly:
 `install-dd-pipeline.sh --force` overwrites it with `templates/global/CLAUDE.md` whenever the two differ
@@ -79,6 +93,7 @@ Transform the learning from auto-memory's note format into CLAUDE.md's instructi
 - Include the command or example, not just the concept
 - Keep the reason to one clause; leave out the story of how it was found
 - Avoid shouting with "Always" / "Never" / all caps; the reason carries the weight
+- Write the rule in the language of the target file (for a new rules file: the language of the project's `CLAUDE.md`)
 
 ### Step 5: Write to target
 
@@ -149,6 +164,7 @@ For an entry that was a topic file plus an index line, name both on the Source l
 - It's session-specific context (session memory handles this)
 - It might change soon (e.g., during a migration)
 - It's already covered by existing rules
+- It matches "Don't promote" under "Anti-Patterns" in `reference/promotion-rules.md` (obvious things, credentials or secrets, and the rest of that list)
 
 ### CLAUDE.md vs .claude/rules/
 

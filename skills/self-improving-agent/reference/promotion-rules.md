@@ -10,6 +10,9 @@ A learning should be promoted when **all three** are true:
 2. **Actionable** — can be written as a concrete instruction with a one-clause reason ("Use X — Y breaks otherwise")
 3. **Durable** — will still be true in 30+ days
 
+Judge "Proven" from what the entry itself records: two or more separate occurrences (dates or sessions), or the result of a check
+that was actually run. An entry that records neither is not proven.
+
 ## Scoring Guide
 
 | Dimension | Score 0 | Score 1 | Score 2 | Score 3 |
@@ -19,6 +22,12 @@ A learning should be promoted when **all three** are true:
 | **Scope** | One file only | One directory | Entire project | All your projects |
 
 **Promote when total ≥ 6.** Watch when total = 4-5. Ignore when total ≤ 3.
+
+When the project is a parent directory that holds several repos, one repo counts as "One directory" and the whole workspace as "Entire project".
+
+Score Scope by where the rule applies, not by where it was learned or recorded, and not by the one file that triggers it:
+a lesson about a tool or shell that was learned in one repo applies to all your projects (3); "after editing X, run Y" applies to
+the entire project (2) unless the entry limits it to one directory or repo (1); "function F in file X must do Z" applies to one file (0).
 
 ## Target Selection
 
