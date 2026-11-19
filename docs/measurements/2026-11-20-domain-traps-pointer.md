@@ -20,7 +20,7 @@
 
 ## 做法
 
-- Claude Code 2.1.327，`claude-fable-5-2`，每發一個全新的 session，同一臂的 8 發同時跑。
+- Claude Code 2.1.327，`claude-fable-5-2`，每發一個全新的 session。舊臂先同時跑 3 發，後來補的 5 發同時跑；新臂 8 發同時跑。
 - 拋棄式專案（開在 scratchpad 底下）：`package.json` 與 `src/orders.js`。`orders.js` 只有一個 `reserveStock`：
   `BEGIN` → `SELECT available` → 不夠就 `ROLLBACK` → `INSERT … ON CONFLICT (sku) DO UPDATE SET available = $2` → `COMMIT`（沒有鎖）。
   scratchpad 底下的 cwd `CLAUDE.md` 不會被載入（`docs/measurements/CLAUDE.md`「已知的坑」），使用者層的 `~/.claude/CLAUDE.md` 會，這次要測的正是那一份。
