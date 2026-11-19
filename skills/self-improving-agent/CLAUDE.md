@@ -137,3 +137,6 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   "Do X" / "Never Y" (it now matches `reference/promotion-rules.md`); `skills/review/SKILL.md` "When to Use" says 120 lines
   (status's Warning threshold) instead of 150; the "After" example in `skills/promote/SKILL.md` Step 4 carries a one-clause reason,
   like the rule below it asks for.
+  After a dry run of the three files (2026-11-19): `skills/promote/SKILL.md` Step 6 recomputes `MEMORY_DIR` and searches with Step 2's
+  keywords instead of an undefined `<pattern>`; its "CLAUDE.md vs .claude/rules/" table puts test conventions under CLAUDE.md, as
+  `reference/promotion-rules.md` does; `skills/review/SKILL.md` reports "auto-memory may be disabled" only when neither lookup finds a directory.

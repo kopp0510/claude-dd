@@ -31,6 +31,9 @@
   `skills/review/SKILL.md` 還寫 MEMORY.md 超過 150 行才跑（status 的 Warning 是 120 行起）；`skills/promote/SKILL.md` 的改寫範例沒帶理由，和它下面要求「祈使句加一個理由」的規則不一致。
 - `scripts/githooks/CLAUDE.md` 的 tag 說明更正：`v1.6.14` 沒有 `claude-md-max-bytes`，`v1.6.15` 起才有（2026-11-18 那次改成「`v1.6.14` 到 `v1.6.16` 都帶」是錯的）。
 - `CLAUDE.md` 與 `docs/measurements/CLAUDE.md` 三處把派工工具叫 `Task` 的地方改成 `Agent 工具`（上次只改了 `commands/`、`skills/` 那幾處）。
+- self-improving-agent 乾跑（2026-11-19）找到的三處：promote 第 6 步的預覽指令原本用沒定義的 `<pattern>`、而且 `$MEMORY_DIR` 只在第 2 步算過，
+  新開的指令裡是空的 —— 改成重算路徑、沿用第 2 步的關鍵字逐個搜；promote 的「CLAUDE.md vs .claude/rules/」表把測試慣例放在 rules 那一欄，
+  和 `reference/promotion-rules.md`（放 CLAUDE.md）相反，改成一致；review 有一句「目錄不在就回報 auto-memory 可能停用」，和上面註解的「兩種查法都落空才回報」不一致，改成後者。
 
 ### Changed
 
