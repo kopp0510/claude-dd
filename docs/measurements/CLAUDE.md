@@ -77,3 +77,8 @@ prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**
   要驗就開全新的 `claude -p`，而且不要在 repo 的 cwd 跑（gitStatus 一樣帶 commit 標題；設計文件與 CHANGELOG 也點名新檔，這兩處會不會被讀到沒測）：
   用 `git archive HEAD | tar -x -C <目錄>` 解出沒有 git 歷史的快照，拿掉點名答案的檔。判定挑只在目標檔才有的字串（先 `grep -cF` 確認別的常駐檔是 0 次），另記第一次碰到目標檔之前跑過哪些工具；
   沒有「拿掉指路句」的對照臂時只能寫「拿得到」，不能寫「是指路造成的」（做法與結果見 `docs/designs/2026-11-15-audit-fixes-design.md` 的 S6「步驟 5 補測」）
+- **拋棄式目錄開在 scratchpad 底下時，cwd 的 `CLAUDE.md` 不會被 `claude -p` 載入**（2026-11-19，2.1.327）：叫 haiku 照貼 context 裡那份檔才有的一行，
+  直接放、`git init` 加 commit 後放、空目錄加 `--add-dir`（設了 `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1`）三種都回「沒有」；不加 `--setting-sources` 時只列得出 `~/.claude/CLAUDE.md`。
+  同一份檔放到平常工作的專案底下的子目錄當 cwd 就載入了（連同上層目錄的 CLAUDE.md）。是 scratchpad 那個位置被排除、還是那個目錄沒被信任，沒查。
+  要比兩版全域模板：兩臂各一個專案底下的子目錄、模板存成 `CLAUDE.md`，加 `--setting-sources project` 排掉使用者層那份；跑之前先照貼驗一次兩臂各只有自己那一版
+  （`docs/measurements/2026-11-19-global-6.2-retry.md`）。`--append-system-prompt-file` 送得進去，但那是 system prompt，不是 CLAUDE.md 的管道。
