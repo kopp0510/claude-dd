@@ -16,6 +16,18 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Fixed
+
+- **self-improving-agent 五個 skill 找記憶資料夾改用 git repo 根目錄**（`git rev-parse --git-common-dir`，不在 git repo 裡才用 `pwd -P`）。
+  原本從子目錄或 `git worktree` 開的 session 會算到一個不存在的資料夾，status 的數字全是 0、看起來像健康。
+  2026-11-19 用 `claude -p` 實測：從 `<repo>/frontend` 和從 worktree 開的 session，記憶資料夾都是 repo 根目錄那個。
+  status 另外改成從 repo 根目錄讀 `CLAUDE.md` 與 `.claude/rules/`、用 `find` 取代 zsh 下會報 no matches 的 glob，
+  並寫明各列容量怎麼合成一格（topic 檔只計數、不評分：索引式 MEMORY.md 本來就會有很多 topic 檔）、「Last updated」用什麼指令、brief 模式的 rules 數是什麼；拿掉沒有指令可算的 Duplicates 數。
+  remember 查重改成每個關鍵字各搜一次；promote、review 寫出 `promotion-rules.md` 在 repo 裡的路徑。
+- `skills/frontend-design/SKILL.md` 的修改聲明不再說「內文已更新至上游最新版」：內文是 2026-06-23（`a372fe3`）同步的，上游之後改寫過。
+
 ## 1.6.16 — 2026-11-17
 
 ### Added
