@@ -194,7 +194,7 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
     remember Step 3 says to set `MEMORY_DIR` again to the directory Step 2 settled on. promote Step 3: a target the user gave (`--target`, and `--paths` with it) is
     used as given, and for an all-projects rule a "no" stops with nothing written and the memory entry left as it is.
   Reported by the same review and not changed here (they predate these edits or need a rule of their own): the directory is computed from the shell's cwd, so a session opened
-  in a non-git parent whose shell has moved into a sub-repo computes that repo's directory, not the session's; status's path regex turns `~/…` and URLs into `/…`; status counts
+  in a non-git parent whose shell has moved into a sub-repo computes that repo's directory, not the session's (asked 2026-11-20: the user decided to keep this); status's path regex turns `~/…` and URLs into `/…`; status counts
   rule files one level deep and stale paths rather than entries; nothing checks the 25KB limit; review and memory-analyst print entry text without masking credentials;
   `--target rules/x.md` without `--paths`; the deployed skill cannot locate the claude-dd checkout. Left by the step-5 dry runs (the runs behaved as intended, the
   wording made them guess): what makes a candidate "clearly this project"; the keyword search still runs, and prints nothing, after "no candidate"; the
