@@ -54,8 +54,9 @@
     資料夾不在的那幾種情況另跑了 `ecfc89c` 版的對照發（promote 兩個候選、沒有候選；remember 沒有候選；extract 一個、兩個、沒有候選），結果相同，但依據都標「自己猜的」—— 所以這幾處改的是「不用猜」，沒量到行為有差；
     `--target` 與全專案通用那兩處沒跑對照發。
   - `docs/measurements/2026-11-19-global-6.2-retry.md` 的結論改成只用它事先寫下的判定式下結論，「失敗後第一個動作」標成事後多看的一項、把照規則無效的發數寫出來；補上 `docs/measurements/CLAUDE.md` 的路徑。本檔 §6.2 那一條跟著改。
+  - 根目錄 `CLAUDE.md`「新增 Skill 步驟」第 3 步補兩句（`ba799a2`，使用者 2026-11-20 同意）：沙盒臂停下、不寫或不搜時，報告要引得出 skill 原文才算過，依據是派工訊息或「猜的」就補文件再重跑、並跑一發舊版對照；鑑別法不要靠 skill 產出的內容，看紀錄檔裡的工具呼叫。
   - `scripts/githooks/CLAUDE.md` 的查法補一句：tag 用變數帶時要寫 `"${t}:…"`，zsh 會把 `"$t:scripts/…"` 的 `:s` 當修飾子、照樣回 0。
-  - `skills/frontend-design/SKILL.md` 寫明 `a372fe3` 是 claude-dd 自己的 commit；`docs/measurements/CLAUDE.md` 那句「哪幾條不是搬來的」補上 2026-11-19 新加的那一條；`DD_PIPELINE_ARCHITECTURE.md` 的 dd-loop 那句補上「領域陷阱」一節。
+  - `skills/frontend-design/SKILL.md` 寫明 `a372fe3` 是 claude-dd 自己的 commit；`docs/measurements/CLAUDE.md` 那句「哪幾條不是搬來的」補上 2026-11-19 新加的那一條；`DD_PIPELINE_ARCHITECTURE.md` 的 dd-loop 那句補上「領域陷阱」一節（那一節搬回全域模板後已拿掉，見下面「全域模板 §3.9 的三條」那一項）。
 
 ### Changed
 
@@ -77,9 +78,11 @@
   - 全域模板 §7（`c0f6d33`）：§7.1 第 5 步「模糊」改成照 §6.1 判斷（有 ≥80% 把握就動手並寫明假設，否則用 AskUserQuestion 問；原本寫「用 ExitPlanMode 或 AskUserQuestion 列選項」）；
     §7.2 `claude-md-improver` 那一列只接 `CLAUDE.md`（原本是任何 `.md` 檔），`self-improving-agent` 那一列拿掉「優化 skill」；§7.6 拿掉「under-trigger 比 over-trigger 嚴重」，改成照 prompt 實際要的工作判斷。
     2026-11-20 部署後各開一個新 session 測一發：「審查這個專案的 CLAUDE.md」叫了 `claude-md-management:claude-md-improver`、「修 README.md 的錯字」沒叫任何 skill、「優化 skills/foo/SKILL.md」叫了 `skill-creator:skill-creator`、「整理 memory」叫了 `self-improving-agent`（每個只有一發，舊寫法沒有對照；`docs/measurements/2026-11-20-global-7-trigger.md`）。
-  - 全域模板 §3.9 的三條（race 與交易、併發驗法、git 進行中狀態）搬到 `skills/dd-loop/SKILL.md` 新的「領域陷阱」一節，原處留一行指標（`c0f6d33`）。
+  - 全域模板 §3.9 的三條（race 與交易、併發驗法、git 進行中狀態）：`c0f6d33` 搬到 `skills/dd-loop/SKILL.md` 的「領域陷阱」一節、原處留一行指標；**2026-11-20 搬回全域模板**，位置與 v1.6.16 相同，dd-loop 那一節與模板的指標、兩份 README 與 `DD_PIPELINE_ARCHITECTURE.md` 提到那一節的句子都拿掉。
+    原因：搬走和 2026-10-30 的使用者決定（`docs/designs/2026-10-30-global-claude-md-slim-design.md`：這幾條留在全域）相反，使用者同意套用稽核的 diff 時那份 diff 沒有列出這個衝突；2026-11-20 問了使用者，選搬回。
+    這三條的文字與 v1.6.16 只差 `⚠️⚠️` → `⚠️`；模板其他地方的差異見本節 `c0f6d33`、`3637c92`、`3e3243a` 的條目。
+    搬回之前的經過（留作紀錄）：
     2026-11-20 指標那一行改成寫明「用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節，迴圈外的修改、迴圈暫停中也一樣」：`dd-loop` 的 description 排除迴圈外的修改，`/dd-stop on` 期間也不呼叫它。量了迴圈外的一個 prompt（資料庫 race）：原本的指標 8 發到了 4 發，改寫後 8 發都到了（`docs/measurements/2026-11-20-domain-traps-pointer.md`）；迴圈暫停中那一種沒有量。
-    這次搬移和 2026-10-30 的使用者決定（`docs/designs/2026-10-30-global-claude-md-slim-design.md`：這幾條留在全域）不一致，留在哪一邊還沒問使用者。
   - 全域模板與 `skills/dd-loop/SKILL.md` 的 `⚠️⚠️` 都收成 `⚠️`（`3637c92`、`31dd5bb`）。
   - 全域模板 §6.7 補 `docker` 指令的例外：perl alarm 砍不掉它，改用 Bash 工具的 `timeout` 參數（`3e3243a`）。
   - 派工工具的名字 `Task` 改成 `Agent`：`commands/dd-init.md` 兩處（`3637c92`、`31dd5bb`）、`skills/code-simplifier/SKILL.md` 的 `allowed-tools`（`31dd5bb`）；2026-11-20 安裝完成訊息的「透過 Task tool 調用」也改了。

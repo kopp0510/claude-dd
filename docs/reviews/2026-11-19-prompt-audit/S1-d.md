@@ -203,6 +203,6 @@ Not reported 的各項看過，沒有要翻案的。
 需要外部查證：
 - git < 2.31、submodule：都查了，公式算錯，已改（`docs/measurements/2026-11-20-memory-dir.md`）。
 - frontend-design「上游內文已改寫」：這一段沒有重查。
-- 改過的 skill／command 要乾跑：步驟 5 補跑了 tech-diagram-gif（合成那一步）與 dd-init（建立模式、升級列差異各一發）；dd-loop 這一段只多了「領域陷阱」一節，量的是指標到不到得了它（`docs/measurements/2026-11-20-domain-traps-pointer.md`）。
+- 改過的 skill／command 要乾跑：步驟 5 補跑了 tech-diagram-gif（合成那一步）與 dd-init（建立模式、升級列差異各一發）；dd-loop 這一段只多了「領域陷阱」一節，量的是指標到不到得了它（`docs/measurements/2026-11-20-domain-traps-pointer.md`）。後續：使用者 2026-11-20 決定把那一節搬回全域模板，S2 段落做了，dd-loop 不再有那一節。
 - 動到 description 或觸發條件要開新 session 測：全域 §7.2 改過的兩列測了（`docs/measurements/2026-11-20-global-7-trigger.md`，每個 prompt 一發）。code-reviewer 的 description 在 2026-11-19 測過（新舊各 5 發），那次的紀錄沒有進 repo，只記在稽核的待辦清單裡。
 - `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` 與 2.1.327 的載入行為：沒對官方文件；`docs/measurements/CLAUDE.md` 那一條記的是實測到的現象。
