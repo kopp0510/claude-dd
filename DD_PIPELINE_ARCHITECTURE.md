@@ -102,7 +102,7 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 它不是「用過才收」的 skill，是補 gate 被 `--no-verify` 繞過的洞；2026-10-23 新增自製 plan-review，
 實證來源為 `docs/designs/2026-10-23-裁決審查-design.md` S1 驗收的實跑；2026-10-29 新增 ADHD output style，
 實證來源為 `docs/measurements/2026-10-29-adhd-style/` 的行為驗收實跑（2026-11-17 加長度上限，實測在 `docs/measurements/2026-11-16-adhd-length/`）；2026-10-30 新增自製 dd-loop，
-內容是從全域 §3.9 原文搬出的迴圈做法細則，實證來源為 `docs/measurements/2026-10-30-dd-loop-trigger/` 的觸發實測；2026-11-14 收編 vendored security-audit（user-invoked），
+內容是從全域 §3.9 原文搬出的迴圈做法細則（2026-11-18 另從 §3.9 搬來「領域陷阱」一節：併發 race、資料庫鎖、git 進行中狀態），實證來源為 `docs/measurements/2026-10-30-dd-loop-trigger/` 的觸發實測；2026-11-14 收編 vendored security-audit（user-invoked），
 實證來源為 `docs/measurements/2026-11-14-security-audit-trial/` 的試跑；2026-11-15 `review` skill 與它包的 `workflow-review` 命名空間指令退場 ——
 後者沒有隨附 LICENSE、查不出上游，前者只是包它的一層，取回與清理見 `UPGRADING.md`「已退場的元件」；2026-11-17 新增 `/dd-stop` 指令與它呼叫的 `scripts/dd-stop.sh`（暫停與恢復迴圈與 gate），
 起因是使用者要一個開關，腳本那一半的依據是 `tests/test-dd-stop.sh`，模型那一半的實測在 `docs/measurements/2026-11-17-dd-stop/`）。

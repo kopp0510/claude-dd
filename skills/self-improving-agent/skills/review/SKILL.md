@@ -29,13 +29,16 @@ Performs a comprehensive audit of Claude Code's auto-memory and produces actiona
 #   /Users/me/pj/測試 目錄        ->  -Users-me-pj-------
 # The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
 # share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
-ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+ROOT=$(g=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$g" >/dev/null 2>&1 && pwd -P)
+case $ROOT in */.git) ROOT=${ROOT%/.git} ;; ?*) ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ;; esac   # no /.git at the end: a submodule, keyed by its own root
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 
 # ALWAYS verify the directory exists before concluding anything about auto-memory.
 # Under LC_ALL=C/POSIX, sed substitutes per byte rather than per character, so any
-# non-ASCII path segment produces too many dashes. List candidates in that case:
-#   find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
+# non-ASCII path segment produces too many dashes. When the directory is missing, list candidates
+# (find, not a glob: zsh aborts on an unmatched glob). A candidate is a project directory: its memory
+# is <candidate>/memory. If one is clearly this project and that directory exists, set MEMORY_DIR to it.
+[ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"
 # Report "auto-memory may be disabled" only after BOTH lookups come up empty.
 # Several candidates and none clearly this project: list them and stop, as /self-improving-agent:status does.
 
@@ -59,7 +62,7 @@ the topic file it points to.
 
 2. **Staleness indicators**
    - References files that no longer exist (`find` to verify).
-     Resolve a bare filename inside a markdown link against the memory directory. A path that contains "/": check an absolute or `~/` path as written; a relative one exists if it is found at the checkout root or anywhere below it (`find <root> \( -name node_modules -o -name .git \) -prune -o -path "*/<path>" -print`), because a memory may record paths relative to a sub-repo or subdirectory. Before searching, drop a trailing "/" from the path and split a `{a,b}` shorthand into one path per name; `find` matches neither as written. A bare filename in prose that is not a link target is not checked. A path the entry itself says was moved or removed is not stale.
+     Resolve a bare filename inside a markdown link against the memory directory. A path that contains "/": check an absolute or `~/` path as written; a relative one exists if it is found at the checkout root or anywhere below it (`find <root> \( -name node_modules -o -name .git \) -prune -o -path "*/<path>" -print`), because a memory may record paths relative to a sub-repo or subdirectory. `-path` takes a glob pattern, not a literal string, so clean the path before searching: drop a leading "./" and a trailing "/", split a `{a,b}` shorthand into one path per name, and put a backslash before each `[`, `]`, `*` and `?`. A bare filename in prose that is not a link target is not checked. A path the entry itself says was moved or removed is not stale.
    - Mentions outdated tools, versions, or commands (check against the project's own files: manifests, lock files, configs; with nothing to check against, do not call it stale)
 
 3. **Consolidation opportunities**
@@ -84,8 +87,8 @@ If `MEMORY.md` references or the directory contains additional files (`debugging
 
 ### Step 4: Cross-reference with CLAUDE.md
 
-Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md` and `.claude/CLAUDE.md` under the checkout root
-(`git rev-parse --show-toplevel`, or the cwd outside a git repo), and `~/.claude/CLAUDE.md`. Compare:
+Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md`, `CLAUDE.local.md` and `.claude/CLAUDE.md` in the checkout root
+(`git rev-parse --show-toplevel`, or the cwd outside a git repo) and in every directory above it (Claude Code loads these from the working directory upward), and `~/.claude/CLAUDE.md`. Compare:
 - Are there MEMORY.md entries that duplicate CLAUDE.md rules? (→ recommend removing them from memory; this skill only reports)
 - Are there MEMORY.md entries that contradict CLAUDE.md? (→ flag conflict)
   A disagreement with what CLAUDE.md says (a rule or a stated fact) is reported under Conflicts only; do not also report that same point as stale.

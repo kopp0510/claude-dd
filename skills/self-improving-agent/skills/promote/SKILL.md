@@ -32,11 +32,15 @@ Parse the user's description. If vague, ask one clarifying question:
 # character in the resolved absolute path with a single "-" (dots, spaces and CJK included).
 # The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
 # share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
-ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+ROOT=$(g=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$g" >/dev/null 2>&1 && pwd -P)
+case $ROOT in */.git) ROOT=${ROOT%/.git} ;; ?*) ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ;; esac   # no /.git at the end: a submodule, keyed by its own root
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify first; a missing directory means "wrong path", not "nothing to promote".
-# Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
-#   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
+# Under LC_ALL=C sed goes per byte, so when the directory is missing, say so and list candidates
+# (find, not a glob: zsh aborts on an unmatched glob). A candidate is a project directory: its memory
+# is <candidate>/memory. If one is clearly this project and that directory exists, set MEMORY_DIR to it.
+# No candidate, or several and none clearly this project: report that with the candidates and stop.
+[ -d "$MEMORY_DIR" ] || { echo "Memory directory not found: $MEMORY_DIR"; find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"; }
 # MEMORY.md may only be an index; search the topic files too.
 # Search once per keyword, not one phrase: a phrase misses entries worded differently.
 # Pick 2-4 distinctive words from the description (tool, file or command names, error text);
@@ -63,14 +67,16 @@ tell the user the value is still in the memory file (this skill does not remove 
 `./CLAUDE.md` and `.claude/rules/` mean the checkout root (`git rev-parse --show-toplevel`, or the cwd
 outside a git repo), not the directory the session was opened in.
 
+A target the user gave (`--target`, and `--paths` with it) is used as given.
 If the user didn't specify a target, pick one from the table by scope and say what you picked before writing; do not wait for an answer on the target.
-For a rules file, say its name and its `paths` too: take `paths` from the files or directories the entry says the rule applies to
-(not every path it mentions, and not a file that only triggers the rule, as in "after editing X, run Y"), written as globs like the example in Step 5 (a directory becomes `<dir>/**/*`); if the entry names none, write the rule to `./CLAUDE.md` instead of a rules file
+When the target you picked is a rules file, say its name and its `paths` too: take `paths` from the files, directories or file patterns the entry says the rule applies to
+(not every path it mentions, and not a file that only triggers the rule, as in "after editing X, run Y"), written as globs like the example in Step 5 and the forms in `reference/rules-directory-patterns.md` (a directory becomes `<dir>/**/*`, a file type such as `*.test.ts` becomes `**/*.test.ts`); if the entry names none, write the rule to `./CLAUDE.md` instead of a rules file
 (a rules file without `paths` loads always anyway). This only removes the wait for a target. Everything else that asks still asks:
 the clarifying question in Step 1 when the description is vague, the confirmations in Step 2 and Step 6, an entry that fails the
 Promotion Decision Guide (Step 2), and an all-projects rule (below).
 
-For an all-projects rule, ask the user before writing anything. Do not edit `~/.claude/CLAUDE.md` directly:
+For an all-projects rule, ask the user before writing anything; on "no", stop there: write nothing and
+leave the memory entry as it is. Do not edit `~/.claude/CLAUDE.md` directly:
 `install-dd-pipeline.sh --force` overwrites it with `templates/global/CLAUDE.md` whenever the two differ
 (the old file is backed up first). Edit the template, then redeploy with `./install-dd-pipeline.sh --force`.
 
@@ -129,8 +135,9 @@ After promoting, remove the original entry (in a topic file plus its MEMORY.md i
 ```bash
 # Show what will be removed. Use the keywords that found the entry in Step 2, not the user's wording
 # (the note may be in another language). MEMORY_DIR is recomputed because a new command starts
-# without Step 2's variables.
-ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+# without Step 2's variables. If Step 2 ended up using a fallback candidate's directory, set MEMORY_DIR to that path instead.
+ROOT=$(g=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$g" >/dev/null 2>&1 && pwd -P)
+case $ROOT in */.git) ROOT=${ROOT%/.git} ;; ?*) ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ;; esac   # no /.git at the end: a submodule, keyed by its own root
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done
 ```

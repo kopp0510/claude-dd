@@ -1458,7 +1458,7 @@ show_completion() {
     # agent、plugin、output style 三段只在這次真的跑過那幾步時才印（--commands-only 三步都沒跑）
     if [ "$COMMANDS_ONLY" = false ]; then
         echo -e "${GREEN}📌 已安裝的內建 Agents（${#BUILTIN_AGENTS[@]} 個）：${NC}"
-        echo "   供 wrapper skills 透過 Task tool 調用"
+        echo "   供 wrapper skills 透過 Agent 工具調用"
         echo ""
         if [ "${#ENABLED_PLUGINS[@]}" -gt 0 ]; then
             echo -e "${GREEN}📌 已啟用的 Plugin（${#ENABLED_PLUGINS[@]} 個）：${NC}"

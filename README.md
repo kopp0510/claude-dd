@@ -212,7 +212,7 @@ If those trade-offs still sound worse than the problem you have, use a single ro
 | Skill | Description |
 |-------|-------------|
 | code-simplifier | Code simplification (the wrapper used at step 3 of the loop) |
-| dd-loop | How each step of the 8-step loop is done (start point and range, step-4 dispatch and filed reports, step-8 range); global §3.9 calls it at the start of each increment and before steps 3, 4 and 8 |
+| dd-loop | How each step of the 8-step loop is done (start point and range, step-4 dispatch and filed reports, step-8 range); global §3.9 calls it at the start of each increment and before steps 3, 4 and 8. Also holds a "domain pitfalls" section (concurrency races, database locks, git in-progress states) to read when a change touches those |
 | design-brainstorm | Socratic design dialogue — look facts up yourself, only ask the human about decisions |
 | frontend-design | Frontend visual design |
 | gate-guard | Hook-only plugin (no skill): stops Claude from bypassing the `CLAUDE.md` gate with `git commit --no-verify` / `-n` / `-c core.hooksPath=` (turning hooks off beforehand with `git config core.hooksPath` is not caught) |

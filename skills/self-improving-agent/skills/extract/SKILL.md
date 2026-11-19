@@ -40,11 +40,16 @@ Read the user's description. Search auto-memory for related entries:
 # with a single "-" (dots, spaces and CJK included).
 # The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
 # share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
-ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+ROOT=$(g=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$g" >/dev/null 2>&1 && pwd -P)
+case $ROOT in */.git) ROOT=${ROOT%/.git} ;; ?*) ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ;; esac   # no /.git at the end: a submodule, keyed by its own root
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify first; a missing directory means "wrong path", not "auto-memory has nothing".
-# Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
-#   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
+# Under LC_ALL=C sed goes per byte, so when the directory is missing, say so and list candidates
+# (find, not a glob: zsh aborts on an unmatched glob). A candidate is a project directory: its memory
+# is <candidate>/memory. If one is clearly this project and that directory exists, set MEMORY_DIR to it.
+# No candidate, or several and none clearly this project: say so, do not search any of them, and go on
+# from the user's description alone.
+[ -d "$MEMORY_DIR" ] || { echo "Memory directory not found: $MEMORY_DIR"; find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"; }
 # Search once per keyword, not one phrase: a phrase misses entries worded differently.
 # Pick 2-4 distinctive words from the description (tool, file or command names, error text);
 # skip common words that would match everything. -F keeps dots and brackets literal.

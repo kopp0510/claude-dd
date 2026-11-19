@@ -223,7 +223,7 @@ gate 要求的是「每個含程式碼的目錄一份 `CLAUDE.md`」，而不是
 | Skill | 說明 |
 |-------|------|
 | code-simplifier | 程式碼簡化（迴圈步驟 3 的 wrapper） |
-| dd-loop | 8 步迴圈各步的做法細則（起點與範圍、步驟 4 派工與報告落地、步驟 8 範圍）；全域 §3.9 在段落開始與步驟 3、4、8 前明寫呼叫 |
+| dd-loop | 8 步迴圈各步的做法細則（起點與範圍、步驟 4 派工與報告落地、步驟 8 範圍）；全域 §3.9 在段落開始與步驟 3、4、8 前明寫呼叫。另有「領域陷阱」一節（併發 race、資料庫鎖、git 進行中狀態），碰到這類修改時讀 |
 | design-brainstorm | 蘇格拉底式設計對話（事實自己查、決策才問人） |
 | frontend-design | 前端視覺設計 |
 | gate-guard | 只有 hook、沒有 skill 的 plugin：擋 Claude 用 `git commit --no-verify`／`-n`／`-c core.hooksPath=` 繞過 CLAUDE.md gate（先用 `git config core.hooksPath` 把 hook 關掉的擋不到） |

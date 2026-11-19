@@ -47,7 +47,8 @@ CI 那一半是 `.github/workflows/ci.yml` 的「根目錄 CLAUDE.md 大小上�
 **調高上限**：先問使用者，再改 `claude-md-max-bytes`。走第 1 條時，改了要等下一個 `v*` tag 才生效（發下一版時打的那個）—— 加字的 commit 自己把數字調高沒有用。
 
 ⚠️ **第 2 條擋不住的**（還沒有帶上限檔的 `v*` tag 時才走得到；2026-11-19 查，`v1.6.15`、`v1.6.16` 帶這個檔（`v1.6.14` 沒有），最新的 tag 是 `v1.6.16`，目前走不到。
-查法：`git cat-file -e "<最新 tag>:scripts/githooks/claude-md-max-bytes"` 回 0 就是走第 1 條）：
+查法：`git cat-file -e "<最新 tag>:scripts/githooks/claude-md-max-bytes"` 回 0 就是走第 1 條；tag 用變數帶時寫 `"${t}:scripts/…"`，
+zsh 會把 `"$t:scripts/…"` 的 `:s` 當成修飾子、把路徑吃掉，只剩 tag 名而照樣回 0（2026-11-20 實測 `print -r -- "[$t:scripts/…]"` 印 `[v1.6.14`））：
 
 - pre-commit：先單獨 commit 把數字調高，下一個 commit 再加字。同一個 commit 一起做會被擋（讀的是 `HEAD` 那一版）
 - 不帶參數那一種：工作目錄的數字改了就算數，所以 CI 擋不住同一次 push 裡的調高
