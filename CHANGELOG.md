@@ -20,7 +20,9 @@
 
 ### Fixed
 
-- **self-improving-agent 五個 skill 找記憶資料夾改用 git repo 根目錄**（`git rev-parse --git-common-dir`，不在 git repo 裡才用 `pwd -P`）。
+- **self-improving-agent 五個 skill 找記憶資料夾改用 git repo 根目錄**（`git rev-parse --git-common-dir` 的上一層，不在 git repo 裡才用 `pwd -P`）。
+  2026-11-20 審查後公式再改兩處：不用 `--path-format=absolute`（git 2.31 才有；git 2.25.1 實測舊寫法把選項字串原樣印出來，算出的路徑是錯的），改成 `cd` 進去再 `pwd -P`；
+  submodule 用它自己的根目錄（`claude -p` 實測記憶資料夾是 `…-super-mod`，舊寫法算成 `…-super--git-modules-mod`）。紀錄：`docs/measurements/2026-11-20-memory-dir.md`。
   原本從子目錄或 `git worktree` 開的 session 會算到一個不存在的資料夾，status 的數字全是 0、看起來像健康。
   2026-11-19 用 `claude -p` 實測：從 `<repo>/frontend` 和從 worktree 開的 session，記憶資料夾都是 repo 根目錄那個。
   status 另外改成從 repo 根目錄讀 `CLAUDE.md` 與 `.claude/rules/`、用 `find` 取代 zsh 下會報 no matches 的 glob，
@@ -40,23 +42,57 @@
   memory-analyst 的 Promotion signals 換成規則檔那三條（原本的「Broadly applicable」「High impact」在規則檔沒有對應句）；`.claude/rules/` 不存在算 0 個檔；
   review 的報告範本補上全專案通用的目標與 `{{names}}` 的定義（照 status）；promote 拿掉沒定義的「or mark」、寫明空的主題檔是只剩 frontmatter、來源兩處時都寫；
   status 第 3 步的指令區塊補上 `MEMORY_DIR`、`PROJ` 的重算（原本只在第 1 步算過，新開的指令裡是空的，`grep` 會去讀 `/MEMORY.md`）。
+- 步驟 4 審查（2026-11-20，四個審查者，報告在 `docs/reviews/2026-11-19-prompt-audit/`）找到、這一段自己帶進來的幾處：
+  - self-improving-agent：promote、extract、remember、status 的「資料夾不在就列候選」原本只寫在註解裡，改成真的會執行的一行並印「Memory directory not found」（promote、extract 的搜尋加了 `2>/dev/null` 之後，路徑算錯時什麼都不印）；
+    後面步驟重算路徑時沿用前面步驟最後用的資料夾（原本一律照公式重算，候選資料夾的結果會掉）；候選是專案資料夾、記憶在它底下的 `memory/`；
+    review 與 memory-analyst 讀的 CLAUDE.md 補上 `CLAUDE.local.md`，checkout 根目錄以上每一層的 `CLAUDE.md`、`CLAUDE.local.md`、`.claude/CLAUDE.md` 也讀（官方文件 code.claude.com/docs/en/memory.md，2026-11-20 查：從工作目錄往上每一層都載入）；
+    status 的說明改成 review 的過期數可能比較多也可能比較少；memory-analyst「已寫進 CLAUDE.md 的不算候選」不再只限 6 分以上的（和 review 一致）。
+  - self-improving-agent，步驟 5 乾跑（資料夾不在，候選一個、兩個、沒有各一種）再找到的：promote、remember、extract 沒寫「沒有候選／好幾個候選」怎麼辦，
+    停下的那幾發是照派工訊息或自己猜的。補上：promote、remember 回報候選後停（remember 不寫、也不建資料夾），extract 講明後不搜任何候選、只用使用者的描述；
+    remember 第 3 步寫明新開的指令要把 `MEMORY_DIR` 再設成第 2 步最後用的那個資料夾；promote 第 3 步寫明使用者給的 `--target`（和跟著它的 `--paths`）照用，
+    全專案通用的規則使用者答「不要」就停、什麼都不寫、記憶條目不動。改完每個分支各重跑一發，停下或不搜的那幾發引的依據都是新加的句子；
+    資料夾不在的那幾種情況另跑了 `ecfc89c` 版的對照發（promote 兩個候選、沒有候選；remember 沒有候選；extract 一個、兩個、沒有候選），結果相同，但依據都標「自己猜的」—— 所以這幾處改的是「不用猜」，沒量到行為有差；
+    `--target` 與全專案通用那兩處沒跑對照發。
+  - `docs/measurements/2026-11-19-global-6.2-retry.md` 的結論改成只用它事先寫下的判定式下結論，「失敗後第一個動作」標成事後多看的一項、把照規則無效的發數寫出來；補上 `docs/measurements/CLAUDE.md` 的路徑。本檔 §6.2 那一條跟著改。
+  - `scripts/githooks/CLAUDE.md` 的查法補一句：tag 用變數帶時要寫 `"${t}:…"`，zsh 會把 `"$t:scripts/…"` 的 `:s` 當修飾子、照樣回 0。
+  - `skills/frontend-design/SKILL.md` 寫明 `a372fe3` 是 claude-dd 自己的 commit；`docs/measurements/CLAUDE.md` 那句「哪幾條不是搬來的」補上 2026-11-19 新加的那一條；`DD_PIPELINE_ARCHITECTURE.md` 的 dd-loop 那句補上「領域陷阱」一節。
 
 ### Changed
 
 - **self-improving-agent 乾跑留下、要新訂規則才消得掉的含糊處**。同一個 skill 的檔裡找不到答案，所以這些是本地的決定，都記在 `skills/self-improving-agent/CLAUDE.md`「Differences from upstream」：
-  - promote 沒給 `--target` 時自己挑目標、寫檔前說選了哪個、不等回答（使用者 2026-11-19 的決定；上游只寫「recommend one」）。rules 檔的 `paths` 取自條目說這條規則適用的路徑（只是觸發規則的那個檔不算）、寫成 glob，條目沒提路徑就寫進 `./CLAUDE.md`。其他要問的照問。
+  - promote 沒給 `--target` 時自己挑目標、寫檔前說選了哪個、不等回答（使用者 2026-11-19 的決定；上游只寫「recommend one」）。rules 檔的 `paths` 取自條目說這條規則適用的檔、目錄或檔案樣式（只是觸發規則的那個檔不算）、照 `reference/rules-directory-patterns.md` 已有的寫法寫成 glob，條目沒提就寫進 `./CLAUDE.md`。其他要問的照問。
   - promote 第 2 步找到條目後先對照 Promotion Decision Guide：判準或分數沒過、或屬於「Don't promote」清單，就講哪一條沒過並問要不要照樣升級（三條判準缺一條、分數不到、或屬於清單，任一個都算沒過；判斷前先讀完整個條目，搜尋只印出命中的那幾行）；含憑證的條目一律不升級、不問（秀條目時遮掉值，並提醒值還留在記憶檔）；使用者答不要就停、什麼都不寫。
   - 和 CLAUDE.md 寫的不一樣的那一點只報在 Conflicts，不再同時算過期。
   - review 與 memory-analyst：「已寫在 CLAUDE.md」指主要指示寫在那裡，只是同主題不算；屬於 Anti-Patterns「Don't promote」清單的不算候選；重複訊號詞也算記憶所用語言的同義說法；
-    條目自己寫明已搬走的路徑不算過期，相對路徑在 checkout 根目錄底下任何一層找得到就算存在（放好幾個 repo 的父目錄裡，記憶寫的是相對於某個 repo 的路徑；`find` 跳過 `node_modules` 與 `.git`，搜尋前去掉路徑結尾的 `/`、把 `{a,b}` 拆成各自的路徑），版本、工具、相依套件對專案自己的檔查，沒東西可對就不叫過期。status 寫明它的過期數是機械檢查。
-  - `reference/promotion-rules.md` 補上 Proven 怎麼從條目判斷（記了兩次以上的發生，或實際跑過的檢查結果）、專案是放好幾個 repo 的父目錄時 Scope 怎麼算、Scope 量的是規則適用的範圍（不是在哪裡學到的，也不是觸發它的那一個檔）。
+    條目自己寫明已搬走的路徑不算過期，相對路徑在 checkout 根目錄底下任何一層找得到就算存在（放好幾個 repo 的父目錄裡，記憶寫的是相對於某個 repo 的路徑；`find` 跳過 `node_modules` 與 `.git`；`-path` 吃的是 glob，所以搜尋前去掉開頭的 `./` 與結尾的 `/`、把 `{a,b}` 拆成各自的路徑、在 `[`、`]`、`*`、`?` 前面加反斜線），review 的「過期的工具、版本、指令」與 memory-analyst 的「版本號、已移除的相依套件」對專案自己的檔查，沒東西可對就不叫過期。status 寫明它的過期數是機械檢查。
+  - `reference/promotion-rules.md` 補上 Proven 怎麼從記憶判斷（條目自己記了兩次以上的發生、同一個教訓記在好幾條裡，或實際跑過的檢查結果）、專案是放好幾個 repo 的父目錄時 Scope 怎麼算、Scope 量的是規則適用的範圍（不是在哪裡學到的，也不是觸發它的那一個檔）。
   - review 範本的候選行改列分數（原本的 `seen {{n}}x` 沒有來源），範本下補各格的說明；`{{names}}` 照字母順序。memory-analyst 的報告順序照 review 的格式，拿掉沒定義的 freshness、organization。
   - promote 改寫的規則用目標檔的語言寫；promote、extract 的搜尋指令補上 remember 那三行「關鍵字怎麼挑」。
 - **全域模板 §6.2 的「不做：自動重試」補上範圍、理由與例外**：指的是沒讀錯誤訊息就原樣重跑；對方那一側的暫時性失敗（連線中斷、服務忙或被限流、檔案被鎖），
   而且指令重跑不會造成第二次副作用（讀取、查詢）時，可以等一下重試一次；本機指令跑到硬逾時不算（§6.7）。原句沒有範圍。
-  來源是 2026-11-19 的 prompt audit（目標模型 Fable 5.2）。同日補了行為探針（新舊各 25 發，`docs/measurements/2026-11-19-global-6.2-retry.md`）：請求數沒有差別，失敗後的第一個動作有差別。
-  對方直接關掉連線時，舊寫法每一發都先查原因（`lsof` 加 `curl -v`），新寫法每一發都直接再打一次；查原因的指令被擋掉時，舊寫法 5 發裡 1 發停下來回報、沒拿到資料。
-  原因沒變的失敗（404）兩邊都沒有重打，建訂單連線中斷時兩邊都先查過才重送。audit 說的「舊寫法會停下來回報」只在那 1 發出現。
+  來源是 2026-11-19 的 prompt audit（目標模型 Fable 5.2）。同日補了行為探針（新舊各 25 發，`docs/measurements/2026-11-19-global-6.2-retry.md`）：照事先寫下的判定式（服務 log 的請求數），新舊沒有差別。
+  事後多看的一項（不在判定式裡）：對方直接關掉連線時，舊寫法先下 `lsof` 加 `curl -v` 查原因，新寫法直接再打一次；白名單沒有 `lsof` 的那一批，舊寫法 5 發都被擋（照規則無效），其中 1 發停下來回報、沒拿到資料。
+  原因沒變的失敗（404）兩邊都沒有重打；建訂單連線中斷那一組照規則有效的只有 1 發，只能當跡象。audit 說的「舊寫法會停下來回報」只在那 1 發出現，分不出是措辭還是白名單造成的。
+- **依 2026-11-17、2026-11-18 的 prompt audit 改的提示文字**（這幾個 commit 當時沒寫進 CHANGELOG，2026-11-20 審查後補記；self-improving-agent 的部分記在它的 `CLAUDE.md`「Differences from upstream」）：
+  - 全域模板 §7（`c0f6d33`）：§7.1 第 5 步「模糊」改成照 §6.1 判斷（有 ≥80% 把握就動手並寫明假設，否則用 AskUserQuestion 問；原本寫「用 ExitPlanMode 或 AskUserQuestion 列選項」）；
+    §7.2 `claude-md-improver` 那一列只接 `CLAUDE.md`（原本是任何 `.md` 檔），`self-improving-agent` 那一列拿掉「優化 skill」；§7.6 拿掉「under-trigger 比 over-trigger 嚴重」，改成照 prompt 實際要的工作判斷。
+    2026-11-20 部署後各開一個新 session 測一發：「審查這個專案的 CLAUDE.md」叫了 `claude-md-management:claude-md-improver`、「修 README.md 的錯字」沒叫任何 skill、「優化 skills/foo/SKILL.md」叫了 `skill-creator:skill-creator`、「整理 memory」叫了 `self-improving-agent`（每個只有一發，舊寫法沒有對照；`docs/measurements/2026-11-20-global-7-trigger.md`）。
+  - 全域模板 §3.9 的三條（race 與交易、併發驗法、git 進行中狀態）搬到 `skills/dd-loop/SKILL.md` 新的「領域陷阱」一節，原處留一行指標（`c0f6d33`）。
+    2026-11-20 指標那一行改成寫明「用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節，迴圈外的修改、迴圈暫停中也一樣」：`dd-loop` 的 description 排除迴圈外的修改，`/dd-stop on` 期間也不呼叫它。量了迴圈外的一個 prompt（資料庫 race）：原本的指標 8 發到了 4 發，改寫後 8 發都到了（`docs/measurements/2026-11-20-domain-traps-pointer.md`）；迴圈暫停中那一種沒有量。
+    這次搬移和 2026-10-30 的使用者決定（`docs/designs/2026-10-30-global-claude-md-slim-design.md`：這幾條留在全域）不一致，留在哪一邊還沒問使用者。
+  - 全域模板與 `skills/dd-loop/SKILL.md` 的 `⚠️⚠️` 都收成 `⚠️`（`3637c92`、`31dd5bb`）。
+  - 全域模板 §6.7 補 `docker` 指令的例外：perl alarm 砍不掉它，改用 Bash 工具的 `timeout` 參數（`3e3243a`）。
+  - 派工工具的名字 `Task` 改成 `Agent`：`commands/dd-init.md` 兩處（`3637c92`、`31dd5bb`）、`skills/code-simplifier/SKILL.md` 的 `allowed-tools`（`31dd5bb`）；2026-11-20 安裝完成訊息的「透過 Task tool 調用」也改了。
+  - `commands/dd-init.md`：刪掉檔頭的 2026-07 改版說明（`31dd5bb`）、Phase 1 列升級差異的那一段改成每個 rev 一條的清單（`3e3243a`）、「三個寫法都是必要的」改成「下面這幾個寫法」（`3637c92`）。
+    蓋章區塊與 React 片段沒動（2026-11-20 和 `v1.6.16` 逐行 `diff`，沒有差異），所以 `dd-loop-rev` 沒跳。
+  - `agents/code-reviewer.md` 的 description 拿掉「官方 code-reviewer plugin 未裝時的本地備份」（`agents/LICENSE.txt` 的比對指令 2026-11-20 重跑，行數與相同行數都沒變）；
+    `agents/security-auditor.md` 的對照表從 OWASP Top 10:2021 換成 2025，編號跟著換（SSRF 的檢查項放到 A01 底下，A10 換成 Mishandling of Exceptional Conditions；2026-11-20 對 top10.owasp.org/2025 核過 A01–A10 的名稱，那一頁把 CWE-918 SSRF 列在 A01）；
+    `agents/senior-devops.md` 的 IaC state 不再寫死「S3 + DynamoDB lock」（都是 `3e3243a`）。
+  - tech-diagram-gif（`43373fe`、`3e3243a`、`2117860`）：SVG 與逐幀截圖從一開始就寫在暫存目錄、不進交付目錄，不再要求刪檔（要刪任何檔先問使用者）；ffmpeg 範例直接輸出到 `./diagrams/<名稱>.gif`；
+    `references/icons.md` 的範例文字不寫特定模型名；`references/style-2-dark-terminal.md` 拿掉「Matches CLAUDE.md standard tech diagram style」；`references/composition-quality-contract.md` 的適用範圍補一句。
+    2026-11-20：ffmpeg 範例的 `$TMP` 改成 `<暫存目錄>`（新開的指令沒有先前設的變數）。
+  - 文件更正：`tests/CLAUDE.md` 寫明四支測試都在暫存目錄跑、都列進 ShellCheck 清單（`d468905`）；根 `CLAUDE.md` 的 subagent 開跑時間那一條、`scripts/CLAUDE.md` 的「上游文件已同步」那一條縮短（`43373fe`）。
+    2026-11-20 補回縮短時掉的兩處：前者的原因（每個 Agent 呼叫的 prompt 約 1.48 萬字元）、後者要巡的 CHANGELOG `## 未發布`。
 
 ## 1.6.16 — 2026-11-17
 

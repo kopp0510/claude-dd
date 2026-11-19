@@ -10,8 +10,8 @@ A learning should be promoted when **all three** are true:
 2. **Actionable** — can be written as a concrete instruction with a one-clause reason ("Use X — Y breaks otherwise")
 3. **Durable** — will still be true in 30+ days
 
-Judge "Proven" from what the entry itself records: two or more separate occurrences (dates or sessions), or the result of a check
-that was actually run. An entry that records neither is not proven.
+Judge "Proven" from what the memory records: two or more separate occurrences (dates or sessions) in the entry itself, the same lesson recorded in several
+entries (the recurrence indicators in `skills/review/SKILL.md` Step 2), or the result of a check that was actually run. An entry with none of these is not proven.
 
 ## Scoring Guide
 

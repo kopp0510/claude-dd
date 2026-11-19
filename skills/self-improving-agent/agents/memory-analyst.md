@@ -24,8 +24,8 @@ You analyze `~/.claude/projects/<project>/memory/` to find:
 - Note total line counts and file sizes
 
 ### 2. Cross-reference with CLAUDE.md
-- Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md` and `.claude/CLAUDE.md` under the checkout root
-  (`git rev-parse --show-toplevel`, or the cwd outside a git repo), and `~/.claude/CLAUDE.md`
+- Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md`, `CLAUDE.local.md` and `.claude/CLAUDE.md` in the checkout root
+  (`git rev-parse --show-toplevel`, or the cwd outside a git repo) and in every directory above it (Claude Code loads these from the working directory upward), and `~/.claude/CLAUDE.md`
 - Read all files in `.claude/rules/` under that root (no directory means 0 files)
 - Identify duplicates, contradictions, and gaps
 - A disagreement with what CLAUDE.md says (a rule or a stated fact) is reported under Conflicts only; do not also report that same point as stale.
@@ -41,7 +41,7 @@ the topic file it points to.
 
 **Staleness signals:**
 - File paths that don't exist on disk (verify with `find` or `ls`).
-  Resolve a bare filename inside a markdown link against the memory directory. A path that contains "/": check an absolute or `~/` path as written; a relative one exists if it is found at the checkout root or anywhere below it (`find <root> \( -name node_modules -o -name .git \) -prune -o -path "*/<path>" -print`), because a memory may record paths relative to a sub-repo or subdirectory. Before searching, drop a trailing "/" from the path and split a `{a,b}` shorthand into one path per name; `find` matches neither as written. A bare filename in prose that is not a link target is not checked. A path the entry itself says was moved or removed is not stale.
+  Resolve a bare filename inside a markdown link against the memory directory. A path that contains "/": check an absolute or `~/` path as written; a relative one exists if it is found at the checkout root or anywhere below it (`find <root> \( -name node_modules -o -name .git \) -prune -o -path "*/<path>" -print`), because a memory may record paths relative to a sub-repo or subdirectory. `-path` takes a glob pattern, not a literal string, so clean the path before searching: drop a leading "./" and a trailing "/", split a `{a,b}` shorthand into one path per name, and put a backslash before each `[`, `]`, `*` and `?`. A bare filename in prose that is not a link target is not checked. A path the entry itself says was moved or removed is not stale.
 - Version numbers that are outdated (check against the project's own files: manifests, lock files, configs; with nothing to check against, do not call it stale)
 - References to removed dependencies (check against the project's own files: manifests, lock files, configs; with nothing to check against, do not call it stale)
 
@@ -60,8 +60,8 @@ use it as written; do not score from memory. If you cannot read the file, say so
 leave the entries unscored. With no scores there are no promotion candidates: in step 5 leave that list
 empty and say why; the other lists do not depend on scores.
 
-Promotion candidates: total score ≥ 6 and all four promotion signals above hold (the same test `/self-improving-agent:review` uses).
-An entry that scores ≥ 6 but is already written in CLAUDE.md or rules/ is not a candidate: recommend removing it from memory.
+Promotion candidates: the total meets the "Promote when" threshold of that Scoring Guide and all four promotion signals above hold (the same test `/self-improving-agent:review` uses).
+An entry already written in CLAUDE.md or rules/ is not a candidate whatever its score: recommend removing it from memory.
 An entry that matches "Don't promote" under "Anti-Patterns" in `promotion-rules.md` is not a candidate.
 
 ### 5. Generate report

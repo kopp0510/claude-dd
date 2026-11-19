@@ -24,15 +24,17 @@ Quick overview of your project's memory state across all memory systems.
 # resolved absolute path with a single "-" (dots, spaces and CJK included).
 # The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
 # share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
-ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+ROOT=$(g=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$g" >/dev/null 2>&1 && pwd -P)
+case $ROOT in */.git) ROOT=${ROOT%/.git} ;; ?*) ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ;; esac   # no /.git at the end: a submodule, keyed by its own root
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 
 # The counts below are 0 when the path is wrong, which reads exactly like "healthy".
-# Verify the directory first. Under LC_ALL=C sed goes per byte, so if it is missing, list candidates
-# (find, not ls + glob: zsh aborts on an unmatched glob):
-#   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"
-# Still no directory (or several candidates and none clearly this project): print
-# "Memory directory not found: $MEMORY_DIR" and stop. Do not print a dashboard of zeros.
+# Verify the directory first. Under LC_ALL=C sed goes per byte, so if it is missing, say so and list candidates
+# (find, not ls + glob: zsh aborts on an unmatched glob). A candidate is a project directory: its memory
+# is <candidate>/memory. If one is clearly this project and that directory exists, set MEMORY_DIR to it.
+[ -d "$MEMORY_DIR" ] || { echo "Memory directory not found: $MEMORY_DIR"; find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"; }
+# Still no memory directory (or several candidates and none clearly this project): report
+# "Memory directory not found" with the candidates and stop. Do not print a dashboard of zeros.
 
 # Project files are read from this checkout's root, so a session opened in a subdirectory
 # still counts the root CLAUDE.md and .claude/rules/.
@@ -77,8 +79,10 @@ plain line count ("User global" in Step 4) and is not scored against this table.
 
 For each MEMORY.md entry that references a file path:
 ```bash
-# A new command starts without Step 1's variables: compute them again.
-ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+# A new command starts without Step 1's variables: compute them again (if Step 1 ended up using a fallback
+# candidate's directory, set MEMORY_DIR to that path instead).
+ROOT=$(g=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$g" >/dev/null 2>&1 && pwd -P)
+case $ROOT in */.git) ROOT=${ROOT%/.git} ;; ?*) ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ;; esac   # no /.git at the end: a submodule, keyed by its own root
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 PROJ=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
 
@@ -138,7 +142,7 @@ done
 - `{{bar}}`: 10 characters, one `█` per full 10% of 200 lines and `░` for the rest, then the percentage (`██░░░░░░░░ 20%`).
 - `{{emoji}}`: 🟢, 🟡 or 🔴 for the MEMORY.md line count, per "Interpretation" below.
 - `{{names}}`: the first 5 topic file names without `.md`, in alphabetical order, separated by ", ", then `… N more` if there are more, as in `a, b, c, d, e, … 4 more`.
-- "Stale refs" is a mechanical existence check on what Step 3 printed. `/self-improving-agent:review` reads the entries and may report fewer: it does not count a path the entry itself says was moved or removed, and it looks for a relative path anywhere below the root.
+- "Stale refs" is a mechanical existence check on what Step 3 printed. `/self-improving-agent:review` reads the entries and may report a different number: it does not count a path the entry itself says was moved or removed, it looks for a relative path anywhere below the root, and it also checks paths inside topic files.
 - Recommendations: one line per row that is Warning or Critical, and none when all are Healthy —
   MEMORY.md: run `/self-improving-agent:review` to promote or prune entries;
   CLAUDE.md: move sections that apply to only part of the code into `.claude/rules/` (see `/self-improving-agent:promote`);

@@ -103,7 +103,7 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   "with timestamp and context" (the body says timestamps are not needed); `agents/memory-analyst.md` and
   `agents/skill-extractor.md` got `name` / `description` frontmatter (upstream had none); `skills/extract/SKILL.md`
   says "Agent tool" instead of "Task tool".
-- 2026-11-18 (same audit, this commit): `skills/remember/SKILL.md` Step 3 writes a topic file plus one index line when
+- 2026-11-18 (same audit, `43373fe`): `skills/remember/SKILL.md` Step 3 writes a topic file plus one index line when
   `MEMORY.md` is an index, and its cross-project line points at `claude-dd/templates/global/CLAUDE.md`;
   `skills/promote/SKILL.md` and `reference/promotion-rules.md` do the same for global rules and ask the user first
   (`install-dd-pipeline.sh --force` overwrites `~/.claude/CLAUDE.md` from that template);
@@ -121,7 +121,7 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   `reference/memory-architecture.md` no longer says worktrees get separate memory directories (the docs say they share one).
   After a dry run: promote's report template names the file the entry came from, and an emptied topic file is deleted only after asking.
 - 2026-11-19 (same audit, remaining items): the five skills compute the memory directory from the git repo root
-  (`git rev-parse --git-common-dir`) instead of `pwd -P`. Tested 2026-11-19 with `claude -p`: a session opened in
+  (`git rev-parse --git-common-dir`) instead of `pwd -P`. Tested 2026-11-19 with `claude -p` (no record was kept; rerun 2026-11-20, see `docs/measurements/2026-11-20-memory-dir.md`): a session opened in
   `lawdesk-ai/frontend` and one in a `git worktree` both reported the repo root's directory. `skills/status/SKILL.md`
   reads `CLAUDE.md` and `.claude/rules/` from the checkout root, uses `find` instead of an unmatched zsh glob, gives a command
   for "Last updated", says how the capacity rows combine (topic files are counted, not scored) and what brief mode's rules count is, and no longer
@@ -150,12 +150,12 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   `skills/promote/SKILL.md` Step 6 no longer says "or mark" (no way to mark was defined), says an empty topic file is one with nothing but
   frontmatter, and Step 7 names both files when the entry was a topic file plus an index line. `skills/status/SKILL.md` Step 3 recomputes
   `MEMORY_DIR` and `PROJ` (a new command starts without Step 1's variables; the old block ran `grep` on `/MEMORY.md`).
-- 2026-11-19 (same audit, the dry-run ambiguities that needed a new rule; no file in this directory answered them, so these are local decisions, not alignments):
+- 2026-11-19 (same audit, the dry-run ambiguities that needed a new rule; except where a bullet names a sibling file, no file in this directory answered them, so these are local decisions, not alignments):
   - `skills/review/SKILL.md` template: a candidate line shows its score (`score {{total}} (durability, impact, scope)`) instead of `seen {{n}}x`, which had no source;
     notes under the template say candidates are listed by score, what `CLAUDE.md:` and `Line {{n}}` mean, and where a "remove from memory" entry goes.
     `{{names}}` is alphabetical in review and status.
   - `skills/promote/SKILL.md` Step 3: with no `--target` it picks a target, says which, and does not wait (the user's decision, 2026-11-19; upstream said
-    "recommend one" without saying whether to wait). `paths` of a rules file come from the paths the entry says the rule applies to (not a file that only triggers it), written as globs; an entry that names none goes to
+    "recommend one" without saying whether to wait). `paths` of a rules file come from the files, directories or file patterns the entry says the rule applies to (not a file that only triggers it), written as globs in the forms `reference/rules-directory-patterns.md` already shows; an entry that names none goes to
     `./CLAUDE.md`. Every other question still asks (Step 1, Step 2, Step 6, the Decision Guide, an all-projects rule).
   - `skills/promote/SKILL.md` Step 2 checks the entry against the Promotion Decision Guide and asks before promoting one that fails; an entry holding a credential or
     secret is refused without asking (the user is told it is still in memory); a "no" stops with nothing written. It reads the whole entry before judging
@@ -164,8 +164,8 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   - Review and memory-analyst: "already in CLAUDE.md" means the main instruction is stated there; an entry matching the Anti-Patterns "Don't promote" list is not a
     candidate; signal words also count in the memory's own language; a path the entry says was moved is not stale, a relative path counts as existing when it is found anywhere below the checkout root
     (a memory in a parent directory of several repos records paths relative to one repo; found by a read-only run on a real workspace;
-    the `find` skips `node_modules` and `.git`, and the path is searched without a trailing "/" and with `{a,b}` split, since `find` matches neither as written), and versions, tools and dependencies are checked against the project's own files. `skills/status/SKILL.md` says its stale count is a mechanical existence check.
-  - `reference/promotion-rules.md`: how to judge "Proven" from the entry (two or more recorded occurrences, or a check that was run), how Scope reads when the
+    the `find` skips `node_modules` and `.git`; `-path` takes a glob, so the path is cleaned first: no leading "./" or trailing "/", `{a,b}` split, and `[`, `]`, `*`, `?` escaped), and review's "outdated tools, versions, or commands" and memory-analyst's "version numbers" and "removed dependencies" are checked against the project's own files. `skills/status/SKILL.md` says its stale count is a mechanical existence check.
+  - `reference/promotion-rules.md`: how to judge "Proven" from the memory (two or more recorded occurrences in the entry, the same lesson recorded in several entries as in review Step 2's recurrence indicators, or a check that was run), how Scope reads when the
     project is a parent directory of several repos, and that Scope is where the rule applies (not where it was learned, and not the one file that triggers it; the same dry runs
     gave one entry 0 and 2, or 1 and 3, on the two readings). `agents/memory-analyst.md` points there instead of restating "2+ sessions".
   - `agents/memory-analyst.md` lists its report sections in the review format's order; "freshness" and "organization" are gone from Health metrics (neither was defined,
@@ -176,3 +176,28 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   what "vague" means in promote Step 1, where a recurrence signal goes in the report, which strings with a "/" are file paths (URL routes, slash commands, image names),
   whether two occurrences in one session are "separate", which instruction of a multi-instruction topic file is its "main" one, a `[[name]]` link, and a same-named file
   in another repo satisfying the path check.
+- 2026-11-20 (step-4 code review of the 2026-11-18 / 2026-11-19 edits; reports in `docs/reviews/2026-11-19-prompt-audit/`):
+  - The repo-root formula in the five skills no longer uses `git rev-parse --path-format=absolute` (added in git 2.31; git 2.25.1 prints the option back
+    and the computed path is wrong): it resolves `--git-common-dir` with `cd` + `pwd -P`. A submodule is keyed by its own root (`--show-toplevel`), not by
+    `<superproject>/.git/modules/<name>`. Tested 2026-11-20 with `claude -p` (root, subdirectory, worktree, submodule, non-git directory); record in
+    `docs/measurements/2026-11-20-memory-dir.md`.
+  - The "directory missing → list candidates" check in promote, extract, remember and status is an executed line that prints "Memory directory not found"
+    (it was a comment; with `2>/dev/null` on the search, a wrong path printed nothing). A candidate is a project directory whose memory is `<candidate>/memory`;
+    later steps that recompute `MEMORY_DIR` keep the directory the first step ended up with.
+  - Review and memory-analyst also read `CLAUDE.local.md`, and look for the three file names (`CLAUDE.md`, `CLAUDE.local.md`, `.claude/CLAUDE.md`) in every directory above the checkout root too
+    (code.claude.com/docs/en/memory.md, read 2026-11-20: they load "from your current working directory and every directory above it").
+  - `skills/status/SKILL.md`: review's stale count may differ in either direction (it also checks paths inside topic files). `agents/memory-analyst.md`: an entry already
+    written in CLAUDE.md or rules/ is not a candidate whatever its score, as in review; its candidate rule points at the Scoring Guide's threshold instead of restating "≥ 6".
+  - Found by the step-5 dry runs of the edits above (a missing directory with one, two or no candidates): promote, remember and extract did not say what to do with
+    no candidate or with several, and the runs that stopped did so on the dispatch brief or on a guess. Each now says it: promote and remember report the candidates
+    and stop (remember writes nothing and does not create the directory); extract says so, searches none of them, and goes on from the user's description.
+    remember Step 3 says to set `MEMORY_DIR` again to the directory Step 2 settled on. promote Step 3: a target the user gave (`--target`, and `--paths` with it) is
+    used as given, and for an all-projects rule a "no" stops with nothing written and the memory entry left as it is.
+  Reported by the same review and not changed here (they predate these edits or need a rule of their own): the directory is computed from the shell's cwd, so a session opened
+  in a non-git parent whose shell has moved into a sub-repo computes that repo's directory, not the session's; status's path regex turns `~/…` and URLs into `/…`; status counts
+  rule files one level deep and stale paths rather than entries; nothing checks the 25KB limit; review and memory-analyst print entry text without masking credentials;
+  `--target rules/x.md` without `--paths`; the deployed skill cannot locate the claude-dd checkout. Left by the step-5 dry runs (the runs behaved as intended, the
+  wording made them guess): what makes a candidate "clearly this project"; the keyword search still runs, and prints nothing, after "no candidate"; the
+  `LC_ALL=C` comment reads as the only cause of a missing directory; whether `--target rules/api.md` means `.claude/rules/api.md`; whether "already covered by
+  existing rules" includes the global file; what remember does with an entry that contradicts the new one, and with its Step 1 "Scope"; extract's `--output`
+  layout, its README (the tree lists it, skill-extractor says only SKILL.md is required), and what fills Option 2 and Edge Cases when the source has one solution.

@@ -43,7 +43,7 @@ prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**
 
 ## 已知的坑
 
-（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步最後的「量測前先關掉 advisor」、「開發本 repo」的「沙盒用 `claude -p` 測行為前」一條，與「注意事項」裡跑實驗才遇到的幾條；最後一條「同一個對話派出的 subagent」是 2026-11-16 新加的，不是搬來的）
+（原根目錄 CLAUDE.md「新增 Agent 步驟」第 5 步最後的「量測前先關掉 advisor」、「開發本 repo」的「沙盒用 `claude -p` 測行為前」一條，與「注意事項」裡跑實驗才遇到的幾條；「同一個對話派出的 subagent」是 2026-11-16 新加的、「拋棄式目錄開在 scratchpad 底下」是 2026-11-19 新加的，這兩條不是搬來的）
 
 - **量測前先關掉 advisor**：`~/.claude/settings.json` 設了 `advisorModel` 時，`claude -p` 的 session 會自己叫 advisor（另一個模型），
   assistant 訊息的 `message.model` 看不到它，只出現在 result 的 `modelUsage` 鍵，它的費用與等待時間會算進那一發。
