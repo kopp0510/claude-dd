@@ -42,12 +42,12 @@ A complete reference for how Claude Code's memory systems work together.
 
 **Key facts:**
 - Enabled by default (since v2.1.32)
-- Only the first 200 lines of MEMORY.md load at startup
+- Only the first 200 lines (or 25KB, whichever comes first) of MEMORY.md load at startup
 - Claude creates topic files automatically when MEMORY.md gets long
 - Git repo root determines the project path
 - Worktrees and subdirectories of the same git repo share one memory directory
-  (code.claude.com/docs/en/memory.md, read 2026-11-18). The skills here still compute the
-  path from `pwd -P`, which only matches when the session starts at the repo root — not yet tested from a subdirectory.
+  (code.claude.com/docs/en/memory.md, read 2026-11-18; tested 2026-11-19 from a subdirectory
+  and from a `git worktree`). The skills take the path from `git rev-parse --git-common-dir`.
 - Local only — not shared via git
 - Toggle with `/memory`, settings, or `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`
 - Subagents can have their own auto memory
@@ -118,10 +118,14 @@ MEMORY.md (raw notes)  →  /self-improving-agent:review (analyze)  →  /self-i
 
 | File | Soft limit | Hard limit | What happens at limit |
 |------|-----------|------------|----------------------|
-| MEMORY.md | 150 lines | 200 lines | Lines after 200 not loaded at startup |
-| CLAUDE.md | 150 lines | No hard limit | Adherence decreases with length |
+| MEMORY.md | 120 lines | 200 lines or 25KB | Content past whichever comes first is not loaded at startup |
+| CLAUDE.md | 150 lines | No hard limit (a file over 4 MiB is skipped) | Longer files use more context and may reduce adherence |
 | Topic files | No limit | No limit | Loaded on demand, not at startup |
 | Rules files | No limit per file | No limit | Only loaded when paths match |
+
+The 200-line target for CLAUDE.md, the 200 lines / 25KB for MEMORY.md and the 4 MiB skip are from
+code.claude.com/docs/en/memory.md (read 2026-11-19). The soft limits are this plugin's early warnings, not
+from the docs; they match the Warning thresholds in `skills/status/SKILL.md` Step 2.
 
 ## Best Practices
 

@@ -36,13 +36,16 @@ A learning qualifies for skill extraction when ANY of these are true:
 Read the user's description. Search auto-memory for related entries:
 
 ```bash
-# Claude Code replaces EVERY non-alphanumeric character in the resolved absolute cwd
+# Claude Code replaces EVERY non-alphanumeric character in the resolved absolute path
 # with a single "-" (dots, spaces and CJK included).
-MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+# The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
+# share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
+ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify first; a missing directory means "wrong path", not "auto-memory has nothing".
-# Under LC_ALL=C sed goes per byte, so glob as a fallback:
-#   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
-grep -rni "<keywords>" "$MEMORY_DIR/"
+# Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
+#   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
+for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done   # one search per keyword
 ```
 
 If found in auto-memory, use those entries as source material. If not, use the user's description directly.

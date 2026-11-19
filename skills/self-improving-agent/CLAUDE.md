@@ -120,3 +120,16 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   (topic files too) instead of only `MEMORY.md`, and promote removes the entry from whichever file holds it;
   `reference/memory-architecture.md` no longer says worktrees get separate memory directories (the docs say they share one).
   After a dry run: promote's report template names the file the entry came from, and an emptied topic file is deleted only after asking.
+- 2026-11-19 (same audit, remaining items): the five skills compute the memory directory from the git repo root
+  (`git rev-parse --git-common-dir`) instead of `pwd -P`. Tested 2026-11-19 with `claude -p`: a session opened in
+  `lawdesk-ai/frontend` and one in a `git worktree` both reported the repo root's directory. `skills/status/SKILL.md`
+  reads `CLAUDE.md` and `.claude/rules/` from the checkout root, uses `find` instead of an unmatched zsh glob, gives a command
+  for "Last updated", says how the capacity rows combine (topic files are counted, not scored) and what brief mode's rules count is, and no longer
+  claims a Duplicates count it has no command for. `skills/remember/SKILL.md` Step 2 searches once per keyword;
+  promote and review name the repo path of `promotion-rules.md`; `reference/memory-architecture.md` capacity table
+  cites the docs and matches status's thresholds.
+  After two dry runs (2026-11-19): every skill's fallback lookup uses `find` instead of an `ls` glob (zsh aborts on no match);
+  status stops with "Memory directory not found" instead of printing zeros, does not score topic files, and defines
+  `{{bar}}`, `{{names}}`, the recommendations and the brief-mode emoji; promote, review and memory-analyst read the root
+  `CLAUDE.md` / `.claude/rules/`, not the cwd's; promote and extract search once per keyword like remember; remember's
+  new topic file copies the existing files' frontmatter; promote's report says "lines used".

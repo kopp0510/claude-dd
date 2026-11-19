@@ -29,13 +29,16 @@ Parse the user's description. If vague, ask one clarifying question:
 
 ```bash
 # Search MEMORY.md for related entries. Claude Code replaces EVERY non-alphanumeric
-# character in the resolved absolute cwd with a single "-" (dots, spaces and CJK included).
-MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+# character in the resolved absolute path with a single "-" (dots, spaces and CJK included).
+# The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
+# share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
+ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify first; a missing directory means "wrong path", not "nothing to promote".
-# Under LC_ALL=C sed goes per byte, so glob as a fallback:
-#   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
+# Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
+#   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
 # MEMORY.md may only be an index; search the topic files too.
-grep -rni "<keywords>" "$MEMORY_DIR"
+for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done   # one search per keyword
 ```
 
 Show the matching entries and confirm they're what the user means.
@@ -47,6 +50,9 @@ Show the matching entries and confirm they're what the user means.
 | Applies to entire project | `./CLAUDE.md` | "Use pnpm, not npm" |
 | Applies to specific file types | `.claude/rules/<topic>.md` | "API handlers need validation" |
 | Applies to all your projects | `templates/global/CLAUDE.md` in the claude-dd checkout (not `~/.claude/CLAUDE.md`) | "Prefer explicit error handling" |
+
+`./CLAUDE.md` and `.claude/rules/` mean the checkout root (`git rev-parse --show-toplevel`, or the cwd
+outside a git repo), not the directory the session was opened in.
 
 If the user didn't specify a target, recommend one based on scope.
 
@@ -119,7 +125,7 @@ Ask the user to confirm removal. Then edit the file(s) it is in to remove the pr
 
 Rule: "{{distilled rule}}"
 Source: {{file}} line {{n}} (removed)
-MEMORY.md: {{lines}}/200 lines remaining
+MEMORY.md: {{lines}}/200 lines used
 
 The pattern is now an enforced instruction. Claude will follow it in all future sessions.
 ```
@@ -127,7 +133,7 @@ The pattern is now an enforced instruction. Claude will follow it in all future 
 ## Promotion Decision Guide
 
 ### Promote when:
-- It meets "Promotion Criteria" and the "Scoring Guide" threshold in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md` (the only definition; the other bullets here are signals, not a separate threshold)
+- It meets "Promotion Criteria" and the "Scoring Guide" threshold in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md` (in the claude-dd repo: `skills/self-improving-agent/reference/promotion-rules.md`; the only definition; the other bullets here are signals, not a separate threshold)
 - You corrected Claude about it more than once
 - It's a project convention that any contributor should know
 - It prevents a recurring mistake

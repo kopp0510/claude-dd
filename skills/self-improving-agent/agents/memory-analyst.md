@@ -24,7 +24,7 @@ You analyze `~/.claude/projects/<project>/memory/` to find:
 - Note total line counts and file sizes
 
 ### 2. Cross-reference with CLAUDE.md
-- Read `./CLAUDE.md` and `~/.claude/CLAUDE.md`
+- Read the root `CLAUDE.md` (`git rev-parse --show-toplevel`, or the cwd outside a git repo) and `~/.claude/CLAUDE.md`
 - Read all files in `.claude/rules/`
 - Identify duplicates, contradictions, and gaps
 

@@ -23,16 +23,19 @@ Performs a comprehensive audit of Claude Code's auto-memory and produces actiona
 
 ```bash
 # Find the project's auto-memory directory.
-# Claude Code encodes the RESOLVED absolute cwd by replacing EVERY non-alphanumeric
+# Claude Code encodes the RESOLVED absolute path by replacing EVERY non-alphanumeric
 # character with a single "-" — not just "/" and "_". Dots, spaces and CJK all become "-":
 #   /Users/me/pj/my_project/v1.2  ->  -Users-me-pj-my-project-v1-2
 #   /Users/me/pj/測試 目錄        ->  -Users-me-pj-------
-MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+# The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
+# share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
+ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 
 # ALWAYS verify the directory exists before concluding anything about auto-memory.
 # Under LC_ALL=C/POSIX, sed substitutes per byte rather than per character, so any
-# non-ASCII path segment produces too many dashes. Fall back to a glob in that case:
-#   ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
+# non-ASCII path segment produces too many dashes. List candidates in that case:
+#   find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
 # Report "auto-memory may be disabled" only after BOTH lookups come up empty.
 
 # List all memory files
@@ -62,7 +65,8 @@ Analyze each entry for:
    - Entries that could merge into one concise rule
 
 4. **Promotion candidates** — the criteria and the score threshold are defined in one place only:
-   "Promotion Criteria" and "Scoring Guide" in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`.
+   "Promotion Criteria" and "Scoring Guide" in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`
+   (in the claude-dd repo: `skills/self-improving-agent/reference/promotion-rules.md`).
    Read that file and apply it as written; do not restate the thresholds from memory. In addition:
    - Not already in CLAUDE.md or `.claude/rules/`
 
@@ -75,12 +79,12 @@ If `MEMORY.md` references or the directory contains additional files (`debugging
 
 ### Step 4: Cross-reference with CLAUDE.md
 
-Read the project's `CLAUDE.md` (if it exists) and compare:
+Read the project's root `CLAUDE.md` (`git rev-parse --show-toplevel`, or the cwd outside a git repo; if it exists) and compare:
 - Are there MEMORY.md entries that duplicate CLAUDE.md rules? (→ remove from memory)
 - Are there MEMORY.md entries that contradict CLAUDE.md? (→ flag conflict)
 - Are there MEMORY.md patterns not yet in CLAUDE.md that should be? (→ promotion candidate)
 
-Also check `.claude/rules/` directory for existing scoped rules.
+Also check the `.claude/rules/` directory under that same root for existing scoped rules.
 
 ### Step 5: Generate report
 

@@ -39,14 +39,20 @@ Extract from the user's input:
 ### Step 2: Check for duplicates
 
 ```bash
-# Claude Code replaces EVERY non-alphanumeric character in the resolved absolute cwd
+# Claude Code replaces EVERY non-alphanumeric character in the resolved absolute path
 # with a single "-" (dots, spaces and CJK included).
-MEMORY_DIR="$HOME/.claude/projects/$(pwd -P | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+# The directory is keyed by the git repo root, not the cwd: subdirectories and worktrees
+# share the main checkout's directory (tested 2026-11-19). Outside a git repo it is the cwd.
+ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
 # Verify before writing — a wrong path loses the entry silently while still looking saved.
-# Under LC_ALL=C sed goes per byte, so glob as a fallback:
-#   [ -d "$MEMORY_DIR" ] || ls -d ~/.claude/projects/*"$(basename "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')"*
+# Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
+#   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
 # MEMORY.md may only be an index; search the topic files too.
-grep -rni "<keywords>" "$MEMORY_DIR" 2>/dev/null
+# Search once per keyword, not one phrase: a phrase misses entries worded differently.
+# Pick 2-4 distinctive words from the fact (tool, file or command names, error text);
+# skip common words that would match everything. -F keeps dots and brackets literal.
+for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done
 ```
 
 If a similar entry exists:
@@ -58,7 +64,9 @@ If a similar entry exists:
 First look at how `MEMORY.md` is laid out:
 
 - **It is an index** (its lines look like `- [title](file.md) — one-line hook`): write the fact to a new
-  topic file in `$MEMORY_DIR` (e.g. `$MEMORY_DIR/<short-name>.md`), then add one index line for it to `MEMORY.md`:
+  topic file in `$MEMORY_DIR` (e.g. `$MEMORY_DIR/<short-name>.md`), then add one index line for it to `MEMORY.md`.
+  Copy the layout of the existing topic files: if they start with frontmatter (`name`, `description`, …),
+  give the new one the same fields; if they don't, write the fact as plain text.
 
   ```markdown
   - [{{short title}}]({{short-name}}.md) — {{one-line hook}}
@@ -71,7 +79,7 @@ First look at how `MEMORY.md` is laid out:
   - {{concise fact or pattern}}
   ```
 
-Keep entries concise — one line when possible. Auto-memory entries don't need timestamps, IDs, or metadata. They're notes, not database records.
+Keep entries concise — one line when possible. Entries don't need timestamps or IDs (topic-file frontmatter that matches the existing files is fine). They're notes, not database records.
 
 If MEMORY.md is over 180 lines, warn the user:
 
@@ -96,7 +104,7 @@ If the knowledge sounds like a rule (imperative, always/never, convention):
   "{{entry}}"
 
   MEMORY.md: {{n}}/200 lines
-  Claude will see this at the start of every session in this project.
+  Claude sees MEMORY.md at the start of every session in this project (a topic file only through its index line).
 ```
 
 ## What NOT to use /self-improving-agent:remember for
