@@ -97,8 +97,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱，並**同批**同步兩份 README 的
    promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）
 3. 執行 `./install-dd-pipeline.sh --force` 部署
-4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Task `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
-5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：做之前先 Read `docs/measurements/CLAUDE.md` 整份：怎麼組兩個 arm、看哪個欄位、量 Task 派出的 subagent 在「量 agent 指令本體」一節，跑之前要避開的在「已知的坑」一節（含先關掉 advisor）
+4. 若 agent 被某個 wrapper skill 調用，確認該 skill 的 Agent 工具 `subagent_type` 先試 `<name>:<name>`（plugin 命名空間）再 fallback `<name>`（本地）
+5. 改 agent 指令本體想知道有沒有變好，用 A/B 實測：做之前先 Read `docs/measurements/CLAUDE.md` 整份：怎麼組兩個 arm、看哪個欄位、量 Agent 工具派出的 subagent 在「量 agent 指令本體」一節，跑之前要避開的在「已知的坑」一節（含先關掉 advisor）
 
 ## 新增 Command 步驟
 

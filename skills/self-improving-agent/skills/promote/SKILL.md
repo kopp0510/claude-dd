@@ -70,7 +70,7 @@ Transform the learning from auto-memory's note format into CLAUDE.md's instructi
 **After** (CLAUDE.md — prescriptive):
 ```markdown
 ## Build & Dependencies
-- Package manager: pnpm (not npm). Use `pnpm install`.
+- Package manager: pnpm (not npm). Use `pnpm install` — the lock file is `pnpm-lock.yaml`.
 ```
 
 **Rules for distillation:**

@@ -32,7 +32,7 @@ prompt 存成 `<名字>.prompt.txt` 放在 jsonl 旁邊，不然事後核對不�
 prompt，再花 opus 的錢。**快慢看 `result.duration_api_ms` 不看 wall**：2026-10-02 五發實測 api 58–84s、
 非模型開銷 35–170s，用 wall 做 n=1 比較會得到相反結論。**命中數也要 n≥2**：單發 reviewer 命中的是隨機
 子集，五發各中 3 項中的 2 項、子集還不同。
-**量 Task 派出的 subagent 時**：它跑的是 agent 定義裡的 `model`，父 session 的 `--model` 不影響它
+**量 Agent 工具派出的 subagent 時**：它跑的是 agent 定義裡的 `model`，父 session 的 `--model` 不影響它
 （實測 haiku 父 session 派 code-reviewer，subagent 的 `message.model` 是 `claude-opus-5-5`）——
 父層可以用 haiku 省錢，但別誤以為那樣是在測 haiku 的 reviewer。數字的位置：subagent 自己的
 `duration_ms`／`tool_uses`／`total_tokens` 在「帶 `output_file` 的 task 記錄」的 `usage`

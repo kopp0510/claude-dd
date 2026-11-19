@@ -123,7 +123,7 @@ Memory Health:
 ## When to Use
 
 - After completing a major feature or debugging session
-- When `/self-improving-agent:status` shows MEMORY.md is over 150 lines
+- When `/self-improving-agent:status` shows MEMORY.md at 120 lines or more (its Warning threshold)
 - Weekly during active development
 - Before starting a new project phase
 - After onboarding a new team member (review what Claude learned)

@@ -43,7 +43,7 @@ For each MEMORY.md entry, evaluate:
 - Patterns that contradict current CLAUDE.md
 
 **Promotion signals:**
-- Actionable (can be written as "Do X" / "Never Y")
+- Actionable (can be written as a concrete instruction with a one-clause reason)
 - Broadly applicable (not a one-time debugging note)
 - Not already in CLAUDE.md or rules/
 - High impact (prevents common mistakes)

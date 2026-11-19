@@ -133,3 +133,7 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   `{{bar}}`, `{{names}}`, the recommendations and the brief-mode emoji; promote, review and memory-analyst read the root
   `CLAUDE.md` / `.claude/rules/`, not the cwd's; promote and extract search once per keyword like remember; remember's
   new topic file copies the existing files' frontmatter; promote's report says "lines used".
+- 2026-11-19 (same audit, review of the edits above): `agents/memory-analyst.md` "Promotion signals" no longer says
+  "Do X" / "Never Y" (it now matches `reference/promotion-rules.md`); `skills/review/SKILL.md` "When to Use" says 120 lines
+  (status's Warning threshold) instead of 150; the "After" example in `skills/promote/SKILL.md` Step 4 carries a one-clause reason,
+  like the rule below it asks for.
