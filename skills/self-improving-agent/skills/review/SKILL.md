@@ -54,13 +54,13 @@ the topic file it points to.
 
 1. **Recurrence indicators**
    - Same concept appears multiple times (different wording)
-   - References to "again" or "still" or "keeps happening"
+   - References to "again" or "still" or "keeps happening" (or the same idea in the language the memory is written in)
    - Similar entries across topic files
 
 2. **Staleness indicators**
-   - References files that no longer exist (`find` to verify)
-   - Mentions outdated tools, versions, or commands
-   - Contradicts current CLAUDE.md rules
+   - References files that no longer exist (`find` to verify).
+     Resolve a bare filename inside a markdown link against the memory directory. A path that contains "/": check an absolute or `~/` path as written; a relative one exists if it is found at the checkout root or anywhere below it (`find <root> \( -name node_modules -o -name .git \) -prune -o -path "*/<path>" -print`), because a memory may record paths relative to a sub-repo or subdirectory. Before searching, drop a trailing "/" from the path and split a `{a,b}` shorthand into one path per name; `find` matches neither as written. A bare filename in prose that is not a link target is not checked. A path the entry itself says was moved or removed is not stale.
+   - Mentions outdated tools, versions, or commands (check against the project's own files: manifests, lock files, configs; with nothing to check against, do not call it stale)
 
 3. **Consolidation opportunities**
    - Multiple entries about the same topic (e.g., three lines about testing)
@@ -71,7 +71,9 @@ the topic file it points to.
    (in the claude-dd repo: `skills/self-improving-agent/reference/promotion-rules.md`).
    Read that file and apply it as written; do not restate the thresholds from memory. A candidate meets both:
    all three Promotion Criteria and the Scoring Guide threshold (the same test `/self-improving-agent:promote` uses). In addition:
-   - Not already in a CLAUDE.md that loads for this project (see Step 4 for which files) or in `.claude/rules/`
+   - Not already in a CLAUDE.md that loads for this project (see Step 4 for which files) or in `.claude/rules/`.
+     "Already in" means the entry's main instruction is stated there; a shared topic alone does not count.
+   - An entry that matches "Don't promote" under "Anti-Patterns" in `promotion-rules.md` is not a candidate.
 
 ### Step 3: Read topic files
 
@@ -86,6 +88,7 @@ Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md
 (`git rev-parse --show-toplevel`, or the cwd outside a git repo), and `~/.claude/CLAUDE.md`. Compare:
 - Are there MEMORY.md entries that duplicate CLAUDE.md rules? (→ recommend removing them from memory; this skill only reports)
 - Are there MEMORY.md entries that contradict CLAUDE.md? (→ flag conflict)
+  A disagreement with what CLAUDE.md says (a rule or a stated fact) is reported under Conflicts only; do not also report that same point as stale.
 - Are there MEMORY.md patterns not yet in CLAUDE.md that should be? (→ promotion candidate)
 
 Also check the `.claude/rules/` directory under that same root for existing scoped rules (no directory means 0 files).
@@ -104,7 +107,7 @@ Memory Health:
   Rules:            {{count}} files in .claude/rules/
 
 🎯 Promotion Candidates ({{count}}):
-  1. "{{pattern}}" — seen {{n}}x, applies broadly
+  1. "{{pattern}}" — score {{total}} (durability {{d}}, impact {{i}}, scope {{s}})
      → Suggest: {{target}} (CLAUDE.md / .claude/rules/{{name}}.md / all projects: the global target in promotion-rules.md "Target Selection")
   2. ...
 
@@ -124,7 +127,12 @@ Memory Health:
   - {{actionable suggestion}}
 ```
 
-`{{names}}`: the first 5 topic file names without `.md`, then `… N more` if there are more (same as `/self-improving-agent:status`).
+- `{{names}}`: the first 5 topic file names without `.md`, in alphabetical order, separated by ", ", then `… N more` if there are more, as in `a, b, c, d, e, … 4 more` (same as `/self-improving-agent:status`).
+- `CLAUDE.md:` one line per CLAUDE.md file read in Step 4 (its path and line count).
+- Promotion Candidates are listed by total score, highest first; equal scores keep their MEMORY.md order. `{{pattern}}` is the entry's main instruction in one line.
+- The `{{count}}` in each section header counts entries, not lines or paths.
+- `Line {{n}}` under Stale Entries and Conflicts is a line number in MEMORY.md; when the problem is inside a topic file, write `<file>:<line>` instead.
+- An entry already written in CLAUDE.md goes under Recommendations ("remove from memory"), not under Promotion Candidates.
 
 ## When to Use
 

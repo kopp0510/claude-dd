@@ -137,11 +137,12 @@ done
 
 - `{{bar}}`: 10 characters, one `█` per full 10% of 200 lines and `░` for the rest, then the percentage (`██░░░░░░░░ 20%`).
 - `{{emoji}}`: 🟢, 🟡 or 🔴 for the MEMORY.md line count, per "Interpretation" below.
-- `{{names}}`: the first 5 topic file names without `.md`, then `… N more` if there are more.
+- `{{names}}`: the first 5 topic file names without `.md`, in alphabetical order, separated by ", ", then `… N more` if there are more, as in `a, b, c, d, e, … 4 more`.
+- "Stale refs" is a mechanical existence check on what Step 3 printed. `/self-improving-agent:review` reads the entries and may report fewer: it does not count a path the entry itself says was moved or removed, and it looks for a relative path anywhere below the root.
 - Recommendations: one line per row that is Warning or Critical, and none when all are Healthy —
   MEMORY.md: run `/self-improving-agent:review` to promote or prune entries;
   CLAUDE.md: move sections that apply to only part of the code into `.claude/rules/` (see `/self-improving-agent:promote`);
-  stale: delete or fix the entries Step 3 printed.
+  stale: read each entry Step 3 printed, then delete or fix it; keep an entry that itself says the path was moved or removed.
 
 ### Brief mode
 
@@ -164,5 +165,5 @@ and the status is the overall Capacity from Step 2: Healthy 🟢, Warning 🟡, 
 
 - Run `/self-improving-agent:status --brief` as a quick check anytime
 - If capacity is yellow+, run `/self-improving-agent:review` to identify promotion candidates
-- Stale entries waste space — delete references to files that no longer exist
+- Stale entries waste space — delete references to files that no longer exist (not a path the entry itself says was moved or removed)
 - Topic files are fine — Claude creates them to keep MEMORY.md under 200 lines

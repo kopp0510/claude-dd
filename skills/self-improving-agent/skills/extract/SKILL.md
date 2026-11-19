@@ -45,7 +45,10 @@ MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[
 # Verify first; a missing directory means "wrong path", not "auto-memory has nothing".
 # Under LC_ALL=C sed goes per byte, so list candidates as a fallback:
 #   [ -d "$MEMORY_DIR" ] || find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
-for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done   # one search per keyword
+# Search once per keyword, not one phrase: a phrase misses entries worded differently.
+# Pick 2-4 distinctive words from the description (tool, file or command names, error text);
+# skip common words that would match everything. -F keeps dots and brackets literal.
+for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done
 ```
 
 If found in auto-memory, use those entries as source material. If not, use the user's description directly.
