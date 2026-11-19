@@ -27,6 +27,10 @@
   並寫明各列容量怎麼合成一格（topic 檔只計數、不評分：索引式 MEMORY.md 本來就會有很多 topic 檔）、「Last updated」用什麼指令、brief 模式的 rules 數是什麼；拿掉沒有指令可算的 Duplicates 數。
   remember 查重改成每個關鍵字各搜一次；promote、review 寫出 `promotion-rules.md` 在 repo 裡的路徑。
 - `skills/frontend-design/SKILL.md` 的修改聲明不再說「內文已更新至上游最新版」：內文是 2026-06-23（`a372fe3`）同步的，上游之後改寫過。
+- self-improving-agent 三處沒跟著先前的改動一起改：`agents/memory-analyst.md` 的 Actionable 判準還寫「Never Y」（`reference/promotion-rules.md` 已改成帶理由的寫法）；
+  `skills/review/SKILL.md` 還寫 MEMORY.md 超過 150 行才跑（status 的 Warning 是 120 行起）；`skills/promote/SKILL.md` 的改寫範例沒帶理由，和它下面要求「祈使句加一個理由」的規則不一致。
+- `scripts/githooks/CLAUDE.md` 的 tag 說明更正：`v1.6.14` 沒有 `claude-md-max-bytes`，`v1.6.15` 起才有（2026-11-18 那次改成「`v1.6.14` 到 `v1.6.16` 都帶」是錯的）。
+- `CLAUDE.md` 與 `docs/measurements/CLAUDE.md` 三處把派工工具叫 `Task` 的地方改成 `Agent 工具`（上次只改了 `commands/`、`skills/` 那幾處）。
 
 ## 1.6.16 — 2026-11-17
 
