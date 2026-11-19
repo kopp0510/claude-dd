@@ -109,7 +109,7 @@ paths:
 
 ### Step 6: Clean up auto-memory
 
-After promoting, remove the original entry (a topic file plus its MEMORY.md index line, or a line in MEMORY.md itself):
+After promoting, remove the original entry (in a topic file plus its MEMORY.md index line, or in MEMORY.md itself):
 
 ```bash
 # Show what will be removed. Use the keywords that found the entry in Step 2, not the user's wording
