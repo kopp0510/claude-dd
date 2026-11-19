@@ -77,6 +77,11 @@ plain line count ("User global" in Step 4) and is not scored against this table.
 
 For each MEMORY.md entry that references a file path:
 ```bash
+# A new command starts without Step 1's variables: compute them again.
+ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+PROJ=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+
 # Verify referenced files still exist. There are TWO kinds of reference and they resolve
 # against different roots — lumping them together is how this check breaks:
 #

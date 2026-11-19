@@ -37,6 +37,7 @@ MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[
 # non-ASCII path segment produces too many dashes. List candidates in that case:
 #   find ~/.claude/projects -maxdepth 1 -name "*$(basename "${ROOT:-$PWD}" | sed 's/[^a-zA-Z0-9]/-/g')"   # find: zsh aborts on an unmatched glob
 # Report "auto-memory may be disabled" only after BOTH lookups come up empty.
+# Several candidates and none clearly this project: list them and stop, as /self-improving-agent:status does.
 
 # List all memory files
 ls -la "$MEMORY_DIR"/
@@ -48,7 +49,8 @@ If neither lookup above finds a memory directory, report that auto-memory may be
 
 Read the full `MEMORY.md` file. Count lines and check against the 200-line startup limit.
 
-Analyze each entry for:
+Analyze each entry for the four things below. When `MEMORY.md` is an index (lines like `- [title](file.md) — hook`), one entry is an index line together with
+the topic file it points to.
 
 1. **Recurrence indicators**
    - Same concept appears multiple times (different wording)
@@ -67,8 +69,9 @@ Analyze each entry for:
 4. **Promotion candidates** — the criteria and the score threshold are defined in one place only:
    "Promotion Criteria" and "Scoring Guide" in `~/.claude/skills/self-improving-agent/reference/promotion-rules.md`
    (in the claude-dd repo: `skills/self-improving-agent/reference/promotion-rules.md`).
-   Read that file and apply it as written; do not restate the thresholds from memory. In addition:
-   - Not already in CLAUDE.md or `.claude/rules/`
+   Read that file and apply it as written; do not restate the thresholds from memory. A candidate meets both:
+   all three Promotion Criteria and the Scoring Guide threshold (the same test `/self-improving-agent:promote` uses). In addition:
+   - Not already in a CLAUDE.md that loads for this project (see Step 4 for which files) or in `.claude/rules/`
 
 ### Step 3: Read topic files
 
@@ -79,12 +82,13 @@ If `MEMORY.md` references or the directory contains additional files (`debugging
 
 ### Step 4: Cross-reference with CLAUDE.md
 
-Read the project's root `CLAUDE.md` (`git rev-parse --show-toplevel`, or the cwd outside a git repo; if it exists) and compare:
-- Are there MEMORY.md entries that duplicate CLAUDE.md rules? (→ remove from memory)
+Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md` and `.claude/CLAUDE.md` under the checkout root
+(`git rev-parse --show-toplevel`, or the cwd outside a git repo), and `~/.claude/CLAUDE.md`. Compare:
+- Are there MEMORY.md entries that duplicate CLAUDE.md rules? (→ recommend removing them from memory; this skill only reports)
 - Are there MEMORY.md entries that contradict CLAUDE.md? (→ flag conflict)
 - Are there MEMORY.md patterns not yet in CLAUDE.md that should be? (→ promotion candidate)
 
-Also check the `.claude/rules/` directory under that same root for existing scoped rules.
+Also check the `.claude/rules/` directory under that same root for existing scoped rules (no directory means 0 files).
 
 ### Step 5: Generate report
 
@@ -101,7 +105,7 @@ Memory Health:
 
 🎯 Promotion Candidates ({{count}}):
   1. "{{pattern}}" — seen {{n}}x, applies broadly
-     → Suggest: {{target}} (CLAUDE.md / .claude/rules/{{name}}.md)
+     → Suggest: {{target}} (CLAUDE.md / .claude/rules/{{name}}.md / all projects: the global target in promotion-rules.md "Target Selection")
   2. ...
 
 🗑️ Stale Entries ({{count}}):
@@ -119,6 +123,8 @@ Memory Health:
   - {{actionable suggestion}}
   - {{actionable suggestion}}
 ```
+
+`{{names}}`: the first 5 topic file names without `.md`, then `… N more` if there are more (same as `/self-improving-agent:status`).
 
 ## When to Use
 
