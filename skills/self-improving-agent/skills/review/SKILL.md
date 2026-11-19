@@ -42,7 +42,7 @@ MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[
 ls -la "$MEMORY_DIR"/
 ```
 
-If memory directory doesn't exist, report that auto-memory may be disabled. Suggest checking with `/memory`.
+If neither lookup above finds a memory directory, report that auto-memory may be disabled. Suggest checking with `/memory`.
 
 ### Step 2: Read and analyze MEMORY.md
 

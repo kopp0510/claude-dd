@@ -112,8 +112,12 @@ paths:
 After promoting, remove or mark the original entry (in a topic file plus its MEMORY.md index line, or in MEMORY.md itself):
 
 ```bash
-# Show what will be removed
-grep -rn "<pattern>" "$MEMORY_DIR"
+# Show what will be removed. Use the keywords that found the entry in Step 2, not the user's wording
+# (the note may be in another language). MEMORY_DIR is recomputed because a new command starts
+# without Step 2's variables.
+ROOT=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); ROOT=${ROOT%/.git}
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "${ROOT:-$(pwd -P)}" | sed 's/[^a-zA-Z0-9]/-/g')/memory"
+for k in "<keyword1>" "<keyword2>"; do grep -rniF -- "$k" "$MEMORY_DIR" 2>/dev/null; done
 ```
 
 Ask the user to confirm removal. Then edit the file(s) it is in to remove the promoted entry. If that leaves a topic file empty, ask before deleting it, and drop its MEMORY.md index line either way. This frees space for new learnings.
@@ -149,7 +153,7 @@ The pattern is now an enforced instruction. Claude will follow it in all future 
 | Use CLAUDE.md for | Use .claude/rules/ for |
 |---|---|
 | Global project rules | File-type-specific patterns |
-| Build commands | Testing conventions |
+| Build commands, test conventions | Rules for one kind of file (e.g. only `tests/api/**`) |
 | Architecture decisions | API design rules |
 | Team conventions | Framework-specific gotchas |
 
