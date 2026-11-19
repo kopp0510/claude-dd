@@ -140,3 +140,15 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   After a dry run of the three files (2026-11-19): `skills/promote/SKILL.md` Step 6 recomputes `MEMORY_DIR` and searches with Step 2's
   keywords instead of an undefined `<pattern>`; its "CLAUDE.md vs .claude/rules/" table puts test conventions under CLAUDE.md, as
   `reference/promotion-rules.md` does; `skills/review/SKILL.md` reports "auto-memory may be disabled" only when neither lookup finds a directory.
+- 2026-11-19 (same audit, the dry-run ambiguities whose answer already exists in a sibling file): `skills/review/SKILL.md` and
+  `agents/memory-analyst.md` define an entry of an index-style `MEMORY.md` (one index line plus its topic file), read the same CLAUDE.md files
+  (`CLAUDE.md` and `.claude/CLAUDE.md` under the checkout root, plus `~/.claude/CLAUDE.md`), and require both the three Promotion Criteria and
+  the score threshold, as `skills/promote/SKILL.md` already did; an entry already written in CLAUDE.md is not a candidate. The agent's
+  "Promotion signals" are now the three criteria of `reference/promotion-rules.md` ("Broadly applicable" and "High impact" had no matching
+  sentence there; impact and scope are scored by the table). A missing `.claude/rules/` counts as 0 files. Review's template names the
+  all-projects target and defines `{{names}}` like status; it lists candidates and stops when the fallback finds several directories, like status.
+  `skills/promote/SKILL.md` Step 6 no longer says "or mark" (no way to mark was defined), says an empty topic file is one with nothing but
+  frontmatter, and Step 7 names both files when the entry was a topic file plus an index line. `skills/status/SKILL.md` Step 3 recomputes
+  `MEMORY_DIR` and `PROJ` (a new command starts without Step 1's variables; the old block ran `grep` on `/MEMORY.md`).
+  Not changed, because no file in this directory answers them (new rules, not alignments): what replaces `seen {{n}}x`, whether promote waits
+  when no target is given, where the Decision Guide gates the workflow, stale versus conflict, the language of signal words and of the distilled rule.

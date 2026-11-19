@@ -34,6 +34,12 @@
 - self-improving-agent 乾跑（2026-11-19）找到的三處：promote 第 6 步的預覽指令原本用沒定義的 `<pattern>`、而且 `$MEMORY_DIR` 只在第 2 步算過，
   新開的指令裡是空的 —— 改成重算路徑、沿用第 2 步的關鍵字逐個搜；promote 的「CLAUDE.md vs .claude/rules/」表把測試慣例放在 rules 那一欄，
   和 `reference/promotion-rules.md`（放 CLAUDE.md）相反，改成一致；review 有一句「目錄不在就回報 auto-memory 可能停用」，和上面註解的「兩種查法都落空才回報」不一致，改成後者。
+- self-improving-agent 三次乾跑回報的含糊處裡，答案已經寫在同一個 skill 別的檔的那幾處，改成和那個檔一致：
+  review 與 memory-analyst 寫明索引式 `MEMORY.md` 的一條 = 一行索引加它指的主題檔；兩邊讀同一組 CLAUDE.md（checkout 根目錄的 `CLAUDE.md`、`.claude/CLAUDE.md` 與 `~/.claude/CLAUDE.md`，原本 review 只讀一份、memory-analyst 讀兩份）；
+  候選要同時過 `reference/promotion-rules.md` 的三條 Promotion Criteria 與分數門檻（和 promote 的寫法一樣），已經寫進 CLAUDE.md 的不算候選；
+  memory-analyst 的 Promotion signals 換成規則檔那三條（原本的「Broadly applicable」「High impact」在規則檔沒有對應句）；`.claude/rules/` 不存在算 0 個檔；
+  review 的報告範本補上全專案通用的目標與 `{{names}}` 的定義（照 status）；promote 拿掉沒定義的「or mark」、寫明空的主題檔是只剩 frontmatter、來源兩處時都寫；
+  status 第 3 步的指令區塊補上 `MEMORY_DIR`、`PROJ` 的重算（原本只在第 1 步算過，新開的指令裡是空的，`grep` 會去讀 `/MEMORY.md`）。
 
 ### Changed
 

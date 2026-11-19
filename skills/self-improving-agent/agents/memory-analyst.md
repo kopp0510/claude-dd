@@ -24,12 +24,14 @@ You analyze `~/.claude/projects/<project>/memory/` to find:
 - Note total line counts and file sizes
 
 ### 2. Cross-reference with CLAUDE.md
-- Read the root `CLAUDE.md` (`git rev-parse --show-toplevel`, or the cwd outside a git repo) and `~/.claude/CLAUDE.md`
-- Read all files in `.claude/rules/`
+- Read the CLAUDE.md files that load for this project, whichever exist: `CLAUDE.md` and `.claude/CLAUDE.md` under the checkout root
+  (`git rev-parse --show-toplevel`, or the cwd outside a git repo), and `~/.claude/CLAUDE.md`
+- Read all files in `.claude/rules/` under that root (no directory means 0 files)
 - Identify duplicates, contradictions, and gaps
 
 ### 3. Detect patterns
-For each MEMORY.md entry, evaluate:
+For each MEMORY.md entry, evaluate the signals below. When `MEMORY.md` is an index (lines like `- [title](file.md) — hook`), one entry is an index line together with
+the topic file it points to.
 
 **Recurrence signals:**
 - Same concept in multiple entries (paraphrased)
@@ -42,11 +44,11 @@ For each MEMORY.md entry, evaluate:
 - References to removed dependencies
 - Patterns that contradict current CLAUDE.md
 
-**Promotion signals:**
+**Promotion signals** (the three Promotion Criteria in `reference/promotion-rules.md`, plus one check; impact and scope are scored in step 4):
+- Proven (appeared in 2+ sessions or confirmed correct after testing)
 - Actionable (can be written as a concrete instruction with a one-clause reason)
-- Broadly applicable (not a one-time debugging note)
-- Not already in CLAUDE.md or rules/
-- High impact (prevents common mistakes)
+- Durable (will still be true in 30+ days)
+- Not already in a CLAUDE.md read in step 2 or in `.claude/rules/`
 
 ### 4. Score each entry
 
@@ -57,7 +59,8 @@ use it as written; do not score from memory. If you cannot read the file, say so
 leave the entries unscored. With no scores there are no promotion candidates: in step 5 leave that list
 empty and say why; the other lists do not depend on scores.
 
-Promotion candidates: total score ≥ 6
+Promotion candidates: total score ≥ 6 and all four promotion signals above hold (the same test `/self-improving-agent:review` uses).
+An entry that scores ≥ 6 but is already written in CLAUDE.md or rules/ is not a candidate: recommend removing it from memory.
 
 ### 5. Generate report
 
