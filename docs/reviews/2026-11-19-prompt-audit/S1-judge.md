@@ -116,7 +116,10 @@
 
 5. `tests/test-install.sh`（改了安裝完成訊息之後）：exit 0，最後一則是 T11 的 ✅。
 
-6. 部署（2026-11-20）：`bash ./install-dd-pipeline.sh --force`，exit 0；`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同，改到的四個 skill 目錄 `diff -rq` 沒有輸出，`--check` 沒有列出不同。指標可達性的新臂是部署之後跑的。
+6. 部署（2026-11-20）：`bash ./install-dd-pipeline.sh --force`，exit 0；`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同，改到的四個 skill 目錄 `diff -rq` 沒有輸出；`--check` exit 0，輸出裡「與 repo 不同」0 行（skill 列「已安裝：13 / 13」、agent「已安裝：4 / 4」）。指標可達性的新臂是部署之後跑的。
+   第二批乾跑用的那棵樹和 commit 進來的文字相同：`diff -rq <scratchpad>/sia/new2/skills/self-improving-agent skills/self-improving-agent` 只印 `Only in skills/self-improving-agent: CLAUDE.md`。
+
+7. CI 的每一個 `run:` 步驟在本機各跑一次（`/bin/bash` 3.2，從 `.github/workflows/ci.yml` 抽出來；開跑時工作目錄等於 `c360152`，跑的途中只改了 `docs/measurements/2026-11-20-domain-traps-pointer.md` 與本檔）：lint 22 步、bash32 7 步，29 步都 exit 0。GitHub 上的 CI 沒跑（沒有 push）。
 
 乾跑留下、沒改的卡住句子（那幾發的行為是對的，是文字讓它們要猜）：記在 `skills/self-improving-agent/CLAUDE.md` 的「Left by the step-5 dry runs」與它前面的「Still not changed」兩段。
 
