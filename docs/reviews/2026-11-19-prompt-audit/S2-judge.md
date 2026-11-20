@@ -73,6 +73,14 @@
 - 量測用的拋棄式 repo（開在工作區底下）與它在 `~/.claude/projects/` 留下的兩個資料夾，量完刪掉了；刪完 `~/.claude/projects` 的清單與量測之前相同
 - ZCode 那一側沒有重新部署（留給使用者）
 
+步驟 6 之後（`f70a16d` 之後補記）：
+- 步驟 7：沒有要寫進 CLAUDE.md 的新教訓。這一段漏掉的那一句（README「核心工作法」）是根目錄 `CLAUDE.md`「觸發時機」已經規定要巡的，漏在沒照做，不是缺規則。
+- 步驟 8：範圍照 `scripts/check-claude-md.sh --segment-base`（`ba799a2`）算出 1 份，`templates/global/CLAUDE.md`；這一段在它裡面只動了搬回的三條。
+  能實跑的一句跑了：在拋棄式 repo 用真的 `git rebase` 做出衝突，衝突中 `git rev-parse --abbrev-ref HEAD` 印 `HEAD`、`.git/rebase-merge` 存在，`git rebase --abort` 之後印回分支名，與那一條寫的相同。
+  第一次跑這個檢查時 commit 沒建起來（zsh 不把變數裡的空白拆成參數），空 repo 裡同一條指令也印 `HEAD`，看起來像通過；先印出 commit 數再跑才算數。
+  沒有實跑的：Postgres 那幾句（`read committed` 是預設、`FOR UPDATE` 鎖不住不存在的列、advisory lock），沒有起資料庫驗。沒有要改的字，這一步沒有動檔。
+- 部署：`f70a16d` 之後 `--check` 的輸出裡「與 repo 不同」0 行，`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同（步驟 5 之後沒有再動會部署的檔）。
+
 ## 重疊與獨有項
 
 - 兩個都抓到：CHANGELOG 漏了 `8dcaa73`（B-s1、C-s1）
