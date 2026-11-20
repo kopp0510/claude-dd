@@ -125,7 +125,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 步驟 7 是「加」、步驟 8 是「整理」，順序不可反 —— 先跑 8 的話，7 會立刻把新東西塞進剛整理好的檔案。**步驟 7 跳過不代表步驟 8 跳過**：gate 逼著更新的 `CLAUDE.md` 一樣要審，gate 只確認「有寫」、不確認「寫得對」。步驟 3、4、8 都從段落起點算整段（步驟 1 之前用 `~/.claude/scripts/check-claude-md.sh --start-segment` 記下、`--segment-base` 取出；有 `task-planner` 進度表時以表上記的起點為準），只看最後一個 commit 會漏掉大半。用 `/dd-stop on` 暫停期間 `--start-segment` 不記新起點（印「迴圈暫停中」）：那時只做步驟 1、2。
 
-三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據。要派時，主對話在同一則訊息裡**直接平行派最少 3 個審查者**（一發只挖到一部分，五發實驗見 [CHANGELOG.md](CHANGELOG.md)，搜「兩發聯集平均」），全部回來後逐條讀程式碼查證；中間不另派裁決者（比較見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。派工要附什麼、報告怎麼落地，見 `skills/dd-loop/SKILL.md`（全域 §3.9 只留步驟清單與關卡，並明寫呼叫這個 skill）。
+三個品質機制各管一軸：simplifier 管可讀性、code-review 管正確性/合規（另有 12 項 Fowler 壞味道基準，只在該次變更有新增或重構程式碼時掛）、真實環境驗證管行為。步驟 4 有一個例外：該段 diff 全是資料、設定、註解或文件，或改動已被專案的機械檢查完全覆蓋時，不派 agent，改成自己逐條核對、在回報附證據。要派時，主對話在同一則訊息裡**直接平行派最少 3 個審查者**（一發只挖到一部分，五發實驗見 [CHANGELOG.md](CHANGELOG.md)，搜「兩發聯集平均」），全部回來後逐條讀程式碼查證；中間不另派裁決者（比較見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。派工要附什麼、報告怎麼落地，見 `skills/dd-loop/SKILL.md`（全域 §3.9 只留步驟清單、關卡與驗證教訓，並明寫呼叫這個 skill）。
 
 **要跨好幾段的工作**先交給 `task-planner`：拆成依序執行的段落，段落裡再列小任務，進度表寫進 `docs/designs/` 的設計文件。小任務只走步驟 1、2，全部 commit 完整段才跑步驟 3–8；草稿先交 `plan-review` 審過才寫檔，換 session 或 `/compact` 之後照表接手。不用你開口：複雜工作動手前要先估段落數，兩段以上就自己叫 `task-planner`（規則見 `templates/global/CLAUDE.md` §4.1 與 `skills/task-planner/SKILL.md`）。
 
