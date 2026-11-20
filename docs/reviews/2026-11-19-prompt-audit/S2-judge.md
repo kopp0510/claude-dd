@@ -55,7 +55,7 @@
    `git diff ba799a2 --stat`：模板 18 行加、2 行減，dd-loop 21 行減（只少最後一節）。
 2. 殘留。`git grep -n '領域陷阱\|domain pitfalls'` 命中的檔：`CHANGELOG.md`、`docs/measurements/2026-11-20-domain-traps-pointer.md`、`docs/reviews/2026-11-19-prompt-audit/` 的 `S1-a.md`、`S1-b.md`、`S1-c.md`、`S1-d.md`（這一組 S2 報告落地之後也會命中）；都是歷史紀錄。
    `grep -c 'read-then-write\|rebase-merge\|advisory lock' skills/dd-loop/SKILL.md`：0。
-3. CI 的每一個 `run:` 步驟在本機各跑一次（`/bin/bash` 3.2），跑了兩輪：第一輪工作目錄是修完審查發現之後的內容、這一組 S2 報告還沒寫；第二輪四份 S2 報告都在（之後只改了本檔這一行）。兩輪都是 lint 22 步、bash32 7 步，29 步都 exit 0。GitHub 上的 CI 沒跑（沒有 push）。
+3. CI 的每一個 `run:` 步驟在本機各跑一次（`/bin/bash` 3.2），跑了兩輪：第一輪工作目錄是修完審查發現之後的內容、這一組 S2 報告還沒寫；第二輪四份 S2 報告都在，但那四份與新的量測紀錄當時還沒進版控，用 `git ls-files`、`git grep` 列檔的步驟看不到它們（第三輪見本節最後）。兩輪都是 lint 22 步、bash32 7 步，29 步都 exit 0。GitHub 上的 CI 沒跑（沒有 push）。
 4. dd-loop 乾跑（部署之前；一個 general-purpose subagent 讀 repo 裡的 `skills/dd-loop/SKILL.md` 與模板 §3.9，派工寫明它 context 裡的全域檔是舊版、不算）：
    - 沒有句子還指向拿掉的那一節；它核過的節名與步驟指標都指得到（只有一處指到「專案自己的 `docs/reviews/CLAUDE.md`」，專案不一定有那個檔）
    - 它卡住或要猜的六處都不是這次搬動帶進來的，沒改，轉新段落：專案沒有 `docs/reviews/` 時要不要自己建；步驟 3、4 什麼時候可以並行；模板說「例外見 dd-loop」而 dd-loop 沒有「例外」這個字眼、那一條管不管步驟 3；沒有進度表時 `S<段落>` 與子目錄叫什麼；要修掉的是全部還是採納的 Critical／Important（模板與 dd-loop 的寫法不同）；「重跑時」指什麼時候。
@@ -72,6 +72,14 @@
 - 步驟 1 的巡查只 grep 了三條的關鍵字，沒有讀 README「核心工作法」那一段的句子；C 抓到的那一句是這樣漏的
 - 量測用的拋棄式 repo（開在工作區底下）與它在 `~/.claude/projects/` 留下的兩個資料夾，量完刪掉了；刪完 `~/.claude/projects` 的清單與量測之前相同
 - ZCode 那一側沒有重新部署（留給使用者）
+
+S2-a-1 的歸類（更正「發現」節）：那一節把它寫成「屬實、查了、沒有改字」，不是採納／駁回／需使用者決定三類之一，照那樣讀會是一條沒修的 Important 帶過了步驟 6。歸類是：
+- 這一段**駁回**。它要成立的是失敗情境（迴圈外、迴圈暫停中的 session 把這三條判成不適用），那是審查者自己列在「需要外部查證」的事；兩種各量 8 發，各 7 發照樣用到，沒量到它發生。
+  搬回的形式（與 v1.6.16 相同、沒有範圍句）是使用者選的；補不補範圍句照事先寫的規則定，不補。只量了 race 那一條、一個 prompt，駁回的依據就這麼多。
+- 文字缺口本身（§3.9「規則」的八條驗證教訓都沒有寫迴圈外適不適用，v1.6.16 就這樣）屬實，**轉新段落**：要補就八條一起補一句，不只這三條；記在工作區的待辦清單。
+- 審查者建議交使用者決定：沒有問，在回報裡講一行（這個改動部署後每個專案都載入）。
+
+README 那兩句：審查者 C 報告裡「與 ecfc89c 版逐行相同」是 `73cd7a5` 當時的狀態；步驟 4 之後那一行補了「驗證教訓」，現在與 `ecfc89c` 各差這一處（`git diff ecfc89c HEAD --stat -- README.md README.zh-TW.md` 各 1 行）。`DD_PIPELINE_ARCHITECTURE.md` 沒有再動。
 
 步驟 6 之後（`f70a16d` 之後補記）：
 - 步驟 7：沒有要寫進 CLAUDE.md 的新教訓。這一段漏掉的那一句（README「核心工作法」）是根目錄 `CLAUDE.md`「觸發時機」已經規定要巡的，漏在沒照做，不是缺規則。
