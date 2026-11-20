@@ -88,6 +88,7 @@ README 那兩句：審查者 C 報告裡「與 ecfc89c 版逐行相同」是 `73
   第一次跑這個檢查時 commit 沒建起來（zsh 不把變數裡的空白拆成參數），空 repo 裡同一條指令也印 `HEAD`，看起來像通過；先印出 commit 數再跑才算數。
   沒有實跑的：Postgres 那幾句（`read committed` 是預設、`FOR UPDATE` 鎖不住不存在的列、advisory lock），沒有起資料庫驗。沒有要改的字，這一步沒有動檔。
 - 部署：`f70a16d` 之後 `--check` 的輸出裡「與 repo 不同」0 行，`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同（步驟 5 之後沒有再動會部署的檔）。
+- CI 第三輪：在 `d11b98c` 的乾淨工作目錄（所有 S2 的檔都已進版控）把 29 個 `run:` 步驟再跑一次，29 步都 exit 0，跑完工作目錄仍然乾淨。這之後只加了這一行。GitHub 上的 CI 沒跑（沒有 push）。
 
 ## 重疊與獨有項
 
