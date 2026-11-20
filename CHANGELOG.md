@@ -56,7 +56,7 @@
   - `docs/measurements/2026-11-19-global-6.2-retry.md` 的結論改成只用它事先寫下的判定式下結論，「失敗後第一個動作」標成事後多看的一項、把照規則無效的發數寫出來；補上 `docs/measurements/CLAUDE.md` 的路徑。本檔 §6.2 那一條跟著改。
   - 根目錄 `CLAUDE.md`「新增 Skill 步驟」第 3 步補兩句（`ba799a2`，使用者 2026-11-20 同意）：沙盒臂停下、不寫或不搜時，報告要引得出 skill 原文才算過，依據是派工訊息或「猜的」就補文件再重跑、並跑一發舊版對照；鑑別法不要靠 skill 產出的內容，看紀錄檔裡的工具呼叫。
   - `scripts/githooks/CLAUDE.md` 的查法補一句：tag 用變數帶時要寫 `"${t}:…"`，zsh 會把 `"$t:scripts/…"` 的 `:s` 當修飾子、照樣回 0。
-  - `skills/frontend-design/SKILL.md` 寫明 `a372fe3` 是 claude-dd 自己的 commit；`docs/measurements/CLAUDE.md` 那句「哪幾條不是搬來的」補上 2026-11-19 新加的那一條；`DD_PIPELINE_ARCHITECTURE.md` 的 dd-loop 那句補上「領域陷阱」一節（那一節搬回全域模板後已拿掉，見下面「全域模板 §3.9 的三條」那一項）。
+  - `skills/frontend-design/SKILL.md` 寫明 `a372fe3` 是 claude-dd 自己的 commit；`docs/measurements/CLAUDE.md` 那句「哪幾條不是搬來的」補上 2026-11-19 新加的那一條；`DD_PIPELINE_ARCHITECTURE.md` 與兩份 README 的 dd-loop 那句補上「領域陷阱」一節（那一節搬回全域模板後已拿掉，見下面「全域模板 §3.9 的三條」那一項）。
 
 ### Changed
 
@@ -69,7 +69,7 @@
   - `reference/promotion-rules.md` 補上 Proven 怎麼從記憶判斷（條目自己記了兩次以上的發生、同一個教訓記在好幾條裡，或實際跑過的檢查結果）、專案是放好幾個 repo 的父目錄時 Scope 怎麼算、Scope 量的是規則適用的範圍（不是在哪裡學到的，也不是觸發它的那一個檔）。
   - review 範本的候選行改列分數（原本的 `seen {{n}}x` 沒有來源），範本下補各格的說明；`{{names}}` 照字母順序。memory-analyst 的報告順序照 review 的格式，拿掉沒定義的 freshness、organization。
   - promote 改寫的規則用目標檔的語言寫；promote、extract 的搜尋指令補上 remember 那三行「關鍵字怎麼挑」。
-- **全域模板 §6.2 的「不做：自動重試」補上範圍、理由與例外**：指的是沒讀錯誤訊息就原樣重跑；對方那一側的暫時性失敗（連線中斷、服務忙或被限流、檔案被鎖），
+- **全域模板 §6.2 的「不做：自動重試」補上範圍、理由與例外**（`8dcaa73`）：指的是沒讀錯誤訊息就原樣重跑；對方那一側的暫時性失敗（連線中斷、服務忙或被限流、檔案被鎖），
   而且指令重跑不會造成第二次副作用（讀取、查詢）時，可以等一下重試一次；本機指令跑到硬逾時不算（§6.7）。原句沒有範圍。
   來源是 2026-11-19 的 prompt audit（目標模型 Fable 5.2）。同日補了行為探針（新舊各 25 發，`docs/measurements/2026-11-19-global-6.2-retry.md`）：照事先寫下的判定式（服務 log 的請求數），新舊沒有差別。
   事後多看的一項（不在判定式裡）：對方直接關掉連線時，舊寫法先下 `lsof` 加 `curl -v` 查原因，新寫法直接再打一次；白名單沒有 `lsof` 的那一批，舊寫法 5 發都被擋（照規則無效），其中 1 發停下來回報、沒拿到資料。
@@ -80,7 +80,9 @@
     2026-11-20 部署後各開一個新 session 測一發：「審查這個專案的 CLAUDE.md」叫了 `claude-md-management:claude-md-improver`、「修 README.md 的錯字」沒叫任何 skill、「優化 skills/foo/SKILL.md」叫了 `skill-creator:skill-creator`、「整理 memory」叫了 `self-improving-agent`（每個只有一發，舊寫法沒有對照；`docs/measurements/2026-11-20-global-7-trigger.md`）。
   - 全域模板 §3.9 的三條（race 與交易、併發驗法、git 進行中狀態）：`c0f6d33` 搬到 `skills/dd-loop/SKILL.md` 的「領域陷阱」一節、原處留一行指標；**2026-11-20 搬回全域模板**，位置與 v1.6.16 相同，dd-loop 那一節與模板的指標、兩份 README 與 `DD_PIPELINE_ARCHITECTURE.md` 提到那一節的句子都拿掉。
     原因：搬走和 2026-10-30 的使用者決定（`docs/designs/2026-10-30-global-claude-md-slim-design.md`：這幾條留在全域）相反，使用者同意套用稽核的 diff 時那份 diff 沒有列出這個衝突；2026-11-20 問了使用者，選搬回。
-    這三條的文字與 v1.6.16 只差 `⚠️⚠️` → `⚠️`；模板其他地方的差異見本節 `c0f6d33`、`3637c92`、`3e3243a` 的條目。
+    這三條的文字與 v1.6.16 只差 `⚠️⚠️` → `⚠️`；模板其他地方的差異見本節 `c0f6d33`、`3637c92`、`3e3243a`、`8dcaa73` 的條目。
+    搬回後 §3.9 沒有「迴圈外也適用」的句子（v1.6.16 也沒有）。部署後量了同一個資料庫 race 的 prompt：迴圈外 8 發有 7 發、迴圈暫停中（`dd-stop.sh on` 之後）8 發有 7 發的回答用到那一條（判定看回答裡有沒有「隔離級別」，這個記號是看過先前 16 發才挑的），照事先寫的規則不補範圍句（`docs/measurements/2026-11-20-lessons-outside-loop.md`）。
+    兩份 README「核心工作法」那句「全域 §3.9 只留步驟清單與關卡」補上「與驗證教訓」（那句從 2026-10-30 起就漏了，根目錄 `CLAUDE.md` 寫的是有）。
     搬回之前的經過（留作紀錄）：
     2026-11-20 指標那一行改成寫明「用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節，迴圈外的修改、迴圈暫停中也一樣」：`dd-loop` 的 description 排除迴圈外的修改，`/dd-stop on` 期間也不呼叫它。量了迴圈外的一個 prompt（資料庫 race）：原本的指標 8 發到了 4 發，改寫後 8 發都到了（`docs/measurements/2026-11-20-domain-traps-pointer.md`）；迴圈暫停中那一種沒有量。
   - 全域模板與 `skills/dd-loop/SKILL.md` 的 `⚠️⚠️` 都收成 `⚠️`（`3637c92`、`31dd5bb`）。

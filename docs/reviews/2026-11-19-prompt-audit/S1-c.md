@@ -187,14 +187,14 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 
 | 發現 | 級別 | 處置 |
 |---|---|---|
-| S1-c-1 「領域陷阱」搬到 dd-loop 之後，迴圈外的修改拿不到 | Important | 採納，改寫了指標句，搬不搬回去交使用者決定（見 S1-c-2）。模板那句改成：碰到這類修改就用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節，迴圈外的修改、迴圈暫停中也一樣（讀檔不算呼叫 `dd-loop`）。`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md` 講 dd-loop 的那一句補上「領域陷阱」。改寫有沒有用另外量了，新舊各 8 發、16 發都有效：舊指標到了 4 發（3 發呼叫 Skill `dd-loop`、1 發用 Read），改寫後到了 8 發（都是用 Read）。只有一個 prompt（資料庫 race），「到了」只證明讀了那個檔。紀錄在 `docs/measurements/2026-11-20-domain-traps-pointer.md`。後續：使用者 2026-11-20 決定搬回全域模板，S2 段落做了，指標句與補在 README、ARCH 的那一句都拿掉。 |
+| S1-c-1 「領域陷阱」搬到 dd-loop 之後，迴圈外的修改拿不到 | Important | 採納，改寫了指標句，搬不搬回去交使用者決定（見 S1-c-2）。模板那句改成：碰到這類修改就用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節，迴圈外的修改、迴圈暫停中也一樣（讀檔不算呼叫 `dd-loop`）。`README.md`、`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md` 講 dd-loop 的那一句補上「領域陷阱」。改寫有沒有用另外量了，新舊各 8 發、16 發都有效：舊指標到了 4 發（3 發呼叫 Skill `dd-loop`、1 發用 Read），改寫後到了 8 發（都是用 Read）。只有一個 prompt（資料庫 race），「到了」只證明讀了那個檔。紀錄在 `docs/measurements/2026-11-20-domain-traps-pointer.md`。後續：使用者 2026-11-20 決定搬回全域模板，S2 段落做了，指標句與補在 README、ARCH 的那一句都拿掉。 |
 | S1-c-2 `c0f6d33` 把三條教訓搬出全域模板，和 2026-10-30 的使用者決定相反 | Important（審查者建議標「需使用者決定」） | 需使用者決定，寫這份報告時還沒問到答案。查證：`docs/designs/2026-10-30-global-claude-md-slim-design.md` 第 33 行確實記著那三條留在全域模板；搬走是 2026-11-18 稽核的一項，使用者當時同意套用那份 diff，但那份 diff 沒有把這個衝突列出來。現況是留在 dd-loop 加上 S1-c-1 的指標。兩個選項：留在 dd-loop（那一節 18 行，全域模板只留 2 行的指標；拿不拿得到靠指標）；搬回全域模板（每個 session 都載入，不靠指標）。CHANGELOG 的那一條寫明「留在哪一邊還沒問使用者」。後續：2026-11-20 用 AskUserQuestion 問了，使用者選搬回全域模板；S2 段落搬回，CHANGELOG 那一條跟著改寫。 |
 | S1-c-3 CHANGELOG「未發布」漏記 | Important | 採納，已修（與 S1-b-6、S1-d-1 同一件）。 |
 | S1-c-s1 CHANGELOG 與量測紀錄的結論拿掉了「只能當跡象」，也算進了無效的發 | Smell | 採納，已修（與 S1-d-2 同一件）：結論改成只用事先寫下的判定式，「失敗後第一個動作」標成事後多看的一項，照規則無效的發數寫出來。 |
 | S1-c-s2 §7.1 第 5 步只摘了 §6.1 的 80% 那一條 | Smell | 不採納。那一步寫的是「照 §6.1 判斷」，是指過去、不是取代；§6.1 每個 session 都載入，摘要漏的三個條件就在同一份檔。 |
 | S1-c-s3 frontend-design 把 `a372fe3` 寫得像上游的 commit | Smell | 採納，已修：寫明是 claude-dd 自己的 commit。 |
 | S1-c-s4 §6.2 把「檔案被別的行程鎖住」歸在「對方那一側」 | Smell | 屬實，沒改，轉新段落。那一句是 2026-11-19 量測的被測文字（審查者自己核過逐字相同）；改字就和量測紀錄對不上，要改得連量測一起重做。 |
-| S1-c-s5 dd-loop 的 description 與開頭沒提「領域陷阱」；ARCH 的描述過期 | Smell | 部分採納：`DD_PIPELINE_ARCHITECTURE.md` 與 `README.zh-TW.md` 那一句補上了。dd-loop 自己的 description 沒改：改 description 會動到觸發，要另外做新 session 的觸發測試，而全域模板的指標句已經直接給了檔案路徑。後續：S2 搬回全域模板後，補上的那一句與指標句都拿掉。 |
+| S1-c-s5 dd-loop 的 description 與開頭沒提「領域陷阱」；ARCH 的描述過期 | Smell | 部分採納：`DD_PIPELINE_ARCHITECTURE.md` 與兩份 README（`README.md`、`README.zh-TW.md`）那一句補上了。dd-loop 自己的 description 沒改：改 description 會動到觸發，要另外做新 session 的觸發測試，而全域模板的指標句已經直接給了檔案路徑。後續：S2 搬回全域模板後，補上的那一句與指標句都拿掉。 |
 | S1-c-s6 安裝完成訊息還寫「Task tool」 | Smell | 採納，已修。`git grep -n 'Task tool'` 剩下的命中：`skills/security-audit/` 的兩個檔（那個 skill 自己對「Task tool」的定義，跨平台用語，不是這一輪要統一的對象）、CHANGELOG 與 `skills/self-improving-agent/CLAUDE.md` 描述這次改名的句子。`tests/test-install.sh` 改完後重跑，exit 0。 |
 
 既有問題兩項屬實，沒在這一段改，轉新段落：`commands/dd-init.md` 蓋章區塊第 7、8 步的 skill 名字沒帶 plugin 命名空間（改它要跳 `dd-loop-rev`）；§4.4 的「Task 工具」指待辦工具、容易和派工工具混。
