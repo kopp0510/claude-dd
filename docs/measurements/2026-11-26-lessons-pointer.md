@@ -23,3 +23,15 @@
 | sonnet | 0／3（只讀 `orders.js`，有一發多讀 `package.json`） | 0／3 | 0.16–0.18 美元 |
 
 `message.model` 各臂只有 `claude-opus-5-5`／`claude-sonnet-5-5`。與 `2026-11-26-writing-pointer.md` 第一批同型：同一句指路，opus 會照做、sonnet 不會。
+
+## 第二版指路句與步驟 4 派工句（上面那批之後、這兩批開跑之前寫的）
+
+改了兩處：全域 §3.9 的指路句改成「改檔、回答怎麼改或怎麼驗證之前,必須先用 Read 讀 … 整份 —— 只是問做法、還沒要改檔也算」；
+`skills/dd-loop/SKILL.md` 步驟 4 加一條：diff 動到併發等幾類時，派工 prompt 另寫「審之前先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 整份」。
+
+- **甲（指路句，sonnet）**：部署後照上面 sonnet 臂再跑 3 發，判定式同上
+- **乙（派工句）**：主對話用 Agent 工具派 `code-reviewer`（agent 定義 sonnet）3 發；prompt 給「把沒有交易的 `reserveStock` 改成 `BEGIN … COMMIT` 包起來」的 diff（改後就是上面那份 `orders.js`）、寫明審查者職責與那句派工句；
+  讀 subagent 紀錄檔，有 Read `skills/dd-loop/lessons.md` 才算讀到，`message.model` 要是 sonnet。另記報告有沒有指出「包進交易擋不住 race／要先取鎖」（只記、不當判準）
+- 甲、乙各自過半才算過；沒過就停下回報
+
+（跑完填）
