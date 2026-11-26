@@ -23,6 +23,8 @@
 - **四個 agent 改用 `sonnet`**：`code-reviewer`、`code-simplifier`（原本 `opus`）與 `senior-devops`、`security-auditor`（原本 `inherit`，跟主對話的模型）。
   為了省用量；sonnet 當步驟 4 審查者的命中率沒量過。`code-simplifier.md` 因此不再與官方檔逐字相同，檔頭加了改動說明，比對結果見 `agents/LICENSE.txt`。
   只影響本 repo 部署的 agent：裝了官方 `code-simplifier` plugin 的機器，skill 會先用 plugin 那份（仍是 opus）。
+- **plan-review 的審查者固定 3 個**：裁決者範本原本是「最少 3 個、沒有上限」，改成剛好 3 個；裁決者仍是 opus、審查者仍是 haiku、輪數不變。
+  另刪掉結尾重述各步驟的「常見錯誤」表。驗證見 `docs/measurements/2026-11-26-plan-review-three.md`。
 
 ### Added
 
