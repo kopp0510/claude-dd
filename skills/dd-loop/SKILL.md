@@ -125,20 +125,25 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 連 `..` 一起填時第一條 `git diff` 回 exit 129,整條管線卻 exit 0,只列出還沒 commit 的那幾份,看起來就像範圍正常):
 
 ```bash
+f=$(git config --local --get dd.docfile) || f=CLAUDE.md
 base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] &&
 { git -c core.quotePath=false diff --name-only "$base" HEAD
   git -c core.quotePath=false diff --name-only HEAD
   git -c core.quotePath=false ls-files --others --exclude-standard; } \
-  | grep 'CLAUDE\.md$' | sort -u
+  | while IFS= read -r p; do [ "${p##*/}" = "$f" ] && printf '%s\n' "$p"; done | sort -u
 ```
+
+第一行取記憶檔名：專案設了 `git config --local dd.docfile`（例如 `AGENTS.md`）就用它，沒設就是 `CLAUDE.md`，跟 gate 的讀法一樣（只讀 `--local`）。
+比對的是路徑最後一段**整個等於**那個檔名，不把檔名放進正規式（`.` 會變成萬用字元）。
 
 後兩條是「還沒 commit 的」(已追蹤的改動 + 未追蹤的新檔)。**不要改用
 `status --porcelain -uall | awk '{print $NF}'`**:git 對含空白的路徑會加引號
 (`?? "api server/CLAUDE.md"`,`core.quotePath=false` 只解決非 ASCII),`$NF` 從空白切開
-就只剩 `server/CLAUDE.md"`,`grep 'CLAUDE\.md$'` 比對不到而丟棄 —— 少列一份卻照樣 exit 0、
+就只剩 `server/CLAUDE.md"`,檔名比對不到而丟棄 —— 少列一份卻照樣 exit 0、
 不印任何錯誤。步驟 7 剛寫出、或被 gate 逼著補出來的 CLAUDE.md 正是「還沒 commit」這個狀態
 
 算出幾份就只審那幾份,用 `claude-md-management:claude-md-improver`。
+**記憶檔名不是 `CLAUDE.md` 時(設了 `dd.docfile`)不要用它**:它的 Phase 1 只 `find` 名叫 `CLAUDE.md`、`.claude.md`、`.claude.local.md` 的檔,在那種專案找不到記憶檔;改成自己逐份審算出來的那幾份,判準照全域 §3.10。
 **該 skill 的 Phase 1 寫的是「find 全部」,不先算範圍就會全 repo 掃** —
 產出跟本輪無關的長報告,看兩次就會開始跳過、規則等於沒有。範圍算出來是空的才跳過這一步(指令 exit 非 0 是範圍沒算出來,不算空:照上方「段落起點與 `<起點>`」那段取到起點,把 `base=` 那一段換成 `base=<那個值>` 再跑)
 
