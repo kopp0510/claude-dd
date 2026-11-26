@@ -13,4 +13,5 @@
 
 ## 結果
 
-（跑完填）
+**2 發有效、2 發讀到 ⇒ 過。** 兩個 subagent 都是 `claude-sonnet-5-5`，第一個工具呼叫都是 Read `lessons.md`、第二個 Read `orders.js`；回報裡都有「隔離級別」。每發 0.06–0.13 美元。
+`senior-devops` 那句（CI 守衛與文件時讀 `lessons.md`／`writing.md`）沒有量。
