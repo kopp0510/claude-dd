@@ -73,7 +73,8 @@ def main():
         rep = {"{SNAP}": snap, "{DIFF}": diff, "{SELF}": self_, "{S4}": s4, "{BRIEF}": briefs[g].rstrip(), "{LINES}": str(lines),
                "{REVIEWER}": {"dir": '`subagent_type: "code-reviewer"`，不帶 model 參數',
                               "dhk": '`subagent_type: "code-reviewer"`、`model: "haiku"`',
-                              "son": '`subagent_type: "code-reviewer"`，不帶 model 參數'}[grp]}
+                              "son": '`subagent_type: "code-reviewer"`，不帶 model 參數',
+                              "mix": '`subagent_type: "code-reviewer"`；其中**剛好 1 個**帶 `model: "opus"`，負責 diff 裡最需要推理的部分（測試與它要測的程式、斷言證明了什麼），其餘不帶 model 參數'}[grp]}
         body = direct
         for k, v in rep.items(): body = body.replace(k, v)
         left = [k for k in rep if k in body]

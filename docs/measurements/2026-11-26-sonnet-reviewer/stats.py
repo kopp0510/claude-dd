@@ -69,10 +69,13 @@ def run_stats(s4, run, dump):
     def short(ms): return ",".join(sorted(x.replace("claude-", "") for x in ms))
     # 沒有裁決者：第 1 層就是審查者，父 session（主對話）自己查證，要是 opus
     if len(d1) < 3 or d2: errs.append(f"要 ≥3 個第 1 層、0 個第 2 層，實際 {len(d1)}／{len(d2)}")
-    want = {"dir": "opus", "dhk": "haiku", "son": "sonnet"}[grp]
+    want = {"dir": "opus", "dhk": "haiku", "son": "sonnet", "mix": None}[grp]
     for a in d1:
         if a["meta"].get("agentType") != "code-reviewer": errs.append("審查者不是 code-reviewer")
-        if not a["models"] or not all(want in x for x in a["models"]): errs.append(f"審查者模型 {short(a['models'])}，要 {want}")
+        if want and (not a["models"] or not all(want in x for x in a["models"])): errs.append(f"審查者模型 {short(a['models'])}，要 {want}")
+    if grp == "mix":  # 剛好 1 個 opus、其餘 sonnet
+        ms = [short(a["models"]) for a in d1]
+        if sum("opus" in m for m in ms) != 1 or not all(("opus" in m) != ("sonnet" in m) for m in ms): errs.append(f"mix 組審查者模型 {ms}，要剛好 1 個 opus、其餘 sonnet")
     pm = set().union(*[scan(s)["models"] for s in glob.glob(os.path.join(pdir, "*.jsonl"))] or [set()])
     if not pm or not all("opus" in x for x in pm): errs.append(f"父 session 模型 {short(pm)}，要 opus")
     revs = d1
