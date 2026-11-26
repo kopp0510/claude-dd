@@ -36,6 +36,7 @@
 - **`jq` 或 `python3`（擇一）** — 軟性依賴。兩者皆缺時 plugin 步驟整步跳過、MCP 檢查退化成字串比對，而安裝照樣成功
 - 可選：`ffmpeg`（tech-diagram-gif 的 GIF 匯出用；缺少時該 skill 退化交付 SVG。macOS `brew install ffmpeg`）
 - 可選：自動壓縮視窗 —— `/autocompact <token 數>` 只存給當下的模型（Claude Code v2.1.288 起），`~/.claude/settings.json` 最上層的 `"autoCompactWindow"` 對每個模型生效。環境檢查會報它在這個檔與環境變數 `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 看到什麼（其他設定檔不讀）、不會改任何東西；為什麼要設見[主對話那一塊要花多少](#主對話那一塊要花多少)
+- 可選：`AGENTS.md` 與 `CLAUDE.md` 一起讀 —— Claude Code 預設在工作目錄以上有 `CLAUDE.md`、`.claude/CLAUDE.md` 或 `CLAUDE.local.md` 時不讀 `AGENTS.md`；兩種都要讀就在 `/config` 把 Project instructions 設成 `claude-md-and-agents-md`（[官方文件](https://code.claude.com/docs/en/memory.md)）。環境檢查會報 `~/.claude/settings.json` 裡的值（其他設定檔不讀）、不會改任何東西
 - 可選：給 `/security-audit` 用的 OS 層沙盒（上游要求它斷外網、只給白名單環境變數、限制資源、只准寫指定的 scratch 路徑）。沒有它時 full audit 不執行目標程式碼，要實跑才能確認的線索停在 `needs_validation`。Claude Code 自帶的 sandbox 能不能滿足這四項沒驗證
 - claude-md-management 與 skill-creator plugin 需已透過官方 marketplace 存在於本機。安裝腳本只登記「已在磁碟上找得到」的 plugin，不會下載。`skill-creator` 要先自己裝過一次：`claude plugin install skill-creator@claude-plugins-official`。claude-md-management 也不在磁碟上的話，同一種寫法：`claude plugin install claude-md-management@claude-plugins-official`
 
@@ -51,7 +52,7 @@ cd claude-dd
 
 安裝腳本的進度顯示為 7 步（`1/7` … `7/7`）：
 
-1. 檢查基礎環境（上述硬性需求，缺一即中止）。另外提醒自動壓縮視窗有沒有設（可選，只提示、不中止）
+1. 檢查基礎環境（上述硬性需求，缺一即中止）。另外提醒 AGENTS.md 的載入設定與自動壓縮視窗有沒有設（可選，只提示、不中止）
 2. 安裝 13 個 promoted Skills 到 `~/.claude/skills/`
 3. 安裝 4 個 promoted Agents 到 `~/.claude/agents/`（code-simplifier / code-reviewer 官方備份 + senior-devops / security-auditor）
 4. 檢查 MCP（唯讀 — 只回報 scope，不安裝任何東西）

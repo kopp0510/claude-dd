@@ -35,6 +35,7 @@
 - **`jq` or `python3`** (either one) — soft dependency. Without both, the plugin step is skipped entirely and the MCP check degrades to string matching, yet the install still succeeds
 - Optional: `ffmpeg` — GIF export in tech-diagram-gif; without it that skill delivers SVG. On macOS: `brew install ffmpeg`
 - Optional: an auto-compact window — `/autocompact <tokens>` saves one for the current model (Claude Code v2.1.288 and later), a top-level `"autoCompactWindow"` in `~/.claude/settings.json` applies to every model. The environment check reports what it finds in that file and in the `CLAUDE_CODE_AUTO_COMPACT_WINDOW` environment variable — other settings files are not read — and never changes anything; why it matters is under [What the main session costs](#what-the-main-session-costs)
+- Optional: reading `AGENTS.md` alongside `CLAUDE.md` — by default Claude Code skips `AGENTS.md` when there is a `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the working directory or above it; to read both, set Project instructions to `claude-md-and-agents-md` in `/config` ([official docs](https://code.claude.com/docs/en/memory.md)). The environment check reports the value in `~/.claude/settings.json` — other settings files are not read — and never changes anything
 - Optional: an OS-enforced sandbox for `/security-audit` — upstream requires one that disables external networking, uses a sanitized allowlisted environment, enforces resource limits, and allows writes only to assigned scratch paths. Without it the full audit does not execute target code, and leads that need execution stay `needs_validation`. Whether Claude Code's own sandbox provides all four controls is not verified
 - The claude-md-management and skill-creator plugins must already be present locally (via the official marketplace). The installer only registers a plugin it can already find on disk — it never downloads one. Install `skill-creator` yourself once first: `claude plugin install skill-creator@claude-plugins-official`. If claude-md-management isn't on disk either, the same form installs it: `claude plugin install claude-md-management@claude-plugins-official`
 
@@ -50,7 +51,7 @@ cd claude-dd
 
 The installer reports its progress as 7 steps (`1/7` … `7/7`):
 
-1. Check the environment (the hard requirements above; missing any one aborts the install). It also reports whether an auto-compact window is set — optional, a notice only, it never aborts
+1. Check the environment (the hard requirements above; missing any one aborts the install). It also reports the AGENTS.md loading setting and whether an auto-compact window is set — optional, notices only, they never abort
 2. Install 13 promoted Skills into `~/.claude/skills/`
 3. Install 4 promoted Agents into `~/.claude/agents/` (local backups of code-simplifier / code-reviewer, plus senior-devops / security-auditor)
 4. Check MCP servers (read-only — reports scope, installs nothing)

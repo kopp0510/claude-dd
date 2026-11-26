@@ -77,7 +77,7 @@
   而某個多位元組字剛好跨過 1024 位元組邊界時，對合法的 UTF-8 回 1（`iconv(): Inappropriate ioctl for device`）。
   2026-11-15 在 macOS 27.0.1 踩到：環境檢查多印一行，後面的字整個往後移，T10 就紅在「不合法的 UTF-8」，而同一份輸出逐行檢查都合法。
   寫到檔案或管線就正常，真的壞位元組照樣回 1（在邊界前後各試過；管線是 `iconv … | cat`，55 個長度都回 0、內容相同，壞位元組回 1）
-- **只跑一組**：`TEST_ONLY=T5 /bin/bash tests/test-install.sh`（原有的檢查與 T1 照跑；值不是 T2–T11 其中一個就 exit 2，
+- **只跑一組**：`TEST_ONLY=T5 /bin/bash tests/test-install.sh`（原有的檢查與 T1 照跑；值不是 T2–T12 其中一個就 exit 2，
   免得打錯字時一組都沒跑卻 rc=0 —— 新增一組時那個 `case` 要跟著加）。變異對照（2026-11-14，
   把安裝腳本的一行改壞、只跑那一組；記「哪個變異 → 紅在哪個斷言」）：啟用寫成 `false` → T3「沒有啟用」；
   移除時不刪 `enabledPlugins` 的鍵 → T3「uninstall 之後…只剩原有的鍵」；`mcp_scope` 的 `local:N` 改回 `none` → T4「只設在一個專案底下」；
@@ -114,6 +114,9 @@
   有兩個變異紅在 T11 之前、不算 T11 的（第一版程式碼上跑的）：每個 agent 都寫檔（原有的 `--check` 檢查那時沙盒還沒有 `agents/` 目錄，安裝腳本自己報錯）、`--check` 一律回非 0（原有的檢查擋下）。
   ⚠️ 「讀不到的檔」那一格用 `chmod 000`，root 讀得到，所以以 root 跑時（容器預設）那一格不跑，✅ 那一行會寫「讀不到檔案那一格沒跑」；
   要在容器裡驗它，另開一般帳號跑（`useradd -m tester; su tester -c 'cd /tmp && TEST_ONLY=T11 bash /repo/tests/test-install.sh'`，2026-11-15 ubuntu:24.04 實跑 rc=0）。CI 的 runner 不是 root。
+- **T12 與 T2 `agents` 那幾列的變異對照**（2026-11-26；改 `install-dd-pipeline.sh` 的 `agents_md_state`／`print_agents_md_line`，跑完還原並 `cmp` 確認與原檔相同）：
+  jq 那條把 `claude-md-and-agents-md` 回成 `or` → T2 `agents.g-and`、`agents.g-bom`、`agents.g-old`；python3 那條拿掉「兩個 ID 不同 → conflict」→ T2 `agents.g-both-diff`；
+  沒設那一行加 ⚠ → T12「沒設 時，那一行不該有 ⚠」。
 - **T2 的 `j-*` 那幾列改的是 marketplace 裡的 `plugin.json`**（`T2_PLUGIN_JSON`）：`j-noversion` 走「`plugin.json` 沒有 version、改讀 `installed_plugins.json`」那條路 ——
   官方 skill-creator 就是這樣，使用者的機器實際走的是它；其他列的 `plugin.json` 都有 version，走不到。把 jq 那條 fallback 改成讀錯欄位 → 這一列紅（jq 那一臂印「取不到版本」）
 - **`t2_canon` 只把長得像時間戳的 `installedAt`／`lastUpdated` 換成 `TS`**：fixture 裡的 `"A"` 要留著，

@@ -386,6 +386,102 @@ else:
     [ -n "$out" ] && echo "$out" || echo "unparseable"
 }
 
+# AGENTS.md 要不要跟 CLAUDE.md 一起讀的設定狀態（官方文件 https://code.claude.com/docs/en/memory.md 「Choose which instruction files load」，2026-11-26 讀的）。
+# 只讀、不改檔。設定位置是 pluginConfigs → <ID> → options.instructionFiles；v2.1.285 前 ID 是 agents-md@builtin，之後兩個 ID 都讀，
+# 所以兩個都查。Claude Code 也讀 --settings 檔與 managed settings，這裡只看 ~/.claude/settings.json。回傳其中一個字：
+#   and / or / claudemd / managedonly  值是官方列的四種之一（claude-md-and-agents-md / claude-md-or-agents-md（預設）/ claude-md / managed-only）
+#   odd         值是字串、但不是那四種
+#   conflict    兩個 ID 都有字串值而且不同（文件沒寫誰贏）
+#   none        檔案不存在，或兩個 ID 都沒有字串值（中間任何一層不是物件也算沒有）
+#   unparseable settings.json 解析不了，或內容不是「剛好一個物件」
+#   unknown     缺 jq 與 python3，檔案裡有 instructionFiles 字樣（只有字串證據）
+# 護欄與 autocompact_state 同一套；jq 與 python3 兩條路徑要對齊，改任何一條先跑 tests/test-install.sh 的 T2（agents 那幾列）。
+agents_md_state() {
+    local file="$1" out=""
+
+    file_exists "$file" || { echo "none"; return; }
+
+    if command_exists "jq"; then
+        out=$(jq -r -s '
+            def iv($id): .pluginConfigs
+                | (if type == "object" then .[$id] else null end)
+                | (if type == "object" then .options else null end)
+                | (if type == "object" then .instructionFiles else null end)
+                | (if type == "string" then . else null end);
+            if length != 1 or (.[0] | type) != "object" then error("not a single top-level object")
+            else [.[0] | iv("cc-plugin-agents-md@builtin"), iv("agents-md@builtin")] | map(select(. != null)) | unique
+                | if length == 0 then "none"
+                  elif length > 1 then "conflict"
+                  elif .[0] == "claude-md-and-agents-md" then "and"
+                  elif .[0] == "claude-md-or-agents-md" then "or"
+                  elif .[0] == "claude-md" then "claudemd"
+                  elif .[0] == "managed-only" then "managedonly"
+                  else "odd" end
+            end' "$file" 2>/dev/null) || out=""
+    elif command_exists "python3"; then
+        out=$(SETTINGS_FILE="$file" python3 -c '
+import json, os, sys
+# 跟 jq 對齊的兩處同 autocompact_state：不合法的 UTF-8 位元組換成替代字元、幾千位的整數照收
+if hasattr(sys, "set_int_max_str_digits"):
+    sys.set_int_max_str_digits(0)
+try:
+    with open(os.environ["SETTINGS_FILE"], encoding="utf-8-sig", errors="replace") as f:
+        data = json.load(f)
+except Exception:
+    sys.exit(1)
+if not isinstance(data, dict):
+    sys.exit(1)
+def iv(i):
+    v = data.get("pluginConfigs")
+    for k in (i, "options", "instructionFiles"):
+        v = v.get(k) if isinstance(v, dict) else None
+    return v if isinstance(v, str) else None
+vals = sorted(set(v for v in (iv("cc-plugin-agents-md@builtin"), iv("agents-md@builtin")) if v is not None))
+names = {"claude-md-and-agents-md": "and", "claude-md-or-agents-md": "or", "claude-md": "claudemd", "managed-only": "managedonly"}
+if not vals:
+    print("none")
+elif len(vals) > 1:
+    print("conflict")
+else:
+    print(names.get(vals[0], "odd"))
+' 2>/dev/null) || out=""
+    else
+        grep -q '"instructionFiles"' "$file" 2>/dev/null && echo "unknown" || echo "none"
+        return
+    fi
+
+    [ -n "$out" ] && echo "$out" || echo "unparseable"
+}
+
+# 環境檢查樹裡自動壓縮視窗前一行：AGENTS.md 的載入設定。只提示，不影響結束碼；預設值不是錯，不印 ⚠
+print_agents_md_line() {
+    local state="$1" name="AGENTS.md 載入"
+    case "$state" in
+        and)
+            echo -e "├── ${name}：settings.json 設為 claude-md-and-agents-md（CLAUDE.md 與 AGENTS.md 都讀）: ${GREEN}${CHECK}${NC}" ;;
+        claudemd)
+            echo -e "├── ${name}：settings.json 設為 claude-md，不讀 AGENTS.md" ;;
+        managedonly)
+            echo -e "├── ${name}：settings.json 設為 managed-only，不讀任何 AGENTS.md" ;;
+        odd)
+            echo -e "├── ${YELLOW}⚠ ${name}：settings.json 的 instructionFiles 不是官方文件列的四種值之一，Claude Code 怎麼處理無從判定${NC}" ;;
+        conflict)
+            echo -e "├── ${YELLOW}⚠ ${name}：settings.json 裡 cc-plugin-agents-md@builtin 與舊 ID agents-md@builtin 的值不同，以哪個為準無從判定${NC}" ;;
+        unparseable)
+            echo -e "├── ${YELLOW}⚠ ${name}：settings.json 無法解析，無從判定有沒有設${NC}" ;;
+        unknown)
+            echo -e "├── ${YELLOW}⚠ ${name}：缺 jq 與 python3，settings.json 裡有 instructionFiles 字樣但無從判定${NC}" ;;
+        *)
+            if [ "$state" = or ]; then
+                echo -e "├── ${name}（可選）：settings.json 設為預設值 claude-md-or-agents-md"
+            else
+                echo -e "├── ${name}（可選）：~/.claude/settings.json 沒設（其他設定檔沒查），預設是 claude-md-or-agents-md"
+            fi
+            echo -e "│   預設下，工作目錄以上有 CLAUDE.md、.claude/CLAUDE.md 或 CLAUDE.local.md 就不讀 AGENTS.md。兩種都要讀：/config 把"
+            echo -e "│   Project instructions 設成 claude-md-and-agents-md，或照 https://code.claude.com/docs/en/memory.md 寫進 settings.json 的 pluginConfigs" ;;
+    esac
+}
+
 # 環境檢查樹的最後一行：自動壓縮視窗有沒有設。只提示，不影響結束碼
 print_autocompact_line() {
     local state="$1" name="自動壓縮視窗"
@@ -472,6 +568,9 @@ check_environment() {
         echo -e "├── ${YELLOW}⚠ ffmpeg 未安裝（可選）：tech-diagram-gif 將退化交付 SVG${NC}"
         echo -e "│   ${YELLOW}安裝：macOS \`brew install ffmpeg\`；Debian/Ubuntu \`sudo apt install ffmpeg\`${NC}"
     fi
+
+    # AGENTS.md 載入設定（可選，只提示）
+    print_agents_md_line "$(agents_md_state "$CLAUDE_DIR/settings.json")"
 
     # 自動壓縮視窗（可選，只提示）
     print_autocompact_line "$(autocompact_state "$CLAUDE_DIR/settings.json")"

@@ -5,6 +5,7 @@
 # 覆蓋前備份、全域 CLAUDE.md 三種情境、hook 路徑驗證、舊指令檔的備份、完成訊息。
 # 2026-11-15 補上 T10：環境檢查的自動壓縮視窗那一行；T2 的等價表加 `autocompact_state`。
 # 2026-11-15 補上 T11：`--check` 看得出部署的 skill、agent 與 repo 這份不同。
+# 2026-11-26 補上 T12：環境檢查的「AGENTS.md 載入」那一行；T2 的等價表加 `agents_md_state`。
 # 測不到的：全域 CLAUDE.md 的互動選單（ask 用 [ -t 0 ] 判斷，管線餵 stdin 一律走預設值）。
 # CI 在 ubuntu（bash 5）與 macOS（/bin/bash 3.2）各跑一次（.github/workflows/ci.yml）。
 # 2026-10-01 從 ci.yml 內嵌 step 搬出來，macOS 那個 job 才能共用；判斷一行都沒改。
@@ -98,14 +99,14 @@ echo "✅ uninstall --yes 移除 adhd.md、保留使用者自己的風格檔"
 
 # ---------------------------------------------------------------------------
 # 以下各組：T1–T9 在 2026-11-14 補上（碰設定檔、備份與完成訊息的路徑），T10 在 2026-11-15 補上（環境檢查的自動壓縮視窗那一行），
-# T11 在 2026-11-15 補上（`--check` 的 skill、agent 那兩段看得出部署版與 repo 不同）。
+# T11 在 2026-11-15 補上（`--check` 的 skill、agent 那兩段看得出部署版與 repo 不同），T12 在 2026-11-26 補上（環境檢查的 AGENTS.md 載入那一行）。
 # 斷言失敗時一律印出「組名＋斷言名」再 exit 1 —— 上面那些裸 [ … ] 在 set -e 下失敗不印任何字。
 # 本機做變異實驗時可以只跑一組：`TEST_ONLY=T5 tests/test-install.sh`（上面原有的檢查與 T1 照跑，T2 之後只跑指定那組）。
 # ---------------------------------------------------------------------------
 # TEST_ONLY 打錯（t5、T05）時會一組都沒跑卻 rc=0，所以先驗值；新增一組時這裡要跟著加
 case "${TEST_ONLY:-}" in
-    ""|T2|T3|T4|T5|T6|T7|T8|T9|T10|T11) ;;
-    *) echo "❌ TEST_ONLY=${TEST_ONLY} 不是 T2–T11 其中一組"; exit 2 ;;
+    ""|T2|T3|T4|T5|T6|T7|T8|T9|T10|T11|T12) ;;
+    *) echo "❌ TEST_ONLY=${TEST_ONLY} 不是 T2–T12 其中一組"; exit 2 ;;
 esac
 want() { [ -z "${TEST_ONLY:-}" ] || [ "$TEST_ONLY" = "$1" ]; }
 # 去掉顏色碼。LC_ALL=C：輸出裡有壞的位元組時，UTF-8 locale 下的 BSD sed 印到那一行就失敗、
@@ -134,7 +135,7 @@ cmp -s templates/global/CLAUDE.md "$T1_HOME/.claude/CLAUDE.md" \
 echo "✅ T1 全域 CLAUDE.md 是 symlink 時，--force 覆蓋前備份的是它指到的內容"
 # --- T1 結束
 
-# --- T2：jq 與 python3 兩條路徑逐項等價（install_plugins／uninstall／plugin_enabled_state／mcp_scope／autocompact_state）
+# --- T2：jq 與 python3 兩條路徑逐項等價（install_plugins／uninstall／plugin_enabled_state／mcp_scope／autocompact_state／agents_md_state）
 # 每個案例、每一臂各開一個沙盒 HOME，交給另一個 bash 行程跑真的函式：行程裡照安裝腳本自己的 set -e 跑。
 # 不在這支測試裡直接 `函式 || rc=$?` —— 那樣呼叫，bash 會讓函式裡的 set -e 失效，測到的就不是真的安裝行為；
 # 而且這支測試上面那行 source 是在真實 HOME 下跑的，CLAUDE_DIR 已經定死，直接呼叫會寫進真的 ~/.claude。
@@ -158,6 +159,7 @@ case "$1" in
     mcp)       mcp_scope playwright "$HOME/.claude.json" ;;
     acw)       unset CLAUDE_CODE_AUTO_COMPACT_WINDOW   # 開發者的 shell 設著它的話，每一格都會變成 env
                autocompact_state "$HOME/.claude/settings.json" ;;
+    agents)    agents_md_state "$HOME/.claude/settings.json" ;;
 esac
 DRIVE
 
@@ -445,6 +447,40 @@ t2_case acw a-top-edge-hi '{"autoCompactWindow":1000000.0000000000000001}' "@abs
 t2_case acw a-badutf8     $'{"t":"caf\xe9","autoCompactWindow":400000}'    "@absent" "@absent" '^all$'
 t2_case acw a-bigint      "{\"x\":1$(printf '%05000d' 0),\"autoCompactWindow\":400000}" "@absent" "@absent" '^all$'
 
+# settings.json 的各種內容 × AGENTS.md 載入設定（agents_md_state）。看 pluginConfigs → <ID> → options.instructionFiles，
+# ID 有新的 cc-plugin-agents-md@builtin 與舊的 agents-md@builtin 兩個；只認字串值，中間任何一層不是物件就當沒有。
+#   官方列的四種值各回 and／or／claudemd／managedonly；別的字串 → odd；兩個 ID 都有字串值又不同 → conflict；都沒有 → none
+#   整份檔案解析不了、或不是剛好一個物件 → unparseable
+T2_AN='"cc-plugin-agents-md@builtin"'
+T2_AO='"agents-md@builtin"'
+t2_ag() { printf '{"pluginConfigs":{%s:{"options":{"instructionFiles":%s}}}}' "$1" "$2"; }
+t2_case agents g-absent    "@absent" "@absent" "@absent" '^none$'
+t2_case agents g-empty     ''        "@absent" "@absent" '^unparseable$'
+t2_case agents g-badjson   '{'       "@absent" "@absent" '^unparseable$'
+t2_case agents g-null      'null'    "@absent" "@absent" '^unparseable$'
+t2_case agents g-array     '[]'      "@absent" "@absent" '^unparseable$'
+t2_case agents g-emptyobj  '{}'      "@absent" "@absent" '^none$'
+t2_case agents g-and       "$(t2_ag "$T2_AN" '"claude-md-and-agents-md"')" "@absent" "@absent" '^and$'
+t2_case agents g-or        "$(t2_ag "$T2_AN" '"claude-md-or-agents-md"')"  "@absent" "@absent" '^or$'
+t2_case agents g-claudemd  "$(t2_ag "$T2_AN" '"claude-md"')"               "@absent" "@absent" '^claudemd$'
+t2_case agents g-managed   "$(t2_ag "$T2_AN" '"managed-only"')"            "@absent" "@absent" '^managedonly$'
+t2_case agents g-odd       "$(t2_ag "$T2_AN" '"both"')"                    "@absent" "@absent" '^odd$'
+t2_case agents g-number    "$(t2_ag "$T2_AN" '1')"                         "@absent" "@absent" '^none$'
+t2_case agents g-bool      "$(t2_ag "$T2_AN" 'true')"                      "@absent" "@absent" '^none$'
+t2_case agents g-old       "$(t2_ag "$T2_AO" '"claude-md-and-agents-md"')" "@absent" "@absent" '^and$'
+t2_case agents g-both-same "{\"pluginConfigs\":{${T2_AN}:{\"options\":{\"instructionFiles\":\"claude-md\"}},${T2_AO}:{\"options\":{\"instructionFiles\":\"claude-md\"}}}}" "@absent" "@absent" '^claudemd$'
+t2_case agents g-both-diff "{\"pluginConfigs\":{${T2_AN}:{\"options\":{\"instructionFiles\":\"claude-md\"}},${T2_AO}:{\"options\":{\"instructionFiles\":\"claude-md-and-agents-md\"}}}}" "@absent" "@absent" '^conflict$'
+t2_case agents g-new-null  "{\"pluginConfigs\":{${T2_AN}:{\"options\":{\"instructionFiles\":null}},${T2_AO}:{\"options\":{\"instructionFiles\":\"claude-md-or-agents-md\"}}}}" "@absent" "@absent" '^or$'
+t2_case agents g-pc-array  '{"pluginConfigs":[]}'                          "@absent" "@absent" '^none$'
+t2_case agents g-pc-string '{"pluginConfigs":"claude-md-and-agents-md"}'   "@absent" "@absent" '^none$'
+t2_case agents g-opt-str   "{\"pluginConfigs\":{${T2_AN}:{\"options\":\"claude-md-and-agents-md\"}}}" "@absent" "@absent" '^none$'
+t2_case agents g-top-key   '{"instructionFiles":"claude-md-and-agents-md"}' "@absent" "@absent" '^none$'
+t2_case agents g-other     '{"pluginConfigs":{"cc-plugin-easel@builtin":{"options":{"autoCharts":true}}}}' "@absent" "@absent" '^none$'
+t2_case agents g-bom       "${T2_BOM}$(t2_ag "$T2_AN" '"claude-md-and-agents-md"')" "@absent" "@absent" '^and$'
+t2_case agents g-multi     "$(t2_ag "$T2_AN" '"claude-md-and-agents-md"') {}" "@absent" "@absent" '^unparseable$' '^(and|none)$'
+t2_case agents g-badutf8   $'{"t":"caf\xe9","pluginConfigs":{"cc-plugin-agents-md@builtin":{"options":{"instructionFiles":"claude-md"}}}}' "@absent" "@absent" '^claudemd$'
+t2_case agents g-bigint    "{\"x\":1$(printf '%05000d' 0),\"pluginConfigs\":{${T2_AN}:{\"options\":{\"instructionFiles\":\"claude-md\"}}}}" "@absent" "@absent" '^claudemd$'
+
 if [ -n "$T2_FAILED" ]; then
     echo "❌ T2：${T2_COUNT} 個案例裡有不符的：${T2_FAILED}"
     exit 1
@@ -728,6 +764,77 @@ t10_nojson_state n3 none "沒有 settings.json"
 plain "$T10_DIR/n1.txt" | grep -F '自動壓縮視窗' | grep -qF '缺 jq 與 python3' \
     || { echo "❌ T10：沒有 jq 與 python3 時，那一行應該講缺 jq 與 python3，實際：$(plain "$T10_DIR/n1.txt" | grep -F '自動壓縮視窗' | head -1)"; exit 1; }
 echo "✅ T10 環境檢查的自動壓縮視窗那一行：${T10_N} 種設定與環境變數各印各的、不影響結束碼；沒有 jq 與 python3 時不講成已設"
+fi
+
+# --- T12：環境檢查（步驟 1，--check 也會跑）的「AGENTS.md 載入」那一行（2026-11-26）
+# 每個狀態印各自的字、以「├── 」開頭（自動壓縮視窗仍是最後一行「└── 」）、不影響結束碼；預設值（沒設、or）不印 ⚠
+if want T12; then
+T12_DIR=$(mktemp -d "$WORK/t12.XXXXXX")
+T12_N=0
+# $1=settings.json 的內容（@absent=不建檔） $2=說明 $3=那一行要有的字（固定字串，挑該狀態獨有的一段） $4=yes 時那一行要有 ⚠、no 時不可以有
+t12_check() {
+    local h line ac
+    T12_N=$((T12_N + 1))
+    h="$T12_DIR/h${T12_N}"
+    mkdir -p "$h/.claude"
+    if [ "$1" != "@absent" ]; then printf '%s' "$1" > "$h/.claude/settings.json"; fi
+    ( unset CLAUDE_CODE_AUTO_COMPACT_WINDOW; HOME="$h" ./install-dd-pipeline.sh --check < /dev/null > "$h/out.txt" 2>&1 ) \
+        || { echo "❌ T12：--check 失敗（${2}）"; tail -20 "$h/out.txt"; exit 1; }
+    line=$(plain "$h/out.txt" | grep -F 'AGENTS.md 載入' | head -1)
+    case "$line" in
+        "├── "*"$3"*) ;;
+        *) echo "❌ T12：${2} 時，AGENTS.md 載入那一行應該以「├── 」開頭、而且有「${3}」，實際：${line:-（沒有這一行）}"; exit 1 ;;
+    esac
+    case "$4:$line" in
+        yes:*"⚠"*|no:*) ;;
+        *) echo "❌ T12：${2} 時，那一行應該有 ⚠，實際：${line}"; exit 1 ;;
+    esac
+    if [ "$4" = no ] && case "$line" in *"⚠"*) true ;; *) false ;; esac; then
+        echo "❌ T12：${2} 時，那一行不該有 ⚠（不是錯），實際：${line}"; exit 1
+    fi
+    ac=$(plain "$h/out.txt" | grep -F '自動壓縮視窗' | head -1)
+    case "$ac" in
+        "└── "*) ;;
+        *) echo "❌ T12：${2} 時，自動壓縮視窗那一行應該仍以「└── 」開頭，實際：${ac:-（沒有這一行）}"; exit 1 ;;
+    esac
+    utf8_ok "$h/out.txt" || { echo "❌ T12：${2} 時，輸出有不合法的 UTF-8"; exit 1; }
+}
+T12_AG() { printf '{"pluginConfigs":{"%s":{"options":{"instructionFiles":"%s"}}}}' "$1" "$2"; }
+t12_check "$(T12_AG cc-plugin-agents-md@builtin claude-md-and-agents-md)" "設成兩種都讀" "（CLAUDE.md 與 AGENTS.md 都讀）" no
+t12_check "$(T12_AG agents-md@builtin claude-md-and-agents-md)" "舊 ID 設成兩種都讀" "（CLAUDE.md 與 AGENTS.md 都讀）" no
+t12_check "$(T12_AG cc-plugin-agents-md@builtin claude-md-or-agents-md)" "明寫預設值" "設為預設值 claude-md-or-agents-md" no
+t12_check '{"theme":"dark"}' "沒設" "沒設（其他設定檔沒查）" no
+t12_check "@absent" "沒有 settings.json" "沒設（其他設定檔沒查）" no
+t12_check "$(T12_AG cc-plugin-agents-md@builtin claude-md)" "只讀 CLAUDE.md" "設為 claude-md，不讀 AGENTS.md" no
+t12_check "$(T12_AG cc-plugin-agents-md@builtin managed-only)" "managed-only" "設為 managed-only" no
+t12_check "$(T12_AG cc-plugin-agents-md@builtin both)" "不認得的值" "不是官方文件列的四種值之一" yes
+t12_check '{"pluginConfigs":{"cc-plugin-agents-md@builtin":{"options":{"instructionFiles":"claude-md"}},"agents-md@builtin":{"options":{"instructionFiles":"claude-md-and-agents-md"}}}}' "兩個 ID 不同" "值不同，以哪個為準無從判定" yes
+t12_check '{' "檔案壞掉" "settings.json 無法解析" yes
+# 預設那兩行的提示要講到不讀 AGENTS.md 的條件與改法
+plain "$T12_DIR/h4/out.txt" | grep -qF '工作目錄以上有 CLAUDE.md、.claude/CLAUDE.md 或 CLAUDE.local.md 就不讀 AGENTS.md' \
+    || { echo "❌ T12：沒設時，提示沒有講到不讀 AGENTS.md 的條件"; exit 1; }
+# 沒有 jq 也沒有 python3：有字樣回 unknown（不講成已設），沒字樣回 none
+cat > "$T12_DIR/nojson.sh" <<'DRIVE'
+# $1=沙盒 HOME；在 repo 根目錄執行。把 jq 與 python3 都當成不存在
+export HOME="$1"
+# shellcheck source=/dev/null
+source ./install-dd-pipeline.sh
+command_exists() { [ "$1" != jq ] && [ "$1" != python3 ] && command -v "$1" >/dev/null 2>&1; }
+agents_md_state "$HOME/.claude/settings.json"
+DRIVE
+mkdir -p "$T12_DIR/n1/.claude" "$T12_DIR/n2/.claude"
+T12_AG cc-plugin-agents-md@builtin claude-md-and-agents-md > "$T12_DIR/n1/.claude/settings.json"
+printf '{"theme":"dark"}' > "$T12_DIR/n2/.claude/settings.json"
+# $1=沙盒 HOME 的目錄名 $2=應該回的狀態
+t12_nojson() {
+    local s
+    s=$("$BASH" "$T12_DIR/nojson.sh" "$T12_DIR/$1" < /dev/null 2> "$T12_DIR/$1.err") \
+        || { echo "❌ T12：沒有 jq 與 python3 時 agents_md_state 失敗（${1}）"; cat "$T12_DIR/$1.err"; exit 1; }
+    [ "$s" = "$2" ] || { echo "❌ T12：沒有 jq 與 python3 時 ${1} 應該回 ${2}，實際：${s}"; exit 1; }
+}
+t12_nojson n1 unknown
+t12_nojson n2 none
+echo "✅ T12 環境檢查的 AGENTS.md 載入那一行：${T12_N} 種設定各印各的、不影響結束碼；沒有 jq 與 python3 時不講成已設"
 fi
 
 # --- T11：--check 的「檢查內建 Skills」「檢查內建 Agents」看得出部署版與 repo 這份不同（2026-11-15）

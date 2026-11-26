@@ -88,6 +88,10 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 最上層與 `modelSettings` 的 `autoCompactWindow`、以及這個 shell 的 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`）：只提示、不改檔、不影響結束碼。
 只讀這一個設定檔，專案層等其他設定檔不讀，所以「都沒設」那一行印的是「沒有有效的設定（其他設定檔沒查）」，不寫成確定沒設。
 印出的句子只寫官方文件原文撐得住的說法（出處在 `docs/designs/2026-11-15-speed-cost-design.md` 的 F15），「幾萬才壓縮」這類數字不進安裝輸出。
+自動壓縮視窗前一行報 **AGENTS.md 載入設定**（`agents_md_state`，讀 `~/.claude/settings.json` 的 `pluginConfigs` 底下 `cc-plugin-agents-md@builtin` 與舊 ID `agents-md@builtin` 的 `options.instructionFiles`）：
+只提示、不改檔、不影響結束碼；預設值不是錯，沒設時不印 ⚠，只講預設下有 `CLAUDE.md`、`.claude/CLAUDE.md` 或 `CLAUDE.local.md` 就不讀 `AGENTS.md`、要兩種都讀怎麼設。
+Claude Code 也讀 `--settings` 檔與 managed settings，這裡不讀，所以沒設那一行寫「其他設定檔沒查」。兩個 ID 的值不同時印「無從判定」（官方文件沒寫誰贏）。
+出處是官方文件 https://code.claude.com/docs/en/memory.md 的「Choose which instruction files load」（2026-11-26 讀的）。
 
 `--check` 的 skills、agents 兩段除了看在不在，還比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`）：部署版與 repo 這份不同，
 那一行印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行計數；只提示、不改檔、不影響結束碼（`tests/test-install.sh` 的 T11）。

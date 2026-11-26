@@ -16,6 +16,15 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Added
+
+- **環境檢查（安裝與 `--check`）多報一行「AGENTS.md 載入」**：讀 `~/.claude/settings.json` 的 `pluginConfigs` 底下 `cc-plugin-agents-md@builtin`（與 v2.1.285 前的舊 ID `agents-md@builtin`）的 `options.instructionFiles`。
+  Claude Code 預設在工作目錄以上有 `CLAUDE.md`、`.claude/CLAUDE.md` 或 `CLAUDE.local.md` 時不讀 `AGENTS.md`（官方文件 https://code.claude.com/docs/en/memory.md ），
+  用 `dd.docfile AGENTS.md` 又留著 `CLAUDE.local.md` 的專案就讀不到 `AGENTS.md`。只提示、不改檔、不影響結束碼；預設值不印 ⚠。
+  jq 與 python3 兩條路徑由 `tests/test-install.sh` T2 的 `agents` 那幾列守，輸出那一行由 T12 守。
+
 ## 1.6.17 — 2026-11-20
 
 ### Fixed
