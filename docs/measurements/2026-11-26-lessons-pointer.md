@@ -34,4 +34,9 @@
   讀 subagent 紀錄檔，有 Read `skills/dd-loop/lessons.md` 才算讀到，`message.model` 要是 sonnet。另記報告有沒有指出「包進交易擋不住 race／要先取鎖」（只記、不當判準）
 - 甲、乙各自過半才算過；沒過就停下回報
 
-（跑完填）
+**甲：3 發有效、0 發讀到 ⇒ 沒過，停下回報。** 三發都只讀 `orders.js`（兩發多讀 `package.json`），回答都沒有「隔離級別」；`claude-sonnet-5-5`，每發 0.16–0.18 美元。第二版指路句對 sonnet 主對話沒有效果。
+
+**乙：3 發、3 發讀到 ⇒ 過。** 三個 `code-reviewer` subagent 都是 `claude-sonnet-5-5`，第一個工具呼叫都是 Read `lessons.md`、第二個 Read `orders.js`，之後交回。
+三份報告都把「只包交易擋不住 race（read committed 下兩邊讀到同一份 pre-image）」列成 Critical，並引了 lessons.md 第 1 條；三份都另提「列不存在時要用 advisory lock」與「拉寬窗的可控實驗」。
+
+結論：派工 prompt 裡寫明的一句，sonnet 會照做（這裡 3／3、`writing-pointer` 那份的 code-simplifier 也是 3／3）；只放在全域 CLAUDE.md 的指路句，sonnet 主對話兩版都是 0／3，opus 是 3／3。
