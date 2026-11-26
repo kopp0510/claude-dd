@@ -27,6 +27,7 @@ tools: Read, Grep, Glob, Bash
 - 輸入處理層(controller、handler、validator)
 - `.env.example`、設定檔(確認密鑰管理方式)
 - 既有測試(看安全測試覆蓋哪些情境)
+- 審到 race condition、交易與鎖、「擋誤用」或「讓 X 可偵測」的機制、測試的鑑別力時:**先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 整份**,照對應的那一條判
 
 ### 2. 證據導向
 每個 finding 必須附:

@@ -25,6 +25,7 @@ model: sonnet
 - `Dockerfile`、`docker-compose.yml`、`k8s/` 目錄
 - 部署腳本、環境變數定義
 - README 中的部署說明段落
+- 要加 CI 檢查或部署前的守衛(「擋誤用」「讓 X 可偵測」這類機制)時:**先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 整份**;要寫或改註解、README、設計文件時:**先用 Read 讀 `~/.claude/skills/dd-loop/writing.md` 整份**
 
 ### 2. 自動化優於文件
 - 能用腳本/CI 做的,不寫「手動執行 X」的 README
