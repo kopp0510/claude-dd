@@ -1,7 +1,9 @@
 # 全域 §3.10 改成指路句之後，寫註解時會不會去讀 `writing.md`（2026-11-26）
 
-`cd46c74` 把全域 CLAUDE.md §3.10 的內容搬到 `skills/dd-loop/writing.md`，原位置只留一句「動筆或縮短既有文字之前,先用 Read 讀 `~/.claude/skills/dd-loop/writing.md` 整份」。
+`88b516d` 把全域 CLAUDE.md §3.10 的內容搬到 `skills/dd-loop/writing.md`，原位置只留一句「動筆或縮短既有文字之前,先用 Read 讀 `~/.claude/skills/dd-loop/writing.md` 整份」。
 問：迴圈外、一個單純的「加註解」請求，全新的 session 會不會去讀它。
+
+> 量測當時部署的是維護者本機分支的全域模板：比這個 repo 的 `templates/global/CLAUDE.md` 在 §3.9「規則」與 §3.10 多幾段本機規則（因此 `writing.md` 多兩條重點）。兩臂之間的差別只有下面寫的那幾處。
 
 ## 做法（跑之前寫死）
 

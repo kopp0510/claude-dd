@@ -3,6 +3,8 @@
 `lessons-pointer` 與 `writing-pointer` 兩份量到：只有指路句時 sonnet 主對話不去讀那兩份檔。改法：全域 §3.9「規則」與 §3.10 各列出每一條的粗體重點（從 `lessons.md`、`writing.md` 每條開頭的粗體原文照抄，不改字），細節仍在檔裡。
 問：只有一行重點時，sonnet 會不會照那一行做。
 
+> 量測當時部署的是維護者本機分支的全域模板：比這個 repo 的 `templates/global/CLAUDE.md` 在 §3.9「規則」與 §3.10 多幾段本機規則（因此 `writing.md` 多兩條重點）。兩臂之間的差別只有下面寫的那幾處。
+
 ## 做法（跑之前寫死）
 
 共同：拋棄式專案開在 scratchpad 底下，`claude -p … --model sonnet --output-format stream-json --verbose --max-budget-usd 2 --no-session-persistence --permission-mode dontAsk --settings '{"advisorModel":""}'`，一發有效 = `subtype` 是 `success` 且 `permission_denials` 是空的。
@@ -17,7 +19,7 @@
 
 ## 結果
 
-12 發都有效，每發 0.17–0.20 美元。改動在 `f4eb3e8`（全域模板 30472 → 32820 bytes）。
+12 發都有效，每發 0.17–0.20 美元。改動在 `3d970c0`（全域模板 30472 → 32820 bytes）。
 
 - **A 併發：過。** 新版 3 發回答都有「隔離級別」，而且 3 發都 Read 了 `lessons.md`（一發先讀它、兩發讀完 `orders.js` 才讀）。基準 0／6 有「隔離級別」、0／6 讀檔。
 - **B 註解：分不出（照事先寫的規則）。** 基準 3 發只有 1 發違反（第 2 發「依 coupon.type 分三種」），沒到 ≥2；新版 3 發 0 違反。

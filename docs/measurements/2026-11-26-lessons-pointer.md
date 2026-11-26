@@ -1,7 +1,9 @@
 # 全域 §3.9「規則」改成指路句之後，碰到併發 race 會不會去讀 `lessons.md`（2026-11-26）
 
-`cd46c74` 把 §3.9「規則」的 8 條驗證教訓搬到 `skills/dd-loop/lessons.md`，原位置留一句「改併發 / 資料庫鎖…時:先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 對應的那一條」。
+`88b516d` 把 §3.9「規則」的 8 條驗證教訓搬到 `skills/dd-loop/lessons.md`，原位置留一句「改併發 / 資料庫鎖…時:先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 對應的那一條」。
 題目沿用 `2026-11-20-domain-traps-pointer.md`（同一個 prompt、同樣結構的 `src/orders.js`），那次量的是指向 dd-loop SKILL.md 的指路。
+
+> 量測當時部署的是維護者本機分支的全域模板：比這個 repo 的 `templates/global/CLAUDE.md` 在 §3.9「規則」與 §3.10 多幾段本機規則（因此 `writing.md` 多兩條重點）。兩臂之間的差別只有下面寫的那幾處。
 
 ## 做法（跑之前寫死）
 
