@@ -15,4 +15,11 @@
 
 ## 結果
 
-（跑完填）
+6 發都有效。**opus 3／3 讀到 ⇒ 有效；sonnet 0／3 ⇒ 沒過半，停下回報。**
+
+| 臂 | 讀到 `lessons.md` | 回答有「隔離級別」 | 每發費用 |
+|---|---|---|---|
+| opus | 3／3（都在讀完 `orders.js`、`package.json` 之後） | 3／3 | 0.39–0.43 美元 |
+| sonnet | 0／3（只讀 `orders.js`，有一發多讀 `package.json`） | 0／3 | 0.16–0.18 美元 |
+
+`message.model` 各臂只有 `claude-opus-5-5`／`claude-sonnet-5-5`。與 `2026-11-26-writing-pointer.md` 第一批同型：同一句指路，opus 會照做、sonnet 不會。
