@@ -815,12 +815,13 @@ plain "$T12_DIR/h4/out.txt" | grep -qF '工作目錄以上有 CLAUDE.md、.claud
     || { echo "❌ T12：沒設時，提示沒有講到不讀 AGENTS.md 的條件"; exit 1; }
 # 沒有 jq 也沒有 python3：有字樣回 unknown（不講成已設），沒字樣回 none
 cat > "$T12_DIR/nojson.sh" <<'DRIVE'
-# $1=沙盒 HOME；在 repo 根目錄執行。把 jq 與 python3 都當成不存在
+# $1=沙盒 HOME $2=state（只問狀態）或 line（跑整個環境檢查）；在 repo 根目錄執行。把 jq 與 python3 都當成不存在
 export HOME="$1"
+unset CLAUDE_CODE_AUTO_COMPACT_WINDOW
 # shellcheck source=/dev/null
 source ./install-dd-pipeline.sh
 command_exists() { [ "$1" != jq ] && [ "$1" != python3 ] && command -v "$1" >/dev/null 2>&1; }
-agents_md_state "$HOME/.claude/settings.json"
+if [ "$2" = line ]; then check_environment; else agents_md_state "$HOME/.claude/settings.json"; fi
 DRIVE
 mkdir -p "$T12_DIR/n1/.claude" "$T12_DIR/n2/.claude"
 T12_AG cc-plugin-agents-md@builtin claude-md-and-agents-md > "$T12_DIR/n1/.claude/settings.json"
@@ -828,12 +829,25 @@ printf '{"theme":"dark"}' > "$T12_DIR/n2/.claude/settings.json"
 # $1=沙盒 HOME 的目錄名 $2=應該回的狀態
 t12_nojson() {
     local s
-    s=$("$BASH" "$T12_DIR/nojson.sh" "$T12_DIR/$1" < /dev/null 2> "$T12_DIR/$1.err") \
+    s=$("$BASH" "$T12_DIR/nojson.sh" "$T12_DIR/$1" state < /dev/null 2> "$T12_DIR/$1.err") \
         || { echo "❌ T12：沒有 jq 與 python3 時 agents_md_state 失敗（${1}）"; cat "$T12_DIR/$1.err"; exit 1; }
     [ "$s" = "$2" ] || { echo "❌ T12：沒有 jq 與 python3 時 ${1} 應該回 ${2}，實際：${s}"; exit 1; }
 }
 t12_nojson n1 unknown
 t12_nojson n2 none
+# 讀不到的檔（chmod 000）不講成確定沒設；root 讀得到，所以以 root 跑時這一格不跑
+if [ "$(id -u)" != 0 ]; then
+    mkdir -p "$T12_DIR/n3/.claude"
+    T12_AG cc-plugin-agents-md@builtin claude-md > "$T12_DIR/n3/.claude/settings.json"
+    chmod 000 "$T12_DIR/n3/.claude/settings.json"
+    t12_nojson n3 unparseable
+    chmod 600 "$T12_DIR/n3/.claude/settings.json"
+fi
+# 印出來的那一行也要講缺 jq 與 python3，不可以掉成「沒設」
+"$BASH" "$T12_DIR/nojson.sh" "$T12_DIR/n1" line < /dev/null > "$T12_DIR/n1.txt" 2>&1 \
+    || { echo "❌ T12：沒有 jq 與 python3 時環境檢查失敗"; tail -20 "$T12_DIR/n1.txt"; exit 1; }
+plain "$T12_DIR/n1.txt" | grep -F 'AGENTS.md 載入' | grep -qF '缺 jq 與 python3' \
+    || { echo "❌ T12：沒有 jq 與 python3 時，那一行應該講缺 jq 與 python3，實際：$(plain "$T12_DIR/n1.txt" | grep -F 'AGENTS.md 載入' | head -1)"; exit 1; }
 echo "✅ T12 環境檢查的 AGENTS.md 載入那一行：${T12_N} 種設定各印各的、不影響結束碼；沒有 jq 與 python3 時不講成已設"
 fi
 

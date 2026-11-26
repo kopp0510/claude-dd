@@ -125,7 +125,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 連 `..` 一起填時第一條 `git diff` 回 exit 129,整條管線卻 exit 0,只列出還沒 commit 的那幾份,看起來就像範圍正常):
 
 ```bash
-f=$(git config --local --get dd.docfile) || f=CLAUDE.md
+f=$(git config --local --get dd.docfile); [ -n "$f" ] || f=CLAUDE.md
 base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] &&
 { git -c core.quotePath=false diff --name-only "$base" HEAD
   git -c core.quotePath=false diff --name-only HEAD
@@ -133,7 +133,7 @@ base=$(~/.claude/scripts/check-claude-md.sh --segment-base) && [ -n "$base" ] &&
   | while IFS= read -r p; do [ "${p##*/}" = "$f" ] && printf '%s\n' "$p"; done | sort -u
 ```
 
-第一行取記憶檔名：專案設了 `git config --local dd.docfile`（例如 `AGENTS.md`）就用它，沒設就是 `CLAUDE.md`，跟 gate 的讀法一樣（只讀 `--local`）。
+第一行取記憶檔名：專案設了 `git config --local dd.docfile`（例如 `AGENTS.md`）就用它，沒設或設成空字串就是 `CLAUDE.md`，跟 gate 的讀法一樣（只讀 `--local`）。
 比對的是路徑最後一段**整個等於**那個檔名，不把檔名放進正規式（`.` 會變成萬用字元）。
 
 後兩條是「還沒 commit 的」(已追蹤的改動 + 未追蹤的新檔)。**不要改用

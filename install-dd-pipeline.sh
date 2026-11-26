@@ -396,6 +396,7 @@ else:
 #   unparseable settings.json 解析不了，或內容不是「剛好一個物件」
 #   unknown     缺 jq 與 python3，檔案裡有 instructionFiles 字樣（只有字串證據）
 # 護欄與 autocompact_state 同一套；jq 與 python3 兩條路徑要對齊，改任何一條先跑 tests/test-install.sh 的 T2（agents 那幾列）。
+# 已知沒對齊的輸入（2026-11-26 審查時實測，都要刻意造才會有，autocompact_state 也一樣）：小寫的 nan（jq 收、python3 不收）、落單的 surrogate 如 \ud800（jq 不收、python3 收）。
 agents_md_state() {
     local file="$1" out=""
 
@@ -446,7 +447,10 @@ else:
     print(names.get(vals[0], "odd"))
 ' 2>/dev/null) || out=""
     else
-        grep -q '"instructionFiles"' "$file" 2>/dev/null && echo "unknown" || echo "none"
+        # 只有字串證據：有字樣 → unknown、沒字樣 → none；讀不到檔（grep 回 2）→ unparseable，不講成確定沒設
+        local rc=0
+        grep -q '"instructionFiles"' "$file" 2>/dev/null || rc=$?
+        case "$rc" in 0) echo "unknown" ;; 1) echo "none" ;; *) echo "unparseable" ;; esac
         return
     fi
 
@@ -471,7 +475,7 @@ print_agents_md_line() {
             echo -e "├── ${YELLOW}⚠ ${name}：settings.json 無法解析，無從判定有沒有設${NC}" ;;
         unknown)
             echo -e "├── ${YELLOW}⚠ ${name}：缺 jq 與 python3，settings.json 裡有 instructionFiles 字樣但無從判定${NC}" ;;
-        *)
+        none|or)
             if [ "$state" = or ]; then
                 echo -e "├── ${name}（可選）：settings.json 設為預設值 claude-md-or-agents-md"
             else
@@ -479,6 +483,9 @@ print_agents_md_line() {
             fi
             echo -e "│   預設下，工作目錄以上有 CLAUDE.md、.claude/CLAUDE.md 或 CLAUDE.local.md 就不讀 AGENTS.md。兩種都要讀：/config 把"
             echo -e "│   Project instructions 設成 claude-md-and-agents-md，或照 https://code.claude.com/docs/en/memory.md 寫進 settings.json 的 pluginConfigs" ;;
+        *)
+            # 沒列到的狀態字（日後新增或拼錯）不可以掉成「沒設」
+            echo -e "├── ${YELLOW}⚠ ${name}：無從判定（狀態「${state}」）${NC}" ;;
     esac
 }
 

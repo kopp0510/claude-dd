@@ -25,7 +25,7 @@
   用 `dd.docfile AGENTS.md` 又留著 `CLAUDE.local.md` 的專案就讀不到 `AGENTS.md`。只提示、不改檔、不影響結束碼；預設值不印 ⚠。
   jq 與 python3 兩條路徑由 `tests/test-install.sh` T2 的 `agents` 那幾列守，輸出那一行由 T12 守。
 - **dd-loop 步驟 8 照 `dd.docfile` 的檔名算範圍**：原本寫死 `grep 'CLAUDE\.md$'`，設了 `dd.docfile AGENTS.md` 的專案一定算出空範圍、被當成「範圍為空」而跳過步驟 8。
-  現在先取 `git config --local --get dd.docfile`（沒設就是 `CLAUDE.md`，跟 gate 一樣），比對路徑最後一段整個等於那個檔名；記憶檔名不是 `CLAUDE.md` 時不用 `claude-md-improver`（它只找 `CLAUDE.md`），改自己逐份審。
+  現在先取 `git config --local --get dd.docfile`（沒設或設成空字串就是 `CLAUDE.md`，跟 gate 一樣），比對路徑最後一段整個等於那個檔名；記憶檔名不是 `CLAUDE.md` 時不用 `claude-md-improver`（它只找 `CLAUDE.md`），改自己逐份審。
 
 ## 1.6.17 — 2026-11-20
 

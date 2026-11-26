@@ -91,7 +91,7 @@ GIF 匯出用，缺少時警示並附安裝指令（brew / apt），該 skill �
 自動壓縮視窗前一行報 **AGENTS.md 載入設定**（`agents_md_state`，讀 `~/.claude/settings.json` 的 `pluginConfigs` 底下 `cc-plugin-agents-md@builtin` 與舊 ID `agents-md@builtin` 的 `options.instructionFiles`）：
 只提示、不改檔、不影響結束碼；預設值不是錯，沒設時不印 ⚠，只講預設下有 `CLAUDE.md`、`.claude/CLAUDE.md` 或 `CLAUDE.local.md` 就不讀 `AGENTS.md`、要兩種都讀怎麼設。
 Claude Code 也讀 `--settings` 檔與 managed settings，這裡不讀，所以沒設那一行寫「其他設定檔沒查」。兩個 ID 的值不同時印「無從判定」（官方文件沒寫誰贏）。
-出處是官方文件 https://code.claude.com/docs/en/memory.md 的「Choose which instruction files load」（2026-11-26 讀的）。
+出處是官方文件 https://code.claude.com/docs/en/memory.md 的「Choose which instruction files load」（2026-11-26 讀的）。jq 與 python3 兩條路徑由 `tests/test-install.sh` T2 的 `agents` 那幾列守，印出的那一行由 T12 守。
 
 `--check` 的 skills、agents 兩段除了看在不在，還比內容（比法跟安裝本身一樣：skill 用 `diff -rq`、agent 用 `cmp -s`）：部署版與 repo 這份不同，
 那一行印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行計數；只提示、不改檔、不影響結束碼（`tests/test-install.sh` 的 T11）。
