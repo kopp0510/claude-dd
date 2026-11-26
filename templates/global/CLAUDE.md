@@ -274,7 +274,7 @@
 
 ### 3.10 寫文件與註解時的判準
 
-⚠️ **這一節與 §3.9 的迴圈無關,凡是寫註解、CLAUDE.md、AGENTS.md、README、設計文件時都適用**:動筆或縮短既有文字之前,先用 Read 讀 `~/.claude/skills/dd-loop/writing.md` 整份(讀檔不算呼叫 `dd-loop`)。
+⚠️ **這一節與 §3.9 的迴圈無關**:要寫、改或縮短程式碼註解、CLAUDE.md、AGENTS.md、README、設計文件時,**第一個 Edit / Write 之前必須先用 Read 讀 `~/.claude/skills/dd-loop/writing.md` 整份** —— 只加一行註解也算(讀檔不算呼叫 `dd-loop`)。
 
 ---
 

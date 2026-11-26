@@ -29,3 +29,15 @@
 **3 發有效、3 發讀到 ⇒ 過半，指路句留著。** 三發都在第一個 Edit 之前 Read 了 `writing.md`（兩發先讀它、一發先讀 `price.js`），`message.model` 與 `modelUsage` 都只有 `claude-opus-5-5`；每發 0.39–0.42 美元。
 
 所以這句指路對 opus 有效、對 sonnet 無效（各 3 發）。2026-11-26 起四個 agent 都是 sonnet：會改註解的 `code-simplifier` 沒有實測，照 sonnet 那批推測它不會去讀。
+
+## 第二版指路句與 code-simplifier 派工句（opus 那批之後、這兩批開跑之前寫的）
+
+改了兩處：全域 §3.10 的指路句改成「第一個 Edit / Write 之前必須先用 Read 讀 … 整份 —— 只加一行註解也算」；
+`skills/code-simplifier/SKILL.md` 的 Prompt 模板「約束：」加一句「要改或新增註解時，第一個 Edit 之前先用 Read 讀 `~/.claude/skills/dd-loop/writing.md` 整份」。
+
+- **甲（指路句，sonnet）**：部署後照第一批的做法再跑 3 發 sonnet，判定式與結論規則同上
+- **乙（派工句）**：主對話用 Agent 工具派 `code-simplifier`（agent 定義 sonnet）3 發，prompt 是模板照填（範圍：拋棄式目錄裡的 `price.js`，檔案內容同上，另加一句「這個函式沒有註解，順手補上說明折扣與運費的註解」）；
+  讀 subagent 紀錄檔，第一個 Edit 之前有 Read `skills/dd-loop/writing.md` 才算讀到，`message.model` 要是 sonnet
+- 甲、乙各自過半才算過；沒過就停下回報
+
+（跑完填）
