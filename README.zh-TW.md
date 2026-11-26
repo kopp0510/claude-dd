@@ -170,6 +170,8 @@ git pull && ./install-dd-pipeline.sh --force
   gate 腳本不在時（協作者沒裝 claude-dd）只印警告、不擋 commit；擋下時的錯誤訊息會告訴 AI 怎麼補
 - **記憶檔名可設**：預設 `CLAUDE.md`，`git config --local dd.docfile GEMINI.md` 讓 gate 改認那個檔名，給只准放特定檔名的 repo 用。
   只讀 `--local`（存在 `.git/config`、不進版控，每個 clone 要各自設）：設成 global、`-c dd.docfile=…`、`GIT_CONFIG_PARAMETERS` 都不生效。只接受單純檔名（不能帶路徑或空白、不以 `-` 開頭），也不可以是程式碼檔名（副檔名在 gate 的程式碼清單裡，例如 `main.py`），否則每次 commit 都 `exit 1`
+  設了之後，迴圈步驟 8 也照這個檔名算範圍；`claude-md-improver` 只找 `CLAUDE.md`，那種專案的步驟 8 改成自己逐份審。
+  設成 `AGENTS.md` 時注意：工作目錄以上又有 `CLAUDE.md`、`.claude/CLAUDE.md` 或 `CLAUDE.local.md` 的話，Claude Code 預設不讀 `AGENTS.md`，要在 `/config` 把 Project instructions 設成 `claude-md-and-agents-md`（[官方文件](https://code.claude.com/docs/en/memory.md)；環境檢查會報目前的值）
 - 只對程式碼副檔名（`js|ts|py|go|rs|sh|…`）觸發，並排除 `node_modules`、`dist`、`.screenshots`、`migrations` 等目錄。只改 markdown 或設定檔**本身**不會觸發 —— 但見下一條：有 SKIP 欠帳時照樣擋
 - 檢查點 commit（步驟 2）逃生口：`SKIP_DOC_CHECK=1 git commit`；最終 commit（步驟 6）必須全過。SKIP 不是豁免：gate 會追查段落起點以來跳過的目錄，之後第一個正常 commit（就算沒改程式碼）沒補上它們的 CLAUDE.md 一樣擋
 - `git commit --no-verify`／`-n` 會讓 gate 整個不跑。Claude 這樣下指令時，`gate-guard` 會擋下並指向 `SKIP_DOC_CHECK=1`。它只擋 Claude，你自己在終端機打 `--no-verify` 擋不到；它是全域安裝，沒裝 gate 的專案也會擋

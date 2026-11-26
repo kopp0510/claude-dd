@@ -131,7 +131,8 @@ Claude Code 也讀 `--settings` 檔與 managed settings，這裡不讀，所以�
 段落起點以來跳過、還沒補 CLAUDE.md 的目錄，之後的正常 commit 一樣擋。
 `/dd-stop on` 可以把整個 gate 與迴圈的步驟 3–8 暫停（`git config --local dd.stopped true` 加上 `CLAUDE.local.md` 裡的聲明），一樣不是豁免：暫停期間欠的照記，`/dd-stop off` 之後照追。
 記憶檔名可設（`git config --local dd.docfile <檔名>`，預設 `CLAUDE.md`、只讀 local、不收程式碼檔名），
-給只准放特定檔名的 repo 用；三處使用點與驗證規則見 `scripts/CLAUDE.md`。
+給只准放特定檔名的 repo 用；三處使用點與驗證規則見 `scripts/CLAUDE.md`。迴圈步驟 8 算範圍時也照這個檔名（`skills/dd-loop/SKILL.md`「步驟 8：先算範圍」）。
+設成 `AGENTS.md` 又有 `CLAUDE.md`／`CLAUDE.local.md` 時要另設 Claude Code 的 Project instructions 才會讀到它，環境檢查會報那個值（見「安裝腳本」一節）。
 
 要跨好幾段的工作由 `task-planner` 拆成段落（一段一圈）與小任務（只走步驟 1、2，
 全部 commit 完，整段才跑 3–8），進度表寫進專案 `docs/designs/` 的設計文件，換 session 照表接手。
