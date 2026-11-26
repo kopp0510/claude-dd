@@ -20,6 +20,7 @@
 
 ### Changed
 
+- **步驟 4 的審查者改成 1 個 opus 加其餘 sonnet**（`dd-loop`）：全部 sonnet 時，2026-10-24 那批已知錯誤裡最難的 K5（測試證明不了它宣稱的事）2 發都漏掉（opus 當時 2/2）；混搭 2 發抓到 1 發，費用約全 opus 的六成。量測見 `docs/measurements/2026-11-26-sonnet-reviewer.md`。
 - **`code-reviewer` 只給 Read、Grep、Glob、Bash 四個工具**（frontmatter 加 `tools:`）：審查者不改檔，用不到其他工具；工具說明是 subagent 開場載入量的一大塊，haiku 實測 25 個工具 46999 tokens、這 4 個 28918。
 - **全域 CLAUDE.md 從 48437 縮到約 30 KB**：§3.9「規則」的 8 條驗證教訓搬到 `skills/dd-loop/lessons.md`、§3.10 寫文件的判準搬到 `skills/dd-loop/writing.md`（原文搬，只改指向本節／§3.9 的字），
   原位置各留一句「碰到這類工作就用 Read 讀 <路徑>」的指路。為了縮短主對話與每個 subagent 開場都要載入的量。§3.10 那句指路的到達率沒量過。

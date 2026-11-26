@@ -91,7 +91,7 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
 1. 在 `agents/` 建立 `<agent-name>.md`（frontmatter 含 `name`、`description`、`model` —
    四個 agent 2026-11-26 起都是 `sonnet`（使用者為了省用量決定；原本自製的是 `inherit`、兩個官方備份是 `opus`）。
    官方 `code-simplifier` 與 `pr-review-toolkit` 版的 code-reviewer 是 `opus`，`feature-dev` 版的 code-reviewer 是 `sonnet`（2026-11-15 讀本機官方副本）。
-   sonnet 審查的命中率沒量過（haiku 與 opus 的對照見 `docs/measurements/2026-10-23-reviewer-real-sessions.md`）。改這兩個官方備份之後，重跑 `agents/LICENSE.txt` 開頭列的比對指令，
+   步驟 4 因此改成 1 個 opus 加其餘 sonnet（全 sonnet 漏掉 K5，見 `docs/measurements/2026-11-26-sonnet-reviewer.md`）。改這兩個官方備份之後，重跑 `agents/LICENSE.txt` 開頭列的比對指令，
    把檔裡的行數與差異描述改成實際結果）
 2. 在 `install-dd-pipeline.sh` 的 `PROMOTED_AGENTS` 陣列加入名稱，並**同批**同步兩份 README 的
    promoted Agents 數字與本檔「目錄結構」那行的總數（CI 的「數字宣稱一致性」會擋）

@@ -67,7 +67,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 - **diff 檔用 Read 的 `offset`/`limit` 每次 300 行讀到最後一行**,這句也寫進給審查者的 prompt:
   Read 一次讀太多會**靜靜截斷、不報錯**(約 47 KB 就停;實測 3024 行的 diff 檔只回 544 行)
 - **主對話直接派審查者**:用 Agent 工具**在同一則訊息裡平行**派審查者
-  (`subagent_type: "code-reviewer"`,不帶 model 參數 —— 用 agent 定義的 sonnet,不換 haiku)**最少 3 個**,
+  (`subagent_type: "code-reviewer"`;其中**剛好 1 個**帶 `model: "opus"`,負責 diff 裡最需要推理的部分(測試與它要測的程式、斷言證明了什麼),其餘不帶 model 參數、用 agent 定義的 sonnet,不換 haiku;全 sonnet 時實測漏掉「測試證明不了它宣稱的事」那類錯,`docs/measurements/2026-11-26-sonnet-reviewer.md`)**最少 3 個**,
   數量是設定的下限,實際數量自己定,理由寫進 `-judge.md` 的「派工」節。**先派工、派完自己讀 diff 檔**(跟審查者同時進行)。
   一發只會挖到一部分（實測每發命中的已知錯誤子集不同），所以要好幾發。派工 prompt 寫明審查者的職責:找漏洞、每條附證據、沒證據不算。diff 動到併發或資料庫鎖、「擋誤用」或「讓 X 可偵測」的機制、git 進行中狀態、測試的鑑別力時,派工 prompt 另寫一句「審之前先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 整份,照對應的那一條判」(審查者是 sonnet,只靠全域 CLAUDE.md 的指路句實測 0／3 會去讀,`docs/measurements/2026-11-26-lessons-pointer.md`)。
   某個審查者失敗、沒回來或報告不完整 → 補派,補不了就照實寫進報告(哪個、為什麼),不能當作它沒有發現;
