@@ -20,6 +20,7 @@
 
 ### Changed
 
+- **`code-reviewer` 只給 Read、Grep、Glob、Bash 四個工具**（frontmatter 加 `tools:`）：審查者不改檔，用不到其他工具；工具說明是 subagent 開場載入量的一大塊，haiku 實測 25 個工具 46999 tokens、這 4 個 28918。
 - **全域 CLAUDE.md 從 48437 縮到約 30 KB**：§3.9「規則」的 8 條驗證教訓搬到 `skills/dd-loop/lessons.md`、§3.10 寫文件的判準搬到 `skills/dd-loop/writing.md`（原文搬，只改指向本節／§3.9 的字），
   原位置各留一句「碰到這類工作就用 Read 讀 <路徑>」的指路。為了縮短主對話與每個 subagent 開場都要載入的量。§3.10 那句指路的到達率沒量過。
 - **四個 agent 改用 `sonnet`**：`code-reviewer`、`code-simplifier`（原本 `opus`）與 `senior-devops`、`security-auditor`（原本 `inherit`，跟主對話的模型）。
