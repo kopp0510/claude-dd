@@ -222,12 +222,8 @@ skill 若含 `hooks/hooks.json`，其中 `command` **必須**用可在任意 cwd
   與 `plugin_enabled_state()` 都區分 `none`（確定沒有）／`unparseable`（檔案損毀，或內容不是「剛好一個物件」，無從判定）／`unknown`（缺 jq
   與 python3，只有字串證據）；jq 與 python3 兩條路徑須逐項等價（型別護欄要對齊），
   否則同一台機器裝不裝 jq 會得到不同結論。改這幾支（`jq_inplace`、`py_inplace`、`install_plugins`、`uninstall`、
-  `plugin_enabled_state`、`mcp_scope`、`autocompact_state`）的任何一條路徑，先跑 `tests/test-install.sh` 的 T2：它拿同一批假設定檔兩條都跑、比結論。
-  ⚠️ T2 只守它列的那幾類輸入，不是「等價」的證明 —— 2026-11-14 第一版 92 例抓到 16 例結論不同
-  （空檔時 jq 回報成功而檔案沒寫、頂層是 `null` 時 jq 把整個檔改寫成物件…，之前逐項讀程式碼對過好幾輪都沒看出來），
-  審查又找到表上沒有的兩類（檔案裡不只一個 JSON 值：不加 `-s` 的 `jq -e` 只看最後一個值；開頭有 BOM：jq 略過、python 預設的 utf-8 報錯）。
-  2026-11-15 `autocompact_state` 的審查再找到三類（數字字面值比浮點數精確：jq 拿字面值的原樣比大小，1.7、1.7.1、1.8.1 實測；別處有不合法的 UTF-8 位元組：jq 換成替代字元、python 報錯；
-  別處有幾千位的整數：python 的整數字串超過 4300 位就報錯，3.13.2 實測），只對 `autocompact_state` 修了、補了列，其他幾支沒測過這三類。
+  `plugin_enabled_state`、`mcp_scope`、`autocompact_state`、`agents_md_state`）的任何一條路徑，先跑 `tests/test-install.sh` 的 T2：它拿同一批假設定檔兩條都跑、比結論。
+  ⚠️ T2 只守它列的那幾類輸入，不是「等價」的證明：歷次漏掉的輸入類別、哪幾支還沒測過哪幾類，見 `tests/CLAUDE.md`「T2 守的輸入類別」。
   想到新的輸入類別就加進表裡，不要只改一條路徑
 - `OFFICIAL_PLUGINS` 新增項目前先確認該 plugin 的 `.claude-plugin/plugin.json`
   **有沒有 `version` 欄位** — 官方 `skill-creator` 就沒有（marketplace 與 cache 兩份都沒有）。

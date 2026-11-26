@@ -52,7 +52,7 @@
         只是轉呼叫 gate、**不判檔名**，所以行為正確。改它**不需要**跳 rev（蓋章區塊是
         ``grep -n '^```' commands/dd-init.md | head -2`` 夾出來的那段，Phase 3 在它之後）
       - **區塊內**：rev 12 以前步驟 8 的範圍指令寫死在蓋章區塊裡，要跟著檔名走就得跳 `dd-loop-rev`。
-        rev 13（2026-10-30）起區塊只寫「指令見 `dd-loop`」，指令在 `skills/dd-loop/SKILL.md`（一樣寫死 `grep 'CLAUDE\.md$'`），
+        rev 13（2026-10-30）起區塊只寫「指令見 `dd-loop`」，指令在 `skills/dd-loop/SKILL.md`（2026-11-26 起照 `dd.docfile` 的檔名比對），
         要跟著檔名走改那裡就好、不必跳 rev；已蓋 rev 12 以前的專案區塊裡仍是舊指令
       ⚠️ **已知限制(不是「使用者看不到」)**：Phase 3 產生的訊息字串寫死 `CLAUDE.md`
       （hook 的註解、gate 不在時的 fallback 警告、pre-commit／lefthook 的設定名 ——

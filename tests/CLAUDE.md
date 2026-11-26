@@ -117,6 +117,12 @@
 - **T12 與 T2 `agents` 那幾列的變異對照**（2026-11-26；改 `install-dd-pipeline.sh` 的 `agents_md_state`／`print_agents_md_line`，跑完還原並 `cmp` 確認與原檔相同）：
   jq 那條把 `claude-md-and-agents-md` 回成 `or` → T2 `agents.g-and`、`agents.g-bom`、`agents.g-old`；python3 那條拿掉「兩個 ID 不同 → conflict」→ T2 `agents.g-both-diff`；
   沒設那一行加 ⚠ → T12「沒設 時，那一行不該有 ⚠」。
+- **T2 守的輸入類別**（2026-11-26 從根目錄 `CLAUDE.md` 原文搬來，根目錄那條改成指到這裡）：
+  T2 只守它列的那幾類輸入，不是「等價」的證明 —— 2026-11-14 第一版 92 例抓到 16 例結論不同
+  （空檔時 jq 回報成功而檔案沒寫、頂層是 `null` 時 jq 把整個檔改寫成物件…，之前逐項讀程式碼對過好幾輪都沒看出來），
+  審查又找到表上沒有的兩類（檔案裡不只一個 JSON 值：不加 `-s` 的 `jq -e` 只看最後一個值；開頭有 BOM：jq 略過、python 預設的 utf-8 報錯）。
+  2026-11-15 `autocompact_state` 的審查再找到三類（數字字面值比浮點數精確：jq 拿字面值的原樣比大小，1.7、1.7.1、1.8.1 實測；別處有不合法的 UTF-8 位元組：jq 換成替代字元、python 報錯；
+  別處有幾千位的整數：python 的整數字串超過 4300 位就報錯，3.13.2 實測），只對 `autocompact_state` 修了、補了列（`agents_md_state` 2026-11-26 新寫時照它的護欄、後兩類也有列），其他幾支沒測過這三類。
 - **T2 的 `j-*` 那幾列改的是 marketplace 裡的 `plugin.json`**（`T2_PLUGIN_JSON`）：`j-noversion` 走「`plugin.json` 沒有 version、改讀 `installed_plugins.json`」那條路 ——
   官方 skill-creator 就是這樣，使用者的機器實際走的是它；其他列的 `plugin.json` 都有 version，走不到。把 jq 那條 fallback 改成讀錯欄位 → 這一列紅（jq 那一臂印「取不到版本」）
 - **`t2_canon` 只把長得像時間戳的 `installedAt`／`lastUpdated` 換成 `TS`**：fixture 裡的 `"A"` 要留著，
