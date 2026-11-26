@@ -20,6 +20,7 @@
 
 ### Changed
 
+- **`dd-loop` 補寫報告放哪**：專案還沒有 `docs/reviews/` 時第一次落地就建它；沒有進度表時段落用 `S1`、報告放 `docs/reviews/<日期>-<主題>/`；`docs/reviews/` 的命名慣例檔可能是 `dd.docfile` 設的檔名。`security-auditor`、`senior-devops` 的定義檔寫明碰到哪幾類工作要先讀 `lessons.md`／`writing.md`（security-auditor 實測 sonnet 2/2 照做）。
 - **步驟 4 的審查者改成 1 個 opus 加其餘 sonnet**（`dd-loop`）：全部 sonnet 時，2026-10-24 那批已知錯誤裡最難的 K5（測試證明不了它宣稱的事）2 發都漏掉（opus 當時 2/2）；混搭 2 發抓到 1 發，費用約全 opus 的六成。量測見 `docs/measurements/2026-11-26-sonnet-reviewer.md`。
 - **`code-reviewer` 與 `security-auditor` 只給 Read、Grep、Glob、Bash 四個工具**（frontmatter 加 `tools:`）：兩者都只審不改檔，用不到其他工具；工具說明是 subagent 開場載入量的一大塊，haiku 實測 25 個工具 46999 tokens、這 4 個 28918。
 - **全域 CLAUDE.md 從 48437 縮到約 30 KB**：§3.9「規則」的 8 條驗證教訓搬到 `skills/dd-loop/lessons.md`、§3.10 寫文件的判準搬到 `skills/dd-loop/writing.md`（原文搬，只改指向本節／§3.9 的字），

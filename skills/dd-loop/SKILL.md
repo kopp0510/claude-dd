@@ -94,7 +94,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
     **專案還沒有 `docs/reviews/` 目錄時,第一次落地就建它** —— 目錄一建就等於採用留痕慣例,之後 `--start-segment` 會查上一段有沒有新增報告
     (剛採用時的出路見上方「段落起點與 `<起點>`」那段的 `S<上一段>-SKIP.md`)。
     `<段落>` 用進度表上的段落 ID;**沒有進度表時用 `S1`**,報告放子目錄 `docs/reviews/<日期>-<主題>/`(不放根目錄,免得不同工作的 `S1` 互相覆蓋)。
-    **多張進度表時放子目錄** `docs/reviews/<進度表檔名去掉 -design.md>/`(段落 ID 會跨表重複);gate 認得子目錄裡的 `S*.md`。**寫之前先 `ls`**,
+    **多張進度表時放子目錄** `docs/reviews/<進度表檔名去掉 -design.md>/`(段落 ID 會跨表重複)。不管哪一種子目錄,gate 都認得裡面的 `S*.md`。**寫之前先 `ls`**,
     因為覆蓋掉別人的報告時 `git status` 顯示的是 `M` 而不是 `??`,沒有任何警告。
     專案的 `docs/reviews/` 底下有自己的記憶檔(`CLAUDE.md`,或 `dd.docfile` 設的檔名)寫了別的命名慣例時,照它。
   - 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由(有 `docs/reviews/` 時 gate 的 `--start-segment` 要範圍裡新增一份
