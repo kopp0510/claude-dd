@@ -21,7 +21,7 @@
 ## Highlights
 
 - **Fewer stops to ask** — reversible steps just happen (including local commits and running existing tests); it only stops for destructive actions, scope changes, or information only you can give. Pushing is always left to you
-- **Criteria for writing docs and comments** — §3.10 of the global CLAUDE.md, which applies even to projects that don't run the loop: enumerate instead of writing counts, print the cited line when checking a line-number reference, and when fixing "the same claim stated in N places", search by the criterion rather than by the first sentence you found
+- **Criteria for writing docs and comments** — `skills/dd-loop/writing.md`, pointed to from §3.10 of the global CLAUDE.md, which applies even to projects that don't run the loop: enumerate instead of writing counts, print the cited line when checking a line-number reference, and when fixing "the same claim stated in N places", search by the criterion rather than by the first sentence you found
 - **Explicit skill triggering** — when a skill should have fired and didn't, a concrete reason is written out, so skipping leaves an auditable line
 - **Usage-inventory model** — only components with an evidenced usage record are kept, all shipped by default
 - **Global CLAUDE.md template** — the single source for all of the above, deployed to `~/.claude/CLAUDE.md` after an interactive diff

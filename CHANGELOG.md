@@ -20,6 +20,8 @@
 
 ### Changed
 
+- **全域 CLAUDE.md 從 48437 縮到約 30 KB**：§3.9「規則」的 8 條驗證教訓搬到 `skills/dd-loop/lessons.md`、§3.10 寫文件的判準搬到 `skills/dd-loop/writing.md`（原文搬，只改指向本節／§3.9 的字），
+  原位置各留一句「碰到這類工作就用 Read 讀 <路徑>」的指路。為了縮短主對話與每個 subagent 開場都要載入的量。§3.10 那句指路的到達率沒量過。
 - **四個 agent 改用 `sonnet`**：`code-reviewer`、`code-simplifier`（原本 `opus`）與 `senior-devops`、`security-auditor`（原本 `inherit`，跟主對話的模型）。
   為了省用量；sonnet 當步驟 4 審查者的命中率沒量過。`code-simplifier.md` 因此不再與官方檔逐字相同，檔頭加了改動說明，比對結果見 `agents/LICENSE.txt`。
   只影響本 repo 部署的 agent：裝了官方 `code-simplifier` plugin 的機器，skill 會先用 plugin 那份（仍是 opus）。
