@@ -40,4 +40,8 @@
   讀 subagent 紀錄檔，第一個 Edit 之前有 Read `skills/dd-loop/writing.md` 才算讀到，`message.model` 要是 sonnet
 - 甲、乙各自過半才算過；沒過就停下回報
 
-（跑完填）
+**甲：3 發有效、2 發讀到 ⇒ 過半。** 讀到的兩發都是先 Read `price.js`、再 Read `writing.md`、第三個工具呼叫才 Edit；沒讀到的那一發 Read `price.js` 後直接 Edit。全是 `claude-sonnet-5-5`，每發 0.16–0.19 美元。
+同一個 prompt 的第一版指路句是 0／3（上面第一批）。
+
+**乙：3 發、3 發讀到 ⇒ 過半。** 三個 `code-simplifier` subagent 的 `message.model` 都是 `claude-sonnet-5-5`；兩發先讀 `writing.md`、一發先讀 `price.js`，都在第一個寫檔動作之前。
+它們改檔用的是 Write（不是 Edit），判定式寫的是 Edit；照「第一個寫檔動作之前」判，三發都算讀到。查第三發的時候它還沒寫檔，Read `writing.md` 已經發生。
