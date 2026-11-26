@@ -69,7 +69,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
 - **主對話直接派審查者**:用 Agent 工具**在同一則訊息裡平行**派審查者
   (`subagent_type: "code-reviewer"`;其中**剛好 1 個**帶 `model: "opus"`,負責 diff 裡最需要推理的部分(測試與它要測的程式、斷言證明了什麼),其餘不帶 model 參數、用 agent 定義的 sonnet,不換 haiku;全 sonnet 時實測漏掉「測試證明不了它宣稱的事」那類錯,`docs/measurements/2026-11-26-sonnet-reviewer.md`)**最少 3 個**,
   數量是設定的下限,實際數量自己定,理由寫進 `-judge.md` 的「派工」節。**先派工、派完自己讀 diff 檔**(跟審查者同時進行)。
-  一發只會挖到一部分（實測每發命中的已知錯誤子集不同），所以要好幾發。派工 prompt 寫明審查者的職責:找漏洞、每條附證據、沒證據不算。diff 動到併發或資料庫鎖、「擋誤用」或「讓 X 可偵測」的機制、git 進行中狀態、測試的鑑別力時,派工 prompt 另寫一句「審之前先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 整份,照對應的那一條判」(審查者是 sonnet,只靠全域 CLAUDE.md 的指路句實測 0／3 會去讀,`docs/measurements/2026-11-26-lessons-pointer.md`)。
+  一發只會挖到一部分（實測每發命中的已知錯誤子集不同），所以要好幾發。派工 prompt 寫明審查者的職責:找漏洞、每條附證據、沒證據不算。diff 動到併發或資料庫鎖、「擋誤用」或「讓 X 可偵測」的機制、git 進行中狀態、測試的鑑別力、識別符(函式名、欄位名、設定鍵)或清單的分母,以及驗證結果是 0 紅或無輸出時(全域 §3.9「規則」那一條列的同一組),派工 prompt 另寫一句「審之前先用 Read 讀 `~/.claude/skills/dd-loop/lessons.md` 整份,照對應的那一條判」(審查者是 sonnet,只靠全域 CLAUDE.md 的指路句實測 0／3 會去讀,`docs/measurements/2026-11-26-lessons-pointer.md`)。
   某個審查者失敗、沒回來或報告不完整 → 補派,補不了就照實寫進報告(哪個、為什麼),不能當作它沒有發現;
   收回的完整報告少於 3 份 → 不算跑過步驟 4,照實說,不續行
 - 不另派裁決者：2026-10-24 實測主對話直接派命中 4/6，另派裁決者 3/6（n 小、只是方向）
@@ -97,7 +97,7 @@ description: 8 步開發迴圈（全域 CLAUDE.md §3.9）各步的做法細則�
     **多張進度表時放子目錄** `docs/reviews/<進度表檔名去掉 -design.md>/`(段落 ID 會跨表重複)。不管哪一種子目錄,gate 都認得裡面的 `S*.md`。**寫之前先 `ls`**,
     因為覆蓋掉別人的報告時 `git status` 顯示的是 `M` 而不是 `??`,沒有任何警告。
     專案的 `docs/reviews/` 底下有自己的記憶檔(`CLAUDE.md`,或 `dd.docfile` 設的檔名)寫了別的命名慣例時,照它。
-  - 跳過時建 `docs/reviews/S<段落>-SKIP.md` 寫明理由(有 `docs/reviews/` 時 gate 的 `--start-segment` 要範圍裡新增一份
+  - 跳過時建 `S<段落>-SKIP.md` 寫明理由,位置同上面的報告(沒有進度表時放 `docs/reviews/<日期>-<主題>/`、多張進度表時放該表的子目錄;寫之前先 `ls`,蓋掉既有的申報檔 gate 不算新增)(有 `docs/reviews/` 時 gate 的 `--start-segment` 要範圍裡新增一份
     `S<數字>…md`,只加 trailer 開下一段時會被擋),commit 訊息加 trailer `SKIP-REVIEW: <段落> <理由>`(放在 `Co-Authored-By` 那一段裡、緊接在它前一行,**中間不能空行** —— 隔了空行 git 就不認它是 trailer,下面的查法回空值、commit 照樣成功),
     同時寫進設計文件該段底下(沒有設計文件就寫在回報裡)。查的時候用
     `git log --format='%h %(trailers:key=SKIP-REVIEW,valueonly)'`,**不要用 `--grep`**
