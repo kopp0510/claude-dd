@@ -26,4 +26,6 @@
 同一個 prompt、同樣的檔、同樣的旗標，只把 `--model sonnet` 換成 `--model opus`，3 發同時跑、各自新的拋棄式專案。判定式與結論規則同上；
 沒過半 → 停下回報，由使用者決定要不要把 §3.10 搬回全域。
 
-（跑完填）
+**3 發有效、3 發讀到 ⇒ 過半，指路句留著。** 三發都在第一個 Edit 之前 Read 了 `writing.md`（兩發先讀它、一發先讀 `price.js`），`message.model` 與 `modelUsage` 都只有 `claude-opus-5-5`；每發 0.39–0.42 美元。
+
+所以這句指路對 opus 有效、對 sonnet 無效（各 3 發）。2026-11-26 起四個 agent 都是 sonnet：會改註解的 `code-simplifier` 沒有實測，照 sonnet 那批推測它不會去讀。
