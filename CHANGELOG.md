@@ -18,6 +18,12 @@
 
 ## 未發布
 
+### Changed
+
+- **四個 agent 改用 `sonnet`**：`code-reviewer`、`code-simplifier`（原本 `opus`）與 `senior-devops`、`security-auditor`（原本 `inherit`，跟主對話的模型）。
+  為了省用量；sonnet 當步驟 4 審查者的命中率沒量過。`code-simplifier.md` 因此不再與官方檔逐字相同，檔頭加了改動說明，比對結果見 `agents/LICENSE.txt`。
+  只影響本 repo 部署的 agent：裝了官方 `code-simplifier` plugin 的機器，skill 會先用 plugin 那份（仍是 opus）。
+
 ### Added
 
 - **環境檢查（安裝與 `--check`）多報一行「AGENTS.md 載入」**：讀 `~/.claude/settings.json` 的 `pluginConfigs` 底下 `cc-plugin-agents-md@builtin`（與 v2.1.285 前的舊 ID `agents-md@builtin`）的 `options.instructionFiles`。

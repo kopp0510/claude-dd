@@ -144,7 +144,7 @@ git pull && ./install-dd-pipeline.sh --force
 
 ### 審查那一步要花多少
 
-步驟 4 是最貴的一步。該段有人工寫的程式碼時，主對話至少派 3 個審查者，本 repo 部署的 `agents/code-reviewer.md` 定義的 model 是 opus；diff 全是資料、設定、註解或文件，或已被機械檢查完全覆蓋時不派。手上有兩組量測，量的不是同一件事，也都不是「每段要花多少」：
+步驟 4 是最貴的一步。該段有人工寫的程式碼時，主對話至少派 3 個審查者，本 repo 部署的 `agents/code-reviewer.md` 定義的 model 是 sonnet（2026-11-26 前是 opus）；diff 全是資料、設定、註解或文件，或已被機械檢查完全覆蓋時不派。手上有兩組量測，量的不是同一件事，也都不是「每段要花多少」：
 
 - **真實 session 裡單個審查者的耗時，量在現行派工做法之前**：2026-10-23 從維護者自己的 session 紀錄（約前 30 天）取出 311 次審查者執行，中位 11.8 分、第 90 百分位 27.7 分。這是 wall time：含模型思考與工具執行；被喚醒續跑過的審查，中間閒置的時間也算在裡面。派工規則隔天就改了（現在先把 diff 準備成一個檔交給審查者，並由主對話直接派），之後沒有再量過真實 session。
 - **現行規則下一整次審查，在基準台上**：2026-10-24，拿兩份固定的測試 diff（203 行與 249 行）跑了 4 發。整發 221–327 秒（平均 269 秒），其中最慢的單一審查者 139–226 秒；費用每發 3.89–6.89 美元（平均 5.13），取自最後一筆 result 紀錄，量測檔自己註明可能偏低。只有 4 發、又是小的固定 diff，不能拿來估預算。
@@ -327,7 +327,7 @@ vendored 內容，各自附上游授權檔：
 | `skills/frontend-design/LICENSE.txt` | Apache-2.0 | 有歸屬／NOTICE 要求 |
 | `skills/tech-diagram-gif/LICENSE.txt` | MIT | fireworks-tech-graph contributors（只借風格規範，借了哪幾條見該檔） |
 | `skills/self-improving-agent/LICENSE` | MIT | Reza Rezvani |
-| `agents/LICENSE.txt` | Apache-2.0 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) —— `agents/code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔逐字相同；`agents/code-reviewer.md` 是改過的檔，只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同（比對指令與行數見該檔） |
+| `agents/LICENSE.txt` | Apache-2.0 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) —— `agents/code-simplifier.md` 與官方 `code-simplifier` plugin 的同名檔只差 frontmatter 的 model 與一行改動說明；`agents/code-reviewer.md` 是改過的檔，只有一部分行與官方 `pr-review-toolkit`、`feature-dev` 的同名檔相同（比對指令與行數見該檔） |
 | `skills/security-audit/LICENSE.txt` | MIT | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（Cloudflare, Inc.） |
 | `output-styles/LICENSE.txt` | MIT | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（只借規則，逐節去向見該檔） |
 

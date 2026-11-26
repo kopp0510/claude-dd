@@ -199,7 +199,7 @@ CI 直接 `source` 安裝腳本取用陣列（腳本尾端有 source guard）。
 Root MIT（LICENSE）。vendored 內容各自附上游授權
 （`skills/writing-great-skills/LICENSE.txt`、`skills/frontend-design/LICENSE.txt`（Apache-2.0，有歸屬要求）、
 `skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`、`skills/security-audit/LICENSE.txt`（cloudflare/security-audit-skill，MIT）、`output-styles/LICENSE.txt`（i-have-adhd，MIT，只借規則，逐節去向見該檔）、
-`agents/LICENSE.txt`（anthropics/claude-plugins-official，Apache-2.0：`code-simplifier.md` 與官方檔逐字相同、`code-reviewer.md` 是改過的檔，比對結果見該檔）），
+`agents/LICENSE.txt`（anthropics/claude-plugins-official，Apache-2.0：`code-simplifier.md` 與官方檔只差 model 與一行改動說明、`code-reviewer.md` 是改過的檔，比對結果見該檔）），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
 原本有一個例外 `commands/workflow-review/`（第三方，`7248a15` 收編，未隨附 LICENSE、上游 repo 從未記錄，不符收編檢查清單第 1 項）：
 查不出上游就不能編一個授權上去，2026-11-15 退場。
