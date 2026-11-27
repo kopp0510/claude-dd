@@ -6,17 +6,17 @@
 
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。派工 prompt 是三個審查者共用的一段加各自的方向，全文如下（`<scratchpad>` 是這個 session 的暫存目錄，沒進 repo）。
 
-審查包 `<scratchpad>/s6-review/pack.txt`（576 行）的組成：這一段做了什麼的事實、已跑過的驗證與預期值、`git diff bf7e654 69f0e65`。被改到的檔沒有另附整檔，理由在 `S6-judge.md` 的「派工」。
+審查包 `<scratchpad>/s6-review/pack.txt`（576 行）的組成：這一段做了什麼的事實、已跑過的驗證與預期值、`git diff 5a0d16e e9212a4`。被改到的檔沒有另附整檔，理由在 `S6-judge.md` 的「派工」。
 
 ````
 你是這一段改動的審查者。職責：找漏洞，每條附證據（檔案路徑＋行或原句、或指令與輸出），沒證據不算。不寫優點。
 專案：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。全程唯讀：不改檔、不 commit、不跑安裝腳本、不跑 `claude`。
 審查包：<scratchpad>/s6-review/pack.txt（576 行，最後一行是 `<<<審查包結束>>>`）。先用 Read 把它讀完：用 offset／limit 每次 150 行，讀到看見最後那一行為止（Read 一次讀太多會靜靜截斷、不報錯）。
-範圍是 `git diff bf7e654 69f0e65`（已 commit 的兩個 commit，不是未 staged 的 diff）。被改到的檔讀 `git show 69f0e65:<路徑>`，舊版讀 `git show bf7e654:<路徑>`；沒被改到的檔照常讀。
+範圍是 `git diff 5a0d16e e9212a4`（已 commit 的兩個 commit，不是未 staged 的 diff）。被改到的檔讀 `git show e9212a4:<路徑>`，舊版讀 `git show 5a0d16e:<路徑>`；沒被改到的檔照常讀。
 審查包第二節列的驗證已經跑過、結果已確認，不要重跑；可以質疑它驗的是不是該驗的。只用手上的資料判斷，需要外部查證的（要上網、要跑 `claude -p`、要跑安裝）列出來交回。
 這一段全是 Markdown，沒有程式碼。要抓的是文件裡的宣稱與指路：講錯的、指不到的、搬完意思變了的、少掉的指示。使用者對這次搬動的要求是「意思不能變；是搬家，不是刪」。
 交回格式（照抄標題）：第一行 `Critical N / Important N / Smells N — 範圍：…`；【發現】每條：編號｜級別｜內容｜證據｜會出什麼事｜建議改法；【Smells】；【Not reported】看到但判斷不報的與理由；【What I ran】讀了哪些檔、跑了哪些指令；【需要外部查證】。
-你的方向（a）：根目錄 CLAUDE.md 少了什麼。把 `git show bf7e654:CLAUDE.md` 與 `git show 69f0e65:CLAUDE.md` 對起來，逐處看被拿走的每一段：①它裡面有沒有「要照做的指示」，搬走後根目錄留下的指路句夠不夠讓人在該做那件事的時候知道要去讀（指路句說的觸發時機，有沒有比原文窄）②宣稱「刪掉、沒有搬」的兩處有沒有帶走別處沒有的指示 ③根目錄留下的三條約束句，跟原文那三句的條件與指向一不一樣（補的主詞與設定檔路徑對不對）④根目錄剩下的內容裡，有沒有句子還在引用已經搬走的東西（「上面」「下方」「那一條」、節名、步驟編號、「四方」「第五方」這類在搬走段落裡才定義的詞）。
+你的方向（a）：根目錄 CLAUDE.md 少了什麼。把 `git show 5a0d16e:CLAUDE.md` 與 `git show e9212a4:CLAUDE.md` 對起來，逐處看被拿走的每一段：①它裡面有沒有「要照做的指示」，搬走後根目錄留下的指路句夠不夠讓人在該做那件事的時候知道要去讀（指路句說的觸發時機，有沒有比原文窄）②宣稱「刪掉、沒有搬」的兩處有沒有帶走別處沒有的指示 ③根目錄留下的三條約束句，跟原文那三句的條件與指向一不一樣（補的主詞與設定檔路徑對不對）④根目錄剩下的內容裡，有沒有句子還在引用已經搬走的東西（「上面」「下方」「那一條」、節名、步驟編號、「四方」「第五方」這類在搬走段落裡才定義的詞）。
 ````
 
 ## 發現
@@ -24,7 +24,7 @@
 審查者交回的報告，逐字（只把暫存目錄的絕對路徑換成 `<scratchpad>`）：
 
 ````
-Critical 0 / Important 3 / Smells 1 — 範圍：git diff bf7e654 69f0e65，方向（a）根目錄 CLAUDE.md 少了什麼
+Critical 0 / Important 3 / Smells 1 — 範圍：git diff 5a0d16e e9212a4，方向（a）根目錄 CLAUDE.md 少了什麼
 
 先講結論：根目錄 CLAUDE.md 留下的三條約束句跟原句一致；刪掉沒搬的兩處沒有帶走別處沒有的指示。有問題的是指路句，原文搬得對，但有兩處指路的觸發條件比原文窄，另有一處搬走的內容變成沒人提醒要同步。
 
@@ -34,7 +34,7 @@ Critical 0 / Important 3 / Smells 1 — 範圍：git diff bf7e654 69f0e65，方�
 - 這段原文在舊版根目錄「新增 Agent 步驟」5（`**量測前先關掉 advisor**：…要加 --settings '{"advisorModel":""}'`），舊版每個 session 都會載入。
 - 搬到新檔後放在「## 量 agent 指令本體」一節，而「## 測 skill 會不會自己叫」那一節沒有 advisor 的字（pack.txt L500–513）。
 - 新版根目錄 L74 的 skill 指路只叫人讀「測 skill 會不會自己叫」。L325 的通用指路叫人讀「`docs/measurements/CLAUDE.md`「已知的坑」」，它括號列的六項也沒有 advisor（pack.txt L541–564 那一節裡確實沒有）。
-- 這條本來就不只用在 agent A/B。`git grep -n advisorModel 69f0e65 -- docs/measurements/*/run.sh` 命中 6 支，其中包括 skill 觸發測試 `2026-10-30-dd-loop-trigger/run.sh:27` 與 `2026-11-14-security-audit-trigger/run.sh:30`。`2026-10-29-adhd-style/CLAUDE.md` 這次也改成指向「量 agent 指令本體」去拿 advisor 的做法。
+- 這條本來就不只用在 agent A/B。`git grep -n advisorModel e9212a4 -- docs/measurements/*/run.sh` 命中 6 支，其中包括 skill 觸發測試 `2026-10-30-dd-loop-trigger/run.sh:27` 與 `2026-11-14-security-audit-trigger/run.sh:30`。`2026-10-29-adhd-style/CLAUDE.md` 這次也改成指向「量 agent 指令本體」去拿 advisor 的做法。
 ｜會出什麼事：照 L74 或 L325 去做 skill 觸發測試或 output style 驗收的人沒關 advisor，費用和等待時間混進結果，量測失真。舊版時這句常駐在 context 裡，不會漏看。
 ｜建議改法：L325 的指路改成讀整份 `docs/measurements/CLAUDE.md`（括號列的項目加上「先關 advisor」）。或者把 advisor 那段移到「已知的坑」，「量 agent 指令本體」留一句指過去。
 
@@ -68,13 +68,13 @@ Critical 0 / Important 3 / Smells 1 — 範圍：git diff bf7e654 69f0e65，方�
 
 【What I ran】
 - Read pack.txt L1–576，分四次讀到 `<<<審查包結束>>>`
-- `git show 69f0e65:CLAUDE.md` 與 `git show bf7e654:CLAUDE.md` 寫進 scratchpad 的 new.md、old.md → 成功；Read new.md L150–254
+- `git show e9212a4:CLAUDE.md` 與 `git show 5a0d16e:CLAUDE.md` 寫進 scratchpad 的 new.md、old.md → 成功；Read new.md L150–254
 - `grep -nE '四方|第五方|上面|下方|下節|上一條|那一條|上方|下一條|本節|如下|前述|上述' new.md` → 9 筆，逐筆核過（見上）
 - `grep -nE 'advisor|deploy|--force|已知的坑|docs/measurements/CLAUDE.md|量 agent|測 skill' new.md` → advisor 0 筆，指路在 L74、L103、L325
 - `grep -n BUILTIN_SKILLS install-dd-pipeline.sh` → L55、490、497、662、667
-- `git show 69f0e65:DD_PIPELINE_ARCHITECTURE.md | grep -n '^## '` → 節名都在；`sed -n 111,135p` 看了「核心工作法」那一節
-- `git grep -n '無法比對' 69f0e65 -- tests/ install-dd-pipeline.sh` → T11 有斷言
-- `git grep -n advisorModel 69f0e65 -- docs/measurements/*/run.sh` → 6 支 run.sh，含兩支 skill 觸發測試
+- `git show e9212a4:DD_PIPELINE_ARCHITECTURE.md | grep -n '^## '` → 節名都在；`sed -n 111,135p` 看了「核心工作法」那一節
+- `git grep -n '無法比對' e9212a4 -- tests/ install-dd-pipeline.sh` → T11 有斷言
+- `git grep -n advisorModel e9212a4 -- docs/measurements/*/run.sh` → 6 支 run.sh，含兩支 skill 觸發測試
 
 【需要外部查證】
 - 第 1、2 條算不算真的漏讀，要靠審查包已排定的步驟 5 乾跑來證實。建議乾跑多加兩題：「測 skill 觸發時要不要關 advisor、怎麼關」「測 hook-only 元件擋不擋 Bash 的完整 `claude -p` 指令」，看全新 agent 照指路句走能不能拿到 advisor 那段和底稿指令。

@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 D 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`ac8fcfe..HEAD`。
+裁決者給審查者 D 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`e9a5db5..HEAD`。
 
 ````text
 ```
@@ -14,7 +14,7 @@
 
 ### S4-rev-common.txt
 ```
-你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`ac8fcfe..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
+你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`e9a5db5..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
 
 ## 讀什麼
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S4-review-diff.txt
@@ -29,7 +29,7 @@
 - CI「迴圈步數第五方」本機跑 → 8 個 ✅、exit 0
 - simplifier 沒改任何檔
 - 實驗（14 發 claude -p）不可重跑：要花錢，快照與 log 在 session 暫存目錄已不可得。數字以 `docs/measurements/2026-10-24-s4-outputs/stats.jsonl` 為準。
-- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；db0af00/a4ed41f/ee68e72 用 git show grep 過對應句子存在。
+- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；85f921e/544ccdf/35e94a4 用 git show grep 過對應句子存在。
 
 ## 你的職責
 找漏洞、證明這次改動有錯（程式邏輯錯、數字對不上、引用指錯、宣稱說過頭、文件互相矛盾）。每條附證據（diff 檔行號或 repo 檔案行、grep / python 指令與輸出）；沒證據的不算。不要客套、不要「整體不錯」。
@@ -46,11 +46,11 @@
 ## 你的方向：D 文件宣稱、交叉引用與結論有沒有說過頭
 審設計文件 S4 節與開放問題（diff 檔第 15–97 行與 ③ 段）、量測文件新節的文字宣稱（非逐格數字）、三份 plan-S4-r*.md、inputs/CLAUDE.md、根目錄 CLAUDE.md 那一行。重點：
 - 計畫（設計文件 S4 節，跑之前寫死的）與實際做法/文件的落差有沒有照實寫：例如計畫說整發取「最後一筆 result 的 duration_ms」，stats.py 改成時間戳；計畫說機械檢查掃工具「結果」的絕對路徑，stats.py 只看輸入；計畫說 brief grep 答案片段的結果「附進量測文件」—— 有附嗎？計畫說「答案先對到程式碼…寫進命中判準」有寫嗎？計畫說「G4 1 發」，實際 2 發；計畫的費用粗估「5×4」；計畫說斷言 `git log --oneline | wc -l` 等於 2。逐條列「計畫寫了、實際沒做或沒記」的
-- commit hash 宣稱：db0af00、a4ed41f、ee68e72、7b4bd74、1f5ae2a、3f474dc、8478a4b、ee68e72 與 K 的對應；G2/G3/G4 範圍與「4 檔 +111/−18」「8 檔 +124/−7」「3 檔 +231/−16（最大）」（用 git diff --shortstat 核）；`git ls-tree -r --name-only 8514fb2` 帶著 G2 答案那句
+- commit hash 宣稱：85f921e、544ccdf、35e94a4、e54aa2e、eb5c186、1e7ffae、340e12e、35e94a4 與 K 的對應；G2/G3/G4 範圍與「4 檔 +111/−18」「8 檔 +124/−7」「3 檔 +231/−16（最大）」（用 git diff --shortstat 核）；`git ls-tree -r --name-only 720f1b3` 帶著 G2 答案那句
 - briefs.txt 寫的檔案清單是否等於各範圍 `git diff --name-only`；brief 的驗證數字（90 ✅ / 81、105 ✅ / 90、16 個 step）與舊報告／commit 訊息是否一致（用 git show 那些 commit 或讀 docs/reviews 舊報告的派工節）
 - 結論是否說過頭：例如「haiku 審查者沒有比 Opus 審查者少抓」在 n=2、3 個錯誤下的措辭；「多出來的主要是裁決者那一層」的歸因（§3.10 歸因要能被反證）；結論 4「附帶觀察」；開放問題那兩條的摘要是否忠於量測文件
 - 交叉引用：量測文件引用的路徑（`2026-10-24-s4-inputs/stats.py` 這種相對路徑在文件所在目錄是否成立）；inputs/CLAUDE.md 的描述（例如 stats.py「洩題」作廢、test_leaky「該抓的、誤報各幾則」）與程式是否一致；inputs/CLAUDE.md 說 outputs 有「每個 agent 最後一則文字」—— 檔名格式對嗎
-- 進度表 S4 列（IN_PROGRESS、`ac8fcfe..`）與規則區塊是否一致；根目錄 CLAUDE.md 那行
+- 進度表 S4 列（IN_PROGRESS、`e9a5db5..`）與規則區塊是否一致；根目錄 CLAUDE.md 那行
 - plan-S4-r*.md 的處置是否與最終設計文件一致（例如 r2 說「stdout 存 out.jsonl」而最後是 logs/<發代號>.jsonl；r2 說「機械檢查改成工具輸入出現…絕對路徑」而設計文件寫工具「結果」）
 ```
 ````
@@ -60,7 +60,7 @@
 審查者 D 的報告原文（逐字）：
 
 ````text
-Critical 0 / Important 7 / Smells 0。審查範圍是 `ac8fcfe..HEAD`，方向 D：文件宣稱、交叉引用、結論有沒有說過頭。
+Critical 0 / Important 7 / Smells 0。審查範圍是 `e9a5db5..HEAD`，方向 D：文件宣稱、交叉引用、結論有沒有說過頭。
 
 這次最要緊的兩條是第 1 條和第 4 條：一條是洩題檢查「沒有命中」說過頭了，一條是 G4／G3「讀到第幾行」的量法跟文件寫的不是同一件事。
 
@@ -100,10 +100,10 @@ Critical 0 / Important 7 / Smells 0。審查範圍是 `ac8fcfe..HEAD`，方向 D
 - 失敗情境：開放問題「大 diff 讀不讀得完」的答案被當成已經量到，後續可能據此決定 diff 檔不用切段。
 - 建議：措辭改成「請求讀到第 N 行（沒核對工具結果是否成功）」；設計文件:35 補回「沒驗證」；:246 改成「沒統計」，或補上統計 sed／cat 的指令。
 
-[Important] 5｜設計文件 diff 檔:55、量測文件 diff 檔:192：「K3 對應 a4ed41f」指錯了第一次寫進去的 commit
-- 證據：我跑 `git log -S '要記「哪個變異' -- templates/global/CLAUDE.md`，最早是 713038a（2026-10-07 16:02，「全域迴圈補兩條 + S4 的報告落地」），diff 第 46 行加了「變異測試的『紅數』不是證據 —— 要記『哪個變異 → 哪幾個情境變紅』」。a4ed41f（10-09）只是改寫成現在的措辭。`git merge-base --is-ancestor b66d8ae 713038a` 成立。
+[Important] 5｜設計文件 diff 檔:55、量測文件 diff 檔:192：「K3 對應 544ccdf」指錯了第一次寫進去的 commit
+- 證據：我跑 `git log -S '要記「哪個變異' -- templates/global/CLAUDE.md`，最早是 3fe445a（2026-10-07 16:02，「全域迴圈補兩條 + S4 的報告落地」），diff 第 46 行加了「變異測試的『紅數』不是證據 —— 要記『哪個變異 → 哪幾個情境變紅』」。544ccdf（10-09）只是改寫成現在的措辭。`git merge-base --is-ancestor 40b3f0a 3fe445a` 成立。
 - 失敗情境：要追「教訓什麼時候進全域規則」的人會拿到晚了兩天、而且是蒸餾改寫的那個 commit。「都用 `git log -S` 查過」的結果是被搜尋片語的選擇決定的，正是 §3.10「歸因要能被反證」要防的情況。污染的結論不受影響，兩個 commit 都在 G2 之後。
-- 建議：改成「K3 ← 713038a（a4ed41f 改寫）」。
+- 建議：改成「K3 ← 3fe445a（544ccdf 改寫）」。
 
 [Important] 6｜量測文件 diff 檔:172（結論 1 的歸因）
 - 內容：文件寫「裁決者耗時 314–352s，其中審查者層只佔 164–235s，剩下的是裁決者自己讀 diff、派工、**等待**、逐條查證」。「等待審查者」本來就屬於審查者層，放進「剩下」自相矛盾。而且 `rev_max_s` 是單一審查者自己的耗時（stats.py:591），不是「第一個派出到最後一個回來」的跨度，所以「剩下」裡混著審查者的排程時間，分不出裁決者自己的工作量。
@@ -120,11 +120,11 @@ Critical 0 / Important 7 / Smells 0。審查範圍是 `ac8fcfe..HEAD`，方向 D
 
 Not reported
 - shortstat「4 檔 +111/−18」「8 檔 +124/−7」「3 檔 +231/−16」：用 `git diff --shortstat` 核過，正確。briefs.txt 的檔案清單也等於快照的 `git diff --name-only`，三段都對。
-- `git ls-tree -r --name-only 8514fb2` 確實帶著 `review-followups/S4-a.md`、`S4-b.md`。7b4bd74、1f5ae2a 跟 K4 無關，屬實。db0af00、ee68e72 是 K2、K6 最早寫進去的 commit，屬實。8478a4b 是 48de43f 的後代，同一天。
-- brief 的 90／81、8、105／90、16 個 step 跟舊派工節（S4-a.md:11、S1-a.md:7–9）、b66d8ae 的 commit 訊息一致。G3 brief 拿掉了 m1／m3 變異那句，符合「拿掉指向特定錯誤的字句」。
+- `git ls-tree -r --name-only 720f1b3` 確實帶著 `review-followups/S4-a.md`、`S4-b.md`。e54aa2e、eb5c186 跟 K4 無關，屬實。85f921e、35e94a4 是 K2、K6 最早寫進去的 commit，屬實。340e12e 是 dd3f72d 的後代，同一天。
+- brief 的 90／81、8、105／90、16 個 step 跟舊派工節（S4-a.md:11、S1-a.md:7–9）、40b3f0a 的 commit 訊息一致。G3 brief 拿掉了 m1／m3 變異那句，符合「拿掉指向特定錯誤的字句」。
 - 這些數字都核過、對得上：diff 檔行數 1010／3024／1155、G4 第一段到第 310 行、check-claude-md.sh 從第 971 行開始、費用合計 34.66、倍數 3／1.9／3.6／2.5、git 次數 3–5 對 0–3、報告 51 份、K1／K5 命中表合計 3／3／3、K2 和 K6 引用的行。
 - 結論 3「haiku 沒有比 Opus 少抓」：同一節有「只是這批的觀察」，結論 2 也寫了分不出差異，措辭夠保守，不報。
-- 進度表 S4 列（IN_PROGRESS、`ac8fcfe..`、有 S4-1 小任務）符合規則區塊；根目錄 CLAUDE.md 那行跟計畫:93 一致。
+- 進度表 S4 列（IN_PROGRESS、`e9a5db5..`、有 S4-1 小任務）符合規則區塊；根目錄 CLAUDE.md 那行跟計畫:93 一致。
 - 計畫的費用粗估「5×4」是照計畫的 G4 1 發算的，合理；實際多跑一發，已經算在第 3 條 c。
 - r2 寫 `out.jsonl`、最後改成 `logs/<發代號>.jsonl`：是後續輪次的修正，本身不算錯；它延伸出來的白名單問題在第 1 條。
 - reports/ 原文的內容不審（照派工排除）。
@@ -135,10 +135,10 @@ Not reported
 
 What I ran
 - `git diff --shortstat` 加 `--name-only` 對三個範圍 → 4／111／18、8／124／7、3／231／16，清單跟 briefs 一致
-- `git log -1` 查 db0af00、a4ed41f、ee68e72、7b4bd74、1f5ae2a、3f474dc、8478a4b、48de43f → 日期和主旨如上
-- `git log -S` 查 K2、K3、K6 的片語，以及「那只證明」「連共同祖先都沒有」「pre-commit 不查」「正常流程」 → db0af00、a4ed41f、ee68e72、ee68e72；0；0；7b4bd74 與 1f5ae2a
-- `git log -S '要記「哪個變異'`，加上 `merge-base --is-ancestor b66d8ae 713038a` → 713038a，在 G2 之後
-- `git ls-tree -r --name-only 8514fb2 | grep review-followups/S4` → S4-a.md、S4-b.md
+- `git log -1` 查 85f921e、544ccdf、35e94a4、e54aa2e、eb5c186、1e7ffae、340e12e、dd3f72d → 日期和主旨如上
+- `git log -S` 查 K2、K3、K6 的片語，以及「那只證明」「連共同祖先都沒有」「pre-commit 不查」「正常流程」 → 85f921e、544ccdf、35e94a4、35e94a4；0；0；e54aa2e 與 eb5c186
+- `git log -S '要記「哪個變異'`，加上 `merge-base --is-ancestor 40b3f0a 3fe445a` → 3fe445a，在 G2 之後
+- `git ls-tree -r --name-only 720f1b3 | grep review-followups/S4` → S4-a.md、S4-b.md
 - `python3 -I revD/regen.py`（照 prepare.py 重建快照與 diff 檔）→ 行數 1010／3024／1155，段落起始行如上
 - `wc -c` 三份 diff 檔，以及 `head -780 S4-review-diff.txt` → 69124／252520／66084；73033
 - `python3 -I revD/t.py`（用 leaky 測別發的路徑）→ 5 則全部 False
@@ -147,17 +147,17 @@ What I ran
 - `grep` G4-new-1 的裁決者與 C 報告找「情境 A–G」→ 裁決者查證 A–F
 - `grep` 量測文件找 brief 答案片段，`grep` 設計文件找「答案先對到」→ 只有命中表列與計畫:342
 - `grep` K4 的各種寫法在 G3-* → 只命中 a3d3dc:18、abe0ae:5
-- `git show` 舊報告派工節與 b66d8ae／8514fb2 的 commit 訊息 → 90／81、105／90、16 一致
+- `git show` 舊報告派工節與 40b3f0a／720f1b3 的 commit 訊息 → 90／81、105／90、16 一致
 
 暫存檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/revD/regen.py、/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/revD/t.py
 ````
 
 ## 處置
 
-修正在 1e209ef。編號對到 `S4-judge.md` 的「採納」清單。
+修正在 896ff46。編號對到 `S4-judge.md` 的「採納」清單。
 
 - D1 → 同 A1；D2 → 同 B1；D3（計畫寫死的做法實跑偏離沒標）→ 採納 4（Important），設計文件 S4 節逐條加「實跑時改的」或「實跑時沒做」，brief grep 補跑（0 筆）
 - D3b → 同 A2；D4 → 同 A3，末項 haiku 讀法改成「沒數」（採納 11，Smells）
-- D5（K3 第一次寫進全域是 713038a）→ 採納 9（Smells），量測文件與設計文件都補上
+- D5（K3 第一次寫進全域是 3fe445a）→ 採納 9（Smells），量測文件與設計文件都補上
 - D6（結論 1「等待」措辭）→ 採納 10（Smells），改成「各審查者開跑時間的落差」
 - D7 → 同 C3

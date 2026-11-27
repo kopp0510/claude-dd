@@ -7,7 +7,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 > 你是 8 步迴圈步驟 4 的審查者 B。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 >
 > 專案根目錄：/Users/danlio/project/my_project/claude-dd
-> 審查範圍：git diff 2d436c0 86f37df（清理各層 CLAUDE.md 與全域模板，加 CHANGELOG 一條）。
+> 審查範圍：git diff a6af543 f434a5e（清理各層 CLAUDE.md 與全域模板，加 CHANGELOG 一條）。
 > 材料：<scratchpad>/cm-review-diff.txt（完整路徑：<scratchpad>/cm-review-diff.txt）。
 > 用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔讀材料裡那一份，沒改到的檔讀 repo。
 > 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
@@ -29,11 +29,11 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 ## 發現
 
 Critical 0 / Important 2 / Smells 1
-（審查範圍：git diff 2d436c0 86f37df）
+（審查範圍：git diff a6af543 f434a5e）
 
 ## Findings
 [Important] diagrams/src/CLAUDE.md:51｜「（要 ≥12px）」把一次量測值改寫成了一條門檻規則，但這條規則找不到出處
-  證據：舊版寫的是「（2026-09-11 四張都 ≥12px）」，是量到的結果（`git show 2d436c0:diagrams/src/CLAUDE.md | grep -n 12px` 第 51 行）。`verify-geometry.py` 的 `check_text_overflow()` 容差只有 0.5px（`x2 > hi + 0.5`）。`composition-quality-contract.md` 裡的 ≥12px 只用在 port 間距與平行連線間距，沒有用在文字與框右緣的距離。
+  證據：舊版寫的是「（2026-09-11 四張都 ≥12px）」，是量到的結果（`git show a6af543:diagrams/src/CLAUDE.md | grep -n 12px` 第 51 行）。`verify-geometry.py` 的 `check_text_overflow()` 容差只有 0.5px（`x2 > hi + 0.5`）。`composition-quality-contract.md` 裡的 ≥12px 只用在 port 間距與平行連線間距，沒有用在文字與框右緣的距離。
   失敗情境：之後有人改 loop 或 usage 圖，量到字尾離框右緣 8px。他會照這句判成不合格而去重排版面，但腳本與 contract 都沒有這條規定。
 
 [Important] CLAUDE.md:40｜「各元件的加入日期與實證來源見 `DD_PIPELINE_ARCHITECTURE.md`「部署清單」」，但那節沒有 tech-diagram-gif 的實證來源
@@ -46,10 +46,10 @@ Critical 0 / Important 2 / Smells 1
 ## Not reported
 - scripts/CLAUDE.md:99 還寫著「`test-gate.sh` 前 61 項」，是寫死項數的現在式句子。這次 diff 刪掉了 tests/CLAUDE.md 裡解釋這件事的那句，但 :99 這行本身是舊的問題，不是這次引入的。
 - skills/self-improving-agent/hooks/error-capture.sh:15 的 `# Install: Add to .claude/settings.json` 仍是上游原文。hooks/CLAUDE.md 新增的那段已經寫明「還沒改」，所以不算假宣稱。
-- 以下新宣稱都核對過，成立：`.ttl` 三支都是 40px；style-12 沒有 `.sm`；style-11 是 `.sm` 14、`.nm` 19、`.al` 14、`.ttl` 26；`../../skills/tech-diagram-gif/references/style-8-dark-luxury.md` 從 diagrams/src 解析得到；tag `pre-prune-2026-08-04` 存在；ci.yml「迴圈步數四方一致」step 有比對兩條判定線上的 rev（第 332–356 行，含「抓不到那行」）；`code-reviewer`、`security-auditor` 都在 agents/；dd-init.md:97 在蓋章區塊（52–149 行）內，寫了「不要把它寫成閉環」；`2026-10-07-review-followups/S4-a.md` 的處置確實記了 S6-a A2 ⑦ 的更正；`S6-a` 的 A2、`S6-b` 的 B2 確實是漂移那項；`2026-10-23-裁決審查/` 的 S3–S5 是裁決者寫的；gate-guard/hooks/CLAUDE.md 有「與上層的關係」節；self-improving-agent 有 `.claude-plugin/plugin.json` 與絕對路徑的 `hooks.json`，本 session 執行 Bash 時 error-capture hook 實際觸發了；全庫 `git grep '派 Task'` 0 筆；「.ttl 實測也會錯」的新敘述符合歷史（104df7b、51ad5d7、766153c、b15432f）。
+- 以下新宣稱都核對過，成立：`.ttl` 三支都是 40px；style-12 沒有 `.sm`；style-11 是 `.sm` 14、`.nm` 19、`.al` 14、`.ttl` 26；`../../skills/tech-diagram-gif/references/style-8-dark-luxury.md` 從 diagrams/src 解析得到；tag `pre-prune-2026-08-04` 存在；ci.yml「迴圈步數四方一致」step 有比對兩條判定線上的 rev（第 332–356 行，含「抓不到那行」）；`code-reviewer`、`security-auditor` 都在 agents/；dd-init.md:97 在蓋章區塊（52–149 行）內，寫了「不要把它寫成閉環」；`2026-10-07-review-followups/S4-a.md` 的處置確實記了 S6-a A2 ⑦ 的更正；`S6-a` 的 A2、`S6-b` 的 B2 確實是漂移那項；`2026-10-23-裁決審查/` 的 S3–S5 是裁決者寫的；gate-guard/hooks/CLAUDE.md 有「與上層的關係」節；self-improving-agent 有 `.claude-plugin/plugin.json` 與絕對路徑的 `hooks.json`，本 session 執行 Bash 時 error-capture hook 實際觸發了；全庫 `git grep '派 Task'` 0 筆；「.ttl 實測也會錯」的新敘述符合歷史（ce24343、b88270e、a88e396、43e2883）。
 
 ## What I ran
-- `git diff --stat 2d436c0 86f37df`；Read 每次 300 行讀完 cm-review-diff.txt（715 行）；`sed -n 77,95p DD_PIPELINE_ARCHITECTURE.md`；`git tag | grep pre-prune`；`sed -n 330,365p .github/workflows/ci.yml`；`grep -n '列出與現行版的差異\|rev 比' commands/dd-init.md`；`grep -n ttl diagrams/src/gen_*.py`；解析 style-11、style-12 的 `<style>`；grep 12px 於 contract/SKILL/verify-geometry.py 加 `sed -n 678,697p`；`git show 2d436c0:diagrams/src/CLAUDE.md | grep -n 12px`；`grep -n '閉環' commands/dd-init.md`；ls/cat self-improving-agent；grep S6-a/S6-b A2/B2 與 followups/S4-a.md；`git log -S'.ttl {{'`；`git grep -n '派 Task'`
+- `git diff --stat a6af543 f434a5e`；Read 每次 300 行讀完 cm-review-diff.txt（715 行）；`sed -n 77,95p DD_PIPELINE_ARCHITECTURE.md`；`git tag | grep pre-prune`；`sed -n 330,365p .github/workflows/ci.yml`；`grep -n '列出與現行版的差異\|rev 比' commands/dd-init.md`；`grep -n ttl diagrams/src/gen_*.py`；解析 style-11、style-12 的 `<style>`；grep 12px 於 contract/SKILL/verify-geometry.py 加 `sed -n 678,697p`；`git show a6af543:diagrams/src/CLAUDE.md | grep -n 12px`；`grep -n '閉環' commands/dd-init.md`；ls/cat self-improving-agent；grep S6-a/S6-b A2/B2 與 followups/S4-a.md；`git log -S'.ttl {{'`；`git grep -n '派 Task'`
 
 ## 需要外部查證
 - 讀 `~/.claude/settings.json`，確認 hooks 裡沒有手動又登記一次 error-capture.sh。

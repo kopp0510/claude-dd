@@ -66,7 +66,7 @@ wrap() {  # stdin = 區塊；包上專案自己的檔頭與區塊外的在地小
 }
 
 # ---- 1. 四個舊版：在地內容留在原步驟、該版的範本行清乾淨、只有一個標記 ----
-for tag in v1.6.12 v1.6.4 6a9addd v1.1.0; do
+for tag in v1.6.12 v1.6.4 b1227f7 v1.1.0; do
   f="$WORK/$tag.md"; o="$WORK/$tag.out.md"
   git -C "$ROOT" show "${tag}:commands/dd-init.md" | stamp > "$WORK/$tag.blk"
   grep -q 'dd-loop-version' "$WORK/$tag.blk" || { ng "${tag}：抽不到帶標記的區塊（CI 的 checkout 要 fetch-depth: 0）"; continue; }
@@ -113,7 +113,7 @@ if cmp -s "$WORK/cur.md" "$WORK/cur.out.md"; then ok "現行區塊：輸出與�
 # ---- 3. rental-management 型：區塊掛在專案自己的 ### 底下 ----
 f="$WORK/rental.md"; o="$WORK/rental.out.md"
 { printf '# 專案R\n\n## 專案規則\n\n'
-  sed 's/^## 開發流程（每個功能段落依序走）$/### 工作流程（完成的定義，不可省略）/' "$WORK/6a9addd.blk"
+  sed 's/^## 開發流程（每個功能段落依序走）$/### 工作流程（完成的定義，不可省略）/' "$WORK/b1227f7.blk"
   printf '\n## 部署\n\n- LOCALD\n'; } > "$f"
 run "rental 型：--plan" 0 --plan "$f"
 said "在地，保留"

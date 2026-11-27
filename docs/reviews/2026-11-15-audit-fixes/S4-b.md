@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s4-review-pack.txt`，763 行，沒進 repo）的組成：
-- 第 1 部分：`git diff cf6beea HEAD`（表上這段的起點到 HEAD = a2954f7），工作目錄乾淨、沒有未追蹤的檔；`agents/LICENSE.txt` 只放前 40 行，後面 202 行是 Apache-2.0 全文
+- 第 1 部分：`git diff 5d9d68b HEAD`（表上這段的起點到 HEAD = 6ea3552），工作目錄乾淨、沒有未追蹤的檔；`agents/LICENSE.txt` 只放前 40 行，後面 202 行是 Apache-2.0 全文
 - 第 2 部分：步驟 3（code-simplifier）沒有跑，這一段的 diff 全是 Markdown 與純文字
 - 第 3 部分：`skills/self-improving-agent/` 被改到的四個檔與 `reference/promotion-rules.md` 在派工當下的整檔內容（帶行號）
 - 第 4 部分：已跑過的驗證 V1–V6（兩條 grep 驗收、S4-2 的乾跑與預期、與本機官方副本的比對輸出、照 ci.yml 逐 step 跑、CHANGELOG 與 tag 的差異）
@@ -17,7 +17,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff cf6beea HEAD`（8 步開發迴圈 S4 段落，3 個 commit：14c9e8b、b90303a、a2954f7）。這一段沒有程式碼，改的是文字：
+> 審查範圍：`git diff 5d9d68b HEAD`（8 步開發迴圈 S4 段落，3 個 commit：90cfe4c、0d2125d、6ea3552）。這一段沒有程式碼，改的是文字：
 > - S4-1：`skills/self-improving-agent/` 的 `SKILL.md`、`README.md` 刪掉「OpenClaw」「Codex CLI」兩個安裝小節與 Platform Support 表對應的兩列。
 > - S4-2：`skills/self-improving-agent/agents/memory-analyst.md`「### 4. Score each entry」自己的分數定義拿掉，改成指到 `reference/promotion-rules.md` 的 Scoring Guide（這是行為改變）。
 > - S4-3：新增 `agents/LICENSE.txt`（兩個官方備份 agent 與官方檔的比對結果，後面附 Apache-2.0 全文）；兩份 README 的授權表、`DD_PIPELINE_ARCHITECTURE.md` 的授權段、根目錄 `CLAUDE.md`、`CHANGELOG.md` 的 `## 未發布` 跟著改。
@@ -50,7 +50,7 @@
 
 逐字原文（交回的訊息；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 1 / Smells 2 — 範圍：`git diff cf6beea HEAD` 裡的授權與歸屬宣稱（`agents/LICENSE.txt` 前 40 行、兩份 README 授權表新增的那一列、`DD_PIPELINE_ARCHITECTURE.md` 授權段、根目錄 CLAUDE.md 收編清單 #1 與 #7）
+> Critical 0 / Important 1 / Smells 2 — 範圍：`git diff 5d9d68b HEAD` 裡的授權與歸屬宣稱（`agents/LICENSE.txt` 前 40 行、兩份 README 授權表新增的那一列、`DD_PIPELINE_ARCHITECTURE.md` 授權段、根目錄 CLAUDE.md 收編清單 #1 與 #7）
 >
 > 【發現】
 > 1｜Important｜改過的 Apache-2.0 檔 `agents/code-reviewer.md` 檔內沒有「這個檔被改過」的說明。這次 S4-3 宣稱補齊了授權（CHANGELOG 寫「補上授權檔」），只在旁邊另放一份 `agents/LICENSE.txt` 說明它改過。｜`grep -n -i 'mattpocock\|adopted\|fowler\|anthropic\|official\|modified\|changed' agents/code-reviewer.md` 只命中 `:51 ## Fowler Smell Baseline` 與 `:53 ...adopted from mattpocock/skills`。檔內唯一碰到來源的是 frontmatter description 的「官方 code-reviewer plugin 未裝時的本地備份」，只講用途，沒說被改過。`agents/LICENSE.txt:16` 自己寫「code-reviewer.md —— 改過的檔（117 行）」。｜Apache-2.0 §4(b) 要求 "cause any modified files to carry prominent notices stating that You changed the files"。有人只複製 `agents/code-reviewer.md` 這一個檔（這正是 `install_builtin_agents` 部署時做的事，只 `cp` `<名字>.md`）時，手上的檔既沒有授權資訊，也沒有改動說明，收編清單 #1「授權相容」並沒有真的做完。｜在 `code-reviewer.md` 正文開頭或 frontmatter 加一句改動說明，指向 `agents/LICENSE.txt`（例如「Modified from anthropics/claude-plugins-official (Apache-2.0); see agents/LICENSE.txt」）。只放一份同目錄說明夠不夠算 §4(b) 的 notice，是法律判斷，列在下面「需要外部查證」。
@@ -62,7 +62,7 @@
 > - 第 18–19 行的 13 行（56 行）與 10 行（46 行）：重跑 `grep -cxFf` 相符，`wc -l` 也對得上。117 行相符。
 > - 第 21 行的四節（Scope Discipline、Work Order、Fowler、Severity）：對照 V4 的標題清單，官方兩份確實都沒有。
 > - 第 22 行的 Fowler 歸屬：`skills/writing-great-skills/LICENSE.txt` 是 MIT、Copyright (c) 2026 Matt Pocock，與 `code-reviewer.md:53` 的 "adopted from mattpocock/skills" 以及兩份 README 第 294／310 行既有的列一致。新增那一列沒有重複寫 Fowler，因為上一列已經寫了，不算漏。
-> - 第 23 行「不寫它源自哪一份」：證據只有部分行相同、git 紀錄最早一筆是 279c8a9，這句沒有說得比證據多。
+> - 第 23 行「不寫它源自哪一份」：證據只有部分行相同、git 紀錄最早一筆是 70d0250，這句沒有說得比證據多。
 > - 第 10 行的 .gcs-sha：重讀是 b5b01ac…，相符。第 28 行：三個 plugin.json 的 author 都是 Anthropic、沒有 license 欄位；三個目錄裡都沒有 NOTICE。相符。第 29 行的樣板 `Copyright [yyyy]`：官方 LICENSE 第 190 行確實沒填。
 > - 附的全文：`tail -n 202 agents/LICENSE.txt | cmp - "$M/LICENSE"` 相同，從開頭的 "Apache License" 到結尾的 "limitations under the License." 都在，是完整的 Apache-2.0。
 > - 三處描述（兩份 README 新增列、架構文件新增句、LICENSE.txt）講的是同一件事：逐字相同、改過、只有部分行相同、Apache-2.0，彼此沒有出入。

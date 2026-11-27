@@ -16,8 +16,8 @@
 ````text
 你是 claude-dd repo（<REPO>）8 步開發迴圈步驟 4 的審查者。職責：找漏洞，每條附證據（路徑:行，或指令與輸出），沒證據的不算。不寫優點、不客套。
 
-審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 6f2118a 到目前工作目錄的整段（兩個 commit aa9b162、d36e5d6，加上步驟 3 還沒 commit 的改動）。
-另有 fc2ccb0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
+審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 1239450 到目前工作目錄的整段（兩個 commit e1b1eeb、43f2c85，加上步驟 3 還沒 commit 的改動）。
+另有 dc345d0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
 
 材料：
 - diff 檔：<S>/s2-review/diff.txt（924 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**：Read 一次讀太多會靜靜截斷、不報錯。
@@ -42,7 +42,7 @@
 
 ## 發現
 
-S2-b 審查結果：Critical 0／Important 4／Smell 5。範圍是 6f2118a 到工作目錄（fc2ccb0、aa9b162、d36e5d6，加上步驟 3 還沒 commit 的改動）。這次先核文件裡的宣稱。
+S2-b 審查結果：Critical 0／Important 4／Smell 5。範圍是 1239450 到工作目錄（dc345d0、e1b1eeb、43f2c85，加上步驟 3 還沒 commit 的改動）。這次先核文件裡的宣稱。
 
 ## Findings
 
@@ -54,7 +54,7 @@ Important｜skills/security-audit/CLAUDE.md:74-128（乾跑發現）｜漏記了
 
 Important｜skills/security-audit/CLAUDE.md:16-24（從上游更新）｜更新步驟漏了專案規則裡 CI 不擋、而且專門針對 SKILL.md 內文的 `$<數字>` 自查｜證據：根目錄 CLAUDE.md「新增 Skill 步驟」7：「SKILL.md 與 `commands/*.md` 內文不要出現 `$<數字>`：帶參數呼叫時會被換成第 N 個參數、不報錯……自查：`grep -rn '\$[0-9]' skills/*/SKILL.md commands/*.md`」。`grep -n -F '$[0-9]' .github/workflows/ci.yml` 沒有輸出，CI 的 step 清單裡也沒有這項。本檔第 1–7 步只有 clone、diff、覆蓋、LICENSE、node 測試、乾跑、install｜失敗情境：上游哪天在 SKILL.md 加了含 `$1` 的 shell 範例，照第 1–7 步做全部會過，部署後使用者打 `/security-audit 對這個 repo 做完整稽核` 時那段文字會被換掉，而且不報錯。這是 vendored 文字最可能踩到的地方。
 
-Smell｜docs/designs/2026-11-14-security-audit-intake-design.md:46（A19，fc2ccb0 改的）｜「S1 步驟 4 加的 Y、Y5、YD 例外」歸因錯了：Y 在 S1-3 就已經存在｜證據：`git show a0aa58a:docs/measurements/2026-11-14-dd-init-symlink/results.txt` 第 31 行「- Y：CLAUDE.md 是指向專案裡 AGENTS.md 的 symlink，「寫檔前」那題答「要」」、第 59 行「3/3 綠：Y」。Y5、YD 到 96aaa42 才出現。S1-b.md:185 的處置也只寫「加了答「要」的臂 Y、Y5、YD」進重跑清單與驗收，不是新增這些臂｜失敗情境：有人照 A19 追「答要」這個例外是什麼時候進協定的，會判成 S1-3 的協定裡沒有答「要」的臂，誤讀 a0aa58a 的結果。一個字的歸因錯誤，也就是全域 §3.10 的「歸因要能被反證」。
+Smell｜docs/designs/2026-11-14-security-audit-intake-design.md:46（A19，dc345d0 改的）｜「S1 步驟 4 加的 Y、Y5、YD 例外」歸因錯了：Y 在 S1-3 就已經存在｜證據：`git show bc22fed:docs/measurements/2026-11-14-dd-init-symlink/results.txt` 第 31 行「- Y：CLAUDE.md 是指向專案裡 AGENTS.md 的 symlink，「寫檔前」那題答「要」」、第 59 行「3/3 綠：Y」。Y5、YD 到 87fe578 才出現。S1-b.md:185 的處置也只寫「加了答「要」的臂 Y、Y5、YD」進重跑清單與驗收，不是新增這些臂｜失敗情境：有人照 A19 追「答要」這個例外是什麼時候進協定的，會判成 S1-3 的協定裡沒有答「要」的臂，誤讀 bc22fed 的結果。一個字的歸因錯誤，也就是全域 §3.10 的「歸因要能被反證」。
 
 Smell｜skills/security-audit/CLAUDE.md:69（D16 那列）｜「(b) incomplete：……由 D12、D13、D14a、D14b、D15 的乾跑走到」列進了兩條沒走到 incomplete 的分支｜證據：report-D13 第 38 行最後的 metadata 是 `run_status: "in_progress"`（SKILL.md:133 那條本來就是 deferred 再用 final-clean critic 記缺口，不會變 incomplete）；report-D14a 停在提議，也沒走到 incomplete。真的寫出 incomplete 的只有 D12（`budget_cannot_fund_reconnaissance_and_reserves`）、D14b（`critic_budget_exhausted`）、D15（`validation_budget_exhausted`）｜失敗情境：結論「(b) 有人走過」照樣成立，但清單多列了 D13、D14a，下次重跑時會拿它們去驗 incomplete，結果驗不到。
 
@@ -74,9 +74,9 @@ Smell｜docs/measurements/2026-11-14-security-audit-trial/results.txt:31-38、CL
 - README 裡的試跑數字都和 results.txt、jsonl 對得上：花費、wall 21.7 分、agent 7 次與分型、模型分組（我用 jq 依 parent_tool_use_id 分組重算過：主 session 與 4 個是 Opus、3 個是 Sonnet）、denials 3、unit／verdict 計數。
 - 乾跑 subagent 都是 sonnet、都只讀：tasks/*.output 的 message.model 全是 claude-sonnet-5-5；tool_use 只有 Read、Grep、Bash，Bash 裡只有 ls、git、jq、cat 和 2>&1，沒有寫檔或 node。
 - 「Node 是安裝腳本的必要依賴」（install-dd-pipeline.sh:320-325）、「`cp -r` 整個目錄部署」（install_builtin_skills）、A10 的前例（writing-great-skills 有 dmi、沒進指令一覽）、三處授權清單與數字同步、CHANGELOG 只動 `## 未發布`：都成立。
-- fc2ccb0 對 S1-b.md、S1-judge.md 的改動都在「處置」節，沒碰「發現」節；dd-init.md:62、:72 確實有答「不要」時的截圖告知。
+- dc345d0 對 S1-b.md、S1-judge.md 的改動都在「處置」節，沒碰「發現」節；dd-init.md:62、:72 確實有答「不要」時的截圖告知。
 - 設計文件 :93、:110 還寫 `ls -l`：那是 S1-2、S1-3 當時的做法文字，A16 已經註明後來改成 `ls -ld`，不算改一半。
-- S2 的 commits 欄 `6f2118a..` 跟 `.git/dd-segment-base` 一致。範圍裡包含 S1 的 fc2ccb0，但「接手」規則比對的是 `（S2-`，不會誤算。
+- S2 的 commits 欄 `1239450..` 跟 `.git/dd-segment-base` 一致。範圍裡包含 S1 的 dc345d0，但「接手」規則比對的是 `（S2-`，不會誤算。
 - check.sh 的 denial 欄位是先截 140 字再用 sed 把路徑換成 `$S`。這是步驟 3 之前就有的寫法，換一個更長的 scratchpad 路徑可能漏出半截本機路徑，但目錄 CLAUDE.md 規定的去識別 grep 擋得到。
 - skills/security-audit/CLAUDE.md:82 的「US$15」：`$<數字>` 規則只管 SKILL.md 與 commands，這份檔不適用。
 
@@ -89,9 +89,9 @@ Smell｜docs/measurements/2026-11-14-security-audit-trial/results.txt:31-38、CL
 - 讀 <S>/dry/report-D*.txt 的【結論】與 D10、D12、D2、D8、D4、D14a 的逐條；prompt-D11c、report-D11c 全文；grep 各報告的 incomplete、focused recon、Phase 5，以及「乾跑發現」各條引句的出處
 - jq 讀 <S>/../tasks/<id>.output：16 個乾跑 subagent 的 model 與 tool_use
 - jq 讀 <S>/runs/real.jsonl、probe1.jsonl、probe.jsonl：各 agent 的模型分組、denial 原指令、modelUsage 花費、probe 的 result；grep 'Base directory for this skill'
-- `git show a0aa58a:` 與 `96aaa42:` 的 docs/measurements/2026-11-14-dd-init-symlink/results.txt，grep Y、Y5、YD
+- `git show bc22fed:` 與 `87fe578:` 的 docs/measurements/2026-11-14-dd-init-symlink/results.txt，grep Y、Y5、YD
 - grep docs/reviews 的 S1-b.md、S1-c.md、S1-judge.md（c-9、需使用者決定、節標題）；grep commands/dd-init.md 的 `ls -ld` 與 screenshots
-- `bash scripts/check-claude-md.sh --segment-base` → 6f2118ac…
+- `bash scripts/check-claude-md.sh --segment-base` → 12394500…
 - `git grep` vendored 清單（mattpocock、i-have-adhd、tech-diagram-gif）、security-auditor、security-audit 在兩份 README 的出現處
 - grep install-dd-pipeline.sh 的 node 檢查與 install_builtin_skills；grep ci.yml 的 `$[0-9]`、node --test 與 step 名稱；grep report-schema.json 與 *.cjs 的 metadata
 - 印 CHANGELOG `## 未發布` 的小節標題；sed 逐行核對上面引用的行號
@@ -107,7 +107,7 @@ Smell｜docs/measurements/2026-11-14-security-audit-trial/results.txt:31-38、CL
 - b-2（Important）採納：分支表加 D17（focused reconnaissance：每多一次重跑 gate，擋下就種 `deferred`），並照根目錄 CLAUDE.md「新增 Skill 步驟」第 3 步補跑乾跑（sonnet，只讀，結論：做得完）；同批補了 S2-d 第 6 條找到的 D1b、D5c2、D7b、D8b。判準那段寫明清單是人照判準掃的、不保證列全，第一版漏了這五條
 - b-3（Important）採納：乾跑發現補 D12-1（gate 最低額不含 hunter）、D12-4（縮範圍過不了 gate）、D10-1（scoped 與 profile 是否並存）、D15-5／D15-7（ledger 沒有放驗證結果的欄位），也補了其他報告【結論】點名、原本沒收的（D11b-5、D12-8、D14b-1／-3、D5c-4、D6-6）；開頭寫收錄原則：每份報告【結論】點名的都收，其餘只收兩條以上分支撞到的，收之前找過上游反例
 - b-4（Important）採納：同 S2-a 的 a-2
-- b-5（Smell）採納：`git show a0aa58a:docs/measurements/2026-11-14-dd-init-symlink/results.txt` 第 31、59 行確實有 Y；設計文件 A19 改成「Y 臂從 S1-3 就有、Y5 與 YD 臂是 S1 步驟 4 加的」
+- b-5（Smell）採納：`git show bc22fed:docs/measurements/2026-11-14-dd-init-symlink/results.txt` 第 31、59 行確實有 Y；設計文件 A19 改成「Y 臂從 S1-3 就有、Y5 與 YD 臂是 S1 步驟 4 加的」
 - b-6（Smell）採納：D16 (b) 改成「由 D12、D14b、D15 的乾跑走到（D13 停在 `in_progress`、D14a 停在 wave 1 之前，都沒走到）」；設計文件 S2-1 第 2 步那句（照抄來源）加了查證註記。S2-d 把同一條標 Important，採較高的級別處理（已修）
 - b-7（Smell）採納：同 S2-a 的 a-3（CHANGELOG 改成逐條標記：試跑走過、乾跑、或不另跑附理由）
 - b-8（Smell）採納：試跑 README 那句改成「那 1 筆 needs_validation 就是 S1 修掉的那筆（`--apply` 跟著 symlink 寫出，見設計文件進度表 S1 那列）」

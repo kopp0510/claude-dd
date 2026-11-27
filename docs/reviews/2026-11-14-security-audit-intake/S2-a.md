@@ -16,8 +16,8 @@
 ````text
 你是 claude-dd repo（<REPO>）8 步開發迴圈步驟 4 的審查者。職責：找漏洞，每條附證據（路徑:行，或指令與輸出），沒證據的不算。不寫優點、不客套。
 
-審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 6f2118a 到目前工作目錄的整段（兩個 commit aa9b162、d36e5d6，加上步驟 3 還沒 commit 的改動）。
-另有 fc2ccb0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
+審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 1239450 到目前工作目錄的整段（兩個 commit e1b1eeb、43f2c85，加上步驟 3 還沒 commit 的改動）。
+另有 dc345d0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
 
 材料：
 - diff 檔：<S>/s2-review/diff.txt（924 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**：Read 一次讀太多會靜靜截斷、不報錯。
@@ -44,7 +44,7 @@
 
 S2-a 報告：沒有 Critical；4 條 Important、1 條 Smell。最該先處理的是兩份 README 的前置需求沒提上游要的沙盒。
 
-範圍：6f2118a 到目前工作目錄，含 fc2ccb0、aa9b162、d36e5d6，以及步驟 3 還沒 commit 的兩個檔。路徑都相對 repo 根目錄，scratchpad 寫成 <S>。
+範圍：1239450 到目前工作目錄，含 dc345d0、e1b1eeb、43f2c85，以及步驟 3 還沒 commit 的兩個檔。路徑都相對 repo 根目錄，scratchpad 寫成 <S>。
 
 1. Important｜README.md:33-37、README.zh-TW.md:34-38（前置需求）｜收編時沒巡到上游的第三項需求：OS 強制的沙盒。沒有它，full audit 一筆都到不了 `confirmed`，兩份 README 卻一個字都沒提
    證據：
@@ -100,7 +100,7 @@ S2-a 報告：沒有 Critical；4 條 Important、1 條 Smell。最該先處理�
    失敗情境：手上還有原始 jsonl 的人想重核 README 花費列的「Opus US$11.96、Sonnet US$0.74」或 probe1 的兩筆 result，照跑法做不出這兩節。CLAUDE.md:10 寫了「加上兩次探針與各模型花費」，但沒寫怎麼算。
 
 Not reported
-- fc2ccb0：
+- dc345d0：
   - 三處改動都在「處置」節（S1-b.md:171 之後、S1-judge.md:73–88），沒違反 docs/reviews/CLAUDE.md:36「前兩節寫完就不改」。
   - 「使用者選 A」對得上 S1-judge.md:59 的選項 A。
   - A16 的 `ls -ld` 對得上 commands/dd-init.md:58、:108、:223；A19 的 Y、Y5、YD 對得上 docs/measurements/2026-11-14-dd-init-symlink/mkprompt.sh:21。
@@ -116,7 +116,7 @@ Not reported
 - agents/security-auditor.md 的 description「(用 /security-audit)」：dmi 的 skill 模型叫不到，但這句是請使用者去打指令，說得通。本文 :122 照 A9 不改。
 - skills/security-audit/CLAUDE.md:42「原句都用 `grep -F` 回對過」：D12-12 沒回對到、5 條要正規化才命中；但本檔實際引用的英文句，④ 全部命中，沒有造成錯。
 - 去識別：diff 涉及的 40 個檔掃 `-Users-|-private-tmp-|/private/tmp/|/Users/|<使用者>`，命中的全是描述樣式的句子，沒有真路徑。
-- 進度表：S2 的起點 6f2118a 與 `.git/dd-segment-base` 一致。fc2ccb0 標（S1）卻落在 S2 範圍內，不影響「接手」時比對 `（S2-`。
+- 進度表：S2 的起點 1239450 與 `.git/dd-segment-base` 一致。dc345d0 標（S1）卻落在 S2 範圍內，不影響「接手」時比對 `（S2-`。
 - 給主對話的提醒（不是發現）：
   - ④ 記 SKILL.md 的 hunk 是「2a3、4a6,7」，實際 `diff` 是 `2a3`、`5a7,8`（①-b 那份是對的）。寫進 S2 報告的「派工」節之前要改。
   - S2 步驟 5 的反向與反向對照兩發，cwd 是 claude-dd 的 clone，又放行 Read、Glob、Grep。clone 的根 CLAUDE.md:32 寫著「security-audit…（user-invoked）」。這個 session 一讀 `skills/security-audit/` 的檔，harness 就把該目錄的 CLAUDE.md（:4「只在使用者打 `/security-audit` 時載入」）注入了 context（repo 內的情況，我這次實際看到）。這兩句可能讓模型不去叫拿掉 dmi 的那一份，削弱反向對照的鑑別力。
@@ -124,7 +124,7 @@ Not reported
 What I ran
 - 讀 <S>/s2-review/prompt-common.txt；diff.txt 分 1–300、301–600、601–925 三段讀完 → 讀完
 - `git ls-files` 抓所有 CLAUDE.md；`git grep -nE '新增|同時改|同批|要一起|手動同步|CI 不驗|一起改|逐項巡'` 與另一次 `同步`（排除根 CLAUDE.md 與全域模板，兩份另外直接讀）→ 規則清單
-- 讀 docs/reviews/CLAUDE.md；`grep '^## '` S1-b.md、S1-judge.md；`git show --stat fc2ccb0` → fc2ccb0 只改處置節
+- 讀 docs/reviews/CLAUDE.md；`grep '^## '` S1-b.md、S1-judge.md；`git show --stat dc345d0` → dc345d0 只改處置節
 - 設計文件 `sed` 17–73、150–230 → S2 計畫、A5–A21、進度表規則
 - `diff` 上游 SKILL.md 與 repo 版 → `2a3`、`5a7,8`
 - `git grep disable-model-invocation` → writing-great-skills:4、security-audit:3
@@ -136,7 +136,7 @@ What I ran
 - SKILL.md 的 `grep '^#'`、第 12–46、84–136、170–195 行；VALIDATION-AND-REPORTING.md:124；validate-coverage-ledger.cjs:555–565；RECONNAISSANCE.md:150 → 逐條核乾跑發現
 - 各份 dry report 的【結論】；prompt-D11c、D14a 的條件；D12、D14b、D15 的 budget 與 run-metadata、D11c、D13、D15 的 Phase 5 grep → 歸因核對
 - 對 <S>/audit-out/run-1/run-metadata.json 跑 `jq keys`、`jq '.budget|type'` → 鍵名對上 SKILL.md:89；budget 是 object
-- `cat` `.git/dd-segment-base` → 6f2118a
+- `cat` `.git/dd-segment-base` → 1239450
 - 讀安裝腳本的 show_completion、install_builtin_skills、PROMOTED_SKILLS；grep tests/test-install.sh → 沒有別的列舉點
 - 去識別 grep 掃 diff 涉及的 40 個檔 → 只命中樣式描述
 - results.txt 的 `grep '^## '`；README 與 CLAUDE.md 裡寫 check.sh 的行 → 第 5 條

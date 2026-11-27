@@ -6,7 +6,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 
 > 你是程式碼審查者（代號 B）。審查 claude-dd repo（/Users/danlio/project/my_project/claude-dd）一個功能段落的整段變更：讓 plan-review 在兩張流程圖（使用流程、大工作怎麼跑）各有自己的框，重出 4 張 GIF，並更新 diagrams/src/CLAUDE.md 與兩份 README 的圖說。
 >
-> 材料：<scratchpad>/dg-review-diff.txt。內容：①整段 diff（git diff 1971cf5 HEAD，不含 GIF）③被改到的三個檔的 HEAD 版整檔（附行號）④已跑過的驗證與預期值 —— ④列的已確認，不要重跑。
+> 材料：<scratchpad>/dg-review-diff.txt。內容：①整段 diff（git diff eee9340 HEAD，不含 GIF）③被改到的三個檔的 HEAD 版整檔（附行號）④已跑過的驗證與預期值 —— ④列的已確認，不要重跑。
 > **用 Read 的 offset/limit 每次 300 行讀到最後一行**（一次讀太多會被靜靜截斷）。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。
 >
 > 你的方向：產生器程式碼的正確性 —— 座標、連線（從哪個框到哪個框、箭頭方向、會不會穿過別的框或文字）、小球 dur/begin 是否符合 diagrams/src/CLAUDE.md 的規則（整除 7.2、負值、不是 dur 整數倍、短於 40px 不放球）、legend 與實際連線一一對應、舊的識別符（p65、p71、Y7、ask）有沒有殘留或被別處引用、註解是否描述現況。
@@ -25,7 +25,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 
 ## 發現
 
-Critical 0 / Important 3 / Smells 0 — 審查範圍是 git diff 1971cf5 HEAD（gen_usage.py、gen_planner.py、diagrams/src/CLAUDE.md、兩份 README）。
+Critical 0 / Important 3 / Smells 0 — 審查範圍是 git diff eee9340 HEAD（gen_usage.py、gen_planner.py、diagrams/src/CLAUDE.md、兩份 README）。
 
 我要負責的幾何與動畫部分全部沒問題：座標、箭頭方向、連線有沒有穿過框或文字、dur/begin、legend 都對得上。三條發現都是圖上文字或連線，跟來源 skill 的語意不一致。
 

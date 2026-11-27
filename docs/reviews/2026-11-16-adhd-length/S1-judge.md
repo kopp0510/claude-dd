@@ -1,6 +1,6 @@
 # S1-judge（主對話查證）— ADHD output style 加長度上限
 
-段落 S1，起點 `7e1ff44`，進度表在 `docs/designs/2026-11-16-adhd-length-design.md`。
+段落 S1，起點 `dd6bffa`，進度表在 `docs/designs/2026-11-16-adhd-length-design.md`。
 
 ## 派工
 
@@ -14,7 +14,7 @@
 
 - A：`就說|要我` 掃 `out/` 得 6 發、全在 NEW 臂，與它報的相同；`templates/global/CLAUDE.md` 的「未執行,建議跑 <指令>」「但注意 X」「一句話提一次」都找得到；第 3 批 NEW 每則超過 30 字的行數與它報的相同（它 P3 的分母含標題行）
 - B：守門標籤在 `check.sh`／`selftest.sh` 的出現次數與它報的相同（缺C1、缺病因在 selftest 是 0）；第 3 批 NEW 的第一行與它引的相同；P3 加回扣除行是 8 行 348 字、7 行 307 字，相同
-- C：`git show f3dbcd6:output-styles/adhd.md` 有「約 40 個字以內」、`e3a84da` 那版有「其他可能性不寫」；`out/` 的模型都是 `claude-fable-5-2`；`f3609bb`、`2a0a3e7` 當時不在 git 裡
+- C：`git show 415c9e5:output-styles/adhd.md` 有「約 40 個字以內」、`74a0ca1` 那版有「其他可能性不寫」；`out/` 的模型都是 `claude-fable-5-2`；`f3609bb`、`2a0a3e7` 當時不在 git 裡
 
 採納：A1 到 A4、A6、A7、B1 到 B5、C1 到 C7 全部採納（B4、B5 採納成已知限制、不改判準）；A5 部分採納。級別照審查者標的，沒有調級。逐條的查證與做了什麼在 `S1-a.md`、`S1-b.md`、`S1-c.md` 的處置。
 
@@ -26,7 +26,7 @@
 
 ## 處置
 
-- 採納的修正在 `c5f3c19`（風格檔、LICENSE.txt、selftest.sh、`styles/`、第 4 批的規則）與它的下一個 commit（量測說明的「沒證明的」、CHANGELOG、設計文件、這四份報告）
+- 採納的修正在 `6715ca1`（風格檔、LICENSE.txt、selftest.sh、`styles/`、第 4 批的規則）與它的下一個 commit（量測說明的「沒證明的」、CHANGELOG、設計文件、這四份報告）
 - 風格檔的字改了，第 3 批（blob `2f82e10`）的結果不算改過的這一份。步驟 5 照事先寫死、先 commit 的規則再跑一批（第 4 批，blob `8368e8d`）：
   **不通過**，`check.sh` exit 1。長度 NEW 六發全過、三個 prompt 都有鑑別力；守門 `NEW-p1-r2` 紅在「沒講還有幾項」——
   它寫的是「另有 I1、I2 與 M1 到 M4 不急，要看再說。」，沒列的六項用代號全寫了，沒寫數量也沒寫檔名，判準要的是數量或九個檔名

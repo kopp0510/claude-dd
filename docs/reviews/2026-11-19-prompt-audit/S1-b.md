@@ -1,4 +1,4 @@
-# S1-b（審查者 B：改動紀錄對得上最終文字嗎、跨檔一致）— 2026-11 提示文字稽核的改動（`2636b36..`）
+# S1-b（審查者 B：改動紀錄對得上最終文字嗎、跨檔一致）— 2026-11 提示文字稽核的改動（`1290eb5..`）
 
 ## 派工
 
@@ -20,7 +20,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 >
 > ## 範圍
 > repo：<repo>（它的上一層不是 git repo；git 指令用 `git -C <repo>`）
-> 要審的是 `git diff 2636b36`（到工作目錄；工作目錄 = HEAD `ecfc89c`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
+> 要審的是 `git diff 1290eb5`（到工作目錄；工作目錄 = HEAD `c74f115`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
 > 步驟 3（code-simplifier）跑過了，沒有改任何檔。
 >
 > ## 審查材料（只有這一個檔）
@@ -43,7 +43,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 > - 來源是 2026-11 對提示文字做的三輪稽核（目標模型 Claude Fable 5.2）：收斂強調記號、更正過期或互相矛盾的句子、把全域模板的「領域陷阱」搬到 `skills/dd-loop/SKILL.md`、改全域 §6.2「不做：自動重試」的寫法、修 `skills/self-improving-agent`。
 > - `skills/self-improving-agent` 是收編的第三方 skill；本地改動逐條記在 `skills/self-improving-agent/CLAUDE.md` 的「Differences from upstream」。repo 根 `CLAUDE.md` 規定：改過的 skill 部署前要由 subagent 乾跑；說上游「沒寫」某件事之前要對過該 skill 目錄的每個 `.md`。
 > - 全域 §6.2 的新舊寫法做過行為量測，紀錄在 `docs/measurements/2026-11-19-global-6.2-retry.md`。
-> - 這段範圍裡先前的 16 個 commit（`c0f6d33` 到 `3ed8a01`）當時都沒有走過審查，這次是第一次審。
+> - 這段範圍裡先前的 16 個 commit（`e8bd89e` 到 `b5e9f96`）當時都沒有走過審查，這次是第一次審。
 >
 > ## 要找的（文件與指示文字的錯，比照程式碼的 bug）
 > 1. 照字面做會做錯、做不出來，或兩種讀法會得出不同結果的句子（寫出兩種讀法各會怎樣）。
@@ -74,9 +74,9 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 
 ## 發現
 
-審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `ecfc89c`。
+審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `c74f115`。
 
-S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
+S1-b 的審查報告（範圍 `git diff 1290eb5`，HEAD 是 `c74f115`）
 
 【我讀了什麼】
 - 審查材料 `<scratchpad>/s4/diff-pack.md`：
@@ -94,13 +94,13 @@ S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
   - git log／tag 的資料
 
 【What I ran】
-- `git log --oneline 2636b36..HEAD` → 17 個 commit，`c0f6d33` 到 `ecfc89c`。
-- `git log -S'same audit, this commit'` → 這句是 `43373fe` 加的。
+- `git log --oneline 1290eb5..HEAD` → 17 個 commit，`e8bd89e` 到 `c74f115`。
+- `git log -S'same audit, this commit'` → 這句是 `6b46c96` 加的。
 - 從 `## 未發布` 抽到 `## 1.6.16`，對每個詞跑 `grep -cF`：
   - Copilot、25KB、OWASP、§7、領域陷阱、ExitPlanMode、優化 skill、docker、state lock、dd-init、tech-diagram、⚠️⚠️、`index` 都是 0。
   - `frontmatter` 1、`remember` 2，但命中的都是別的事。
 - 各 tag 的 `git ls-tree scripts/githooks/`：v1.6.13、v1.6.14 只有 pre-commit；v1.6.15、v1.6.16 有 `claude-md-max-bytes`。CHANGELOG 第 26 行的說法成立。
-- `git show -s a372fe3` → 2026-06-23「frontend-design 更新至上游最新版」，和 diff 第 439 行對得上。
+- `git show -s 7278dec` → 2026-06-23「frontend-design 更新至上游最新版」，和 diff 第 439 行對得上。
 - `install-dd-pipeline.sh` 第 1393–1402 行：內容不同又帶 `--force` 時，先 `backup_before_overwrite`，再 `cp` 模板蓋過去。「overwrites … after a backup」的說法成立。
 - `git grep -e git-common-dir -e worktree -- docs/measurements`：沒有任何一筆是「從子目錄／worktree 開 session 的 `claude -p` 實測」的紀錄。
 - 在 scratchpad 的拋棄式 repo 跑 skill 那段 `ROOT=…; ${ROOT:-$(pwd -P)}`：
@@ -239,7 +239,7 @@ S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
 
 - **Differences 3958 的指標失效**
   - 原文：`(same audit, this commit)`
-  - 它後面又加了好幾筆，「this commit」已經指不到。實際是 `43373fe`（`git log -S`）。
+  - 它後面又加了好幾筆，「this commit」已經指不到。實際是 `6b46c96`（`git log -S`）。
 
 - **「tested 2026-11-19 with `claude -p`」查不到紀錄**
   - 這句出現在 CHANGELOG 第 19 行、Differences 3976、memory-architecture diff 第 721 行，以及五個 skill 的註解。
@@ -266,7 +266,7 @@ S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
 看過、判定不算的，每條一句理由：
 
 - **githooks 的 tag 說明**：`ls-tree` 證實 v1.6.14 沒有 `claude-md-max-bytes`、v1.6.15 有，說法成立。
-- **frontend-design 修改聲明**：`a372fe3` 是 2026-06-23，說法成立。
+- **frontend-design 修改聲明**：`7278dec` 是 2026-06-23，說法成立。
 - **PROMOTED_SKILLS**：清單裡有 `self-improving-agent`，說法成立。
 - **installer 覆蓋前會備份**：讀了程式碼，說法成立。
 - **ROOT 公式在子目錄、worktree、symlink 下都對**：實測過，不另列。
@@ -284,7 +284,7 @@ S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
 
 **第 4 部分的驗證沒證明的事**
 
-- **對照組只隔離了最後一個 commit**：對照組是 `3ed8a01`，也就是 HEAD^。新舊比較只隔離了 `ecfc89c`；`8f34fc6`、`16b1a55`、`2c638b0`、`2d337c7` 對 `2636b36` 的行為差異沒有比。
+- **對照組只隔離了最後一個 commit**：對照組是 `b5e9f96`，也就是 HEAD^。新舊比較只隔離了 `c74f115`；`0e3c410`、`9a3e3b2`、`795e100`、`407155c` 對 `1290eb5` 的行為差異沒有比。
 - **`grep -cF` 只證明字串在**：只核了 Differences 最後一筆，而且只證明字串存在，不證明語意。CHANGELOG 沒核。
 - **status 沒有結果紀錄**：第 7333 行說有對真工作區跑，但第 4 部分沒有任何 status 的預期與結果。
 - **remember、extract 沒有乾跑**：remember 第 3 步的索引式／清單式兩條分支、複製 frontmatter，以及 extract 的搜尋，這段範圍都改了，第 4 部分都沒跑。根目錄 `CLAUDE.md` 第 53–54 行規定每條分支各一發。
@@ -302,9 +302,9 @@ S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
 |---|---|---|
 | S1-b-1 status 第 3 步、promote 第 6 步的重算會丟掉備援找到的資料夾 | Important | 採納，已修。兩個重算區塊的註解寫明「前面的步驟用了候選的資料夾，就把 `MEMORY_DIR` 設成那個路徑」；步驟 5 乾跑時 remember 的那一發說第 3 步沒有對應的句子，補了一句。乾跑（一個候選的材料）：promote 把條目從候選的 `memory/` 移除、remember 把新主題檔寫在候選的 `memory/`、status 的數字來自候選（9 個主題檔）；三個材料用 `verify.py` 核，公式算的資料夾都沒被建出來。 |
 | S1-b-2 「會載入的 CLAUDE.md」少列了檔 | Important | 採納，已修（與 S1-a-3 同一件，處置見 `S1-a.md`）。 |
-| S1-b-3 路徑檢查碰到 `[`…`]` 或 `./` 開頭會報假 Stale | Important | 採納，已修（與 S1-a-s6 同一件）。乾跑材料 C：現行版兩發都不把 `app/[id]/page.tsx`、`./src/server.ts` 列成 Stale；`ecfc89c` 版 review 那一發兩個都列了。 |
-| S1-b-4 promote 決定 rules 檔 `paths` 的規則有兩處讀法分歧、和表格衝突 | Important | 採納，已修，三處衝突各一句：①`paths` 取自條目說規則適用的「檔、目錄或檔案樣式」（原本只寫檔或目錄，表格「specific file types」那一列用不到）；②檔案類型照 `reference/rules-directory-patterns.md` 寫成 glob（`*.test.ts` 寫成 `**/*.test.ts`、目錄寫成 `<dir>/**/*`），只是觸發規則的檔不算；③那一段只管「自己挑的目標」，使用者給的 `--target`（和跟著它的 `--paths`）照用（這一句是步驟 5 第二批補的：第一批那一發照用了，但它的報告說文件沒寫）。Differences 的「no file in this directory answered them」前面加了限定（點名別的檔的那幾條除外）。乾跑：條目限定 `tests/api/` 的那一發 `paths` 是 `tests/api/**/*`；`*.test.ts` 的那一發是 `**/*.test.ts`；「改 X 後跑 Y」的那一發寫進 `./CLAUDE.md`；給了 `--target rules/api.md --paths "src/api/**/*.ts"` 的那一發寫出 `.claude/rules/api.md`、`paths` 就是給的那個，依據引的是新加的那句。`*.test.ts` 那一發的 `ecfc89c` 對照也寫出 `**/*.test.ts`，這一格分不出新舊。使用者給了 `--target` 卻沒給 `--paths` 時 `paths` 寫什麼，仍然沒寫，轉新段落。 |
-| S1-b-5 「Proven 從條目本身判」和 recurrence 訊號是兩種讀法 | Important | 採納，已修。`reference/promotion-rules.md` 的 Proven 那句加上「同一個教訓記在好幾條」（指到 review 第 2 步的 recurrence 訊號）。乾跑材料 C：三條各只記一次、講同一件事的條目，現行版 review 與 memory-analyst 都判成候選；`ecfc89c` 版兩發都判成不是。 |
+| S1-b-3 路徑檢查碰到 `[`…`]` 或 `./` 開頭會報假 Stale | Important | 採納，已修（與 S1-a-s6 同一件）。乾跑材料 C：現行版兩發都不把 `app/[id]/page.tsx`、`./src/server.ts` 列成 Stale；`c74f115` 版 review 那一發兩個都列了。 |
+| S1-b-4 promote 決定 rules 檔 `paths` 的規則有兩處讀法分歧、和表格衝突 | Important | 採納，已修，三處衝突各一句：①`paths` 取自條目說規則適用的「檔、目錄或檔案樣式」（原本只寫檔或目錄，表格「specific file types」那一列用不到）；②檔案類型照 `reference/rules-directory-patterns.md` 寫成 glob（`*.test.ts` 寫成 `**/*.test.ts`、目錄寫成 `<dir>/**/*`），只是觸發規則的檔不算；③那一段只管「自己挑的目標」，使用者給的 `--target`（和跟著它的 `--paths`）照用（這一句是步驟 5 第二批補的：第一批那一發照用了，但它的報告說文件沒寫）。Differences 的「no file in this directory answered them」前面加了限定（點名別的檔的那幾條除外）。乾跑：條目限定 `tests/api/` 的那一發 `paths` 是 `tests/api/**/*`；`*.test.ts` 的那一發是 `**/*.test.ts`；「改 X 後跑 Y」的那一發寫進 `./CLAUDE.md`；給了 `--target rules/api.md --paths "src/api/**/*.ts"` 的那一發寫出 `.claude/rules/api.md`、`paths` 就是給的那個，依據引的是新加的那句。`*.test.ts` 那一發的 `c74f115` 對照也寫出 `**/*.test.ts`，這一格分不出新舊。使用者給了 `--target` 卻沒給 `--paths` 時 `paths` 寫什麼，仍然沒寫，轉新段落。 |
+| S1-b-5 「Proven 從條目本身判」和 recurrence 訊號是兩種讀法 | Important | 採納，已修。`reference/promotion-rules.md` 的 Proven 那句加上「同一個教訓記在好幾條」（指到 review 第 2 步的 recurrence 訊號）。乾跑材料 C：三條各只記一次、講同一件事的條目，現行版 review 與 memory-analyst 都判成候選；`c74f115` 版兩發都判成不是。 |
 | S1-b-6 CHANGELOG「未發布」只記了一部分 | Important | 採納，已修（與 S1-c-3、S1-d-1 同一件）：補上 2026-11-18 那幾個 commit 的條目，附 commit hash。 |
 | S1-b-s1 review 寫「as status does」 | Smell | 採納，已修（與 S1-a-s2 同一件）。 |
 | S1-b-s2 status 寫 review「may report fewer」方向反了 | Smell | 採納，已修（與 S1-a-s5 同一件）。 |
@@ -314,7 +314,7 @@ S1-b 的審查報告（範圍 `git diff 2636b36`，HEAD 是 `ecfc89c`）
 | S1-b-s6 過期檢查的對象兩邊不一樣，紀錄卻寫得像兩邊都查三樣 | Smell | 部分採納：Differences 那句改成分開寫 review 查什麼、memory-analyst 查什麼。兩邊查的對象仍然不同（memory-analyst 沒有「指令」），沒改，轉新段落；步驟 5 的 memory-analyst 那一發也把它列為卡住。 |
 | S1-b-s7 promote「其他要問的照問」清單漏了第 5 步 | Smell | 不採納。第 5 步寫的是 suggest（建議改用 rules），不是要等回答的問題。 |
 | S1-b-s8 部署後的 skill 找不到 claude-dd checkout | Smell | 屬實，沒改，轉新段落。步驟 5「全專案通用」那一發答「不要」所以沒實際卡住，它把這句列為卡住。 |
-| S1-b-s9 Differences 的「this commit」指不到 | Smell | 採納，已修：改成 `43373fe`。 |
+| S1-b-s9 Differences 的「this commit」指不到 | Smell | 採納，已修：改成 `6b46c96`。 |
 | S1-b-s10 「tested 2026-11-19 with `claude -p`」查不到紀錄 | Smell | 採納，已補（與 S1-d 的同一條 Smell 同一件）：2026-11-20 重量一次，紀錄在 `docs/measurements/2026-11-20-memory-dir.md`（五種位置各一發）。 |
 | S1-b-s11 status 的 Stale 列算的是路徑不是條目；rules 只數第一層 | Smell | 屬實，沒改，轉新段落（兩件都是）。 |
 | S1-b-s12 CHANGELOG 把只能當跡象的結果寫成定論 | Smell | 採納，已修（與 S1-c 的 Smell 1、S1-d-2 同一件）：CHANGELOG 與量測紀錄的結論都改成只用事先寫下的判定式，那一項標成只能當跡象。 |

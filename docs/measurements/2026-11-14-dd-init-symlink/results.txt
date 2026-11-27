@@ -14,9 +14,9 @@
 - 所有 shell 指令（stat -f、shasum）是 macOS 版；GNU stat 的 -f 印的是檔案系統資訊，在 Linux 上跑不出正確的 before.txt
 
 文字版本（commands/dd-init.md 的 sha256 前 8 碼）
-- 舊文字 = 58e3edb（6afa7ca1）
+- 舊文字 = b6e3666（6afa7ca1）
 - 新文字第一版（6bd5b025）：沒 commit
-- 第二版 = a0aa58a，S1-3 的 commit（de1df4bc）
+- 第二版 = bc22fed，S1-3 的 commit（de1df4bc）
 - 第三版（67d44378）：S1 步驟 4 的修正，工作目錄、沒 commit。對第二版的改動：懸空連結也要問；「寫檔前」那節的檢查改成 [ -L ] 與 (cd "$(dirname <路徑>)" && pwd -P)；
   答「要」與「不要」各要做什麼（含 Phase 5、Phase 6 的寫法）；.screenshots 與 .gitignore 是 symlink 時的後果；Phase 1 升級第 6 步 --apply 之前先查 CLAUDE.md.dd-upgrade 在不在；
   Phase 3 第 2 步 git 舊於 2.31（--path-format 不認得）時的退路與「不在 repo 裡」的 / 邊界
@@ -25,7 +25,7 @@
 
 臂（情境）
 - A：CLAUDE.md.dd-upgrade 已經是指到專案外的 symlink（S1-2 的臂，Phase 1 升級）
-- AO：同 A，但升級腳本換成 9584605 的舊版（沒有 exit 6；模擬用 --commands-only 更新、腳本還是舊版的人）
+- AO：同 A，但升級腳本換成 dd8b5a9 的舊版（沒有 exit 6；模擬用 --commands-only 更新、腳本還是舊版的人）
 - B：.gitignore 與 .screenshots 都是指到專案外的 symlink（Phase 2）
 - C：CLAUDE.md 是指到專案外一般檔的 symlink，檔裡沒有開發流程（補充模式）
 - C2：CLAUDE.md 是懸空的 symlink
@@ -64,7 +64,7 @@
   - H1K：舊版 gate 呼叫刪掉、交出 YAML、講了「還沒生效」；把回報裡的 YAML 原樣寫進設定、pre-commit validate-config 與 install 都過，同樣的 commit 被擋（rc=1）
 - A：1 次，當時的 check.sh 判紅；換成現在的 check.sh 重判是綠（見下面「check.sh 改過的地方」）。專案外的檔與 symlink 都沒動
 
-第二版（a0aa58a）
+第二版（bc22fed）
 - 1/1 綠：B、C、D、G、G2、H3（舊文字下紅的臂，各再跑一次）
 - 2/2 綠：A
 - 3/3 綠：Y —— 三次都先問、答「要」之後對連結目標 AGENTS.md 用 Edit 蓋章；CLAUDE.md 還是指向 AGENTS.md、專案裡沒多出一般檔

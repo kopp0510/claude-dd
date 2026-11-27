@@ -2,7 +2,7 @@
 
 ## 派工
 
-- 主對話給裁決者的派工單：scratchpad 的 `S3_judge_prompt.txt`；diff 檔 `S3_review_bundle.txt`（4150 行：`git diff 6e9aaf0 HEAD` 加 13 個被改到檔案的整檔內容；工作目錄乾淨，HEAD = 92eea63）
+- 主對話給裁決者的派工單：scratchpad 的 `S3_judge_prompt.txt`；diff 檔 `S3_review_bundle.txt`（4150 行：`git diff 984628d HEAD` 加 13 個被改到檔案的整檔內容；工作目錄乾淨，HEAD = 46083de）
 - 步驟 3（code-simplifier）跳過：人工程式只有 `scripts/check-claude-md.sh` 三行 `echo` 字串，其餘是規則文件；所以 diff 檔沒有「步驟 3 的改動」那一份
 - 裁決者：`general-purpose`、`model: opus`；約 7.2 分鐘（`duration_ms` 429097）、15 次工具
 - 派了 3 個 `code-reviewer`（同一則訊息平行，不帶 model 參數 → opus；紀錄檔 agentType code-reviewer、spawnDepth 2、`message.model` claude-opus-5-5）。

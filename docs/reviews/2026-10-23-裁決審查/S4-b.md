@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 B 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`ac8fcfe..HEAD`。
+裁決者給審查者 B 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`e9a5db5..HEAD`。
 
 ````text
 ```
@@ -14,7 +14,7 @@
 
 ### S4-rev-common.txt
 ```
-你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`ac8fcfe..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
+你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`e9a5db5..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
 
 ## 讀什麼
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S4-review-diff.txt
@@ -29,7 +29,7 @@
 - CI「迴圈步數第五方」本機跑 → 8 個 ✅、exit 0
 - simplifier 沒改任何檔
 - 實驗（14 發 claude -p）不可重跑：要花錢，快照與 log 在 session 暫存目錄已不可得。數字以 `docs/measurements/2026-10-24-s4-outputs/stats.jsonl` 為準。
-- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；db0af00/a4ed41f/ee68e72 用 git show grep 過對應句子存在。
+- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；85f921e/544ccdf/35e94a4 用 git show grep 過對應句子存在。
 
 ## 你的職責
 找漏洞、證明這次改動有錯（程式邏輯錯、數字對不上、引用指錯、宣稱說過頭、文件互相矛盾）。每條附證據（diff 檔行號或 repo 檔案行、grep / python 指令與輸出）；沒證據的不算。不要客套、不要「整體不錯」。
@@ -63,7 +63,7 @@
 審查者 B 的報告原文（逐字）：
 
 ````text
-Critical 0 / Important 3 / Smells 0。範圍是 `ac8fcfe..HEAD`，方向 B：拿量測文件「新做法對照」一節的數字逐格對 `stats.jsonl`。
+Critical 0 / Important 3 / Smells 0。範圍是 `e9a5db5..HEAD`，方向 B：拿量測文件「新做法對照」一節的數字逐格對 `stats.jsonl`。
 
 數字本身全對：14 列原始數字表每一格都和 stats.jsonl 一致（用腳本逐格比對，14 列都 OK）；合計 34.66，文件寫「約 US$34.7」；結論 1、3、4 和設計文件開放問題裡的倍數、範圍都對得上。下面三條問題都出在「宣稱說過頭」或「歸屬錯」，不是算錯。
 
@@ -79,7 +79,7 @@ Critical 0 / Important 3 / Smells 0。範圍是 `ac8fcfe..HEAD`，方向 B：拿
 
 [Important] 量測文件 :202–203 與設計文件 :118 寫 G4 第 2 發「4 個都只讀前段的 diff、沒讀整檔內容那段」，沒有照設計文件預先寫死的判準判
   Failure：設計文件 S4 一節的判準是「工具結果含該檔末段，或報告引到該檔後半的行」，量測文件實際用的只有 Read 的範圍。同一份文件 :262 自己承認用 `sed`／`cat` 讀的不算進去。而 G4-new-2 那 4 個審查者撈了 git 2、3、0、4 次（`git show`／`diff` 也能把 `scripts/check-claude-md.sh` 印出來），Reviewer D 也直接把快照裡的 `check-claude-md.sh` 拿出來跑（見 denial 原文 `cp $R/scripts/check-claude-md.sh`）。「沒讀整檔內容」這句的根據只有 Read 範圍，卻被拿去回答開放問題「讀不讀得完」。
-  Evidence：當天輸出 :255 `G4-new-2 ['314/1155 git=2', '310/1155 git=3', '310/1155 git=0', '311/1155 git=4']`。另外我查過報告裡的引用：`check-claude-md.sh` 在 48de43f 只有 183 行，D 引的 :187–209 超出檔長，所以是 diff.txt 的行號；A 引到 :76。在報告引用這一層，4 個審查者都沒引到檔案後半，這一半判準反而支持原結論。
+  Evidence：當天輸出 :255 `G4-new-2 ['314/1155 git=2', '310/1155 git=3', '310/1155 git=0', '311/1155 git=4']`。另外我查過報告裡的引用：`check-claude-md.sh` 在 dd3f72d 只有 183 行，D 引的 :187–209 超出檔長，所以是 diff.txt 的行號；A 引到 :76。在報告引用這一層，4 個審查者都沒引到檔案後半，這一半判準反而支持原結論。
   建議改法：句子改成「沒用 Read 讀到整檔內容那段」，並寫明 tool_result 沒查。設計文件 :118 同批補上「只算 Read」的限定。
 
 已核對、沒有問題的：
@@ -100,12 +100,12 @@ What I ran
 - `head`、`wc -l docs/measurements/2026-10-24-s4-outputs/stats.jsonl` → 14 筆
 - `python3 -I /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/b_check.py`（逐格比對表格、算合計、平均、倍數，印出 denial）→ 14 列都 OK、合計 34.66、G2 2.99／3.64、G3 1.87／2.54、hk 對新組費用 0.33／0.47、denial 共 3 筆
 - `grep -n -i 'no-verify|重現|情境…' reports/G4-*` → G4-new-1 裁決者的「查證情境 A–F」與 denial 第 2 筆的指令一一對應；G4-new-2 那筆是 Reviewer D 的（rebase-local-base、跑 1000 個 commit 那組）
-- `grep -o 'check-claude-md\.sh:[0-9-]*|diff\.txt:…' G4-new-2.d2.*`，以及 `git show 48de43f:scripts/check-claude-md.sh | wc -l` → 183 行，報告最多引到檔案的 :76
+- `grep -o 'check-claude-md\.sh:[0-9-]*|diff\.txt:…' G4-new-2.d2.*`，以及 `git show dd3f72d:scripts/check-claude-md.sh | wc -l` → 183 行，報告最多引到檔案的 :76
 ````
 
 ## 處置
 
-修正在 1e209ef。編號對到 `S4-judge.md` 的「採納」清單。
+修正在 896ff46。編號對到 `S4-judge.md` 的「採納」清單。
 
 - B1（3 筆 denial 不全是審查者）→ 採納 7（降 Smells）。改成「G4-new-1 有一筆是裁決者發的」
 - B2、B3（讀行數的數字）→ 採納 1（Important），同 A3 的修法

@@ -4,7 +4,7 @@
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數）與步驟 3 的 code-simplifier。
 給審查者的 prompt 只有一句「完整派工在 `<scratchpad>/imp/review/prompt-a.txt`，先讀完再照做」加三句防漏；下面是那個檔的全文（路徑已去識別）。
-diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git diff 28663da HEAD`（HEAD = 1a05146）②步驟 3 與審查同時進行的說明
+diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git diff f6179b2 HEAD`（HEAD = 072615e）②步驟 3 與審查同時進行的說明
 ③`install-dd-pipeline.sh`、`tests/test-install.sh`、`tests/CLAUDE.md` 在 HEAD 的整檔內容 ④已跑過的驗證 V1–V10 與預期值。
 
 ````text
@@ -12,7 +12,7 @@ diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git dif
 
 ## 範圍與資料
 
-- 審查範圍：repo <repo> 的 `git diff 28663da HEAD`（一個功能段落，4 個 commit：89dd118、4995b0d、61585a4、1a05146）
+- 審查範圍：repo <repo> 的 `git diff f6179b2 HEAD`（一個功能段落，4 個 commit：20680b1、cd1b1c7、3155dfb、072615e）
 - diff 檔：<scratchpad>/imp/review/diff.txt（2940 行，四部分：整段 diff／步驟 3 的說明／被改到的檔在 HEAD 的整檔內容／已經跑過的驗證）
 - **diff 檔用 Read 的 offset／limit 每次 300 行讀到最後一行**。Read 一次讀太多會靜靜截斷、不報錯
 - 被改到的檔（install-dd-pipeline.sh、tests/test-install.sh、tests/CLAUDE.md）一律讀 diff 檔第 3 部分那一份，**不要讀工作目錄**：另一個 agent（code-simplifier）正在同時改工作目錄。其餘被改到的大份文件用 `git show HEAD:<路徑>`。沒被改到的檔照常讀
@@ -54,7 +54,7 @@ diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git dif
 審查者交回的完整報告（逐字；只把本機路徑換成 `<scratchpad>`、`<repo>`）：
 
 ````text
-Critical 0 / Important 2 / Smells 0。範圍是 `git diff 28663da HEAD`（89dd118、4995b0d、61585a4、1a05146）。安裝腳本讀的是 diff 檔第 3 部分的 HEAD 整檔，沒有讀工作目錄。
+Critical 0 / Important 2 / Smells 0。範圍是 `git diff f6179b2 HEAD`（20680b1、cd1b1c7、3155dfb、072615e）。安裝腳本讀的是 diff 檔第 3 部分的 HEAD 整檔，沒有讀工作目錄。
 
 [Important] install-dd-pipeline.sh:220（jq_inplace 的前置檢查）與 :651（mcp_scope 的 jq filter）：設定檔裡接連放兩個 JSON 值時（例如 `{} {}`），jq 與 python3 兩條路徑結論不同。這一段宣稱已經把這類情況修成一致，T2 的 92 例沒有這一例。
   Failure：`~/.claude.json` 是 `{"mcpServers":{"playwright":{}}} {}` 時，jq 那條印 `global` 與 `none` 兩行，進不了 print_mcp_line 的任何一個 case，落到 `*` 印「未安裝」（把不確定講成確定）；python3 那條回 unparseable。settings.json 是 `{} {}` 時，jq_inplace 的 `jq -e 'type == "object"'` 兩個值都印 true，exit 0，前置檢查放行；接著 filter 兩份都改、寫回兩個物件，回報成功並印「已啟用」。python3 那條 json.load 報 Extra data，回報更新失敗。jq_register 也是這樣。

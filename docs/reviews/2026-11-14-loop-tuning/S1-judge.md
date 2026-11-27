@@ -1,6 +1,6 @@
 # S1-judge：照量測調整規則（S1）的查證
 
-範圍：`git diff 58ae9b0` 到工作目錄，五個 commit（62e8a19 S1-1、2182831 S1-2、17a6c27 S1-3、429a598 S1-4、91b4614 引用修正）。全部是文件與規則文字。
+範圍：`git diff 139bc41` 到工作目錄，五個 commit（ba95951 S1-1、d634f1c S1-2、19ba6b9 S1-3、e4a5fc1 S1-4、69c528d 引用修正）。全部是文件與規則文字。
 
 ## 派工
 
@@ -14,7 +14,7 @@
 
 ### 讀檔檢查（每份抽一處自己讀）
 
-- S1-a：`git show 58ae9b0:CLAUDE.md | sed -n 115p` 是「`--disallowedTools advisor` 擋不掉，要加 `--settings`…」那行 —— 對得上
+- S1-a：`git show 139bc41:CLAUDE.md | sed -n 115p` 是「`--disallowedTools advisor` 擋不掉，要加 `--settings`…」那行 —— 對得上
 - S1-b：`skills/security-audit/CLAUDE.md` 第 26 行（「從上游更新」第 8 步）寫「動到本檔引用的原句…重跑相關分支的乾跑」—— 對得上
 - S1-c：`.github/workflows/ci.yml` 第 34–36 行（ShellCheck 清單）與 549、553、557、587、590、594 行（兩個 job 的 `run:`）逐檔列了三支測試 —— 對得上
 
@@ -73,4 +73,4 @@
 - b：`--commands-only` 的矛盾（新開的腳本與既有腳本要分開看）；「不准寫檔」的兩種讀法；「結論對得上」會變成核對自述
 - c：例外沒有回指到第 3 步；量測檔找不到 transcript；三條外部查證
 
-S1-4 試派的兩個 haiku 查核在派工前先抓到一條（S1-3 的「8 條、其中 4 條」在被引的檔裡對不到），已在 91b4614 修掉，所以三個審查者都沒有報它。
+S1-4 試派的兩個 haiku 查核在派工前先抓到一條（S1-3 的「8 條、其中 4 條」在被引的檔裡對不到），已在 69c528d 修掉，所以三個審查者都沒有報它。

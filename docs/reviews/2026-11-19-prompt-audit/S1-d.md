@@ -1,4 +1,4 @@
-# S1-d（審查者 D：repo 內各層文件與量測紀錄的事實宣稱）— 2026-11 提示文字稽核的改動（`2636b36..`）
+# S1-d（審查者 D：repo 內各層文件與量測紀錄的事實宣稱）— 2026-11 提示文字稽核的改動（`1290eb5..`）
 
 ## 派工
 
@@ -20,7 +20,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 >
 > ## 範圍
 > repo：<repo>（它的上一層不是 git repo；git 指令用 `git -C <repo>`）
-> 要審的是 `git diff 2636b36`（到工作目錄；工作目錄 = HEAD `ecfc89c`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
+> 要審的是 `git diff 1290eb5`（到工作目錄；工作目錄 = HEAD `c74f115`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
 > 步驟 3（code-simplifier）跑過了，沒有改任何檔。
 >
 > ## 審查材料（只有這一個檔）
@@ -43,7 +43,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 > - 來源是 2026-11 對提示文字做的三輪稽核（目標模型 Claude Fable 5.2）：收斂強調記號、更正過期或互相矛盾的句子、把全域模板的「領域陷阱」搬到 `skills/dd-loop/SKILL.md`、改全域 §6.2「不做：自動重試」的寫法、修 `skills/self-improving-agent`。
 > - `skills/self-improving-agent` 是收編的第三方 skill；本地改動逐條記在 `skills/self-improving-agent/CLAUDE.md` 的「Differences from upstream」。repo 根 `CLAUDE.md` 規定：改過的 skill 部署前要由 subagent 乾跑；說上游「沒寫」某件事之前要對過該 skill 目錄的每個 `.md`。
 > - 全域 §6.2 的新舊寫法做過行為量測，紀錄在 `docs/measurements/2026-11-19-global-6.2-retry.md`。
-> - 這段範圍裡先前的 16 個 commit（`c0f6d33` 到 `3ed8a01`）當時都沒有走過審查，這次是第一次審。
+> - 這段範圍裡先前的 16 個 commit（`e8bd89e` 到 `b5e9f96`）當時都沒有走過審查，這次是第一次審。
 >
 > ## 要找的（文件與指示文字的錯，比照程式碼的 bug）
 > 1. 照字面做會做錯、做不出來，或兩種讀法會得出不同結果的句子（寫出兩種讀法各會怎樣）。
@@ -74,9 +74,9 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 
 ## 發現
 
-審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `ecfc89c`。
+審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `c74f115`。
 
-S1-d 審查報告(範圍 `git diff 2636b36`..`ecfc89c`,重點:各層文件、量測紀錄、CHANGELOG 未發布、tech-diagram-gif)
+S1-d 審查報告(範圍 `git diff 1290eb5`..`c74f115`,重點:各層文件、量測紀錄、CHANGELOG 未發布、tech-diagram-gif)
 
 【我讀了什麼】
 - diff-pack.md:第 1 部分(1–1691)與第 2 部分(1692–1695)全部讀完,第 4 部分(7323–7375)全部讀完。
@@ -86,18 +86,18 @@ S1-d 審查報告(範圍 `git diff 2636b36`..`ecfc89c`,重點:各層文件、量
 - 從 repo 另外讀的:skills/tech-diagram-gif/scripts/verify-geometry.py(245–330、420–470)、skills/tech-diagram-gif/scripts/CLAUDE.md(grep)、agents/LICENSE.txt(1–40)、docs/measurements/2026-11-15-reviewer-effort.md(grep)、tests/test-*.sh(trap／mktemp)、.github/workflows/ci.yml(grep)。
 
 【What I ran】
-- `git log --oneline 2636b36..HEAD` → 17 個 commit,`c0f6d33`…`ecfc89c`。
+- `git log --oneline 1290eb5..HEAD` → 17 個 commit,`e8bd89e`…`c74f115`。
 - `git ls-tree <tag> scripts/githooks/`:
   - v1.6.14 只有 pre-commit;v1.6.15、v1.6.16 有 claude-md-max-bytes。
   - 最新 tag 是 v1.6.16(`git describe --tags --abbrev=0`)。
   - githooks/CLAUDE.md 與 CHANGELOG 的 tag 說法相符。
 - `git cat-file -e "v1.6.14:scripts/githooks/claude-md-max-bytes"`(字面寫 tag)→ rc=128;v1.6.16 → rc=0。
 - 我第一次用 zsh 迴圈 `"$t:scripts/…"` 跑,印出 `v1.6.14 rc=0`。那是 zsh 展開造成的假結果(見 Important 3),不是事實。
-- `git log -p 2636b36..HEAD -- scripts/githooks/CLAUDE.md` → 31dd5bb(2026-11-18)寫「v1.6.14 到 v1.6.16 都帶」,96753ff 更正。CHANGELOG 那句描述相符。
-- `git show -s a372fe3` → 2026-06-23「frontend-design 更新至上游最新版」。`git diff a372fe3 HEAD -- skills/frontend-design/SKILL.md` 只差 description 與 modifications 兩行,相符。
-- `git show --stat 29726db` → 2026-10-16,改了 CHANGELOG、DD_PIPELINE_ARCHITECTURE、兩份 README、scripts/CLAUDE.md,相符。
-- `git diff 8dcaa73^:templates/global/CLAUDE.md 8dcaa73:templates/global/CLAUDE.md` → 只差 §6.2(-1 行、+3 行),與量測紀錄「只差 §6.2 那三行」相符。
-- `git show --stat` 查 3637c92、31dd5bb → remember 的 description、兩個 agent 的 frontmatter、extract 的「Agent tool」,與 Differences 那條相符。「this commit」那條是 43373fe 加的,該 commit 動了所列各檔,相符。
+- `git log -p 1290eb5..HEAD -- scripts/githooks/CLAUDE.md` → 6758536(2026-11-18)寫「v1.6.14 到 v1.6.16 都帶」,48e87f5 更正。CHANGELOG 那句描述相符。
+- `git show -s 7278dec` → 2026-06-23「frontend-design 更新至上游最新版」。`git diff 7278dec HEAD -- skills/frontend-design/SKILL.md` 只差 description 與 modifications 兩行,相符。
+- `git show --stat d44d423` → 2026-10-16,改了 CHANGELOG、DD_PIPELINE_ARCHITECTURE、兩份 README、scripts/CLAUDE.md,相符。
+- `git diff 51f736a^:templates/global/CLAUDE.md 51f736a:templates/global/CLAUDE.md` → 只差 §6.2(-1 行、+3 行),與量測紀錄「只差 §6.2 那三行」相符。
+- `git show --stat` 查 c9b5190、6758536 → remember 的 description、兩個 agent 的 frontmatter、extract 的「Agent tool」,與 Differences 那條相符。「this commit」那條是 6b46c96 加的,該 commit 動了所列各檔,相符。
 - `grep -nE '\bTask\b' CLAUDE.md docs/measurements/CLAUDE.md commands/*.md skills/*/SKILL.md …` → 只剩 task-planner 的標題與 vendored 的 security-audit。「三處」= CLAUDE.md 2 處 + docs/measurements/CLAUDE.md 1 處,相符。
 - `grep -n '^#' docs/measurements/CLAUDE.md` → 「已知的坑」是第 44 行的 `##`,新加的條目在它底下,相符。
 - `grep` docs/measurements/2026-11-15-reviewer-effort.md → 174–179 行的表:三發都是 84/85、159/160、234/235、312。CLAUDE.md 的「四發一個隔約 75 秒」相符。
@@ -113,7 +113,7 @@ S1-d 審查報告(範圍 `git diff 2636b36`..`ecfc89c`,重點:各層文件、量
 【Important】
 
 1. CHANGELOG「## 未發布」漏記 2026-11-18 那 8 個 commit 的改動。Fixed 那一節卻拿它們當「上次」「先前的改動」。
-   - 證據:`git log --name-only 2636b36..HEAD` 顯示 `c0f6d33`、`d468905`、`3637c92`、`31dd5bb`、`43373fe`、`3e3243a`、`2117860`、`febdc45` 都沒動 CHANGELOG.md。
+   - 證據:`git log --name-only 1290eb5..HEAD` 顯示 `e8bd89e`、`1175c9f`、`c9b5190`、`6758536`、`6b46c96`、`d2f2aad`、`e1b7447`、`689391a` 都沒動 CHANGELOG.md。
    - 這幾個詞在未發布一節 `grep -cF` 都回 0:OWASP、senior-devops、security-auditor、§7、領域、dd-loop、dd-init、tech-diagram、SVG、docker、allowed-tools、templates/global、marketplace。
    - 漏掉的是會改變部署後行為的改動:
      - 全域模板 §7.1 第 5 條、§7.2 由「任何 `.md`」改成「`CLAUDE.md`」並刪掉「優化 skill」、§7.6 拿掉「under-trigger 比 over-trigger 嚴重」(pack 1642–1667)。
@@ -132,7 +132,7 @@ S1-d 審查報告(範圍 `git diff 2636b36`..`ecfc89c`,重點:各層文件、量
    - 但粗體結論「失敗後的第一個動作有差別」(232)量的是 `lsof`、`curl -v`、`sleep 3`。
      - 這些不會出現在服務 log:`log()` 只寫 `time method path code`(281)。
      - 也不在事先寫下的判定式裡。
-     - 照它自己的判定式,結論應該是「沒有差別」,也就是 12c22f4 原本的 commit 標題。
+     - 照它自己的判定式,結論應該是「沒有差別」,也就是 e66e9bf 原本的 commit 標題。
    - 「舊寫法 10 發都先查原因」用到了它自己規則判為無效的發:
      - 「有效的一發要 `permission_denials` 為空」(254)。
      - S2 的 A 臂 5 發都有 denial(255、263)。

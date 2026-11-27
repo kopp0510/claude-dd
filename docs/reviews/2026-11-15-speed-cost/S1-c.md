@@ -3,12 +3,12 @@
 ## 派工
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數），同時派 code-simplifier 跑步驟 3。下面是給這個審查者的 prompt 全文（路徑已去識別：`<repo>`、`<scratchpad>`）。
-diff 檔（3014 行）的組成：①`git diff 60239e7 HEAD`（HEAD = ded7c0b）②步驟 3 的改動（並行，派工當下是空的）③`install-dd-pipeline.sh` 與 `tests/test-install.sh` 在 HEAD 的整檔內容 ④已跑過的驗證與預期值 11 條。
+diff 檔（3014 行）的組成：①`git diff 750c8db HEAD`（HEAD = 3fe579d）②步驟 3 的改動（並行，派工當下是空的）③`install-dd-pipeline.sh` 與 `tests/test-install.sh` 在 HEAD 的整檔內容 ④已跑過的驗證與預期值 11 條。
 
 ````text
 你是 code reviewer。唯一的職責：找這段改動的漏洞。每條發現都要附證據（diff 檔的行號加原文，或你實際跑的唯讀指令與輸出）；沒證據的不算。不寫優點。
 
-審查範圍：repo `<repo>` 的 `git diff 60239e7 HEAD`（兩個 commit：S1-1 安裝腳本的環境檢查多一行報「自動壓縮視窗」有沒有設，連同測試；S1-2 量測檔、兩份 README、CHANGELOG）。
+審查範圍：repo `<repo>` 的 `git diff 750c8db HEAD`（兩個 commit：S1-1 安裝腳本的環境檢查多一行報「自動壓縮視窗」有沒有設，連同測試；S1-2 量測檔、兩份 README、CHANGELOG）。
 
 材料都在這個 diff 檔（3014 行）：
 <scratchpad>/s1/review/S1-diff.txt
@@ -34,7 +34,7 @@ diff 檔（3014 行）的組成：①`git diff 60239e7 HEAD`（HEAD = ded7c0b）
 審查者交回的報告全文（路徑已去識別，其餘逐字）。
 
 ````text
-Critical 0 / Important 3 / Smell 4。審的是 git diff 60239e7 HEAD 的文件宣稱，材料用 S1-diff.txt（第 1–702 行、HEAD 腳本 410–477 與 1487–1507 行、第 4 部分）。
+Critical 0 / Important 3 / Smell 4。審的是 git diff 750c8db HEAD 的文件宣稱，材料用 S1-diff.txt（第 1–702 行、HEAD 腳本 410–477 與 1487–1507 行、第 4 部分）。
 
 **[Important] 1｜install-dd-pipeline.sh `autocompact_state`／`print_autocompact_line` 的 `*)` 分支（diff 檔 377、417、445–447 行）；README.md 55 行；README.zh-TW.md 94 行**
 - 問題：腳本只讀 `$CLAUDE_DIR/settings.json` 一個檔，`none` 卻印成確定的「沒設」。README 也寫 "The environment check reports whether one is set"。
@@ -93,7 +93,7 @@ Critical 0 / Important 3 / Smell 4。審的是 git diff 60239e7 HEAD 的文件�
 - 兩份 README 的前置需求、步驟 1、新小節中英對得上。
 - 錨點 `#what-the-main-session-costs`、`#主對話那一塊要花多少` 都對得上標題（README.md 148 行、README.zh-TW.md 151 行）。
 - CHANGELOG「`--check` 與 `--commands-only` 也會跑」成立：HEAD 411–414 行與 1498 行在所有模式都呼叫 `check_environment`。
-- 設計文件 S1 標 `IN_PROGRESS`、commits 欄 `60239e7..`，符合它自己的規則。
+- 設計文件 S1 標 `IN_PROGRESS`、commits 欄 `750c8db..`，符合它自己的規則。
 - 根目錄 CLAUDE.md 兩處改動符合腳本。
 - session-cost.md 的範圍到 10:30:08，與新量測檔互相引用、不重疊，12 次壓縮也在它自己的輸出裡。
 - 設計文件 F4 寫「跑 Bash 22.9 分」，量測檔寫 22.5：這不在本次 diff 內，是既有內容，提一句。

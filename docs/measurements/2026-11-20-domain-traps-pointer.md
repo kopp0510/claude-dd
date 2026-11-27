@@ -3,7 +3,7 @@
 > 之後：使用者 2026-11-20 決定把這三條搬回全域模板（同一天的下一個段落做的，報告在 `docs/reviews/2026-11-19-prompt-audit/` 的 `S2-…md`）。
 > 搬回之後模板沒有這句指標、dd-loop 也沒有這一節；這一份量的是搬回之前的兩種指標寫法，留作紀錄，下面的內文沒有改。
 
-問題：`c0f6d33` 把全域模板 §3.9 的三條教訓（race 與交易、併發的驗法、git 進行中狀態）搬到 `skills/dd-loop/SKILL.md` 的「領域陷阱」一節，
+問題：`e8bd89e` 把全域模板 §3.9 的三條教訓（race 與交易、併發的驗法、git 進行中狀態）搬到 `skills/dd-loop/SKILL.md` 的「領域陷阱」一節，
 模板只留一句指標。不在 8 步迴圈裡的 session 碰到併發 race 時，會不會去讀那一節？指標句改寫之後有沒有比較常到？
 （步驟 4 審查的 S1-c-1，報告在 `docs/reviews/2026-11-19-prompt-audit/`。）
 
@@ -12,9 +12,9 @@
 
 ## 兩臂
 
-兩臂的 `~/.claude/CLAUDE.md` 只差指標那一句（`git diff ecfc89c -- templates/global/CLAUDE.md` 只有這一處）：
+兩臂的 `~/.claude/CLAUDE.md` 只差指標那一句（`git diff c74f115 -- templates/global/CLAUDE.md` 只有這一處）：
 
-- 舊臂（`ecfc89c` 的模板，當時部署的那一份；部署新版時留下的備份 `global/CLAUDE.md` 和 `git show ecfc89c:templates/global/CLAUDE.md` 逐字相同）：
+- 舊臂（`c74f115` 的模板，當時部署的那一份；部署新版時留下的備份 `global/CLAUDE.md` 和 `git show c74f115:templates/global/CLAUDE.md` 逐字相同）：
   「併發 race、資料庫鎖、git 進行中狀態的驗法見 `dd-loop` skill 的「領域陷阱」一節(碰到這類修改時讀)」
 - 新臂（部署工作目錄的模板之後，`diff -q` 確認部署版與 repo 相同）：
   「併發 race 與資料庫鎖的修法與驗法、git 進行中狀態的驗法在 `dd-loop` skill 的「領域陷阱」一節:碰到這類修改就用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節,迴圈外的修改、迴圈暫停中也一樣(讀檔不算呼叫 `dd-loop`)」

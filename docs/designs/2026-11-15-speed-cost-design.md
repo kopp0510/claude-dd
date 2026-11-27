@@ -28,9 +28,9 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 60239e7..fd96d69 |
-| S2 | 審查者思考強度實驗（medium 對 low） | DONE | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I table.py` 能從存下的 stats 重印出表（原本寫 `stats.py`：它要讀不在 repo 的原始紀錄，從存下的 stats 重印的是 `table.py`） | 58fc4ba..024546e |
-| S3 | 計畫審查的計畫與事實放成檔、審查者只拿路徑 | DONE | S2 | 量測文件有真跑的結果：每一發最後一個審查者開始的秒數與 prompt 字元數、每個 subagent 有沒有把審查包讀到結尾、那條重大幾發中幾發；照跑之前寫死的三個關卡寫出「採用／不採用」；不採用時 SKILL.md 與 CHANGELOG 已還原 | dd570e7..163ad26 |
+| S1 | 安裝檢查提醒自動壓縮視窗＋文件 | DONE | — | 沙盒 HOME 跑 `./install-dd-pipeline.sh --check`，設定檔是「最上層有設／最上層的值在範圍外／只設在個別模型／都沒設／壞掉」與環境變數是 400000、是 5 時各印各的那一行；`tests/test-install.sh` 在 macOS（`/bin/bash`，3.2）與 ubuntu:24.04 容器都 rc=0；本機照 ci.yml 逐 step 全過 | 750c8db..867939e |
+| S2 | 審查者思考強度實驗（medium 對 low） | DONE | S1 | 量測文件有兩部分（計畫審查的 haiku 審查者、步驟 4 的 opus 審查者）兩臂的耗時、token、命中表，每個審查者實際跑的強度有紀錄佐證，並照跑之前寫死的判準各寫出「建議改／不建議改／分不出／沒跑完」其中一個；`python3 -I table.py` 能從存下的 stats 重印出表（原本寫 `stats.py`：它要讀不在 repo 的原始紀錄，從存下的 stats 重印的是 `table.py`） | 9e473c3..3e8ba5d |
+| S3 | 計畫審查的計畫與事實放成檔、審查者只拿路徑 | DONE | S2 | 量測文件有真跑的結果：每一發最後一個審查者開始的秒數與 prompt 字元數、每個 subagent 有沒有把審查包讀到結尾、那條重大幾發中幾發；照跑之前寫死的三個關卡寫出「採用／不採用」；不採用時 SKILL.md 與 CHANGELOG 已還原 | c772d96..eb80e74 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -53,7 +53,7 @@
 
 ## 段落與小任務
 
-### 開工前查到的事實（2026-11-15，repo 在 HEAD 089b10d，本機 macOS，Claude Code 2.1.325）
+### 開工前查到的事實（2026-11-15，repo 在 HEAD 16355ad，本機 macOS，Claude Code 2.1.325）
 
 - F1 使用者的 `~/.claude/settings.json`（用 jq 讀）：最上層沒有 `autoCompactWindow`；`modelSettings` 裡 `claude-opus-5-5`、`claude-fable-5-1`、`claude-opus-4-8` 各有 `autoCompactWindow: 400000`；`claude-fable-5-2` 原本只有 `effortLevel`，使用者打 `/autocompact 400000` 之後多了 `autoCompactWindow: 400000`（指令回覆「Auto-compact window for Fable 5.2 set to 400k tokens」）
 - F2 同一個 session 的紀錄檔：模型在 `2026-11-14T10:35:55Z` 從 `claude-opus-5-5` 換成 `claude-fable-5-2`。`compact_boundary` 紀錄：換之前 12 次 `auto`，`preTokens` 366,594–385,382；換之後一次 `auto` 是 969,715
@@ -67,7 +67,7 @@
 - F10 `install-dd-pipeline.sh` 現況：`check_environment` 依序檢查 Claude Code CLI、Node.js、Git、Bash、ffmpeg（ffmpeg 是可選、最後一行用 `└──`），有任何必要工具缺少才 `exit 1`；`main()` 先跑 `check_environment` 再跑 `validate_skill_hooks`，`--check` 接著跑 `check_builtin_skills`、`check_builtin_agents`、`check_mcp`、`check_plugins`。`plugin_enabled_state` 是讀 `$CLAUDE_DIR/settings.json` 的既有函式：jq 用 `-r -s` 並在「不是剛好一個頂層物件」時 `error(...)`，python3 用 `encoding="utf-8-sig"`、非 dict `sys.exit(1)`，兩者皆缺時 `grep` 鍵名回 `unknown`／`none`，空輸出回 `unparseable`
 - F11 `tests/test-install.sh`：`TEST_ONLY` 的合法值寫在一個 `case`（`""|T2|T3|T4|T5|T6|T7|T8|T9`），其他值 exit 2；T2 的 `t2_case <呼叫點> <名稱> <settings 內容> <installed 內容> <claude.json 內容> <必須出現的 regex> <不可出現的 regex>` 每個案例 jq、python3 兩臂各開一個子行程跑 `drive.sh`；T4 是跑真的 `--check` 看 MCP 那一行
 - F12 兩份 README 現況：「前置需求」有一行可選的 ffmpeg；`### What the review step costs`／對應的中文小節講步驟 4 的兩組量測，沒有講主對話。`grep -n -i 'ffmpeg' DD_PIPELINE_ARCHITECTURE.md` 0 筆
-- F13 既有的審查者實驗素材：`docs/measurements/2026-10-24-s5-inputs/`（`prepare.py` 用 `git archive` 做兩個 commit 的快照、產 diff 檔與 prompt；`RANGES = {"G2": ("639bde7","b66d8ae"), "G3": ("08b2576","8514fb2"), …}`；`run.sh` 用 `claude -p … --model opus --output-format stream-json --verbose --permission-mode dontAsk --allowedTools "Agent Read Glob Grep Bash" --max-budget-usd 20`；`direct.txt` 是父 session 自己查證的說明）。那份目錄的 CLAUDE.md 寫明它是凍結的，要改實驗就另開新目錄。2026-10-24 的費用：S5 的 8 發合計約 36.6 美元（父 session 是 opus）、B 組關掉 advisor 的 4 發合計 10.05 美元（父 opus＋haiku 審查者）
+- F13 既有的審查者實驗素材：`docs/measurements/2026-10-24-s5-inputs/`（`prepare.py` 用 `git archive` 做兩個 commit 的快照、產 diff 檔與 prompt；`RANGES = {"G2": ("b1d28bd","40b3f0a"), "G3": ("96e930e","720f1b3"), …}`；`run.sh` 用 `claude -p … --model opus --output-format stream-json --verbose --permission-mode dontAsk --allowedTools "Agent Read Glob Grep Bash" --max-budget-usd 20`；`direct.txt` 是父 session 自己查證的說明）。那份目錄的 CLAUDE.md 寫明它是凍結的，要改實驗就另開新目錄。2026-10-24 的費用：S5 的 8 發合計約 36.6 美元（父 session 是 opus）、B 組關掉 advisor 的 4 發合計 10.05 美元（父 opus＋haiku 審查者）
 - F14 scratchpad 裡還在的素材：`imp/judge-r1.txt`（30,206 bytes，2026-11-14 第 1 輪裁決者實際拿到的 prompt）、`imp/judge-report-r1.txt`（10,143 bytes，那一輪的裁決報告）
 - F15 官方文件原文（2026-11-15 由 web-fetch subagent 從 code.claude.com/docs 逐字抓回，它註明是原文不是摘要；我沒有自己開瀏覽器看）：
   - `model-config.md`「Set the auto-compact window」：`**For every model**: set autoCompactWindow in a settings file, such as "autoCompactWindow": 200000 in ~/.claude/settings.json. A window you saved for a model with /autocompact takes precedence over this key in the same file for that model.`
@@ -147,11 +147,11 @@ README 要寫的內容（兩份同義）：2026-11-15 量的一件兩段工作�
 1. Agent 工具的 `effort` 參數在 `claude -p` 裡有沒有作用，三發便宜的都要看到 subagent 紀錄檔的 `effort` 欄位是 `low`：①haiku 父 session 派一個 haiku 的 general-purpose ②第二層：haiku 父 session 派一個 general-purpose（haiku），由它再派一個 haiku（實驗的甲部分是裁決者派審查者，在第二層）③有定義檔的 agent：haiku 父 session 派 `code-reviewer`（定義檔寫 `model: opus`）做一件一句話的小事。任何一發沒作用就停下回報，不往下做。
 2. 兩臂都明寫強度（`medium`／`low`），不靠預設值（使用者 2026-11-15 剛把預設改成 high，subagent 的預設會不會跟著變沒查）。
 3. 第一發跑完讀 `result.total_cost_usd`，照它重估總額；估計總額超過 30 美元時先停下回報，由使用者決定要不要照跑（他看到的說法是約 20–40 美元），不直接跑到截斷；這個值取自最後一筆 result、會偏低（`docs/measurements/2026-10-23-reviewer-real-sessions.md` 記過），所以累計到 30 美元就不再開新的一發。
-4. 洩題（比內容，不 grep 關鍵字）：甲部分的正確答案來自 2026-11-14，那條重大本來就是靠當時的規則推出來的，規則裡有那個機制不算洩題；要查的是「現在載入的規則比當時多了什麼」。拿受測 session 會載入的每一份部署檔，對快照 `b1935bb` 裡的對應檔做 diff：`~/.claude/CLAUDE.md` 對 `templates/global/CLAUDE.md`、`~/.claude/skills/plan-review/SKILL.md` 對 `skills/plan-review/SKILL.md`、`~/.claude/skills/dd-loop/SKILL.md` 對 `skills/dd-loop/SKILL.md`。diff 是空的就在量測文件寫「無污染」，那條重大照常計分。只有「部署版有、快照沒有，而且講到那條重大的機制」的段落才算受污染；唯一的計分項真的受污染時，甲不開跑，那一部分寫「沒跑完，不下結論」。乙沿用 2026-10-24 已經判過的（只算 K1、K4、K5）。
+4. 洩題（比內容，不 grep 關鍵字）：甲部分的正確答案來自 2026-11-14，那條重大本來就是靠當時的規則推出來的，規則裡有那個機制不算洩題；要查的是「現在載入的規則比當時多了什麼」。拿受測 session 會載入的每一份部署檔，對快照 `23429eb` 裡的對應檔做 diff：`~/.claude/CLAUDE.md` 對 `templates/global/CLAUDE.md`、`~/.claude/skills/plan-review/SKILL.md` 對 `skills/plan-review/SKILL.md`、`~/.claude/skills/dd-loop/SKILL.md` 對 `skills/dd-loop/SKILL.md`。diff 是空的就在量測文件寫「無污染」，那條重大照常計分。只有「部署版有、快照沒有，而且講到那條重大的機制」的段落才算受污染；唯一的計分項真的受污染時，甲不開跑，那一部分寫「沒跑完，不下結論」。乙沿用 2026-10-24 已經判過的（只算 K1、K4、K5）。
 5. 快照裡各層的 CLAUDE.md 保留不刪（真實流程的審查者會讀專案規則；根目錄 CLAUDE.md 那條「刪掉 fixture 子目錄的 CLAUDE.md」講的是不想讓受測 session 讀到的實驗說明檔，這裡沒有那種檔）。實驗自己的說明檔放在快照之外。
 
 甲部分（計畫審查，haiku 審查者）：
-- 素材：2026-11-14 那份計畫的第 1 輪裁決者 prompt（scratchpad 裡的 `imp/judge-r1.txt`，當時實際送出的那份）＋ repo 在 `b1935bb` 的快照（`git archive` 到拋棄式目錄再 `git init`，prompt 裡的專案根目錄換成快照路徑）。
+- 素材：2026-11-14 那份計畫的第 1 輪裁決者 prompt（scratchpad 裡的 `imp/judge-r1.txt`，當時實際送出的那份）＋ repo 在 `23429eb` 的快照（`git archive` 到拋棄式目錄再 `git init`，prompt 裡的專案根目錄換成快照路徑）。
 - 正確答案：當時第 1 輪裁決報告採納的那幾條（1 條重大、其餘小事），跑之前逐條抄進量測文件。命中判準照 `docs/measurements/2026-10-23-reviewer-real-sessions.md`「命中（判準跑之前寫死…）」那一節的寫法：同一個位置、同一個機制才算，級別不論。計分只算那 1 條重大；小事逐條列出命中與否，只當參考、不進判準。
 - 兩臂：裁決者照舊（general-purpose、opus、明寫 medium），只差它派審查者時帶 `effort: "medium"` 或 `"low"`（改裁決者 prompt 裡派審查者那一句）。每臂 2 發，共 4 發，兩臂交錯跑（medium、low、medium、low）。
 - 審查者人數由裁決者自己定（原 prompt 寫「最少 3 個」），不改它；每發記「審查者人數、有沒有重派或補派」。兩臂的人數不一樣時在結果裡註明，那一部分最多只能寫「分不出」（人數會同時影響聯集命中與整發秒數，n=2 分不開）。
@@ -192,7 +192,7 @@ S2 開工前提的結果（2026-11-15；細節與表在 `docs/measurements/2026-
 - 前提 1：三發探針（第 1 層、第 2 層、有定義檔的 `code-reviewer`）帶 `effort: "low"` 的 subagent，紀錄檔的 `effort` 欄位都是 `low`，`permission_denials` 都是空的。往下做
 - 前提 2：照做，兩臂都明寫。另外查了「medium 是不是現在實際在跑的」：互動式 session 那次 `code-reviewer` 19 個、第 2 層 haiku 25 個全部 `medium`；
   `claude -p` 裡不帶參數的 `code-reviewer` 是 `xhigh`（n=1，原因沒驗證）。結論只講「明寫 medium 對明寫 low」
-- 前提 4（量測文件「開工前提的結果」的第 3 小節「洩題檢查」；那邊的編號不含預算那一項）：四份部署檔對 `b1935bb` 的對應檔 `diff -q` 都相同，無污染
+- 前提 4（量測文件「開工前提的結果」的第 3 小節「洩題檢查」；那邊的編號不含預算那一項）：四份部署檔對 `23429eb` 的對應檔 `diff -q` 都相同，無污染
 - 跟上面寫的不一樣的兩處（跑之前改、兩臂相同）：乙的審查者任務說明由 `prepare.py` 先寫成檔，父 session 只給一句「先讀哪個檔」（原本寫由 haiku 父 session 自己組 prompt，兩臂的 prompt 會隨它的轉述而不同）；
   父 session 最後只回一行，不貼報告（報告本來就從紀錄檔讀）
 - 探針費用 0.50 美元，算進 30 美元的累計
@@ -214,7 +214,7 @@ S2 跑的結果（細節在量測文件「結果」）：
 改法（只動 `skills/plan-review/SKILL.md` 一份規則檔）：
 - 第 1 步加一項：把審查範圍、計畫全文（含附錄）、事實寫成一個檔（審查包），放 scratchpad、每輪重寫、最後一行是固定的結尾句；寫不了檔就照舊貼
 - 第 2 步：寫了審查包時範本換兩處 —— 兩組標記那一整段換成讀檔指示（路徑、行數、每次 300 行讀到結尾句）；「派審查者」的「《計畫與事實》貼上面兩組標記之間的內容」那半句換成「貼那一段讀檔指示、不貼檔案內容」
-- 裁決者範本本身不改（與 `b1935bb` 逐字相同），貼的那條路的字不動。第一版是只換第一處、在範本加一條條件句，真跑 2 發有 1 發沒被照做，`8633574` 改成上面這樣
+- 裁決者範本本身不改（與 `23429eb` 逐字相同），貼的那條路的字不動。第一版是只換第一處、在範本加一條條件句，真跑 2 發有 1 發沒被照做，`a64b6c7` 改成上面這樣
 - 「計畫全文」那條的「整份大文件放不下時，附路徑讓審查者自己讀」留著：它講的是計畫引用的別份大文件，兩條路都適用
 - 「常見錯誤」加一列
 - 跟計畫不同的一處：結尾句不含行數（計畫寫「含總行數」）。行數由 `wc -l` 數、寫在讀檔指示裡，含結尾句那一行；讀到看見結尾句為止，不靠行數
@@ -227,11 +227,11 @@ S2 跑的結果（細節在量測文件「結果」）：
 - **S3-2 改 SKILL.md 與 CHANGELOG**。驗證：`grep -rn '\$[0-9]' skills/plan-review/SKILL.md` 沒有輸出；`git diff` 裡貼的那條路的句子沒被刪改（只有新增）；`gen_review.py` 逐框對過；本機照 CI 逐 step 跑全過。commit：`feat: plan-review 的計畫與事實改成放檔、審查者只拿路徑（S3-2）`
   S3-2 做完的紀錄：SKILL.md 新增 12 行、刪 0 行（`git diff` 沒有 `-` 開頭的內容行）。`diagrams/src/gen_review.py` 中文那組 7 個框逐框對過：
   ①「計畫寫好／附查到的事實，推測要標明是推測」、②「派 ≥3 個審查者／haiku，同一則訊息平行派」都沒有講怎麼交計畫，③–⑦ 與「例外」「什麼算重大」跟這次改的句子無關 → 不用重出圖。
-  CHANGELOG 與這段紀錄比 SKILL.md 晚一個 commit（改檔的腳本在 CHANGELOG 那一步找錯位置而中斷，`e3c7fd1` 只帶到 SKILL.md）
+  CHANGELOG 與這段紀錄比 SKILL.md 晚一個 commit（改檔的腳本在 CHANGELOG 那一步找錯位置而中斷，`505df35` 只帶到 SKILL.md）
 - **S3-3 跑驗證、寫結果**。結果：採用（判定與限制在量測文件）。真跑 3 發共 6.14 美元：第一版寫法 2 發裡 1 發的裁決者沒照做（讀完檔仍把內容貼給每個審查者），
-  所以中途改成「寫了檔時範本換兩處」（`8633574`，補跑的判定在開跑前寫進量測文件「第一次修正」），補跑 1 發過關。
-  跟計畫不同的地方：預定 2 發、實際 3 發；判準 ③ 改成只算審查者真的從檔讀的發；貼的那條路的檢查（V5）被模型的安全機制擋下沒跑成，改由「範本回到與 `b1935bb` 逐字相同」蓋掉那個缺口；乾跑多派了 3 臂（只審一段、換兩處之後的兩臂）。
-  步驟 4 的審查之後（`fd3004b`）：讀檔指示那一行加一句（只引審查包的行不算讀過專案的檔）、`readcheck.py` 改嚴、洩題歸因重寫；因為改了交出去的那一行，補跑第 4 發 `P-med-7`（判定先寫進量測文件「第二次修正」），過關。四發共 7.75 美元。
+  所以中途改成「寫了檔時範本換兩處」（`a64b6c7`，補跑的判定在開跑前寫進量測文件「第一次修正」），補跑 1 發過關。
+  跟計畫不同的地方：預定 2 發、實際 3 發；判準 ③ 改成只算審查者真的從檔讀的發；貼的那條路的檢查（V5）被模型的安全機制擋下沒跑成，改由「範本回到與 `23429eb` 逐字相同」蓋掉那個缺口；乾跑多派了 3 臂（只審一段、換兩處之後的兩臂）。
+  步驟 4 的審查之後（`7344704`）：讀檔指示那一行加一句（只引審查包的行不算讀過專案的檔）、`readcheck.py` 改嚴、洩題歸因重寫；因為改了交出去的那一行，補跑第 4 發 `P-med-7`（判定先寫進量測文件「第二次修正」），過關。四發共 7.75 美元。
   原訂內容：真跑 2 發（必要時補 1 發）、大檔臂、乾跑三臂、貼的那條路一臂；報告去識別後進 `out/`，commit 前 `grep -rnE -- '-Users-|/Users/|-private-tmp-|/private/tmp' docs/measurements/2026-11-15-plan-review-pack*` 要 0 筆。不採用時在這裡還原 SKILL.md 與 CHANGELOG。commit：`docs: 計畫審查材料放檔的實驗結果（S3-3）`
 
 ### 要新增的測試清單（全部在 `tests/test-install.sh`）
@@ -271,7 +271,7 @@ S2 不加測試。
 - 輪2-R1-7｜沒有 jq 也沒有 python3、檔案裡又沒有 `"autoCompactWindow"` 字樣時回 `none` 是「不確定卻說確定」｜這個情況下不管檔案壞不壞，那個檔裡確定沒有這個鍵，`none` 是對的。這也跟 `plugin_enabled_state` 的既有退化路徑一致。
 - 輪2-R2-4｜設定不是「前置需求」，不該放在那段｜這是放哪一段的寫法選擇，句子本身不會錯。計畫同時在安裝步驟 1 與費用小節都有寫。
 - 輪2-R3-6｜甲的判準 ② 把裁決者自己的時間也算進去，會稀釋效果｜這是第 1 輪重大 輪1-R4-1 採納的設計：主對話在等的就是裁決者整發，稀釋效果本來就是要量的東西。
-- 輪2-R4-2｜快照裡 CHANGELOG.md:237、scripts/dd-init-upgrade.sh:75 的句子，以及 25 處 2026-11-14 的 CLAUDE.md 字樣會洩題｜b1935bb 的 commit 時間是 2026-11-14 21:33，早於 judge-r1.txt 的 22:30。那些內容就是當時審查者實際看得到的 repo，原本就該讀得到，不算洩題。
+- 輪2-R4-2｜快照裡 CHANGELOG.md:237、scripts/dd-init-upgrade.sh:75 的句子，以及 25 處 2026-11-14 的 CLAUDE.md 字樣會洩題｜23429eb 的 commit 時間是 2026-11-14 21:33，早於 judge-r1.txt 的 22:30。那些內容就是當時審查者實際看得到的 repo，原本就該讀得到，不算洩題。
 - 輪2-R4-7｜「預設改成 high」不成立，`/effort high` 只是 session 設定｜同 輪1-R3-13，沒有新證據。而且 `~/.claude/settings.json` 的 `modelSettings` 確實存著 `effortLevel`（:159、:162、:172），F1 也記了 fable-5-2 原本就有 `effortLevel`，它是寫進設定檔的值。
 - 輪2-R4-E1｜`all`、`permodel` 兩句「對所有模型」「換到沒設過的模型不生效」要先實測才能印｜F15 有官方原文逐字支持：最上層鍵 `For every model`；`/autocompact` 存在 `modelSettings` 的當下模型；個別值 `takes precedence`。F16 也實測過最上層鍵確實生效。至於 `none` 那句，上面重大第 1 條改成原文說法之後就不需要實測。
 
@@ -281,6 +281,6 @@ S2 不加測試。
 - 輪3-R3-5｜審查報告放在 `docs/reviews/2026-11-15-speed-cost/`，gate 會擋｜scripts/check-claude-md.sh:205 的正規式是 `(^|/)S[0-9][^/]*\.md$`，子目錄裡的 `S1-a.md` 也認得。輪3-R2 也核過這點。
 - 輪3-R3-6、輪3-R4-8｜F15 的原文是 subagent 轉述的，要再找人核、要拿 settings.json 實測｜同輪2-R4-E1，無新證據。F15 註明是逐字原文，F16 也實測過最上層的鍵確實生效；`--settings` 對 settings.json 的差別，官方原文寫的是「in a settings file」。
 - 輪3-R1-4、輪3-R4-5｜個別模型設 `"auto"` 被當成沒設，跟官方原文衝突｜官方原文說 `"auto"` 就是「為該模型調的預設視窗」，效果等於沒設。最上層有設時回 `all`，句子已經寫了個別設定優先；沒設時回 `none`，句子寫的是用預設。兩種印出來的都對。
-- 輪3-R4-3｜開工前提 4 比的對象寫成工作樹｜原文寫的是「對快照 b1935bb 裡的對應檔」，列的是檔名對應；R4 自己也查到 b1935bb 跟 HEAD 這幾份是一樣的，結果不受影響。
+- 輪3-R4-3｜開工前提 4 比的對象寫成工作樹｜原文寫的是「對快照 23429eb 裡的對應檔」，列的是檔名對應；R4 自己也查到 23429eb 跟 HEAD 這幾份是一樣的，結果不受影響。
 - 輪3-R4-4｜環境變數用「純數字」，設定檔用「整數值的數字」，兩條規則不一樣｜環境變數本來是字串，比較嚴的檢查只會把結果落到 ⚠「無從判定」，那是誠實的輸出，不會印錯。
 - 輪3-R4-7｜README 那句「那個模型沒設」沒寫是哪個模型｜S1-2 的驗證已經要求每一句都對回量測輸出（:52），模型名在對照表裡就要對上。

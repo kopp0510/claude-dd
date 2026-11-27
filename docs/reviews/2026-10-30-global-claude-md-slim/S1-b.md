@@ -4,11 +4,11 @@
 
 `subagent_type: code-reviewer`，與其他審查者同一則訊息平行派出。共用派工說明（逐字）：
 
-> 你是 code-review 審查者。審查範圍：claude-dd repo（/Users/danlio/project/my_project/claude-dd）段落 S1 的整段改動 = `git diff f46d4de HEAD`（3 個 commit：a30dc1a、f0e80ab、a542817；工作目錄乾淨）。
+> 你是 code-review 審查者。審查範圍：claude-dd repo（/Users/danlio/project/my_project/claude-dd）段落 S1 的整段改動 = `git diff a2dbb9b HEAD`（3 個 commit：d3b980d、cbb59d7、a3aa5a4；工作目錄乾淨）。
 > 段落目標：把全域模板 templates/global/CLAUDE.md §3.9 的 8 步迴圈做法細則，原文搬進新 skill skills/dd-loop/SKILL.md，全域只留 8 步清單、關卡、驗證教訓，並明寫「段落開始時、步驟 3、4、8 開始前呼叫 dd-loop」；同批改部署陣列、README×2、根 CLAUDE.md、架構文件、CHANGELOG、引用處；新增觸發實測 docs/measurements/2026-10-30-dd-loop-trigger/。設計文件：docs/designs/2026-10-30-global-claude-md-slim-design.md。
 > 
 > 資料：diff 檔 /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/S1-diff.txt（①整段 diff ②步驟 3 改動：無 ③被改到檔案的 HEAD 整檔（帶行號）④已跑過的驗證與預期值 —— ④ 已確認，不要重跑）。
-> **diff 檔用 Read 的 offset/limit 每次 300 行讀到最後一行（共 5593 行）**：Read 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。舊版可用 `git show f46d4de:<path>`。
+> **diff 檔用 Read 的 offset/limit 每次 300 行讀到最後一行（共 5593 行）**：Read 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。舊版可用 `git show a2dbb9b:<path>`。
 > 
 > 你的職責：找漏洞，每條附證據（路徑:行號 + 原文，或指令與輸出），沒證據不算。只用手上的資料判斷，需要外部查證（上網、跑 claude -p 等）的列出來交回。專案規則在各層 CLAUDE.md 與全域模板 §3.10。
 > 輸出：Critical / Important / Smells 三級，每條「位置｜問題｜失敗情境｜證據｜建議」；另列 Not reported（看到但判為不報的，附理由）、What I ran（跑過的指令）、需要外部查證。
@@ -21,7 +21,7 @@
 
 （逐字原文）
 
-審查者 B 報告（方向：文件宣稱、數字、引用、同步點），範圍是 `git diff f46d4de HEAD`（a30dc1a、f0e80ab、a542817）。
+審查者 B 報告（方向：文件宣稱、數字、引用、同步點），範圍是 `git diff a2dbb9b HEAD`（d3b980d、cbb59d7、a3aa5a4）。
 
 Critical 0 / Important 2 / Smells 0
 
@@ -43,13 +43,13 @@ Critical 0 / Important 2 / Smells 0
 - 證據：
   - check.sh：`select(.tool_name=="Skill")`、`select(test("dd-loop"))|length`
   - results.tsv：p1–p4 共 8 列都是 `inject_chars=24`
-  - 自己重算：SKILL.md 去掉 frontmatter，在 a30dc1a 是 6,120 字元，整檔 6,323 字元。6,188 落在兩者之間，可信，但從 repo 內的東西無法重現。
+  - 自己重算：SKILL.md 去掉 frontmatter，在 d3b980d 是 6,120 字元，整檔 6,323 字元。6,188 落在兩者之間，可信，但從 repo 內的東西無法重現。
 - 建議：
   - check.sh 改成抽 skill 注入訊息的長度，以及每份 jsonl 的第一個 tool_use 名稱和 `permission_denials|length`，重跑後放進新的日期目錄（照該層 CLAUDE.md，不覆蓋原處）。
   - 或者 README 把這三句降級成「未進 repo 的觀察」，並寫明 6,188 的量法。
 
 **有核對、而且成立的**（所以不報）
-- 全域模板大小：f46d4de 是 842 行、56,068 bytes、28,082 字元；HEAD 是 748 行、46,158 bytes、23,040 字元，差 5,042 字元，與 CHANGELOG、量測 README 一致。
+- 全域模板大小：a2dbb9b 是 842 行、56,068 bytes、28,082 字元；HEAD 是 748 行、46,158 bytes、23,040 字元，差 5,042 字元，與 CHANGELOG、量測 README 一致。
 - 費用合計是 3.8545，對上「約 US$3.85」。
 - 4 個正例各 2 次、反例 1 次，與 run.sh 一致。
 - 13 個 skills 的同步：根 CLAUDE.md 目錄結構、兩份 README 的安裝步驟 2 與表格標題、架構文件部署清單、PROMOTED_SKILLS 都已改；表格與陣列都照字母序。沒有其他地方列舉全部 skill，也不涉及 vendored 或授權清單。
@@ -66,10 +66,10 @@ Critical 0 / Important 2 / Smells 0
 - 全域 §3.9 裡沒有殘留的「見下方／上一條」懸空指標；§7.3 確實有「不重入」，可以被引用；退路句的 repo 網址與 README 第 42 行的 clone 網址一致。
 
 **Not reported**
-- 設計文件寫「找不到的 3 行、兩處同時出現：0」：在 HEAD 重算，找不到的是 5 行。多出的兩行是 SKILL.md 步驟 8 補的 `..` 說明，以及 a542817 的「上一條」改寫，兩者都是刻意的，④ 也已註明這份對照是在 S1-1 commit 前跑的。重複行仍是 0。我的正規化數出 181 行、文件寫 183 行，差在切區塊的寫法，不構成錯誤。
+- 設計文件寫「找不到的 3 行、兩處同時出現：0」：在 HEAD 重算，找不到的是 5 行。多出的兩行是 SKILL.md 步驟 8 補的 `..` 說明，以及 a3aa5a4 的「上一條」改寫，兩者都是刻意的，④ 也已註明這份對照是在 S1-1 commit 前跑的。重複行仍是 0。我的正規化數出 181 行、文件寫 183 行，差在切區塊的寫法，不構成錯誤。
 - p1-start 的 prompt 寫「新的一個功能段落（S2）」，但 fixture 的進度表只有 S1。這是 fixture 本身不一致，不是文件宣稱，對「叫不叫」的判定沒有影響。
 - 設計文件大量寫行號，偏離 §3.10「寫識別符不寫行號」。這是查證紀錄的快照，而且我逐筆核過都對，所以不報。
-- 6,188 是在 a30dc1a 版量的，a542817 之後 SKILL.md 多了 39 字元。README 已標「同日量」，量級沒變。
+- 6,188 是在 d3b980d 版量的，a3aa5a4 之後 SKILL.md 多了 39 字元。README 已標「同日量」，量級沒變。
 
 **What I ran**
 - `cat S1-prompt-common.txt` → 讀到派工說明
@@ -77,10 +77,10 @@ Critical 0 / Important 2 / Smells 0
 - `git grep -n '§3\.9'`，排除 docs/reviews 等 → 21 處，逐筆判定
 - 對搬走的內容做關鍵詞 git grep（報告一律落地、範圍要明講、judge.md、SKIP-REVIEW 等） → 只命中 dd-init 蓋章區塊、gate 腳本、scripts/CLAUDE.md 這些獨立副本
 - 在 deployed 目錄 git grep「全域模板」「全域 CLAUDE.md」 → 沒有懸空指標
-- `git show f46d4de/HEAD:templates/global/CLAUDE.md | wc -c` 和 `wc -m` → 56068/46158 bytes，28082/23040 字元
-- 用 `git show <c>:skills/dd-loop/SKILL.md | wc -m` 查 a30dc1a、f0e80ab、HEAD → 6323/6323/6362，a30dc1a 去掉 frontmatter 是 6120
+- `git show a2dbb9b/HEAD:templates/global/CLAUDE.md | wc -c` 和 `wc -m` → 56068/46158 bytes，28082/23040 字元
+- 用 `git show <c>:skills/dd-loop/SKILL.md | wc -m` 查 d3b980d、cbb59d7、HEAD → 6323/6323/6362，d3b980d 去掉 frontmatter 是 6120
 - 用 awk 加總 results.tsv 的 cost → 3.8545
-- 寫了一支 bash 腳本，正規化 f46d4de 的 §3.9，與 HEAD 的 §3.9 ∪ SKILL.md 做 comm → 舊版 181 行、重複 0、找不到 5 行（都是刻意改寫）
+- 寫了一支 bash 腳本，正規化 a2dbb9b 的 §3.9，與 HEAD 的 §3.9 ∪ SKILL.md 做 comm → 舊版 181 行、重複 0、找不到 5 行（都是刻意改寫）
 - 用 `sed -n` 印出設計文件引用的各個行號 → 全部指對
 - grep 13/12 skills、worktree-manager、verification-gate 的出現位置 → 數字已同步，沒有其他 skill 列舉
 

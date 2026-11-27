@@ -13,7 +13,7 @@
 你是 claude-dd repo（<REPO>）S1 段落的程式碼審查者，代號 S1-a。
 你的職責：找漏洞。每條發現都要附證據（diff 檔的行號與原文、你讀到的檔案路徑:行、或你跑的指令與輸出）；沒證據的不算。不寫優點。
 
-審查範圍：S1 整段，`git diff 9584605` 起到工作目錄（3 個 commit：cf093e7 S1-1、58e3edb S1-2、a0aa58a S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
+審查範圍：S1 整段，`git diff dd8b5a9` 起到工作目錄（3 個 commit：88ae4e2 S1-1、b6e3666 S1-2、bc22fed S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
 untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，不在範圍。
 
 材料：<S>/s1-review/diff.txt
@@ -41,7 +41,7 @@ untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，
 - 只用手上的資料與唯讀指令判斷（Read、Grep、git show／log／grep、bash -n、shellcheck）。不要改檔、不要 commit、不要跑 install-dd-pipeline.sh、不要派 agent、不要開 docker
 - 需要外部查證的（要上網、要跑會寫檔的東西、要真容器）列在「需要外部查證」交回
 - 每條標級別：Critical（照做會把檔寫到專案外、或驗證是空的而宣稱有效）／Important（會錯、會誤導、規定要同步卻漏）／Smell（小事）
-- 拿不準是不是既有問題時，去看那幾行在 9584605 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
+- 拿不準是不是既有問題時，去看那幾行在 dd8b5a9 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
 
 輸出格式（照抄標題）：
 ## Findings
@@ -57,7 +57,7 @@ untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，
 （逐字原文，只換了路徑）
 
 ````text
-Critical 2 / Important 4 / Smell 2 — 審查範圍：`git diff 9584605` 到工作目錄（cf093e7 S1-1、58e3edb S1-2、a0aa58a S1-3，加上步驟 3 simplifier 還沒 commit 的改動）
+Critical 2 / Important 4 / Smell 2 — 審查範圍：`git diff dd8b5a9` 到工作目錄（88ae4e2 S1-1、b6e3666 S1-2、bc22fed S1-3，加上步驟 3 simplifier 還沒 commit 的改動）
 
 下文的 `<S>` 指 <S>。repo 檔案路徑都相對於 <REPO>。
 
@@ -156,7 +156,7 @@ S1-a-7｜Smell｜第 2 步「印出來的路徑在不在 toplevel 底下」沒�
   證據：
   - dd-init.md:205：「「不在 repo 裡」看的是上面那行指令**印出來的路徑**在不在 `git rev-parse --show-toplevel` 底下」。
   - dd-init.md:42：「等於專案根目錄、或以「專案根目錄 + `/`」開頭」。
-  - 9584605:commands/dd-init.md:163 原本就寫「（`git rev-parse --show-toplevel` 之外）」。S1 改寫了這句，而且讓它成為 husky v9 以外掛載點的唯一防線（design:139–140）。
+  - dd8b5a9:commands/dd-init.md:163 原本就寫「（`git rev-parse --show-toplevel` 之外）」。S1 改寫了這句，而且讓它成為 husky v9 以外掛載點的唯一防線（design:139–140）。
   - 所有 fixture 都是 `repo/` 對 `outside/`，沒有共同前綴的情況。
   照做的失敗情境：
   - toplevel 是 `/w/app`，`.git/hooks/pre-commit -> /w/app-shared/hook`。
@@ -169,8 +169,8 @@ S1-a-8｜Smell｜設計文件引用的 F3、F4、F5c、F6 在 repo 裡沒有定�
   - `git grep` 找不到任何 F 編號的定義。定義只在 <S>/plan-facts-r1.md:15–23，`git ls-files | grep -c plan-facts` → 0。
   - :147 不成立：
     - `cmp ~/.claude/commands/dd-init.md commands/dd-init.md` → differ（line 30）。
-    - 兩個部署檔都與 `git show 9584605:` 版本相同（cmp 通過）。
-    - cf093e7、58e3edb 早於這份文件進 repo 的 a0aa58a，就已經改過這兩個檔。
+    - 兩個部署檔都與 `git show dd8b5a9:` 版本相同（cmp 通過）。
+    - 88ae4e2、b6e3666 早於這份文件進 repo 的 bc22fed，就已經改過這兩個檔。
   照做的失敗情境：
   - 公開 repo 的讀者或下一個 session 照「見 F6」找不到出處。
   - 照 :147 以為部署版已是最新，就不會去查「部署版是舊的」這個狀態，也就是 S1-a-2 那個狀態。
@@ -195,7 +195,7 @@ S1-a-8｜Smell｜設計文件引用的 F3、F4、F5c、F6 在 repo 裡沒有定�
 - 同批義務已做：CHANGELOG `## 未發布`、DD_PIPELINE_ARCHITECTURE.md:135、tests/CLAUDE.md、scripts/CLAUDE.md、根 CLAUDE.md 指路都有改。其他巢狀 CLAUDE.md 沒有 S1 會觸發的同批規則。
 - exit 6 之後答「不要刪」：第 6 步「exit 非 0 → 不升級」已涵蓋。
 - results.txt:71 D 說「答不要之後的模式判斷沒寫」：dd-init.md:31 已寫「使用者答「不要」就跳過 Phase 1」，第一版就有。
-- 目前 `~/.claude` 的部署版等於 9584605：步驟 5 才部署，屬預期。只有 design:147 的敘述錯，見 S1-a-8。
+- 目前 `~/.claude` 的部署版等於 dd8b5a9：步驟 5 才部署，屬預期。只有 design:147 的敘述錯，見 S1-a-8。
 - mkprompt.sh 的 awk `\n` 跳脫：正常。
 
 ## 需要外部查證
@@ -218,11 +218,11 @@ S1-a-8｜Smell｜設計文件引用的 F3、F4、F5c、F6 在 repo 裡沒有定�
 - `grep -rl 'Refusing to write' <S>/m`，再對 C 的兩份 grep 那一行 → 只有 base-old2/C、base-old3/C，都是 Edit
 - 對 base-old3/G、base-old-h/H3、C2（三輪）、base-old2/E 的回報 grep Edit、Write、heredoc → 都是直接寫目標，沒有對 symlink 呼叫 Write
 - 用 awk 抽 new1–new4 B 回報的問句段 → 每份都另問了 `.screenshots`；new2 的 `.gitignore` 題含 `'.screenshots/'`
-- 用 shasum 核 58e3edb、HEAD、工作目錄、m/dd-init-old.md、dd-init-new.md、dd-init-new2.md → 6afa7ca1、de1df4bc、de1df4bc、6afa7ca1、6bd5b025、de1df4bc
+- 用 shasum 核 b6e3666、HEAD、工作目錄、m/dd-init-old.md、dd-init-new.md、dd-init-new2.md → 6afa7ca1、de1df4bc、de1df4bc、6afa7ca1、6bd5b025、de1df4bc
 - `diff m/dd-init-new.md commands/dd-init.md` → 兩個 hunk（51、67–69）；dd-init-new2.md → 無差異
 - `git show v1.6.4:commands/dd-init.md | grep -o 'dd-loop-rev: [0-9]*'` → 9
 - `git show v1.6.14:scripts/dd-init-upgrade.sh | grep -c 'exit 6'` → 0
-- 用 `cmp` 比部署版與工作目錄、部署版與 `git show 9584605:` → 前者 differ，後者相同（兩個檔都是）
+- 用 `cmp` 比部署版與工作目錄、部署版與 `git show dd8b5a9:` → 前者 differ，後者相同（兩個檔都是）
 - `sed -n 1360,1400p install-dd-pipeline.sh`，並 grep `--commands-only` → create_scripts 只在 COMMANDS_ONLY=false 時執行；README.md:67 有記載
 - 在 m/base-old3/F/repo 帶與不帶 `--path-format=absolute` 跑 `git rev-parse --git-path hooks/pre-commit` → `.git/hooks/pre-commit` 對 `<S>/m/base-old3/F/outside/hook`
 - 取所有 m/*/*/check.txt 的末行，並從 prompt.txt 對出各臂用的文字版本 → 計數與 results.txt:36–59 一致
@@ -231,7 +231,7 @@ S1-a-8｜Smell｜設計文件引用的 F3、F4、F5c、F6 在 repo 裡沒有定�
 - `git grep` F 編號，並 grep <S>/plan-facts-r1.md → repo 內沒有定義；定義在 plan-facts-r1.md:15–23
 - 對 new*/E、F、G、G2、I 與 new-h1/H1、H2 的回報 grep 前綴比對的寫法 → 沒有，都是目測
 - 用 `sed -n` 讀 dd-init.md 24–34、35–70、86–104、196–208、293–306，grep 備份、chmod、git add 的行號，並再 grep 一次核對所引行號
-- `git log --stat 9584605..HEAD` → 三個 commit 的檔案清單
+- `git log --stat dd8b5a9..HEAD` → 三個 commit 的檔案清單
 - `git grep dd-init-upgrade` 掃 README 兩份、UPGRADING、CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、.github、skills、templates → 沒有過期的宣稱
 - `sed -n 12p tests/CLAUDE.md`、grep tests/test-dd-init-upgrade.sh 的參數 → 「40 ❌」、7 則紅、`UP="${1:-…}"`
 
@@ -244,18 +244,18 @@ Not reported：untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 
   負面測試：B 的回報刪掉 `.screenshots` 那幾行 → 紅在「問句沒附 ./.screenshots 的連結目標」「問句沒提到 .screenshots」，還原後綠。存起來的 B 回報用新版重判都沒翻
 - S1-a-2（Critical）採納：Phase 1「用升級腳本升級」第 6 步在 `--apply` 之前先跑 `{ [ -e CLAUDE.md.dd-upgrade ] || [ -L CLAUDE.md.dd-upgrade ]; }`，在就 `ls -ld`、問、不刪、不跑 `--apply`，
   並寫明「舊版升級腳本不會自己擋（用 `--commands-only` 更新的人手上可能是舊版腳本）」；「寫檔前」那節改成指向第 6 步。
-  加臂 AO（升級腳本換成 9584605 的舊版）：a0aa58a 的文字下紅（連結目標被蓋掉、沒問），修正後的文字下 3/3 停在第 6 步
+  加臂 AO（升級腳本換成 dd8b5a9 的舊版）：bc22fed 的文字下紅（連結目標被蓋掉、沒問），修正後的文字下 3/3 停在第 6 步
 - S1-a-3（Important）採納：四處歸因改正（`commands/dd-init.md`「寫檔前」那節、CHANGELOG、設計文件、`results.txt`），寫明解析靠的是 `--path-format=absolute`、只寫 `--git-path` 印的是沒解析的相對路徑。
   「需要外部查證」的 git < 2.31 已查：alpine:3.13 的 git 2.30.6 印兩行（`--path-format=absolute` 本身、沒解析的 `.git/hooks/pre-commit`），exit 0。
   所以 Phase 3 第 2 步加了退路：輸出要剛好一行、`/` 開頭，否則就是 git 舊於 2.31，改用 `git rev-parse --git-path hooks/pre-commit` 的相對路徑照「寫檔前」那節檢查。
-  加臂 O、OI（git 2.30.6）：a0aa58a 的文字下兩臂是綠的（subagent 自己發現、臨場補），修正後的文字下各 1 次綠，照退路判斷
+  加臂 O、OI（git 2.30.6）：bc22fed 的文字下兩臂是綠的（subagent 自己發現、臨場補），修正後的文字下各 1 次綠，照退路判斷
 - S1-a-4（Important）採納：「需要外部查證」的 Write 已查（主對話，Claude Code 2.1.325，拋棄式目錄）：Write、Edit 對指向存在的檔與懸空的 symlink 都拒絕。
   `commands/dd-init.md`「寫檔前」那節拿掉「Write 跟著連結在專案外建檔」半句（留下「`[ -e ]` 與 Glob 都把它當成不存在，Phase 0 第 3 步就會走建立模式」），結尾那段寫明「（含懸空的）」；
   H3 的歸因在 CHANGELOG 與設計文件 A21 ① 改成「直接對連結目標的路徑用 Edit」
 - S1-a-5（Important）採納：父目錄檢查改成 `(cd "$(dirname <路徑>)" && pwd -P)`，並寫「括號不能省：主對話的 Bash 會把 `cd` 留到下一次呼叫」。
   「需要外部查證」的主對話實跑沒做：改法不靠它成不成立（子 shell 不會留下 cwd）
 - S1-a-6（Important）採納：「答「要」」那條寫明連結目標還不存在就照建立模式、對連結目標的路徑用 Write。
-  加臂 YD（`CLAUDE.md` 指向還不存在的 `AGENTS.md`）：a0aa58a 的文字下紅（`AGENTS.md` 建了但沒進版控），修正後的文字下 3/3 綠
+  加臂 YD（`CLAUDE.md` 指向還不存在的 `AGENTS.md`）：bc22fed 的文字下紅（`AGENTS.md` 建了但沒進版控），修正後的文字下 3/3 綠
 - S1-a-7（Smell）採納：Phase 3 第 2 步「不在 repo 裡」加 `/` 邊界（「等於它、或以它加 `/` 開頭；`/w/app-shared/…` 不在 `/w/app` 底下」）
 - S1-a-8（Smell）採納：設計文件的 F3、F4、F5c 換成內容本身（F3 的上游檔逐一列出），F6 那句改成「規劃時 `cmp` 過…；S1 的 commit 都還沒部署」
 - 「需要外部查證」的 GNU `stat -f` 已查（node:22-bookworm 的容器）：印檔案系統資訊、把 `%Lp` 當檔名、exit 1，`|| stat -c` 再補一行，`before.txt` 會帶著會變的 free blocks。

@@ -52,8 +52,8 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | `/dd-init` 寫檔不跟 symlink 寫到專案外 | DONE | — | 拋棄式目錄裡 `CLAUDE.md.dd-upgrade` 是指向專案外檔案的 symlink 時 `--apply` exit 6、專案外檔案 bytes 不變；沒有既存輸出時照常 exit 0；`bash` 與 `/bin/bash`（3.2）跑 `tests/test-dd-init-upgrade.sh` 全綠；沙盒臂 A、AO、B、C、C2、D、E、F、G、G2、I、O、OI（subagent 照新版 `commands/dd-init.md` 做；AO 用舊版升級腳本，O、OI 用 git 2.30.6）遇到 symlink（升級輸出檔、`.gitignore`、`.screenshots`、`CLAUDE.md` 的建立／補充／升級、Phase 3 掛載點的各寫檔分支、掛載點的父目錄）都停下問、專案外假檔的 sha 與權限沒變；答「要」的臂 Y、Y5、YD（`CLAUDE.md` 指向專案裡的 `AGENTS.md`）寫進 `AGENTS.md`、連結還在，Y5、YD 的 Phase 5 commit 的是 `AGENTS.md`；對照臂 K1–K3（不放 symlink）不跳提問、照常寫入；docker 臂 H1–H3：pre-commit、husky v8、husky v9 三個真工具各一臂 symlink、各一臂不放 symlink 的對照（H2、H3 對照：gate 照常掛上、`npm install` 之後 gate 還在；H1 對照：照 Phase 3 pre-commit 分支刪掉舊呼叫、交 YAML，代使用者加進設定並 `pre-commit install` 後 commit 時 gate 有跑） | 9584605..96aaa42 |
-| S2 | 收編 cloudflare/security-audit-skill 為 user-invoked promoted skill | DONE | S1 | `./install-dd-pipeline.sh --force` 後 `diff -rq skills/security-audit ~/.claude/skills/security-audit` 無差異；全新 `claude -p` session 用 `/security-audit` 叫得起來（回覆貼出只存在於 claude-dd 這一版、上游沒有的標記行，不存在的 slash 名稱貼不出）；自然語言的安全稽核需求不會自己叫起它（拿掉 dmi 的對照組會叫起來）；預設輸出路徑解析成 harness 先算好的下一個未用編號（目前是 `~/security-audit-skill/claude-dd/run-2`）；本機跑 CI 的相關 step 與 `tests/test-install.sh` 全綠 | 6f2118a..85851cd |
+| S1 | `/dd-init` 寫檔不跟 symlink 寫到專案外 | DONE | — | 拋棄式目錄裡 `CLAUDE.md.dd-upgrade` 是指向專案外檔案的 symlink 時 `--apply` exit 6、專案外檔案 bytes 不變；沒有既存輸出時照常 exit 0；`bash` 與 `/bin/bash`（3.2）跑 `tests/test-dd-init-upgrade.sh` 全綠；沙盒臂 A、AO、B、C、C2、D、E、F、G、G2、I、O、OI（subagent 照新版 `commands/dd-init.md` 做；AO 用舊版升級腳本，O、OI 用 git 2.30.6）遇到 symlink（升級輸出檔、`.gitignore`、`.screenshots`、`CLAUDE.md` 的建立／補充／升級、Phase 3 掛載點的各寫檔分支、掛載點的父目錄）都停下問、專案外假檔的 sha 與權限沒變；答「要」的臂 Y、Y5、YD（`CLAUDE.md` 指向專案裡的 `AGENTS.md`）寫進 `AGENTS.md`、連結還在，Y5、YD 的 Phase 5 commit 的是 `AGENTS.md`；對照臂 K1–K3（不放 symlink）不跳提問、照常寫入；docker 臂 H1–H3：pre-commit、husky v8、husky v9 三個真工具各一臂 symlink、各一臂不放 symlink 的對照（H2、H3 對照：gate 照常掛上、`npm install` 之後 gate 還在；H1 對照：照 Phase 3 pre-commit 分支刪掉舊呼叫、交 YAML，代使用者加進設定並 `pre-commit install` 後 commit 時 gate 有跑） | dd8b5a9..87fe578 |
+| S2 | 收編 cloudflare/security-audit-skill 為 user-invoked promoted skill | DONE | S1 | `./install-dd-pipeline.sh --force` 後 `diff -rq skills/security-audit ~/.claude/skills/security-audit` 無差異；全新 `claude -p` session 用 `/security-audit` 叫得起來（回覆貼出只存在於 claude-dd 這一版、上游沒有的標記行，不存在的 slash 名稱貼不出）；自然語言的安全稽核需求不會自己叫起它（拿掉 dmi 的對照組會叫起來）；預設輸出路徑解析成 harness 先算好的下一個未用編號（目前是 `~/security-audit-skill/claude-dd/run-2`）；本機跑 CI 的相關 step 與 `tests/test-install.sh` 全綠 | 1239450..52b98c7 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -141,7 +141,7 @@
     - 舊第 2 步**沒有**擋住指到 repo 外的掛載點：舊文字下 G、G2 的 subagent 看到 repo 外的路徑仍然照寫（G2 引第 5 步那條提醒當不問的理由），所以第 5 步最後那條補了「這條是改完之後的提醒，不是不問的理由」
     - 量測 prompt：第 1、2 輪的 prompt 有「只在 {REPO} 裡動作」，它自己就擋住寫到專案外，G、G2 在那兩輪是綠的；只有第 3 輪（`prompt.txt`，不帶這句）算舊文字基準
     - 結果（新文字第一版）：舊文字下紅的 B、C、D、G、G2、H3 各 3/3 綠；舊文字下就綠的 C2、E、F、I、H1、H2 各 1/1；對照臂 K1–K3、H1K–H3K 各 1/1（含容器裡 commit 被 gate 擋）；A 1 次，只紅在問句沒逐字貼 `ls -l`
-    - 第一版新小節結尾寫「不要照那個建議改寫目標」沒有限定條件，答「要」（A16 為 `CLAUDE.md` → `AGENTS.md` 這類專案留的路）的人照不了。第二版（a0aa58a，S1-3 的 commit）補「使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫」，加一臂 Y（`CLAUDE.md` 指向專案裡的 `AGENTS.md`、答「要」）
+    - 第一版新小節結尾寫「不要照那個建議改寫目標」沒有限定條件，答「要」（A16 為 `CLAUDE.md` → `AGENTS.md` 這類專案留的路）的人照不了。第二版（bc22fed，S1-3 的 commit）補「使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫」，加一臂 Y（`CLAUDE.md` 指向專案裡的 `AGENTS.md`、答「要」）
     - 結果（第二版）：B、C、D、G、G2、H3 各再 1/1；A 2/2；Y 3/3（蓋章寫進 `AGENTS.md`、連結還在）。逐臂見 `results.txt`
   - commit：`fix: dd-init 寫檔前先看目標是不是 symlink（S1-3）`
 

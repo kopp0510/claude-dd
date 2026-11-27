@@ -6,9 +6,9 @@
 你是 8 步迴圈步驟 4 的審查者 C。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 
 專案根目錄：/Users/danlio/project/my_project/claude-dd
-審查範圍：git diff 062a7dd 0271d71（把 plan-review 流程圖改成「一排一個角色」的簡單版：diagrams/src/gen_review.py 重寫文字與版面、兩張 GIF 重出、diagrams/src/CLAUDE.md 與 CHANGELOG 同步、進度表加 S2、根 CLAUDE.md 指路句）。
+審查範圍：git diff 8465109 f8e5392（把 plan-review 流程圖改成「一排一個角色」的簡單版：diagrams/src/gen_review.py 重寫文字與版面、兩張 GIF 重出、diagrams/src/CLAUDE.md 與 CHANGELOG 同步、進度表加 S2、根 CLAUDE.md 指路句）。
 材料：<scratchpad>/pg2-diff.txt（完整路徑：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/pg2-diff.txt）。
-用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show 0271d71:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
+用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show f8e5392:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
 
 背景（事實）：使用者看了上一版說流程怪，選了簡單版草圖：三排（主對話／裁決者／審查者）、7 框、7 條線，重派與無法判定寫在圖下方「例外」小字。結構是使用者決定的，不要建議改結構；但框、線標籤、註解、legend 的字若與 skills/plan-review/SKILL.md 原文意思不符（說寬、說窄、漏條件、中英不一致），照報。
@@ -28,12 +28,12 @@ Critical N / Important N / Smells N
 
 ## 發現
 
-Critical 0 / Important 3 / Smells 0（審 git diff 062a7dd 0271d71，方向：同步點與文件）
+Critical 0 / Important 3 / Smells 0（審 git diff 8465109 f8e5392，方向：同步點與文件）
 
 ## Findings
 
 [Important] docs/designs/2026-10-29-plan-review-gif-design.md:5｜開頭的「使用者決定」還寫著 S1 的結構與框字，跟 S2 的圖對不上，本次 diff 沒改這一行
-  證據：:5 寫「使用者決定：圖的結構（8 框、9 條線、3 組）；框 ① 寫「推測要標明」；「無法判定」從讀檔檢查拉出。」；0271d71 的 gen_review.py:19 ① 是「附查到的事實，交給裁決者」（沒有「推測要標明」），讀檔檢查框和無法判定的線都拿掉了；同一份文件 :42 寫 7 框、7 條線
+  證據：:5 寫「使用者決定：圖的結構（8 框、9 條線、3 組）；框 ① 寫「推測要標明」；「無法判定」從讀檔檢查拉出。」；f8e5392 的 gen_review.py:19 ① 是「附查到的事實，交給裁決者」（沒有「推測要標明」），讀檔檢查框和無法判定的線都拿掉了；同一份文件 :42 寫 7 框、7 條線
   失敗情境：下一個 session 照表接手，或之後有人改這張圖，讀到 :5 會把「① 沒寫推測要標明」「無法判定沒從讀檔檢查拉出」當成違反使用者決定，然後改回去。另外有兩種可能分不出來：使用者在 S2 真的放棄了「推測要標明」，或是重寫時把它弄丟了（見「需要外部查證」）
 
 [Important] diagrams/src/gen_review.py:30-31、:53-55（連同 diagrams/src/CLAUDE.md:15、CHANGELOG.md:24）｜「例外」只寫了「審查者不足 → 沒跑成」這一條，SKILL.md 第 5 步其他幾條沒跑成的路，圖上完全沒有
@@ -49,21 +49,21 @@ Critical 0 / Important 3 / Smells 0（審 git diff 062a7dd 0271d71，方向：�
 - 「再審：新的裁決者」是推論，不在 SKILL.md 字面上（材料 ④ 已自己標明）。它只出現在邊標籤和 legend，不在框裡，不算違反「框裡每句話」的宣稱；我讀 SKILL.md:39-41、:66 後認為這個推論站得住
 - 已核過、沒有問題：
   - 根 CLAUDE.md 的指路句和 task-planner SKILL.md:108-109 逐字相同，放在第一個 `##` 之前，前後都有空行。S1 標 DONE 時刪掉、S2 開工時再加回，符合 :136
-  - 進度表 S2 列：格式、狀態、commits 欄填 `062a7dd..` 都符合 :133；「段落與小任務」也補上了 S2-1
+  - 進度表 S2 列：格式、狀態、commits 欄填 `8465109..` 都符合 :133；「段落與小任務」也補上了 S2-1
   - diagrams/src/CLAUDE.md:15 那列以 `|` 開頭，表格沒有被截斷
   - README 嵌入：README.md:109 和 README.zh-TW.md:112 各自嵌對語言版，alt 和兩版 title 一致；本次 diff 沒動 README
   - CHANGELOG 只改 `## 未發布` 的條目，沒碰已發布的區塊（最新 tag 是 v1.6.11）
   - repo 裡沒有其他地方還寫著舊結構（8 框、9 條線、讀檔檢查）；GIF 清單（CLAUDE.md:38、diagrams/src/CLAUDE.md:104-105）不受影響
 
 ## What I ran
-- `wc -l pg2-diff.txt` → 538 行；`git diff --stat 062a7dd 0271d71` → 7 個檔
+- `wc -l pg2-diff.txt` → 538 行；`git diff --stat 8465109 f8e5392` → 7 個檔
 - Read pg2-diff.txt 1-300、300-538 → 讀完整份
 - `cat -n skills/plan-review/SKILL.md | sed -n 1,200p` → 對照框、標籤、註解的原文
-- `git grep -n -E 'plan-review\.(zh-TW\.)?gif|gen_review|review-(zh-TW|en)\.svg' 0271d71` → 只在 README 兩份、diagrams/src/CLAUDE.md、設計文件、docs/reviews 出現
+- `git grep -n -E 'plan-review\.(zh-TW\.)?gif|gen_review|review-(zh-TW|en)\.svg' f8e5392` → 只在 README 兩份、diagrams/src/CLAUDE.md、設計文件、docs/reviews 出現
 - `git grep` 產生器數量（四支、三支、產生器…）→ 沒有寫死的數量和這次改動有關
-- `git show 0271d71:diagrams/src/CLAUDE.md | cat -n` → 讀全檔
-- `grep -n` task-planner SKILL.md 的指路與進度表規則，加上 `git show 0271d71:docs/designs/2026-10-29-plan-review-gif-design.md | cat -n` → 找到 :5 過期的那一行
-- `git show 0271d71:README.md | sed -n 95,120p`、README.zh-TW.md 100-116、CHANGELOG.md 1-32、`git tag -l 'v*'` → 嵌入位置、alt、未發布區塊、最新 tag v1.6.11
+- `git show f8e5392:diagrams/src/CLAUDE.md | cat -n` → 讀全檔
+- `grep -n` task-planner SKILL.md 的指路與進度表規則，加上 `git show f8e5392:docs/designs/2026-10-29-plan-review-gif-design.md | cat -n` → 找到 :5 過期的那一行
+- `git show f8e5392:README.md | sed -n 95,120p`、README.zh-TW.md 100-116、CHANGELOG.md 1-32、`git tag -l 'v*'` → 嵌入位置、alt、未發布區塊、最新 tag v1.6.11
 - `git grep -n -E '8 框|9 條|連線 9|推測要標明|從讀檔檢查|…'` → 過期的只有設計文件 :5
 
 ## 需要外部查證

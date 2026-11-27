@@ -1,10 +1,10 @@
 # S1-judge（主對話查證）— ADHD output style
 
-段落：新增可開關、隨安裝部署的 ADHD 回覆風格。沒有進度表（單段），段落起點 `df7535e`。
+段落：新增可開關、隨安裝部署的 ADHD 回覆風格。沒有進度表（單段），段落起點 `42dac5d`。
 
 ## 派工
 
-- 審查範圍：`git diff df7535e 94d4da2`（當時 HEAD）。diff 檔放 session 暫存目錄，組成：整段 diff、被改到的檔的 HEAD 版整檔、已跑過的驗證與預期值
+- 審查範圍：`git diff 42dac5d 94d4da2`（當時 HEAD）。diff 檔放 session 暫存目錄，組成：整段 diff、被改到的檔的 HEAD 版整檔、已跑過的驗證與預期值
 - 派了 3 個 `code-reviewer`（下限）：A 安裝腳本與測試、B 文件與註解的宣稱、C 風格檔本身與行為驗收。這段只有一個功能，程式碼集中在安裝腳本的一個新函式與兩支量測腳本，
   其餘是文件；照三個方向分工就涵蓋了，所以沒有多派
 - 與步驟 3 的 code-simplifier 並行（所以材料取 HEAD 版）。code-simplifier 沒有改任何檔，另外指出 `run.sh` 去識別的 sed 順序問題（傳 `/tmp/…` 時會留下 `/private<work>`）
@@ -41,7 +41,7 @@
 ## 處置
 
 - 去識別（A1／B1／C1、simplifier）：原始 stream-json 不進 repo，`run.sh` 只抽判定要用的欄位；驗收 grep 加 `-Users-`、`-private-tmp-`。
-  含洩漏的 commit 還沒推，已 `--amend` 拿掉原始輸出（94d4da2 → 17a2408）。改寫後三批之後的 `out/` 掃描 0 筆
+  含洩漏的 commit 還沒推，已 `--amend` 拿掉原始輸出（94d4da2 → aed2151）。改寫後三批之後的 `out/` 掃描 0 筆
 - `rm -rf` 防呆（A2）：只接受不存在或有 `.adhd-accept-work` 標記的目錄；傳 repo 內的量測目錄實跑 → 拒跑 exit 1
 - 寫死 ADHD（A3）：名字改由陣列產生，`show_completion` 走訪陣列 + `case`；`--help` 實跑印「1 個 Output Style（adhd.md；用 /output-style 開關）」
 - `d2` locale（B2）：字數改用 `jq` 算

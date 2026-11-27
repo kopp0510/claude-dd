@@ -1,6 +1,6 @@
 # S2-judge：主對話的查證
 
-段落 S2（`/dd-init` 蓋章區塊瘦身、跳 rev 13、升級分類腳本）步驟 4。範圍 `git diff f2ab54a`（到 7b8638a，工作目錄乾淨）。
+段落 S2（`/dd-init` 蓋章區塊瘦身、跳 rev 13、升級分類腳本）步驟 4。範圍 `git diff 68b4bf2`（到 9c052cf，工作目錄乾淨）。
 
 ## 派工
 
@@ -13,7 +13,7 @@
 逐條讀程式碼或實跑查證，Critical 0，採納的 Important 共 8 條（A 與 C 各有一條指同一件事，合併算一條）：
 
 - **採納｜Important｜S2-a-1 = S2-c-3**：7.3 的步驟重號檢查會掃到區塊外的編號清單。查證：`commands/dd-init.md` 那行的 grep 對象是整份 `CLAUDE.md.dd-upgrade`。12 個已蓋章專案只計數不印內容，9 個的 `^[0-9]+\. ` 超過 8 行
-- **採納｜Important｜S2-a-2**：CHANGELOG「見下一條」懸空。查證：那句在 `## 未發布` 最後一條，下一行是 `## 1.6.12`；原本在 S1 條目結尾（`git show f2ab54a:CHANGELOG.md`）
+- **採納｜Important｜S2-a-2**：CHANGELOG「見下一條」懸空。查證：那句在 `## 未發布` 最後一條，下一行是 `## 1.6.12`；原本在 S1 條目結尾（`git show 68b4bf2:CHANGELOG.md`）
 - **採納｜Important｜S2-a-3**：半號段落判準在全域 §4.4 是在「兩者都沒有時」的引言區塊裡，SKILL.md 沒有。查證：`grep -n -E '半號|S2\.5' skills/dd-loop/SKILL.md` 修前 0 筆，全域模板那條在 `>` 區塊裡
 - **採納｜Important｜S2-b-1**：降級過的標題第二次升級多一個空標題。查證：讀 awk，清單比對是逐字的，`#### CLAUDE.md 維護` 不在清單裡；修後測試「rental 型第二次升級輸出不變」綠，變異（改回逐字）紅
 - **採納｜Important｜S2-b-2**：改寫過的步驟 5 底下的指令錨到步驟 4。查證：錨點只在範本單位更新；修後測試 3b 綠，變異紅 2 則

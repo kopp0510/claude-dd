@@ -4,7 +4,7 @@
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數）。這一段沒有跑步驟 3 的 code-simplifier（唯一的程式碼改動是 `show_help` 的一行字串）。
 給審查者的 prompt 只有一句「完整派工在 `<scratchpad>/imp/review2/prompt-c.txt`，先讀完再照做」加三句防漏；下面是那個檔的全文（路徑已去識別）。
-diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git diff 00955e2 HEAD`（HEAD = 44ec47a）②沒有跑步驟 3 的說明
+diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git diff 9651d68 HEAD`（HEAD = dab3c81）②沒有跑步驟 3 的說明
 ③兩份 README 在 HEAD 的整檔內容 ④已跑過的驗證（本機 CI 20 個 step、`tests/test-install.sh`）與逐句核對表 K1–K13（每列附指令與實際輸出）。
 
 ````text
@@ -12,7 +12,7 @@ diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git dif
 
 ## 範圍與資料
 
-- 審查範圍：repo <repo> 的 `git diff 00955e2 HEAD`（一個功能段落，1 個 commit：44ec47a）。這一段改的是兩份 README（英文 README.md、繁中 README.zh-TW.md）、CHANGELOG.md、根目錄 CLAUDE.md 的一行、設計文件，以及 install-dd-pipeline.sh 的 show_help 裡一行字串
+- 審查範圍：repo <repo> 的 `git diff 9651d68 HEAD`（一個功能段落，1 個 commit：dab3c81）。這一段改的是兩份 README（英文 README.md、繁中 README.zh-TW.md）、CHANGELOG.md、根目錄 CLAUDE.md 的一行、設計文件，以及 install-dd-pipeline.sh 的 show_help 裡一行字串
 - diff 檔：<scratchpad>/imp/review2/diff.txt（四部分：整段 diff／步驟 3 的說明／兩份 README 在 HEAD 的整檔內容／已經跑過的核對與驗證）
 - **diff 檔用 Read 的 offset／limit 每次 300 行讀到最後一行**。Read 一次讀太多會靜靜截斷、不報錯
 - 工作目錄與 HEAD 相同，沒有別的 agent 在改檔：README 以外的檔（install-dd-pipeline.sh、commands/dd-init.md、scripts/、skills/、templates/global/CLAUDE.md、docs/measurements/ 等）直接讀工作目錄
@@ -54,11 +54,11 @@ diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git dif
 審查者交回的完整報告（逐字；只把本機路徑換成 `<scratchpad>`、`<repo>`）：
 
 ````text
-Critical 0 / Important 6 / Smells 0 — 範圍：`git diff 00955e2 HEAD`（44ec47a；兩份 README、CHANGELOG、根目錄 CLAUDE.md、設計文件、show_help 一行）
+Critical 0 / Important 6 / Smells 0 — 範圍：`git diff 9651d68 HEAD`（dab3c81；兩份 README、CHANGELOG、根目錄 CLAUDE.md、設計文件、show_help 一行）
 
 [Important] README.md:84、README.zh-TW.md:85 寫「hook 還在、gate 腳本刪了，之後每次 commit 只印一行警告、照樣放行」，這句只對 v1.3.0 起蓋的 hook 成立。
   Failure：一個用 v1.2.0 以前的 `/dd-init` 掛過 hook、之後沒重跑的專案，hook 裡是沒有防護的 `"$HOME/.claude/scripts/check-claude-md.sh" || exit 1`。`--uninstall` 刪掉腳本之後，sh 回 127，接著 `exit 1`，每次 commit 都被擋，不是放行。
-  Evidence：`git show edb6b96^:commands/dd-init.md` 第 146 行就是那個沒防護的寫法；有防護的寫法最早出現在 edb6b96／be3087e（2026-10-01），最早收進它的 tag 是 v1.3.0；CHANGELOG.md:665–666 自己寫著「解除安裝 claude-dd 之後，原本每次 commit 都會因為找不到腳本而失敗」；commands/dd-init.md:277 也承認舊寫法還存在。核對表 K7 只 grep 了現行那一種寫法，證明不了這句話。
+  Evidence：`git show ab1b088^:commands/dd-init.md` 第 146 行就是那個沒防護的寫法；有防護的寫法最早出現在 ab1b088／7dbce5a（2026-10-01），最早收進它的 tag 是 v1.3.0；CHANGELOG.md:665–666 自己寫著「解除安裝 claude-dd 之後，原本每次 commit 都會因為找不到腳本而失敗」；commands/dd-init.md:277 也承認舊寫法還存在。核對表 K7 只 grep 了現行那一種寫法，證明不了這句話。
 
 [Important] README.md:66、README.zh-TW.md:67 說安裝會換掉「跟 repo 同名、內容不同」的檔，但沒講安裝也會刪掉 repo 裡沒有的檔。
   Failure：使用者自己有 `~/.claude/commands/dd-status.md`（或 dd-help、dd-docs、dd-revise、dd-stop），跑一次安裝（帶不帶 `--force` 都一樣）就被刪了，只留備份。這不是「同名換新」，README 也完全沒提。
@@ -85,8 +85,8 @@ What I ran
 - `sed -n` install-dd-pipeline.sh 的 170–280、306–374、523–648、760–1333、1334–1451 行 → 讀了 helper、check_environment、各個 install／create 函式、uninstall、create_global_claude_md、show_completion、main
 - Read commands/dd-init.md 的 1–127、186–380 行 → Phase 0–6
 - `git grep -n -- '--force' …`（文件、commands、skills、scripts、templates） → 找到上面第 3 條列的那些位置
-- `git log -S'if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]' -- commands/dd-init.md`、`git tag --contains` → edb6b96／be3087e，最早在 v1.3.0
-- `git show edb6b96^:commands/dd-init.md | grep -n check-claude-md.sh` → 第 146 行是沒防護的寫法
+- `git log -S'if [ -x "$HOME/.claude/scripts/check-claude-md.sh" ]' -- commands/dd-init.md`、`git tag --contains` → ab1b088／7dbce5a，最早在 v1.3.0
+- `git show ab1b088^:commands/dd-init.md | grep -n check-claude-md.sh` → 第 146 行是沒防護的寫法
 - `sed -n 655,675p CHANGELOG.md` → 第 665–666 行
 - `find skills -name hooks.json` 加 cat → 只有兩個 hook（gate-guard 是 PreToolUse、self-improving-agent 是 PostToolUse，matcher 都是 Bash）
 - `sed -n 60,124p` error-capture.sh → 樣式清單裡有 `error:`、`failed`

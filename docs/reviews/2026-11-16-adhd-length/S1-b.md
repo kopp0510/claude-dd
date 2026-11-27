@@ -10,7 +10,7 @@ Agent 呼叫的 prompt 只有一句「完整的派工說明在這個檔，先用
 >
 > ## 這一段做了什麼（事實）
 > - 使用者 2026-11-16 說：「我發現 output-style ADHD, 這個 回答一點都不適合給ADHD, 還是給我一堆字 要我閱讀一堆」
-> - 段落起點 7e1ff44。改了 output-styles/adhd.md（Claude Code 的 output style，部署到 ~/.claude/output-styles/）：新增「長度」「範例」兩節，改寫「誰優先」、規則 1、4、5、7、9、「什麼時候可以不照」第 1 點
+> - 段落起點 dd6bffa。改了 output-styles/adhd.md（Claude Code 的 output style，部署到 ~/.claude/output-styles/）：新增「長度」「範例」兩節，改寫「誰優先」、規則 1、4、5、7、9、「什麼時候可以不照」第 1 點
 > - 新增量測目錄 docs/measurements/2026-11-16-adhd-length/（run.sh、check.sh、selftest.sh、measure.sh、CLAUDE.md、out/）：用 claude -p 跑舊版與新版兩臂、三個 prompt 各 n=2，check.sh 判定。跑了三批：第 1、2 批不通過，第 3 批通過
 > - 同步了 README.md、README.zh-TW.md、output-styles/LICENSE.txt、CHANGELOG.md、DD_PIPELINE_ARCHITECTURE.md；新增設計文件 docs/designs/2026-11-16-adhd-length-design.md，根目錄 CLAUDE.md 加了一句進度指路
 > - 「一則最多 10 行」這個數字是做這段的人自己定的，使用者沒有指定數字
@@ -20,7 +20,7 @@ Agent 呼叫的 prompt 只有一句「完整的派工說明在這個檔，先用
 > ## 材料
 > 全部在這個檔：<scratchpad>/review-diff.txt（共 2364 行，最後一行是「########## 檔尾」）。
 > 用 Read 的 offset／limit 每次 300 行讀到最後一行（Read 一次讀太多會靜靜截斷、不報錯）。
-> - ① 整段 diff（git diff 7e1ff44，不含 out/ 的實測輸出）
+> - ① 整段 diff（git diff dd6bffa，不含 out/ 的實測輸出）
 > - ② 步驟 3 自己改了什麼（分開附：simplifier 有沒有改到行為也要看）
 > - ③ 被改到的檔的整檔內容；被改到的檔一律讀這一份，不讀工作目錄
 > - ④ 已經跑過的驗證與預期值：這些已確認，不要重跑。「跑過」不代表結果對，要看的是它驗的是不是該驗的東西
@@ -45,10 +45,10 @@ Agent 呼叫的 prompt 只有一句「完整的派工說明在這個檔，先用
 > 【What I ran】讀了哪些檔、跑了哪些指令
 > 【需要外部查證】
 
-diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff 7e1ff44`（不含 `out/` 的實測輸出，另附檔名清單）② 步驟 3 的改動 `git diff HEAD`
+diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff dd6bffa`（不含 `out/` 的實測輸出，另附檔名清單）② 步驟 3 的改動 `git diff HEAD`
 ③ 被改到的檔的整檔內容（`adhd.md`、`LICENSE.txt`、四支腳本、量測目錄 CLAUDE.md、設計文件；README、CHANGELOG、架構文件、根目錄 CLAUDE.md 只放 diff）與起點那一版的 `adhd.md`
 ④ 已跑過的驗證與預期值（三批的 `check.out`、自測、保留題的量測、步驟 3 的行為不變檢查、`tests/test-install.sh`、LICENSE 引句驗收、去識別掃描）。
-被審的是 `deddc75` 加上步驟 3 還沒 commit 的改動。
+被審的是 `a4a5c5c` 加上步驟 3 還沒 commit 的改動。
 
 ## 發現
 
@@ -102,7 +102,7 @@ diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff 7
 >
 > 【Not reported】
 > - 步驟 3 的改動：measure.sh 的 count_lines、count_chars、result_field 與原本的內聯寫法逐字等價；run.sh 的 REDACT def 代換順序、套用位置與原本相同，沒有改到行為。
-> - 前後批可比性：check.sh 從 6c6a4db（S1-1）之後沒被改過（`git log` 只有那一筆）。P3 prompt 的新句子在第 3 批兩臂都有（batch3/p3.prompt.txt 與 batch1、batch2 的版本已對照）。兩臂 init 的 output_style 各自正確，models 都是同一個 claude-fable-5-2。styles.txt 的 NEW blob 2f82e10 等於 HEAD 與 49e55b4 的 adhd.md。CHANGELOG 與 CLAUDE.md 的跨批比較只用到沒改過的 P1、P2。
+> - 前後批可比性：check.sh 從 274ca20（S1-1）之後沒被改過（`git log` 只有那一筆）。P3 prompt 的新句子在第 3 批兩臂都有（batch3/p3.prompt.txt 與 batch1、batch2 的版本已對照）。兩臂 init 的 output_style 各自正確，models 都是同一個 claude-fable-5-2。styles.txt 的 NEW blob 2f82e10 等於 HEAD 與 7ef3f61 的 adhd.md。CHANGELOG 與 CLAUDE.md 的跨批比較只用到沒改過的 P1、P2。
 > - OLD-p3-r1 只紅在「扣除行」：就算它算通過，OLD 也只有 1/2 過，P3 照樣有鑑別力，結論不變。
 > - 用 Write 寫進 ~/.claude/projects 的記憶檔會污染後面的發：那種工具輸入是絕對路徑，`:"/` 會命中、outside 會大於 0；第 3 批全部是 0。
 > - set -e 的 `[ … ] && x=…` 在 && 串列裡不會中止；`grep -c … || true` 已補。bash 3.2 支援陣列與 `"${arr[@]}"`。這幾項讀程式碼就判定沒問題。
@@ -117,8 +117,8 @@ diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff 7
 > - `cat batch1/check.out batch2/check.out` 與兩批的 styles.txt → 與 CLAUDE.md 的宣稱相同
 > - 用 jq 數 NEW 每發超過 30 字的內容行 → 33/41
 > - 用 `grep -c` 數每個守門標籤在 check.sh 與 selftest.sh 出現幾次 → 缺C1、缺病因 在 selftest 是 0
-> - `git log --oneline 7e1ff44..HEAD -- check.sh run.sh` → check.sh 只有 6c6a4db 一筆
-> - `git rev-parse HEAD:/49e55b4:/7e1ff44:output-styles/adhd.md`，`git show --stat cd1efcd` → blob 對得上
+> - `git log --oneline dd6bffa..HEAD -- check.sh run.sh` → check.sh 只有 274ca20 一筆
+> - `git rev-parse HEAD:/7ef3f61:/dd6bffa:output-styles/adhd.md`，`git show --stat 92a231b` → blob 對得上
 >
 > 【需要外部查證】
 > - 無。

@@ -2,7 +2,7 @@
 
 ## 派工
 
-- 範圍：`git diff def4db0 3a5c718`（9 檔：plan-review SKILL.md、設計文件、量測文件、部署陣列、README×2、CLAUDE.md、架構文件、CHANGELOG）
+- 範圍：`git diff 85a975a a343616`（9 檔：plan-review SKILL.md、設計文件、量測文件、部署陣列、README×2、CLAUDE.md、架構文件、CHANGELOG）
 - **取檔方式（新做法試跑）**：整段 diff 先存成一個檔（scratchpad 的 `S1.diff`，646 行）交給它，要它先讀這個檔、不要逐檔撈 diff；
   前後文讀工作目錄（乾淨，等於 HEAD）
 - 已給、標明不要重跑：`tests/test-install.sh` exit 0；本機照 ci.yml 跑陣列一致性、數字宣稱一致性（skills 12 全對上）、

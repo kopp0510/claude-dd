@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者交回的派工 prompt（四人共用部分加各自方向，逐字；路徑換成 `<scratchpad>`）。範圍：`9798edc..HEAD`。
+裁決者交回的派工 prompt（四人共用部分加各自方向，逐字；路徑換成 `<scratchpad>`）。範圍：`8187b6e..HEAD`。
 
 ````text
 # 派工 prompt（裁決者給審查者，共用部分 + 各自方向）
@@ -12,12 +12,12 @@
 
 ## 共用部分（四人相同）
 
-你是 code-reviewer，審查專案 /Users/danlio/project/my_project/claude-dd 的段落 S5「拿掉裁決者的對照」（範圍 9798edc..HEAD）。這段大多是量測文件、實驗腳本（python/bash）與設計文件，沒有產品程式碼。
+你是 code-reviewer，審查專案 /Users/danlio/project/my_project/claude-dd 的段落 S5「拿掉裁決者的對照」（範圍 8187b6e..HEAD）。這段大多是量測文件、實驗腳本（python/bash）與設計文件，沒有產品程式碼。
 
 ### diff 檔（必讀）
 <scratchpad>/S5-review-diff.txt（2187 行，約 208 KB）。
 **Read 不指定範圍會在約 47 KB 靜靜截斷、不報錯，一律用 offset/limit 每次 300 行讀，讀到第 2187 行為止。**
-四段：① 第 1–563 行 整段 diff（排除機器輸出）② 第 564–593 行 步驟 3 code-simplifier 的改動（commit 66d4314，只動 1 行）③ 第 594–2112 行 被改到檔案的整檔內容（HEAD 版，帶行號）④ 第 2113–2187 行 機器輸出全文（S5 的 stats.jsonl、checks.out、sec1.out）與報告檔名清單。
+四段：① 第 1–563 行 整段 diff（排除機器輸出）② 第 564–593 行 步驟 3 code-simplifier 的改動（commit 36102fb，只動 1 行）③ 第 594–2112 行 被改到檔案的整檔內容（HEAD 版，帶行號）④ 第 2113–2187 行 機器輸出全文（S5 的 stats.jsonl、checks.out、sec1.out）與報告檔名清單。
 被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄。
 
 ### 可以讀的
@@ -49,7 +49,7 @@
 重點：checks.py、sec1.py（新檔），以及改過的 stats.py、prepare.py、run.sh。逐行讀 diff 檔 ③ 的整檔內容：邏輯錯誤、邊界（空輸入、找不到時靜默回 0、檔名含中文/空白、glob 漏抓）、計數口徑（例如把「描述它的那句話」也算進去）、兩份腳本對同一件事的判法不一致、S4 版與 S5 版的差異是否引入偏差。拿原始紀錄實跑腳本（唯讀、輸出寫到你的 tmp 目錄）驗證你的懷疑，並和 diff 檔 ④ 的輸出比對。特別留意：輸出為 0 / 無差異時，先懷疑腳本自己沒跑到。
 
 ### B：量測文件與設計文件的數字核對
-重點：docs/measurements/2026-10-23-reviewer-real-sessions.md 新增的 S5 段落、docs/designs/2026-10-23-裁決審查-design.md 的 S5 段落、兩個 s5-inputs/s5-outputs 的 CLAUDE.md。把每一個數字（時間、token、工具次數、費用、行數、發數、比例、平均）逐條對原始紀錄（s5/stats.jsonl、s5/logs、~/.claude/projects/*scratchpad-s5-* 的 jsonl、s4 對應資料）重算。特別核 commit 4e47492「修正 S5 對照的時間量法並標出實跑落差」後的時間量法：口徑是否一致、S4 與 S5 是否用同一口徑比較、「實跑落差」標得對不對。命中位置不是你的主責（C 管），但數字裡若有命中數就要核。
+重點：docs/measurements/2026-10-23-reviewer-real-sessions.md 新增的 S5 段落、docs/designs/2026-10-23-裁決審查-design.md 的 S5 段落、兩個 s5-inputs/s5-outputs 的 CLAUDE.md。把每一個數字（時間、token、工具次數、費用、行數、發數、比例、平均）逐條對原始紀錄（s5/stats.jsonl、s5/logs、~/.claude/projects/*scratchpad-s5-* 的 jsonl、s4 對應資料）重算。特別核 commit a4b7ee0「修正 S5 對照的時間量法並標出實跑落差」後的時間量法：口徑是否一致、S4 與 S5 是否用同一口徑比較、「實跑落差」標得對不對。命中位置不是你的主責（C 管），但數字裡若有命中數就要核。
 
 ### C：命中判定複核
 重點：量測文件「五組並排」底下的命中位置／命中數，以及任何「某發抓到／沒抓到某個已知錯誤」的宣稱。答案（已知真錯誤）定義在哪裡要先找到（設計文件、s5-inputs 的 CLAUDE.md、或 S4 的量測段），然後逐份讀 s5/reports/ 的 8 份報告（以及需要比較時 s4/reports/），獨立判定每一發對每一個已知錯誤是命中、部分命中、還是沒中，給出報告原文引用。和量測文件的判定逐格比對，列出不一致處。注意：命中判定不能只看關鍵字 grep —— 提到同一段落但結論相反、或把真錯誤判成「既有問題」丟進 Not reported 的，要分清楚。
@@ -69,7 +69,7 @@
 
 ---
 
-審查者 A（方向：腳本正確性），範圍 9798edc..HEAD。結果：Critical 1、Important 3、Smells 0。
+審查者 A（方向：腳本正確性），範圍 8187b6e..HEAD。結果：Critical 1、Important 3、Smells 0。
 
 腳本本身算出來的數字都對得上原始紀錄：每次 Read 的回傳都是字串、沒有回傳 0 行的，派工前的秒數也逐發相符。問題出在 `stats.py` 有兩件事沒檢查到，加上一項指標的定義，這些讓 B 組的結論和費用欄不可靠。
 

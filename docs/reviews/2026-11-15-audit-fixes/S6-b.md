@@ -6,13 +6,13 @@
 
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。派工 prompt 是三個審查者共用的一段加各自的方向，全文如下（`<scratchpad>` 是這個 session 的暫存目錄，沒進 repo）。
 
-審查包 `<scratchpad>/s6-review/pack.txt`（576 行）的組成：這一段做了什麼的事實、已跑過的驗證與預期值、`git diff bf7e654 69f0e65`。被改到的檔沒有另附整檔，理由在 `S6-judge.md` 的「派工」。
+審查包 `<scratchpad>/s6-review/pack.txt`（576 行）的組成：這一段做了什麼的事實、已跑過的驗證與預期值、`git diff 5a0d16e e9212a4`。被改到的檔沒有另附整檔，理由在 `S6-judge.md` 的「派工」。
 
 ````
 你是這一段改動的審查者。職責：找漏洞，每條附證據（檔案路徑＋行或原句、或指令與輸出），沒證據不算。不寫優點。
 專案：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。全程唯讀：不改檔、不 commit、不跑安裝腳本、不跑 `claude`。
 審查包：<scratchpad>/s6-review/pack.txt（576 行，最後一行是 `<<<審查包結束>>>`）。先用 Read 把它讀完：用 offset／limit 每次 150 行，讀到看見最後那一行為止（Read 一次讀太多會靜靜截斷、不報錯）。
-範圍是 `git diff bf7e654 69f0e65`（已 commit 的兩個 commit，不是未 staged 的 diff）。被改到的檔讀 `git show 69f0e65:<路徑>`，舊版讀 `git show bf7e654:<路徑>`；沒被改到的檔照常讀。
+範圍是 `git diff 5a0d16e e9212a4`（已 commit 的兩個 commit，不是未 staged 的 diff）。被改到的檔讀 `git show e9212a4:<路徑>`，舊版讀 `git show 5a0d16e:<路徑>`；沒被改到的檔照常讀。
 審查包第二節列的驗證已經跑過、結果已確認，不要重跑；可以質疑它驗的是不是該驗的。只用手上的資料判斷，需要外部查證的（要上網、要跑 `claude -p`、要跑安裝）列出來交回。
 這一段全是 Markdown，沒有程式碼。要抓的是文件裡的宣稱與指路：講錯的、指不到的、搬完意思變了的、少掉的指示。使用者對這次搬動的要求是「意思不能變；是搬家，不是刪」。
 交回格式（照抄標題）：第一行 `Critical N / Important N / Smells N — 範圍：…`；【發現】每條：編號｜級別｜內容｜證據｜會出什麼事｜建議改法；【Smells】；【Not reported】看到但判斷不報的與理由；【What I ran】讀了哪些檔、跑了哪些指令；【需要外部查證】。
@@ -24,11 +24,11 @@
 審查者交回的報告，逐字（只把暫存目錄的絕對路徑換成 `<scratchpad>`）：
 
 ````
-Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23dd9 S6-1、69f0e65 S6-2），方向 (b)：跨檔指路與同步點
+Critical 0 / Important 1 / Smells 4 — 範圍：git diff 5a0d16e e9212a4（267cb1a S6-1、e9212a4 S6-2），方向 (b)：跨檔指路與同步點
 
 【發現】
-1｜Important｜`CHANGELOG.md` `## 未發布` 新寫的那一條說「56,111 → 45,731 bytes」，但 69f0e65 那一版根目錄 CLAUDE.md 是 45,861 bytes。45,731 是把還沒刪的進度指路句（第 5–6 行，130 bytes）扣掉之後才會有的數字，也就是段落標 DONE 之後的預估值，現在寫成了已經量到的值。
-｜證據：`git show 69f0e65:CLAUDE.md | wc -c` → 45861；`git show 69f0e65:CLAUDE.md | sed -n '5,6p' | wc -c` → 130；`git show bf7e654:CLAUDE.md | wc -c` → 56111。審查包第 12 行也寫「69f0e65 是 45,861」。
+1｜Important｜`CHANGELOG.md` `## 未發布` 新寫的那一條說「56,111 → 45,731 bytes」，但 e9212a4 那一版根目錄 CLAUDE.md 是 45,861 bytes。45,731 是把還沒刪的進度指路句（第 5–6 行，130 bytes）扣掉之後才會有的數字，也就是段落標 DONE 之後的預估值，現在寫成了已經量到的值。
+｜證據：`git show e9212a4:CLAUDE.md | wc -c` → 45861；`git show e9212a4:CLAUDE.md | sed -n '5,6p' | wc -c` → 130；`git show 5a0d16e:CLAUDE.md | wc -c` → 56111。審查包第 12 行也寫「e9212a4 是 45,861」。
 ｜會出什麼事：照「結果只報實際跑過的」去核，這個數字對不上。S6 的步驟 7、8 只要再動到根目錄 CLAUDE.md（步驟 7 本來就可能寫進根目錄），45,731 也會過期，而 CHANGELOG 發版之後就不能再改（CI「已發布區塊不可改動」）。
 ｜建議改法：等標 DONE 那個 commit 再 `wc -c` 把實際數字填進去；或在數字後面寫明「不含進度指路句」。
 
@@ -37,8 +37,8 @@ Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23
   - 「安裝腳本」一節：`--check` 比內容那條 bullet（第 76–77 行）和搬進來的那段（第 89–93 行）講同一件事，連「commands、scripts、output styles、全域 CLAUDE.md 不比」都重複。
   - 「核心工作法」一節：既有的「配套：…SKIP 不是豁免」那段和搬進來的 gate 段（第 134–140 行）也重複。
   - 計畫寫的是「並存、不合併」，所以意思沒變。但下次改 gate 或 `--check` 行為時，很可能只改到其中一處，而根目錄「CI 不驗、只能手動同步」的清單沒有列這兩節。
-- 搬到新位置後，「搭配巢狀 CLAUDE.md 堆疊維護…」開頭那句的主詞不見了。在根目錄時它接在迴圈說明後面，主詞是迴圈。在架構文件裡它接在「本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md「開發本 repo」一節。」後面，「搭配」讀起來像在接 dogfood 那句。證據：`git show 69f0e65:DD_PIPELINE_ARCHITECTURE.md | sed -n '128,140p'`。
-- 根目錄「注意事項」新寫的指路句（69f0e65 CLAUDE.md:325）列舉了「已知的坑」裡有什麼，列舉有缺：
+- 搬到新位置後，「搭配巢狀 CLAUDE.md 堆疊維護…」開頭那句的主詞不見了。在根目錄時它接在迴圈說明後面，主詞是迴圈。在架構文件裡它接在「本 repo 自身也掛同一個 gate（dogfood），啟用方式見根目錄 CLAUDE.md「開發本 repo」一節。」後面，「搭配」讀起來像在接 dogfood 那句。證據：`git show e9212a4:DD_PIPELINE_ARCHITECTURE.md | sed -n '128,140p'`。
+- 根目錄「注意事項」新寫的指路句（e9212a4 CLAUDE.md:325）列舉了「已知的坑」裡有什麼，列舉有缺：
   - 漏了「stream-json 看不出巢狀 CLAUDE.md 有沒有被讀進去」那條。列舉裡的「fixture 的巢狀 CLAUDE.md」是另一條。
   - 「量測前先關掉 advisor」在「量 agent 指令本體」一節，不在「已知的坑」，而這句只把人指到「已知的坑」。舊版這條就在每輪都整份載入的根目錄。現在照 Skill 步驟 5 或注意事項的指路走，指到的節裡都沒有它，只能靠 Read 整份檔時順帶看到（新檔 74 行，Read 會整份讀進來，所以風險低）。
 - 寫出來的範圍比實際窄：
@@ -59,17 +59,17 @@ Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23
 
 【What I ran】
 - Read 審查包 pack.txt，全 576 行（offset 1/150/300/450）
-- `git rev-parse HEAD; git status --short` → 69f0e65，工作目錄乾淨
-- `git grep -nE '根目錄 ?CLAUDE\.md|根 ?CLAUDE\.md|…|CLAUDE\.md「|CLAUDE\.md#' 69f0e65`（排除 docs/designs、docs/reviews、CHANGELOG、輸出目錄）→ 沒有指到舊位置的
-- `git grep -nE 'Skill 步驟|Agent 步驟|沙盒用|殘留清理|BUILTIN_SKILLS|tresor|兩道防線|四方|第五方|量測注意|關掉 advisor|autocompact_state|無法比對|核心工作法|安裝 / 更新' 69f0e65` → 找到架構文件第 76–77 行與第 89–93 行重複
-- `git grep -nE 'CLAUDE\.md' 69f0e65 -- .github install-dd-pipeline.sh UPGRADING.md README* templates commands skills/dd-loop` → 沒有舊指路
-- `git grep -nE '注意事項|開發本 repo|Shared Scratch|BG_WAIT_CEILING|…' 69f0e65` → 沒有舊指路
-- `git grep -nE 'claude -p' 69f0e65 -- skills commands templates scripts tests agents …` → 沒有指到根目錄的
-- `git grep -nE '根目錄|根 CLAUDE|CLAUDE\.md「|上一層' 69f0e65 -- docs/measurements tests skills/*/CLAUDE.md …` → 沒有失效的
-- `git grep -n '實戰\|tresor' 69f0e65` → 只剩 CHANGELOG 與 dd-init.md:11
-- `git show 69f0e65:DD_PIPELINE_ARCHITECTURE.md | sed -n '55,185p'`、`git show 69f0e65:CLAUDE.md | sed -n '148,165p'`、`git show 69f0e65:CHANGELOG.md | sed -n '1,20p'` 與標題列表、設計文件 `grep -n S6`
-- `wc -c`：69f0e65:CLAUDE.md → 45861、第 5–6 行 → 130、bf7e654:CLAUDE.md → 56111
-- `git ls-tree 69f0e65 docs/measurements/` 加逐目錄 `git cat-file -e …/CLAUDE.md` → 12/12 都有
+- `git rev-parse HEAD; git status --short` → e9212a4，工作目錄乾淨
+- `git grep -nE '根目錄 ?CLAUDE\.md|根 ?CLAUDE\.md|…|CLAUDE\.md「|CLAUDE\.md#' e9212a4`（排除 docs/designs、docs/reviews、CHANGELOG、輸出目錄）→ 沒有指到舊位置的
+- `git grep -nE 'Skill 步驟|Agent 步驟|沙盒用|殘留清理|BUILTIN_SKILLS|tresor|兩道防線|四方|第五方|量測注意|關掉 advisor|autocompact_state|無法比對|核心工作法|安裝 / 更新' e9212a4` → 找到架構文件第 76–77 行與第 89–93 行重複
+- `git grep -nE 'CLAUDE\.md' e9212a4 -- .github install-dd-pipeline.sh UPGRADING.md README* templates commands skills/dd-loop` → 沒有舊指路
+- `git grep -nE '注意事項|開發本 repo|Shared Scratch|BG_WAIT_CEILING|…' e9212a4` → 沒有舊指路
+- `git grep -nE 'claude -p' e9212a4 -- skills commands templates scripts tests agents …` → 沒有指到根目錄的
+- `git grep -nE '根目錄|根 CLAUDE|CLAUDE\.md「|上一層' e9212a4 -- docs/measurements tests skills/*/CLAUDE.md …` → 沒有失效的
+- `git grep -n '實戰\|tresor' e9212a4` → 只剩 CHANGELOG 與 dd-init.md:11
+- `git show e9212a4:DD_PIPELINE_ARCHITECTURE.md | sed -n '55,185p'`、`git show e9212a4:CLAUDE.md | sed -n '148,165p'`、`git show e9212a4:CHANGELOG.md | sed -n '1,20p'` 與標題列表、設計文件 `grep -n S6`
+- `wc -c`：e9212a4:CLAUDE.md → 45861、第 5–6 行 → 130、5a0d16e:CLAUDE.md → 56111
+- `git ls-tree e9212a4 docs/measurements/` 加逐目錄 `git cat-file -e …/CLAUDE.md` → 12/12 都有
 
 【需要外部查證】
 - 沒有一條發現要靠外部查證。審查包列的乾跑（全新 agent 照指路拿不拿得到搬走的內容）可以順便測 Smell 第 3 條：只照 Skill 步驟 5 的指路去做，會不會漏掉「關掉 advisor」。那要跑 subagent 或 `claude -p`，超出唯讀範圍。

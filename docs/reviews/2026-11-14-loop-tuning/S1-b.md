@@ -16,7 +16,7 @@
 ````text
 你是 claude-dd repo（<REPO>）8 步開發迴圈步驟 4 的審查者。職責：找漏洞，每條附證據（路徑:行，或指令與輸出），沒證據的不算。不寫優點、不客套。
 
-審查範圍：段落 S1「照 2026-11-14 的量測調整三條規則」從 58ae9b0 到目前工作目錄的整段（五個 commit）。全部是文件與規則文字，沒有產品程式碼。
+審查範圍：段落 S1「照 2026-11-14 的量測調整三條規則」從 139bc41 到目前工作目錄的整段（五個 commit）。全部是文件與規則文字，沒有產品程式碼。
 
 材料：
 - diff 檔：<S>/tune-review/diff.txt（834 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**：Read 一次讀太多會靜靜截斷、不報錯。
@@ -39,7 +39,7 @@
 
 ## 發現
 
-S1-b 的審查結果：Critical 0、Important 5、Smell 1。範圍是 58ae9b0..91b4614 加三段新規則。我依派工指示，把這三段拿去對根目錄 CLAUDE.md 的其他段落、skills/dd-loop/SKILL.md、skills/security-audit/CLAUDE.md 和全域模板。下面的行號都是工作目錄版本；diff 檔裡那份 CLAUDE.md 與工作目錄相同，因為沒有未 commit 的改動。
+S1-b 的審查結果：Critical 0、Important 5、Smell 1。範圍是 139bc41..69c528d 加三段新規則。我依派工指示，把這三段拿去對根目錄 CLAUDE.md 的其他段落、skills/dd-loop/SKILL.md、skills/security-audit/CLAUDE.md 和全域模板。下面的行號都是工作目錄版本；diff 檔裡那份 CLAUDE.md 與工作目錄相同，因為沒有未 commit 的改動。
 
 **Important 1｜CLAUDE.md:131、134 對 CLAUDE.md:369–371**
 - 問題：「指令文字只留先跑它」和「注意事項」那條互相矛盾，而它指去的正是那條。

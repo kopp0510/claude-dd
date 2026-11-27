@@ -15,7 +15,7 @@
 
 ## 跟 2026-10-29 那支不一樣的地方
 
-- 不用先部署。每發只把自己那一臂的風格檔放進拋棄式目錄的 `proj/.claude/output-styles/`（專案層）：OLD 是 `git show 7e1ff44:output-styles/adhd.md`，NEW 是 repo 工作樹的 `output-styles/adhd.md`，
+- 不用先部署。每發只把自己那一臂的風格檔放進拋棄式目錄的 `proj/.claude/output-styles/`（專案層）：OLD 是 `git show dd6bffa:output-styles/adhd.md`，NEW 是 repo 工作樹的 `output-styles/adhd.md`，
   各自只把 `name:` 改成 `ADHDOLD`、`ADHDNEW`，`run.sh` 會用 `diff` 確認只差那一行。專案層風格檔會被載入是 2026-11-16 在 Claude Code 2.1.325 用 haiku 實測的（做法在設計文件「動手前量到的」）
 - init 的 `output_style` 只照抄 `--settings` 給的值，證明不了風格檔有載入，所以另跑載入探針：問「第一個 `##` 標題是什麼」，NEW 要回「長度」、OLD 要回「誰優先」
 - P3 允許 `Bash(bash test.sh)`，讓受測 session 真的跑一次驗證指令

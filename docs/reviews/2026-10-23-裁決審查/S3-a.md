@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 a 的派工 prompt（共用部分逐字，加上方向句）。範圍：`git diff 6e9aaf0 92eea63`。
+裁決者給審查者 a 的派工 prompt（共用部分逐字，加上方向句）。範圍：`git diff 984628d 46083de`。
 
 方向：模板 §3.9 步驟 4 和 dd-init 蓋章版步驟 4 的語意一致性與自洽，以及和 `agents/code-reviewer.md` 對不對得上（184s／12 次工具）
 
@@ -11,7 +11,7 @@
 
 ## 範圍與取檔
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S3_review_bundle.txt
-  （約 4150 行；第 1–443 行是 `git diff 6e9aaf0 HEAD`，第 444 行起是每個被改到檔案的整檔內容，帶行號，以 `----- FILE: <路徑>` 分隔）。
+  （約 4150 行；第 1–443 行是 `git diff 984628d HEAD`，第 444 行起是每個被改到檔案的整檔內容，帶行號，以 `----- FILE: <路徑>` 分隔）。
 - **被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄**。沒被改到的檔（例如 .github/workflows/ci.yml、tests/、skills/、agents/code-reviewer.md、DD_PIPELINE_ARCHITECTURE.md、diagrams/src/）照常讀 repo。
 - 專案規則：repo 根目錄 CLAUDE.md、scripts/CLAUDE.md、docs/reviews/CLAUDE.md（後兩份被改到，讀 diff 檔那份）。
 - 計畫與三輪計畫審查：docs/designs/2026-10-23-裁決審查-design.md 的 S3 一節（在 diff 檔裡）。
@@ -41,7 +41,7 @@
 
 （裁決者交回的逐字原文）
 
-Critical 1 / Important 4 / Smells 0。審查範圍：S3 diff（`git diff 6e9aaf0 HEAD`，bundle 第 1–443 行），重點看全域模板 §3.9 步驟 4 與 dd-init 蓋章區塊步驟 4 這兩份。下文的行號都是 HEAD 版本，對應 bundle 裡的整檔內容。
+Critical 1 / Important 4 / Smells 0。審查範圍：S3 diff（`git diff 984628d HEAD`，bundle 第 1–443 行），重點看全域模板 §3.9 步驟 4 與 dd-init 蓋章區塊步驟 4 這兩份。下文的行號都是 HEAD 版本，對應 bundle 裡的整檔內容。
 
 ## Critical
 

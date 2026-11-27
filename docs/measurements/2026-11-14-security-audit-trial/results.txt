@@ -27,7 +27,7 @@ run_status=complete incomplete_reason=- profile=quick budget={"max_agent_invocat
   validate-findings exit=0 first=PASS: 1 findings valid
   validate-coverage-ledger exit=0 first=PASS: 12 coverage units valid
 ## 目標 repo 有沒有被改
-  git_status_lines=0 head=9584605
+  git_status_lines=0 head=dd8b5a9
 
 ## 探針
   probe1 idx=0 cost=0.02531948 denials=1 models=claude-haiku-5-5

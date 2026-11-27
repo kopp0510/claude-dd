@@ -1,6 +1,6 @@
 # S2-judge：收編 cloudflare/security-audit-skill（S2）的查證
 
-範圍：`git diff 6f2118a` 到工作目錄（aa9b162 S2-1、d36e5d6 S2-2，加上步驟 3 還沒 commit 的試跑 `check.sh` 與同目錄 CLAUDE.md），另含 S1 的 fc2ccb0（審查處置更新）。
+範圍：`git diff 1239450` 到工作目錄（e1b1eeb S2-1、43f2c85 S2-2，加上步驟 3 還沒 commit 的試跑 `check.sh` 與同目錄 CLAUDE.md），另含 S1 的 dc345d0（審查處置更新）。
 
 ## 派工
 
@@ -17,7 +17,7 @@
 ### 讀檔檢查（每份抽一處自己讀）
 
 - S2-a：上游 `README.md` Requirements 第三項（OS-enforced sandbox，「Without these controls, the workflow keeps the lead as `needs_validation`」）—— 對得上
-- S2-b：`git show a0aa58a:docs/measurements/2026-11-14-dd-init-symlink/results.txt` 第 31、59 行有 Y 臂 —— 對得上
+- S2-b：`git show bc22fed:docs/measurements/2026-11-14-dd-init-symlink/results.txt` 第 31、59 行有 Y 臂 —— 對得上
 - S2-c：試跑 `check.sh` 的拒絕清單先 `.[0:140]` 再 `sed` 換路徑 —— 對得上
 - S2-d：`report-D11b.txt` 第 4 點「依情境「target 不算大」，所以 parent 不提議 budget」—— 對得上
 

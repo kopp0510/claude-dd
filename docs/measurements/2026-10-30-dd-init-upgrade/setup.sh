@@ -4,7 +4,7 @@ set -e
 T=${OUT:-$(mktemp -d)}; R=$(cd "$(dirname "$0")/../../.." && pwd)   # 案例 repo 建在 $OUT（預設暫存目錄），不建在 repo 裡
 stamp() { awk '/^```markdown$/ && !f {f=1; next} f && /^```$/ {exit} f'; }
 git -C "$R" show v1.6.12:commands/dd-init.md | stamp > "$T/b12.md"
-git -C "$R" show 6a9addd:commands/dd-init.md | stamp > "$T/b2.md"
+git -C "$R" show b1227f7:commands/dd-init.md | stamp > "$T/b2.md"
 stamp < "$R/commands/dd-init.md" > "$T/b13.md"
 locals() { awk '
   /^5\. / { print "   - LOCAL4 本專案的 review 一律附上 migration 清單" }

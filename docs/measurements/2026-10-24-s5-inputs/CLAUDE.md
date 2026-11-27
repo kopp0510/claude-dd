@@ -14,7 +14,8 @@
 
 ## 約束
 
-- **凍結**：量測文件的數字是用這一版輸入跑出來的；要改實驗就另開新目錄。例外兩個：跑完後步驟 3 拿掉 `stats.py` 裡沒人讀的 `judge` 變數（`revs = d1`，輸出不變）；B 組重跑用的 `run-noadvisor.sh` 是後來加的（只多一個參數，`run.sh` 沒動）
+- **凍結**：量測文件的數字是用這一版輸入跑出來的；要改實驗就另開新目錄。例外三個：跑完後步驟 3 拿掉 `stats.py` 裡沒人讀的 `judge` 變數（`revs = d1`，輸出不變）；B 組重跑用的 `run-noadvisor.sh` 是後來加的（只多一個參數，`run.sh` 沒動）。
+  第三個：2026-11-28 git 歷史改寫（作者身分統一）後，`prepare.py` 的 `RANGES` 換成新的 commit 編號：每個 commit 的內容樹與改寫前相同，產生的快照與 diff 檔不變
 - 發代號是 `<段>-<組>-<序>`（例如 `G3-dhk-2`），組只有 `dir`、`dhk`
 - `stats.py`、`checks.py` 只讀各發快照自己的 projects 目錄，不掃整個 `~/.claude/projects`
 - `stats.py` 的洩題判定 `leaky()` 跟 S4 那份相同，負面測試用 `../2026-10-24-s4-inputs/test_leaky.py`（它讀的是 S4 那份 `stats.py`）

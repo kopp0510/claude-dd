@@ -6,9 +6,9 @@
 你是 8 步迴圈步驟 4 的審查者 B。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 
 專案根目錄：/Users/danlio/project/my_project/claude-dd
-審查範圍：git diff f46b73b 6a2bdd3（新增 plan-review 流程圖：產生器 diagrams/src/gen_review.py、兩張 GIF、README 嵌入、diagrams/src/CLAUDE.md 與根 CLAUDE.md 同步、CHANGELOG、進度表）。
+審查範圍：git diff 4dd9386 e214b32（新增 plan-review 流程圖：產生器 diagrams/src/gen_review.py、兩張 GIF、README 嵌入、diagrams/src/CLAUDE.md 與根 CLAUDE.md 同步、CHANGELOG、進度表）。
 材料：<scratchpad>/pg-review-diff.txt（完整路徑：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/pg-review-diff.txt）。
-用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show 6a2bdd3:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
+用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show e214b32:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
 
 背景（事實）：使用者要一張專門畫 plan-review 怎麼運作的圖。圖的結構（8 框、9 條線、3 組）、框 ① 寫「推測要標明」、「無法判定」從讀檔檢查拉出，都是使用者決定的，不要建議改結構；但框裡的字若與 SKILL.md 原文意思不符，照報。計畫審過 2 輪。
@@ -28,7 +28,7 @@ Critical N / Important N / Smells N
 
 ## 發現
 
-Critical 0 / Important 2 / Smells 0：審 git diff f46b73b 6a2bdd3，重點看 diagrams/src/gen_review.py，以及它是否符合 diagrams/src/CLAUDE.md 的慣例
+Critical 0 / Important 2 / Smells 0：審 git diff 4dd9386 e214b32，重點看 diagrams/src/gen_review.py，以及它是否符合 diagrams/src/CLAUDE.md 的慣例
 
 ## Findings
 
@@ -49,9 +49,9 @@ Critical 0 / Important 2 / Smells 0：審 git diff f46b73b 6a2bdd3，重點看 d
 
 ## What I ran
 - Read pg-review-diff.txt 1–300、300–457 → 讀完全部 457 行
-- `git show 6a2bdd3:diagrams/src/CLAUDE.md | sed -n 36,95p` → 讀到慣例全文（7.2 整除、負 begin、begin 不是 dur 的整數倍、<40px 不放球、legend 一一對應）
-- `git show 6a2bdd3:diagrams/src/gen_planner.py`（grep ball/dur/legend/PLACE，並讀 28–36、180–200 行）→ planner 的每顆球都跟所在的線同色；它的註解寫「68px→1.44、88px→1.8、323px→7.2」
-- `git grep -n -E '三支|6 張|6 份|六張|11 張|gen_planner|three generators|planner-(en|zh)' 6a2bdd3`（排除 reviews、measurements、CHANGELOG、designs）→ 沒有漏改的計數宣稱，只剩 CLAUDE.md:313 那句刻意保留的引用
+- `git show e214b32:diagrams/src/CLAUDE.md | sed -n 36,95p` → 讀到慣例全文（7.2 整除、負 begin、begin 不是 dur 的整數倍、<40px 不放球、legend 一一對應）
+- `git show e214b32:diagrams/src/gen_planner.py`（grep ball/dur/legend/PLACE，並讀 28–36、180–200 行）→ planner 的每顆球都跟所在的線同色；它的註解寫「68px→1.44、88px→1.8、323px→7.2」
+- `git grep -n -E '三支|6 張|6 份|六張|11 張|gen_planner|three generators|planner-(en|zh)' e214b32`（排除 reviews、measurements、CHANGELOG、designs）→ 沒有漏改的計數宣稱，只剩 CLAUDE.md:313 那句刻意保留的引用
 - python3 照 gen_review 的座標公式算 9 條路徑的長度、dur、px/s → start 88/1.8/48.9、send 68/1.44/47.2、retry 68/1.44/47.2、verify 68/1.44/47.2、short 128/2.4/53.3、ok 128/2.4/53.3、fail 383/7.2/53.2、third 68/1.2/56.7、again 1518/7.2/210.8
 
 ## 需要外部查證

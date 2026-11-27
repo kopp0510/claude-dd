@@ -4,11 +4,11 @@
 
 `subagent_type: code-reviewer`，與其他審查者同一則訊息平行派出。共用派工說明（逐字）：
 
-> 你是 code-review 審查者。審查範圍：claude-dd repo（/Users/danlio/project/my_project/claude-dd）段落 S1 的整段改動 = `git diff f46d4de HEAD`（3 個 commit：a30dc1a、f0e80ab、a542817；工作目錄乾淨）。
+> 你是 code-review 審查者。審查範圍：claude-dd repo（/Users/danlio/project/my_project/claude-dd）段落 S1 的整段改動 = `git diff a2dbb9b HEAD`（3 個 commit：d3b980d、cbb59d7、a3aa5a4；工作目錄乾淨）。
 > 段落目標：把全域模板 templates/global/CLAUDE.md §3.9 的 8 步迴圈做法細則，原文搬進新 skill skills/dd-loop/SKILL.md，全域只留 8 步清單、關卡、驗證教訓，並明寫「段落開始時、步驟 3、4、8 開始前呼叫 dd-loop」；同批改部署陣列、README×2、根 CLAUDE.md、架構文件、CHANGELOG、引用處；新增觸發實測 docs/measurements/2026-10-30-dd-loop-trigger/。設計文件：docs/designs/2026-10-30-global-claude-md-slim-design.md。
 > 
 > 資料：diff 檔 /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/S1-diff.txt（①整段 diff ②步驟 3 改動：無 ③被改到檔案的 HEAD 整檔（帶行號）④已跑過的驗證與預期值 —— ④ 已確認，不要重跑）。
-> **diff 檔用 Read 的 offset/limit 每次 300 行讀到最後一行（共 5593 行）**：Read 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。舊版可用 `git show f46d4de:<path>`。
+> **diff 檔用 Read 的 offset/limit 每次 300 行讀到最後一行（共 5593 行）**：Read 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。舊版可用 `git show a2dbb9b:<path>`。
 > 
 > 你的職責：找漏洞，每條附證據（路徑:行號 + 原文，或指令與輸出），沒證據不算。只用手上的資料判斷，需要外部查證（上網、跑 claude -p 等）的列出來交回。專案規則在各層 CLAUDE.md 與全域模板 §3.10。
 > 輸出：Critical / Important / Smells 三級，每條「位置｜問題｜失敗情境｜證據｜建議」；另列 Not reported（看到但判為不報的，附理由）、What I ran（跑過的指令）、需要外部查證。
@@ -21,10 +21,10 @@
 
 （逐字原文）
 
-Critical 0 / Important 3 / Smells 0 — 範圍：`git diff f46d4de HEAD`（a30dc1a、f0e80ab、a542817），讀的是 S1-diff.txt 裡的 ① 和 ④，再加上 repo 裡沒被改到的 commands/dd-init.md、skills/task-planner/SKILL.md、skills/code-simplifier/SKILL.md 與其他 skill 的 frontmatter
+Critical 0 / Important 3 / Smells 0 — 範圍：`git diff a2dbb9b HEAD`（d3b980d、cbb59d7、a3aa5a4），讀的是 S1-diff.txt 裡的 ① 和 ④，再加上 repo 裡沒被改到的 commands/dd-init.md、skills/task-planner/SKILL.md、skills/code-simplifier/SKILL.md 與其他 skill 的 frontmatter
 
 [Important] skills/dd-loop/SKILL.md:95（diff 檔第 504 行）與 templates/global/CLAUDE.md 新增的 `<起點>` 那行（diff 檔第 565 行）｜「commits 欄要去掉 `..`」這條只寫在步驟 8，但全域對 `<起點>` 的定義是整欄照填，步驟 3、4 用 `<起點>` 的地方都沒有這條
-  Failure：task-planner 規則區塊（skills/task-planner/SKILL.md:133）規定 commits 欄填 `<起點>..`。照全域定義代入步驟 4 時：依序跑的 `git diff f46d4de..` 等同 `f46d4de..HEAD`，會**靜靜漏掉工作目錄裡步驟 3 simplifier 還沒 commit 的改動**，exit 0；並行跑的 `git diff f46d4de.. HEAD` 會 exit 129。這次 diff 只在步驟 8 修了，屬於 §3.10 講的「只改一半」
+  Failure：task-planner 規則區塊（skills/task-planner/SKILL.md:133）規定 commits 欄填 `<起點>..`。照全域定義代入步驟 4 時：依序跑的 `git diff a2dbb9b..` 等同 `a2dbb9b..HEAD`，會**靜靜漏掉工作目錄裡步驟 3 simplifier 還沒 commit 的改動**，exit 0；並行跑的 `git diff a2dbb9b.. HEAD` 會 exit 129。這次 diff 只在步驟 8 修了，屬於 §3.10 講的「只改一半」
   Evidence：在拋棄式 repo 實測，commit a→b，工作目錄再加 c。`git diff $b..` 只印 `+b`，exit 0；`git diff $b` 印 `+b +c`；`git diff $b.. HEAD` 印 usage，exit=129
   建議：把「只取 `..` 前面」移到全域那行 `<起點>` 定義，或移到 SKILL.md「段落起點與 `<起點>`」節，讓步驟 3、4、8 都套用
 
@@ -37,7 +37,7 @@ Critical 0 / Important 3 / Smells 0 — 範圍：`git diff f46d4de HEAD`（a30dc
   Evidence：results.tsv 第 2–9 行都是 `inject_chars=24`；check.sh:8 的 `select(.type=="tool_result")|(.content|tostring)|select(test("dd-loop"))|length`
 
 What I ran
-- `git diff --stat f46d4de HEAD` → 21 個檔
+- `git diff --stat a2dbb9b HEAD` → 21 個檔
 - `git grep -n '3\.9' -- skills commands agents` → 只有 dd-init.md:323 和 verification-gate:56，兩處都還成立
 - `sed -n 40,155p commands/dd-init.md`（蓋章區塊 52–149 行）→ 自成一體，沒有指向被搬走的全域文字；和 dd-loop 對照沒有直接矛盾
 - `grep` task-planner 與 code-simplifier SKILL.md 的起點和 § 引用 → code-simplifier:14–17 有自己的 `<起點>` 與進度表例外，和全域一致；task-planner:133 規定填 `<起點>..`（第一條發現的來源）

@@ -1,10 +1,10 @@
 # S1-judge（主對話查證）— plan-review 流程圖
 
-段落：使用者問「README 有附上 plan review 這圖片流程圖嗎」，答沒有後說「加」。進度表在 `docs/designs/2026-10-29-plan-review-gif-design.md`，段落起點 `f46b73b`，S1-1 是 `6a2bdd3`。計畫經 plan-review 2 輪（第 1 輪不通過 1 條重大：步驟 3、4 改到產生器要重出 GIF；第 2 輪通過）。
+段落：使用者問「README 有附上 plan review 這圖片流程圖嗎」，答沒有後說「加」。進度表在 `docs/designs/2026-10-29-plan-review-gif-design.md`，段落起點 `4dd9386`，S1-1 是 `e214b32`。計畫經 plan-review 2 輪（第 1 輪不通過 1 條重大：步驟 3、4 改到產生器要重出 GIF；第 2 輪通過）。
 
 ## 派工
 
-- 審查範圍：`git diff f46b73b 6a2bdd3`。diff 檔放 session 暫存目錄，組成：整段 diff（GIF 只列 stat）、步驟 3 與審查並行的說明（審 HEAD，被改到的檔用 `git show 6a2bdd3:<路徑>` 讀）、已跑過的驗證與預期值、圖上文字 ↔ `skills/plan-review/SKILL.md` 的對照表
+- 審查範圍：`git diff 4dd9386 e214b32`。diff 檔放 session 暫存目錄，組成：整段 diff（GIF 只列 stat）、步驟 3 與審查並行的說明（審 HEAD，被改到的檔用 `git show e214b32:<路徑>` 讀）、已跑過的驗證與預期值、圖上文字 ↔ `skills/plan-review/SKILL.md` 的對照表
 - 步驟 3 的 code-simplifier 與審查並行：只改了 legend 挑箭頭那行（巢狀三元 → 對照表），兩份 SVG sha256 與修改前相同
 - 派 3 個 `code-reviewer`（下限）：A 圖上文字 ↔ SKILL.md 原文、B 產生器程式碼與 `diagrams/src/CLAUDE.md` 慣例、C 同步點與文件。圖上每句話都是在「縮短 SKILL.md」，正是 §3.10 說條件最容易被改掉的地方，所以 A 單獨一個方向
 
@@ -47,7 +47,7 @@
 | 註解 | 複雜任務的計畫…／design-brainstorm 的設計（不論大小） | — | :22 |
 | 註解 | 常走的路（金額、權限、刪資料一律算）、照做會錯或跳過你的決定、後面的關卡也抓不到 | — | :172–175 |
 
-行號在 `6a2bdd3` 的 `skills/plan-review/SKILL.md`（這段沒改它）；用 `grep -n -F '<原句>'` 重找。
+行號在 `e214b32` 的 `skills/plan-review/SKILL.md`（這段沒改它）；用 `grep -n -F '<原句>'` 重找。
 
 ## 處置
 
@@ -61,6 +61,6 @@
 ## 重疊與獨有項
 
 - 三個審查者沒有重疊項：方向分得開，A 管字、B 管程式、C 管同步點
-- A 獨有、也是最重要的：4 處都是「把 SKILL.md 縮短時條件掉了」，正好是 `f46b73b` 剛寫進全域 §3.10 的那條。我自己寫的對照表只對「這句話有沒有出處」，對不出「出處那句還有條件被拿掉」—— 對照表是有出處的檢查，不是條件完整的檢查
+- A 獨有、也是最重要的：4 處都是「把 SKILL.md 縮短時條件掉了」，正好是 `4dd9386` 剛寫進全域 §3.10 的那條。我自己寫的對照表只對「這句話有沒有出處」，對不出「出處那句還有條件被拿掉」—— 對照表是有出處的檢查，不是條件完整的檢查
 - B 獨有：球色與 legend 的對應，幾何檢查與 legend 規則都管不到（只管線）
 - C 獨有：摘要文字與圖的結構不一致（只在 Not reported）

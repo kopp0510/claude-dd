@@ -21,7 +21,7 @@
 
 - P1（2026-11-17，Claude Code 2.1.326）：成立。有檔那一臂回 `ZEBRA-7` 加一句答案，對照只有答案；兩發 `permission_denials` 都是 0、`models` 只有 haiku
 - 它只證明「檔會載入、模型照著多寫了一行」。暫停聲明壓不壓得過專案 CLAUDE.md 與全域 §3.9 的迴圈是另一件事，P1 沒有測
-- 模型層第 1 批（2026-11-17，Claude Code 2.1.326，`claude-fable-5-2`，判準是 `65e1fb9` 那一版的 `check-model.sh`）：三臂都通過，`out/model-1/check.out` 是判定原文。
+- 模型層第 1 批（2026-11-17，Claude Code 2.1.326，`claude-fable-5-2`，判準是 `7efdfa7` 那一版的 `check-model.sh`）：三臂都通過，`out/model-1/check.out` 是判定原文。
   - `stopped` 兩發：各 1 個新 commit、Bash 輸出有「gate 暫停中」、沒有 `Skill dd-loop`、沒有 `--start-segment`、沒有派 agent，結束時旗標與標記段都還在；
     6 與 10 個回合、1.06 與 1.13 美元、`models` 只有 `claude-fable-5-2`、`permission_denials` 0
   - `control` 兩發：第一個工具呼叫就是 `Skill dd-loop`（第 2 發接著發出了 `--start-segment` 的指令；那次 Bash 的輸出是空的、結束時沒有起點檔，指令還沒跑完那一發就被停掉了）
@@ -33,11 +33,11 @@
   - 受測的是全新的 session。已經開著的對話、跑很久被壓縮過的對話會不會照聲明做，沒有測
   - 全域 CLAUDE.md §3.9 與 dd-loop skill 是這台機器當時部署的那一版，不是 repo 這份（`skills/dd-loop/SKILL.md` 新加的「迴圈暫停中」那一句不在裡面）
   - `stopped` 只看工具呼叫與結束時的狀態，沒有看回覆的文字有沒有告訴使用者「這次沒跑步驟 3–8」
-  - 受測的 `dd-stop.sh` 與 gate 是 `65e1fb9` 那一版（`out/model-1/repo-head.txt`）。之後 `dd-stop.sh` 改過兩次（步驟 3 的簡化；步驟 4 修的寫檔失敗那幾處，`on` 改成最後才設旗標），模型層沒有重跑
+  - 受測的 `dd-stop.sh` 與 gate 是 `7efdfa7` 那一版（`out/model-1/repo-head.txt`）。之後 `dd-stop.sh` 改過兩次（步驟 3 的簡化；步驟 4 修的寫檔失敗那幾處，`on` 改成最後才設旗標），模型層沒有重跑
   - 設計文件寫的骨架「每一發的 `permission_denials` 都是 0」只查得到 `stopped` 兩發：另外四發被停掉、沒有 result，`check-model.sh` 對它們沒有查這一項就判通過
 - 判準已知的洞（2026-11-17 步驟 4 的審查找到；審查原文在 `docs/reviews/2026-11-17-dd-stop/S1-d.md`，查證在同一個目錄的 `S1-judge.md`）。
   下面前五條與「 -n 」、`.json` 壞掉那兩項，查證時各手造一份 `.json` 餵 `check-model.sh` 重現過；其餘是讀 `run-model.sh`、`selftest-model.sh` 對出來的，沒有另外跑。
-  `check-model.sh` 沒有跟著改（`git diff 65e1fb9 -- check-model.sh` 是空的）：改了就是改判準，第 1 批不算新判準的。**要跑第 2 批，先補這幾條、補自測、commit，再跑**。
+  `check-model.sh` 沒有跟著改（`git diff 7efdfa7 -- check-model.sh` 是空的）：改了就是改判準，第 1 批不算新判準的。**要跑第 2 批，先補這幾條、補自測、commit，再跑**。
   第 1 批對得出來的：前三條沒有踩到（`stopped` 兩發 `permission_denials` 0、沒有用到補跑；「gate 暫停中」都出自 `git commit` 那一次的輸出、結束時起點檔在；`control`、`resume` 四發都是靠 `Skill dd-loop` 通過，不是靠 Bash 那一半）。
   對不出來的：第四條在 `stopped-2`（那兩次 Read、三次 Edit 的對象沒有留）；第五條在被停掉的四發（沒有 result）：
   - 「無效」排在各臂的行為判準之前，而無效的那一發改看補跑：暫停臂真的跑了迴圈、同一發又有一次權限被擋（例如試 `--no-verify` 被 gate-guard 擋下）時，先判成無效，補跑通過就整臂通過

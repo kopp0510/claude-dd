@@ -31,7 +31,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 > 【Not reported】每條一行
 > 【需要外部查證】每條一行；沒有就寫「沒有」
 
-審查材料 `S1-diff.txt` 的四節：①`git diff 925d0b8 -- . ':!docs/measurements/2026-11-17-dd-stop/out'`（含步驟 3 還沒 commit 的改動）②步驟 3 自己改的（`git diff HEAD`）
+審查材料 `S1-diff.txt` 的四節：①`git diff 9679086 -- . ':!docs/measurements/2026-11-17-dd-stop/out'`（含步驟 3 還沒 commit 的改動）②步驟 3 自己改的（`git diff HEAD`）
 ③怎麼讀整檔（新增的檔看材料、既有的檔讀工作目錄）④已經跑過的驗證與預期值（`tests/test-dd-stop.sh` 131 個 ✅、`tests/test-gate.sh` 213 個 ✅、shellcheck 沒有輸出、`selftest-model.sh` 32 個 ✅、`tests/test-install.sh` exit 0、lint job 22 個 step、變異對照）。
 
 ## 發現
@@ -51,8 +51,8 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 > - `jq -c '{arm,killed,result,final,tools:[...]}' out/model-1/<六個>.json`，另外把每發的 bash_results 也印出來 → 回合數、費用、工具順序都列出來了（核對結果見下面）
 > - `grep -rnoE '<帳號>|/Users/…|-Users-|-private-tmp-|/private/tmp…|/var/folders…|信箱樣式|<user>|<home>|<work>' out/` → 只剩 `<user>`（stopped-2 8 處、control-1 7 處）、`<work>`（stopped-1 3 處）、`noreply@anthropic.com`（2 處）；家目錄、帳號、編碼路徑都是 0 筆
 > - `/bin/bash check-model.sh out/model-1 > scratch; cmp scratch out/model-1/check.out` → rc=0、same
-> - `git diff 65e1fb9 b515357 -- …/run-model.sh` → 只改了 reduce 的 `<user>` 替換和檔頭那一句；check-model.sh 從 65e1fb9 之後沒有改過；repo-head.txt = 65e1fb9
-> - `git diff --stat 65e1fb9 HEAD -- scripts/` → 空的；`git diff --stat 65e1fb9 -- scripts/` → dd-stop.sh 有 27 行沒 commit 的改動（步驟 3 改的）
+> - `git diff 7efdfa7 bca04c1 -- …/run-model.sh` → 只改了 reduce 的 `<user>` 替換和檔頭那一句；check-model.sh 從 7efdfa7 之後沒有改過；repo-head.txt = 7efdfa7
+> - `git diff --stat 7efdfa7 HEAD -- scripts/` → 空的；`git diff --stat 7efdfa7 -- scripts/` → dd-stop.sh 有 27 行沒 commit 的改動（步驟 3 改的）
 > - 在拋棄式 repo 試 `git commit --no-verif`／`-c core.hooksPath` → 被 gate-guard 的 PreToolUse 擋下，沒跑成；guard-no-verify.sh:132 有 `t ~ /^--no-veri/`，所以縮寫也擋得到
 > - 寫了 <scratchpad>/rev/S1-d/craft.sh：複製 model-1 六發的 .json，每次只換掉一發，再餵 check-model.sh。結果：
 >   - A-ordering rc=0 「✅ stopped-1 通過…（補跑；第一次無效：權限被擋 1 次（Bash））」
@@ -69,7 +69,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 > - 「gate 暫停中」出現在 commit 那一條指令自己的輸出裡
 > - control 兩發第一個工具呼叫都是 Skill dd-loop
 > - resume 兩發 i=0 是 off，輸出有「8 步迴圈已恢復」，i=1 是 Skill dd-loop
-> - 判準是 65e1fb9 那一版
+> - 判準是 7efdfa7 那一版
 > - 替換之後重跑，輸出逐位元組相同
 >
 > 【Findings】
@@ -109,7 +109,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 >   - `final.subjects`（模型寫的 commit 標題）沒有經過 clean
 >   - macOS 上 WORK 如果寫成 `/tmp/…`，工具輸出裡的 `/private/tmp/…` 不會被換掉｜證據：clean 的原文；目前 out/ 的 grep 是 0 筆｜會造成什麼：換一台機器或換一個工作目錄，可能漏去識別
 >
-> S1-d-11｜Smell｜measurements CLAUDE.md「結果」｜第 1 批測的是 65e1fb9 版的 dd-stop.sh（repo-head.txt）。工作目錄裡步驟 3 的改動（`begin_line`、`do_off` 印欠帳的順序）是之後才改的，模型層沒有重跑。「結果」沒寫明它對應哪一版腳本｜證據：材料第 ② 節；`git diff --stat 65e1fb9 -- scripts/` → dd-stop.sh 27 行｜會造成什麼：讀的人會以為現在這一版的 off 輸出也測過了
+> S1-d-11｜Smell｜measurements CLAUDE.md「結果」｜第 1 批測的是 7efdfa7 版的 dd-stop.sh（repo-head.txt）。工作目錄裡步驟 3 的改動（`begin_line`、`do_off` 印欠帳的順序）是之後才改的，模型層沒有重跑。「結果」沒寫明它對應哪一版腳本｜證據：材料第 ② 節；`git diff --stat 7efdfa7 -- scripts/` → dd-stop.sh 27 行｜會造成什麼：讀的人會以為現在這一版的 off 輸出也測過了
 >
 > S1-d-12｜Smell｜selftest-model.sh｜判定有些分支沒有測到：
 >   - Task 工具名
@@ -124,7 +124,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 >   我讀過的 32 則沒有空斷言：每則的 needle 都只有那一條分支會印。另外 check-model.sh 有 `set -e`，`.json` 壞掉時 `line=$(verdict …)` 會用 jq 的 exit 碼（例如 5）中止，不在檔頭寫的 0／1／2 裡｜證據：selftest 全檔已讀完｜會造成什麼：S1-d-1、S1-d-2 這兩種壞法，自測都抓不到
 >
 > 【Not reported】
-> - 替換的說法：替換前的樣子查不到。原始 stream-json 沒進 repo，out/model-1 第一次進版控就是 b515357，已經是替換過的。替換後重跑和 check.out 逐位元組相同，我核過了；替換用的指令沒有記錄
+> - 替換的說法：替換前的樣子查不到。原始 stream-json 沒進 repo，out/model-1 第一次進版控就是 bca04c1，已經是替換過的。替換後重跑和 check.out 逐位元組相同，我核過了；替換用的指令沒有記錄
 > - stopped-1 的 session 把 commit 輸出寫到真的 `/tmp/todo_commit.txt`（拋棄式目錄外）：這是受測模型的行為，不是腳本缺陷
 > - probe-local.sh 和 P1 資料：with 是「ZEBRA-7\n1 加 1 等於 2。」，without 沒有 ZEBRA-7，models 是 claude-haiku-5-5、denials 0，跟文件一致，沒找到問題
 > - 方向以外的 dd-stop.sh、gate、test-dd-stop.sh、test-gate.sh ⑰：整份翻過了，沒有深查
@@ -151,7 +151,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 | S1-d-8 `-n` 的比對式會被 commit 訊息誤判 | Smell | 查證：手造 `git commit -m "feat: 支援 -n 參數"` 判成沒通過。方向是假紅。寫進「判準已知的洞」；判準沒改 |
 | S1-d-9 Bash 輸出只留 1500 字 | Smell | 讀 `run-model.sh` 確認（`.[0:1500]`）；第 1 批至少有三次輸出剛好 1500 字。寫進「判準已知的洞」；沒有手造重現 |
 | S1-d-10 去識別把路徑當正規式、`final.subjects` 沒換 | Smell | 讀 `run-model.sh` 確認。第 1 批的 `out/` 重新 `grep -rl` 帳號名稱、`/Users/`、`/Volumes/`、`/private/tmp`、編碼過的專案路徑：0 個檔。寫進「判準已知的洞」；腳本沒改 |
-| S1-d-11 「結果」沒寫對應哪一版腳本 | Smell | 採納。量測目錄 CLAUDE.md 與設計文件寫明受測的是 `65e1fb9` 版，之後步驟 3、4 改過的 `dd-stop.sh` 模型層沒有重跑 |
+| S1-d-11 「結果」沒寫對應哪一版腳本 | Smell | 採納。量測目錄 CLAUDE.md 與設計文件寫明受測的是 `7efdfa7` 版，之後步驟 3、4 改過的 `dd-stop.sh` 模型層沒有重跑 |
 | S1-d-12 自測沒測到的分支、`.json` 壞掉時的 exit 碼 | Smell | 查證：`selftest-model.sh` 裡 `"Task"`、`dd-stop.sh on`、`revise-claude-md`、「不認得的臂」都是 0 筆；壞掉的 `.json` 讓 `check-model.sh` exit 5。寫進「判準已知的洞」；自測沒改（判準沒動，自測跟著不動） |
 
 Not reported 的幾項沒有另外處理。

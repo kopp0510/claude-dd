@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s3-review-pack.txt`，627 行，沒進 repo）的組成：
-- 第 1 部分：`git diff 0dc3b53 HEAD`（表上這段的起點到 HEAD = 2276c3c），工作目錄乾淨、沒有未追蹤的檔
+- 第 1 部分：`git diff db8637e HEAD`（表上這段的起點到 HEAD = 420564e），工作目錄乾淨、沒有未追蹤的檔
 - 第 2 部分：步驟 3（code-simplifier）跑了，沒有改任何檔
 - 第 3 部分：`install-dd-pipeline.sh` 的 `check_builtin_skills`、`install_builtin_skills`、`check_builtin_agents`、`install_builtin_agents` 開頭、`--check` 的流程，與 `tests/test-install.sh` 的檔頭、`TEST_ONLY` 那一段、T11（都帶行號）
 - 第 4 部分：已跑過的驗證 V1–V7（T11 先紅後綠、macOS 與 ubuntu 整份 rc=0、8 個變異各紅在哪、對真實環境跑 `--check` 的輸出、lint、照 ci.yml 逐 step 跑）
@@ -17,7 +17,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff 0dc3b53 HEAD`（8 步開發迴圈 S3 段落，2 個 commit：64aa70b、2276c3c）。這一段做的事：
+> 審查範圍：`git diff db8637e HEAD`（8 步開發迴圈 S3 段落，2 個 commit：986bc79、420564e）。這一段做的事：
 > `./install-dd-pipeline.sh --check` 的「檢查內建 Skills」「檢查內建 Agents」兩段，原本只看目錄／檔案在不在；現在目錄／檔案在的時候再跟 repo 這份比內容
 > （skill 用 `diff -rq`、agent 用 `cmp -s`），不同就印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行「與 repo 不同：N」。只提示、不改檔、不影響結束碼。
 > `tests/test-install.sh` 新增 T11；兩份 README、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md`、根目錄 `CLAUDE.md`、`tests/CLAUDE.md` 跟著改。
@@ -48,7 +48,7 @@
 
 審查者交回的原文（逐字；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 2 / Smells 1 — 範圍：`git diff 0dc3b53 HEAD`（64aa70b、2276c3c）改到的文件，逐句對回 install-dd-pipeline.sh 與審查包的驗證輸出
+> Critical 0 / Important 2 / Smells 1 — 範圍：`git diff db8637e HEAD`（986bc79、420564e）改到的文件，逐句對回 install-dd-pipeline.sh 與審查包的驗證輸出
 >
 > 【發現】
 > 1｜Important｜根目錄 CLAUDE.md 新加的「`--check` 只跑 skills、agents、MCP、plugin 四段」不對，而且和同一段上面幾行互相矛盾。`--check` 會先跑 `check_environment` 和 `validate_skill_hooks`，再跑那四段。｜證據：`CLAUDE.md:27` 原文「`--check` 只跑 skills、agents、MCP、plugin 四段，commands、scripts（gate 住在這層）、output styles、全域 CLAUDE.md 過期了它看不出來。」；同檔 `CLAUDE.md:18`「環境檢查（步驟 1 / `--check`）除必要工具外含**可選項 ffmpeg**」；`install-dd-pipeline.sh:1527` `check_environment`、`:1530` `validate_skill_hooks`，兩個都在 `:1532` `if [ "$CHECK_ONLY" = true ]` 之前｜失敗情境：讀者照第 27 行判斷「`--check` 不跑環境檢查、不驗 hook 路徑」，於是不拿 `--check` 查 ffmpeg、自動壓縮視窗那一行或 hook 相對路徑。其實這三項它都會跑，只要 hook 有相對路徑它就 exit 1｜建議：改成「`--check` 在環境檢查與 hook 路徑驗證之外，只跑 skills、agents、MCP、plugin 四段」，或乾脆拿掉「只跑…四段」，留下「commands、scripts…不比」就好
@@ -66,7 +66,7 @@
 > - tests/CLAUDE.md T11 的描述：「沒改的不可以有」看起來只抽查了 3 個，但 `grep -cF '與 repo 不同：1'` 必須剛好 2 行，這等於每段剛好 1 個不同，所以宣稱成立。`TEST_ONLY` 的 case 有同批改成 T2–T11（`tests/test-install.sh:103-104` 與 `tests/CLAUDE.md` 那句一致）。
 > - 「同批」規則：新增的是既有測試檔裡的一組，不是新的測試檔，所以不用改 ci.yml 或目錄結構那行。沒有新增 CI step、陣列、flag、迴圈步數。README 的「指令一覽」、MCP 表不受影響。
 > - 既有問題，不是這次引入：`CLAUDE.md:12`「--check # 只檢查環境」、`README.md:77`「check the environment only」、`README.zh-TW.md:78`「只檢查環境（不安裝）」、`install-dd-pipeline.sh:284` help「只檢查環境（不安裝）」。這次之前 `--check` 就已經會檢查 skills、agents 在不在，這些句子早就不精確。這次讓落差變大，但不是這次造成的，所以只列在這裡。
-> - 設計文件 S3 列改成 IN_PROGRESS、commit 欄寫 `0dc3b53..`，符合進度表規則（DONE 時才補上迄點）。
+> - 設計文件 S3 列改成 IN_PROGRESS、commit 欄寫 `db8637e..`，符合進度表規則（DONE 時才補上迄點）。
 >
 > 【What I ran】
 > - Read 派工檔 prompt-c.txt 全文；Read 審查包 s3-review-pack.txt 第 1–300、300–627 行（讀到最後一行）

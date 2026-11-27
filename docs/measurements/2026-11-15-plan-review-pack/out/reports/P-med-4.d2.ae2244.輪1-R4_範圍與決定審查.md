@@ -7,7 +7,7 @@
   - `grep -c -E 'settings\.json|\.claude\.json|installed_plugins' tests/test-install.sh` 回 0。
   - `grep -n 'FORCE' install-dd-pipeline.sh`：skills、agents、commands、scripts、output-styles 的覆蓋都不看 `$FORCE`，事實 F12 與 S2-1 第 2 點成立。
   - ci.yml 命名 step：`lint` job（10–563 行）正好 20 個；`macos-latest` job（564 行起）另有 6 個。
-  - `git rev-list --count HEAD` 回 1，`git cat-file -t b1935bb` 失敗；`git branch -a` 只有 `master`。
+  - `git rev-list --count HEAD` 回 1，`git cat-file -t 23429eb` 失敗；`git branch -a` 只有 `master`。
 - 已確認成立的計畫事實：README 第 19、70、152/156 行原文逐字相符；`DD_PIPELINE_ARCHITECTURE.md` 第 74–75 行「可回復」句存在；`tests/CLAUDE.md` 第 10 行 test-install 那列存在；2026-10-23 量測檔含 311 次／中位 11.8 分；2026-10-24 的 269s、5.13 美元、3.83 美元數字在同一量測檔第 317–319 行；`code-reviewer` 定義是 `model: opus`；`deprecated_dd` 清單（889 行）與 F9 相符；`show_completion` 無條件印 agent 與 plugin 段（F10）相符。
 
 【批評】
@@ -34,4 +34,4 @@
 
 輪1-R4-10｜小事｜計畫新增 T3–T9 七組測試，事實 `:122` 聲稱「task-planner 步驟 4 的測試清單題選定的清單就是使用者要求加的測試」。計畫引用的使用者原話（`:113-114`）裡沒有這句。全域 §3.5 只允許使用者要求或修 bug 時新增測試。為什麼需要查證：要看當初的對話紀錄，確認使用者真的在那題選了這份清單；如果沒有，T3–T9 就違反 §3.5。
 
-輪1-R4-11｜小事｜審查包說 repo 在 HEAD `b1935bb`、本機比 origin/main 多 34 個 commit（F1、F15）。這個工作目錄的 HEAD 是 `f57cde6 base`，只有一個 commit，`git cat-file -t b1935bb` 失敗，`git branch -a` 只有 `master`。行號與檔案內容都對得上，但 commit 數、ubuntu job 沒跑過那 34 個 commit 這些事實，我在這裡無法重現，需要在原始環境核對。
+輪1-R4-11｜小事｜審查包說 repo 在 HEAD `23429eb`、本機比 origin/main 多 34 個 commit（F1、F15）。這個工作目錄的 HEAD 是 `f57cde6 base`，只有一個 commit，`git cat-file -t 23429eb` 失敗，`git branch -a` 只有 `master`。行號與檔案內容都對得上，但 commit 數、ubuntu job 沒跑過那 34 個 commit 這些事實，我在這裡無法重現，需要在原始環境核對。

@@ -2,7 +2,7 @@
 
 ## 派工
 
-主對話給裁決者的派工 prompt 見本 session 紀錄；要點：範圍 `ac8fcfe..HEAD`、diff 檔排除 `2026-10-24-s4-outputs/reports/`、附已確認的驗證輸出與預期值（`test_leaky.py` 11 / 11、CI 第五方 8 ✅、simplifier 沒改檔）、審查者 `code-reviewer` 不帶 model 最少 3 個。
+主對話給裁決者的派工 prompt 見本 session 紀錄；要點：範圍 `e9a5db5..HEAD`、diff 檔排除 `2026-10-24-s4-outputs/reports/`、附已確認的驗證輸出與預期值（`test_leaky.py` 11 / 11、CI 第五方 8 ✅、simplifier 沒改檔）、審查者 `code-reviewer` 不帶 model 最少 3 個。
 
 ## 發現
 
@@ -25,8 +25,8 @@ s4 工作目錄與 ~/.claude/projects 的紀錄仍在本機（scratchpad/s4/）�
 - 洩題掃描（scratchpad 內聯腳本）：14 發所有層的工具輸入，找 `<s4>/` 底下「不是自己快照、不是 prompts/<該發>、不是 <段>/diff.txt（舊組不算）」的路徑與 Bash 裡的裸 `..` —— 0 筆讀別發 log／快照／prompt；命中的 `<s4>/G2`、`<s4>/G3` 都是 `cd …/G3 && … diff.txt`；`..` 全在 mktemp／/tmp 拋棄式目錄裡。舊組 0 次碰 diff.txt
 - 3 筆 denial 的發出者（以 tool_use_id 對 meta）：G4-new-1 xzW1pm = spawnDepth 1 general-purpose「G4-new-1-judge」；G4-new-1 pFEo4S = Reviewer A；G4-new-2 uzFDbt = Reviewer D
 - total_cost_usd：有多筆 result 的三發（G2-new-2、G3-old-2、G4-new-1）每一筆值都相同（例 3.4035…×2、1.4640…×3），是累計值；duration_ms 各筆不同（6385／11800）
-- `git log -S '要記「哪個變異' -- templates/global/CLAUDE.md` → 713038a（10-07）；`'「紅數」本身不是證據'` → a4ed41f（10-09）；713038a 在 b66d8ae 之後
-- `git log -S '新功能還沒寫' -- templates/global/CLAUDE.md` → ee68e72；S4-a.md:59 就有 ⑩ 那條；G2-old-1 a594bb:21、G2-old-2 a0166b:16 Not reported 也提 ⑩
+- `git log -S '要記「哪個變異' -- templates/global/CLAUDE.md` → 3fe445a（10-07）；`'「紅數」本身不是證據'` → 544ccdf（10-09）；3fe445a 在 40b3f0a 之後
+- `git log -S '新功能還沒寫' -- templates/global/CLAUDE.md` → 35e94a4；S4-a.md:59 就有 ⑩ 那條；G2-old-1 a594bb:21、G2-old-2 a0166b:16 Not reported 也提 ⑩
 - G3-hk-2 judge K6 在 :15（C 寫 :14，差一行）；G3-hk-1、G3-hk-2 的審查者都沒報 K6（aad426:7「不算矛盾」、a31c92:9「未發現矛盾」）
 - G2-new-1 judge :22 在第 2 條（:20 ⑩）底下；K1 是 :12
 - K5 沾邊原句抽查 G3-new-2 judge:37、G3-hk-1 ae9ad9:9、G3-old-1 a2e1e9:18 都是「從建立 docs/reviews/ 那個 commit 起連鎖紅（含繞過①）」
@@ -51,14 +51,14 @@ s4 工作目錄與 ~/.claude/projects 的紀錄仍在本機（scratchpad/s4/）�
 5. C2｜Important｜K6 參考段「6 發每一發都有人抓到」與結論 5「K6 在 G3-hk-1 是裁決者自查補上的」—— haiku 組兩發的審查者都沒報 K6，兩發都是裁決者自查（G3-hk-1 judge :17、G3-hk-2 judge :15）
    - 影響結論 3（haiku 審查者沒少抓）與結論 5（裁決者作用）的敘述，雖然 K6 不計分
    - 改法：K6 寫「審查者聯集：新 2/2、haiku 0/2、舊 2/2；haiku 兩發都由裁決者自查補上」；結論 3、5 同批補
-6. C1（含 C5）｜Important｜限制段「新做法多抓到的真問題（G2 的 ⑩、G3 的 §3.5 對新功能沒有判準）」兩例都不成立：⑩ 在當時的正確答案 S4-a.md:59 就有、舊組也看到；§3.5 新功能那句源自 ee68e72（污染），G3-new-2 ae16a9:11 審查者自己承認
+6. C1（含 C5）｜Important｜限制段「新做法多抓到的真問題（G2 的 ⑩、G3 的 §3.5 對新功能沒有判準）」兩例都不成立：⑩ 在當時的正確答案 S4-a.md:59 就有、舊組也看到；§3.5 新功能那句源自 35e94a4（污染），G3-new-2 ae16a9:11 審查者自己承認
    - 改法：刪掉這個括號，或換成查得到出處、沒污染、只有新組抓到的例子並附位置
 7. B1＋D2｜Smells（兩人標 Important，我降級：G4 本來就作廢、不計命中，「不重跑」的決定在兩層都會這樣測的情況下仍成立）｜:162「3 筆都是審查者」錯，1 筆是 G4-new-1 裁決者
    - 改法：「2 筆審查者、1 筆裁決者查證時」
 8. C3＋D7｜Smells（兩人標 Important，我降級：參考列不計分，沒有結論依賴它）｜K3 參考：G2-new-1 judge :22 屬第 2 條 ⑩ 不是 K1；G2-hk-1 judge :19 的機制是「沒寫插在哪一行」，G2-old-1 a594bb:8 是「沒記哪個變異」，都不是 K3 原句（S4-a.md:40，寫死紅數、耦合斷言數）的機制；另 G2-new-2 ab6459:32、G2-hk-2 a21bd9:17 在 Not reported 也沾到
    - 改法：K3 照原句描述，這幾處改列「沾邊」，引用改 judge :20–22
-9. D5｜Smells（D 標 Important，我降級：污染結論不變，a4ed41f 確實是文件引的那句片語的來源）｜K3 最早寫進全域規則是 713038a，a4ed41f 是改寫
-   - 改法：「K3 ← 713038a（a4ed41f 改寫成現在的措辭）」，設計文件 :313 與量測文件 :208 同批
+9. D5｜Smells（D 標 Important，我降級：污染結論不變，544ccdf 確實是文件引的那句片語的來源）｜K3 最早寫進全域規則是 3fe445a，544ccdf 是改寫
+   - 改法：「K3 ← 3fe445a（544ccdf 改寫成現在的措辭）」，設計文件 :313 與量測文件 :208 同批
 10. D6｜Smells（D 標 Important，降級：「主要」在數字上成立，只是措辭）｜結論 1「剩下的是…派工、等待、逐條查證」—— rev_max_s 是單一審查者自己的耗時，剩下的含審查者沒同時開跑的空檔
     - 改法：刪「等待」，寫「剩下的含裁決者自己的工作，以及審查者開跑時間的空檔（沒拆）」
 11. D4 末項｜Smells｜:262「haiku 組的 0/… 多半是用 Bash 的 sed／cat 讀」—— 實查是 `cat … | head`、grep、awk，多半只看一段，「多半」也沒數
@@ -83,7 +83,7 @@ Critical 0 / Important 6 / Smells 5
 
 ## 處置
 
-- 採納 1–6（Important）全部修掉，7–11（Smells）照改，都在 1e209ef；不需使用者決定
+- 採納 1–6（Important）全部修掉，7–11（Smells）照改，都在 896ff46；不需使用者決定
 - 主對話另外核過：Read 配對腳本重跑結果相同（G3 截斷在 544 行、G2-hk-2 在 643 行）；被擋那筆 xzW1pm 的 meta 是 general-purpose（裁決者）；費用在多筆 result 間相同；K5 三條沾邊原句與 K6 haiku 審查者沒報都用 sed／grep 印過
 - 需要外部查證的兩項（父 session 第一個時間戳在 headless 開機前或後、截斷上限的單位）沒查，量測文件已寫「沒查」
 

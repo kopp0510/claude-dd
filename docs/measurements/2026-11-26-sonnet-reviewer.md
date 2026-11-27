@@ -1,6 +1,6 @@
 # code-reviewer 改用 sonnet 之後，步驟 4 抓不抓得到已知錯誤（2026-11-26）
 
-`72550ef` 起 `agents/code-reviewer.md` 是 `model: sonnet`，`d74915d` 起只給 Read、Grep、Glob、Bash。拿 2026-10-24 S5 的素材（G2、G3 兩段 diff、已知錯誤 K1、K4、K5）跑一組 sonnet 審查者，跟當時的 A 組（opus 審查者）、B 組（haiku 審查者）比。
+`eab4b40` 起 `agents/code-reviewer.md` 是 `model: sonnet`，`01105a8` 起只給 Read、Grep、Glob、Bash。拿 2026-10-24 S5 的素材（G2、G3 兩段 diff、已知錯誤 K1、K4、K5）跑一組 sonnet 審查者，跟當時的 A 組（opus 審查者）、B 組（haiku 審查者）比。
 
 ## 做法（跑之前寫死）
 

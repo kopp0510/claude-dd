@@ -1,4 +1,4 @@
-# S1-c（審查者 C：全域模板、dd-loop、dd-init 與 agent 定義）— 2026-11 提示文字稽核的改動（`2636b36..`）
+# S1-c（審查者 C：全域模板、dd-loop、dd-init 與 agent 定義）— 2026-11 提示文字稽核的改動（`1290eb5..`）
 
 ## 派工
 
@@ -20,7 +20,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 >
 > ## 範圍
 > repo：<repo>（它的上一層不是 git repo；git 指令用 `git -C <repo>`）
-> 要審的是 `git diff 2636b36`（到工作目錄；工作目錄 = HEAD `ecfc89c`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
+> 要審的是 `git diff 1290eb5`（到工作目錄；工作目錄 = HEAD `c74f115`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
 > 步驟 3（code-simplifier）跑過了，沒有改任何檔。
 >
 > ## 審查材料（只有這一個檔）
@@ -43,7 +43,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 > - 來源是 2026-11 對提示文字做的三輪稽核（目標模型 Claude Fable 5.2）：收斂強調記號、更正過期或互相矛盾的句子、把全域模板的「領域陷阱」搬到 `skills/dd-loop/SKILL.md`、改全域 §6.2「不做：自動重試」的寫法、修 `skills/self-improving-agent`。
 > - `skills/self-improving-agent` 是收編的第三方 skill；本地改動逐條記在 `skills/self-improving-agent/CLAUDE.md` 的「Differences from upstream」。repo 根 `CLAUDE.md` 規定：改過的 skill 部署前要由 subagent 乾跑；說上游「沒寫」某件事之前要對過該 skill 目錄的每個 `.md`。
 > - 全域 §6.2 的新舊寫法做過行為量測，紀錄在 `docs/measurements/2026-11-19-global-6.2-retry.md`。
-> - 這段範圍裡先前的 16 個 commit（`c0f6d33` 到 `3ed8a01`）當時都沒有走過審查，這次是第一次審。
+> - 這段範圍裡先前的 16 個 commit（`e8bd89e` 到 `b5e9f96`）當時都沒有走過審查，這次是第一次審。
 >
 > ## 要找的（文件與指示文字的錯，比照程式碼的 bug）
 > 1. 照字面做會做錯、做不出來，或兩種讀法會得出不同結果的句子（寫出兩種讀法各會怎樣）。
@@ -74,7 +74,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 
 ## 發現
 
-審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `ecfc89c`。
+審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `c74f115`。
 
 【我讀了什麼】
 - 審查材料 <scratchpad>/s4/diff-pack.md：第 1 部分 1–1695 全讀；第 2 部分 1692–1695；第 4 部分 7323–7376。
@@ -83,16 +83,16 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 - 另外從 repo 讀：install-dd-pipeline.sh 50–75、1455–1465；scripts/dd-stop.sh 100–110；docs/designs/2026-10-30-global-claude-md-slim-design.md 25–40；CLAUDE.md 130–145、275–294。
 
 【What I ran】
-- `git log --oneline 2636b36..HEAD` → 17 個 commit，c0f6d33 到 ecfc89c。
-- `git tag --contains 2636b36` → 只有 v1.6.16，2636b36 本身就是 v1.6.16。所以這 17 個 commit 都該記在「## 未發布」。
-- `git diff 8dcaa73^ 8dcaa73 -- templates/global/CLAUDE.md` → 只有 §6.2 一行換成三行。8dcaa73 的模板 blob 是 45b85ce，與 HEAD 相同（材料第 1442 行 `index 5672e6d..45b85ce`）。
-- `git diff 8dcaa73 HEAD -- templates/global/CLAUDE.md` 再 grep §6.2 → 沒有輸出，8dcaa73 之後 §6.2 沒再改過。
+- `git log --oneline 1290eb5..HEAD` → 17 個 commit，e8bd89e 到 c74f115。
+- `git tag --contains 1290eb5` → 只有 v1.6.16，1290eb5 本身就是 v1.6.16。所以這 17 個 commit 都該記在「## 未發布」。
+- `git diff 51f736a^ 51f736a -- templates/global/CLAUDE.md` → 只有 §6.2 一行換成三行。51f736a 的模板 blob 是 45b85ce，與 HEAD 相同（材料第 1442 行 `index 5672e6d..45b85ce`）。
+- `git diff 51f736a HEAD -- templates/global/CLAUDE.md` 再 grep §6.2 → 沒有輸出，51f736a 之後 §6.2 沒再改過。
 - 把模板 diff 的 `-` 行（材料 1467–1479、1490–1494，去掉 `-`、把 ⚠️⚠️ 換成 ⚠️）和 dd-loop 3773–3790 做 diff → 一字不差。
 - 在 repo 裡 git grep 以下字串，沒有過期的引用：`read-then-write|advisory lock|rebase-merge|隔離級別|領域陷阱`、`under-trigger|任何 \`.md\` 檔|優化 skill`、`2026-07 重整`、`⚠️⚠️`（模板、dd-loop、dd-init 都是 0）。
 - `git grep 本地備份|官方 code-reviewer` → install-dd-pipeline.sh:59 還寫「2 個官方 agent 本地備份」，CLAUDE.md:34、94 與 README.zh-TW.md:56 也這樣寫，詳見 Not reported。
 - `git grep 'Task tool'` → install-dd-pipeline.sh:1461 還印「供 wrapper skills 透過 Task tool 調用」。
 - `git grep '^allowed-tools:'` → 用到 Agent 的 skill（code-simplifier、design-brainstorm、plan-review、task-planner）都寫 `Agent`，前後一致。
-- `git show -s a372fe3` → 這是 claude-dd 自己的 commit（2026-06-23「frontend-design 更新至上游最新版」）。`git diff a372fe3 febdc45^ -- skills/frontend-design/SKILL.md` → 期間只改過 description，內文沒動。
+- `git show -s 7278dec` → 這是 claude-dd 自己的 commit（2026-06-23「frontend-design 更新至上游最新版」）。`git diff 7278dec 689391a^ -- skills/frontend-design/SKILL.md` → 期間只改過 description，內文沒動。
 - `git grep '§3\.9'`：CLAUDE.md:157–160 寫了理由——放在 §3.9 裡的東西，沒跑迴圈的專案會跳過；dd-stop.sh:107 規定暫停期間「不呼叫 `dd-loop`」。
 
 【Critical】
@@ -113,9 +113,9 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
    - 情境三：模型讀了指標句，判斷自己在「修」而不是「驗」，於是不去讀。
    佐證：repo CLAUDE.md:159–160 自己記過這個理由：「§3.9 的前言是…放在裡面的話，沒跑迴圈的專案會連這些判準一起跳過」。搬到更窄的 dd-loop，跳過的範圍更大。
 
-2. Important（建議標「需使用者決定」）｜commit c0f6d33；docs/designs/2026-10-30-global-claude-md-slim-design.md:33
+2. Important（建議標「需使用者決定」）｜commit e8bd89e；docs/designs/2026-10-30-global-claude-md-slim-design.md:33
    原文：「使用者決定：§3.9「規則」裡 8 條驗證教訓（race 與交易、併發驗法、擋誤用機制三件事、git 進行中狀態、鑑別力測試、0 紅先疑實驗、識別符 git grep、清點分母）**留在全域**」
-   錯在哪：c0f6d33 把其中三條（race 與交易、併發驗法、git 進行中狀態）搬出全域。commit 訊息只寫「依 prompt-audit」，沒有新的使用者決定；設計文件也沒更新，仍寫這 8 條留在全域。
+   錯在哪：e8bd89e 把其中三條（race 與交易、併發驗法、git 進行中狀態）搬出全域。commit 訊息只寫「依 prompt-audit」，沒有新的使用者決定；設計文件也沒更新，仍寫這 8 條留在全域。
    失敗情境：這等於用 audit 的建議推翻有紀錄的使用者決定。之後的人讀設計文件，會以為 8 條都還在全域；或者拿這次的搬移當前例，繼續搬剩下的 5 條。
 
 3. Important｜CHANGELOG.md「## 未發布」（材料 13–53）
@@ -140,15 +140,15 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
    原文：「建訂單連線中斷時兩邊都先查過才重送」
    錯在哪：同一份量測材料 270 寫「S4 兩臂有效的只有 B 的 1 發，所以 S4 只能當跡象」。結論句和 CHANGELOG 都拿掉了這個但書，一次跡象讀起來像是兩臂都量到的結果，也就是 §3.10 ② 那一類。
    另一處：結論句「舊寫法 10 發都先查原因」也算進了照判定式無效的發次：S2 的 A 臂 5 發都有 denial，S2b 的 A 臂有 1 發 `ps` denial（材料 255、269）。
-   註：第 ④ 項本身查證成立。§6.2 的新文字與量測 B 臂（8dcaa73）逐字相同，HEAD 之後沒再改。
+   註：第 ④ 項本身查證成立。§6.2 的新文字與量測 B 臂（51f736a）逐字相同，HEAD 之後沒再改。
 
 2. Smell｜templates/global/CLAUDE.md 材料 1643
    原文：「5. 模糊 → 照 §6.1 判斷:有 ≥80% 把握就動手並寫明假設,否則用 AskUserQuestion 問」
    錯在哪：§6.1 還有「回問」的三個條件（理解錯會浪費大量時間、涉及設計取捨、慣例衝突），這裡只摘了 80% 那一條。只讀 §7.1 的人會漏掉那三個條件。
 
 3. Smell｜skills/frontend-design/SKILL.md 材料 3798
-   原文：「內文是 2026-06-23 同步的上游版(commit a372fe3)」
-   錯在哪：a372fe3 是 claude-dd 自己的 commit，不是上游 commit。拿這個 hash 去上游 repo 查授權來源的人會找不到。宣稱本身成立：a372fe3 之後內文確實沒改過，只動了 description。
+   原文：「內文是 2026-06-23 同步的上游版(commit 7278dec)」
+   錯在哪：7278dec 是 claude-dd 自己的 commit，不是上游 commit。拿這個 hash 去上游 repo 查授權來源的人會找不到。宣稱本身成立：7278dec 之後內文確實沒改過，只動了 description。
 
 4. Smell｜templates/global/CLAUDE.md 材料 1617
    原文：「對方那一側的暫時性失敗(連線中斷、服務忙或被限流、檔案被別的行程鎖住)」
@@ -188,11 +188,11 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 | 發現 | 級別 | 處置 |
 |---|---|---|
 | S1-c-1 「領域陷阱」搬到 dd-loop 之後，迴圈外的修改拿不到 | Important | 採納，改寫了指標句，搬不搬回去交使用者決定（見 S1-c-2）。模板那句改成：碰到這類修改就用 Read 讀 `~/.claude/skills/dd-loop/SKILL.md` 的那一節，迴圈外的修改、迴圈暫停中也一樣（讀檔不算呼叫 `dd-loop`）。`README.md`、`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md` 講 dd-loop 的那一句補上「領域陷阱」。改寫有沒有用另外量了，新舊各 8 發、16 發都有效：舊指標到了 4 發（3 發呼叫 Skill `dd-loop`、1 發用 Read），改寫後到了 8 發（都是用 Read）。只有一個 prompt（資料庫 race），「到了」只證明讀了那個檔。紀錄在 `docs/measurements/2026-11-20-domain-traps-pointer.md`。後續：使用者 2026-11-20 決定搬回全域模板，S2 段落做了，指標句與補在 README、ARCH 的那一句都拿掉。 |
-| S1-c-2 `c0f6d33` 把三條教訓搬出全域模板，和 2026-10-30 的使用者決定相反 | Important（審查者建議標「需使用者決定」） | 需使用者決定，寫這份報告時還沒問到答案。查證：`docs/designs/2026-10-30-global-claude-md-slim-design.md` 第 33 行確實記著那三條留在全域模板；搬走是 2026-11-18 稽核的一項，使用者當時同意套用那份 diff，但那份 diff 沒有把這個衝突列出來。現況是留在 dd-loop 加上 S1-c-1 的指標。兩個選項：留在 dd-loop（那一節 18 行，全域模板只留 2 行的指標；拿不拿得到靠指標）；搬回全域模板（每個 session 都載入，不靠指標）。CHANGELOG 的那一條寫明「留在哪一邊還沒問使用者」。後續：2026-11-20 用 AskUserQuestion 問了，使用者選搬回全域模板；S2 段落搬回，CHANGELOG 那一條跟著改寫。 |
+| S1-c-2 `e8bd89e` 把三條教訓搬出全域模板，和 2026-10-30 的使用者決定相反 | Important（審查者建議標「需使用者決定」） | 需使用者決定，寫這份報告時還沒問到答案。查證：`docs/designs/2026-10-30-global-claude-md-slim-design.md` 第 33 行確實記著那三條留在全域模板；搬走是 2026-11-18 稽核的一項，使用者當時同意套用那份 diff，但那份 diff 沒有把這個衝突列出來。現況是留在 dd-loop 加上 S1-c-1 的指標。兩個選項：留在 dd-loop（那一節 18 行，全域模板只留 2 行的指標；拿不拿得到靠指標）；搬回全域模板（每個 session 都載入，不靠指標）。CHANGELOG 的那一條寫明「留在哪一邊還沒問使用者」。後續：2026-11-20 用 AskUserQuestion 問了，使用者選搬回全域模板；S2 段落搬回，CHANGELOG 那一條跟著改寫。 |
 | S1-c-3 CHANGELOG「未發布」漏記 | Important | 採納，已修（與 S1-b-6、S1-d-1 同一件）。 |
 | S1-c-s1 CHANGELOG 與量測紀錄的結論拿掉了「只能當跡象」，也算進了無效的發 | Smell | 採納，已修（與 S1-d-2 同一件）：結論改成只用事先寫下的判定式，「失敗後第一個動作」標成事後多看的一項，照規則無效的發數寫出來。 |
 | S1-c-s2 §7.1 第 5 步只摘了 §6.1 的 80% 那一條 | Smell | 不採納。那一步寫的是「照 §6.1 判斷」，是指過去、不是取代；§6.1 每個 session 都載入，摘要漏的三個條件就在同一份檔。 |
-| S1-c-s3 frontend-design 把 `a372fe3` 寫得像上游的 commit | Smell | 採納，已修：寫明是 claude-dd 自己的 commit。 |
+| S1-c-s3 frontend-design 把 `7278dec` 寫得像上游的 commit | Smell | 採納，已修：寫明是 claude-dd 自己的 commit。 |
 | S1-c-s4 §6.2 把「檔案被別的行程鎖住」歸在「對方那一側」 | Smell | 屬實，沒改，轉新段落。那一句是 2026-11-19 量測的被測文字（審查者自己核過逐字相同）；改字就和量測紀錄對不上，要改得連量測一起重做。 |
 | S1-c-s5 dd-loop 的 description 與開頭沒提「領域陷阱」；ARCH 的描述過期 | Smell | 部分採納：`DD_PIPELINE_ARCHITECTURE.md` 與兩份 README（`README.md`、`README.zh-TW.md`）那一句補上了。dd-loop 自己的 description 沒改：改 description 會動到觸發，要另外做新 session 的觸發測試，而全域模板的指標句已經直接給了檔案路徑。後續：S2 搬回全域模板後，補上的那一句與指標句都拿掉。 |
 | S1-c-s6 安裝完成訊息還寫「Task tool」 | Smell | 採納，已修。`git grep -n 'Task tool'` 剩下的命中：`skills/security-audit/` 的兩個檔（那個 skill 自己對「Task tool」的定義，跨平台用語，不是這一輪要統一的對象）、CHANGELOG 與 `skills/self-improving-agent/CLAUDE.md` 描述這次改名的句子。`tests/test-install.sh` 改完後重跑，exit 0。 |

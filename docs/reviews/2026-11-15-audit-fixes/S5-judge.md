@@ -4,7 +4,7 @@
 
 ## 派工
 
-- 範圍：`git diff b3b2bf9`（表上這段的起點）到工作目錄。派工當下 HEAD = 63f4d6c，兩個 commit（S5-1 的 758dbc9、S5-2 的 63f4d6c），工作目錄乾淨。
+- 範圍：`git diff 8bb3e15`（表上這段的起點）到工作目錄。派工當下 HEAD = fbcd1dd，兩個 commit（S5-1 的 8f71da4、S5-2 的 fbcd1dd），工作目錄乾淨。
 - 步驟 3：派 `code-simplifier:code-simplifier`（包裝器會先試的那個類型），用的是這一段剛改好的 Prompt 模板第一版，範圍限定 `install-dd-pipeline.sh`、`tests/test-install.sh`、`.github/workflows/ci.yml` 這次改到的行。
   它逐處看過 5 處改動，結論是沒有要改的，沒有動任何檔（`git status` 0 行）。
 - 步驟 4：派 3 個 `code-reviewer`（下限，不帶 model 參數），同一則訊息裡平行派出。這一段的程式碼改動約 15 行，其餘是文件與一句 prompt，照改動分三個方向：
@@ -26,7 +26,7 @@
 
 - 採納的 Important 五條（B1、C1、C2、C3、C4）都修了；Smells 採納六條（B2、B3、B5、C5、C6、C7），駁回一條（B4：沒有另派乾跑臂，理由在 `S5-b.md`）。級別都沿用審查者標的，沒有調級。
 - C3 與 B5 併案：兩位審查者從不同角度指到同一句（C 說適用範圍不清與「不重排 import」不帶條件，B 說括號只點名兩項）。句子改了字，照根目錄 CLAUDE.md「會原樣進 subagent prompt 的句子只要改了字，之前真跑的證據就不算它的」重跑：
-  判定先 commit（6015e7b），再派第三輪 2 發，兩發都符合；結果在設計文件 S5-2「第三輪」。
+  判定先 commit（52d048d），再派第三輪 2 發，兩發都符合；結果在設計文件 S5-2「第三輪」。
 - 沒有「需使用者決定」的項目；沒有「需要外部查證」的項目。
 - 修完之後步驟 5 重跑的結果記在設計文件 S5 底下。
 

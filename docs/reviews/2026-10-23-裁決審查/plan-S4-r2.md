@@ -4,7 +4,7 @@
 
 ## 派工
 
-- 派工單：scratchpad 的 `judge_S4_r2.txt`（輪次 2、計畫換成照第 1 輪改寫後的 S4 一節、事實補「第 1 輪結果」「這輪改了哪裡」、haiku 實測、`8514fb2` 帶 G2 答案）
+- 派工單：scratchpad 的 `judge_S4_r2.txt`（輪次 2、計畫換成照第 1 輪改寫後的 S4 一節、事實補「第 1 輪結果」「這輪改了哪裡」、haiku 實測、`720f1b3` 帶 G2 答案）
 - 裁決者：`general-purpose`、`model: opus`，背景執行；約 7.5 分鐘（`duration_ms` 449539）、11 次工具；4 個 haiku 審查者（前提、隔離與洩題、量法、同步點與範圍）
 
 ## 發現（裁決者報告重點）
@@ -12,7 +12,7 @@
 **結論：`不通過（3 條重大）`**；需使用者決定：無
 
 - 【採納（重大）】
-  1. 輪2-R1-2、輪2-R2-2、輪2-R3-5：快照只隔離了 repo。每一發 `claude -p` 都會載入部署版 `~/.claude/CLAUDE.md`，裡面已有 G2、G3 修正之後才寫進去的教訓（K2 ← db0af00、K3 ← a4ed41f、K6 ← ee68e72，`git log -S` 查證），所有組一起灌水；洩題檢查只 grep 兩個字串，抓不到；禁區沒含 `~/.claude/projects/`
+  1. 輪2-R1-2、輪2-R2-2、輪2-R3-5：快照只隔離了 repo。每一發 `claude -p` 都會載入部署版 `~/.claude/CLAUDE.md`，裡面已有 G2、G3 修正之後才寫進去的教訓（K2 ← 85f921e、K3 ← 544ccdf、K6 ← 35e94a4，`git log -S` 查證），所有組一起灌水；洩題檢查只 grep 兩個字串，抓不到；禁區沒含 `~/.claude/projects/`
   2. 輪2-R3-1、輪2-R3-2、輪2-R3-6：`result.duration_ms`、`total_cost_usd` 的來源不存在 —— projects 的紀錄檔沒有 `result`（s4probe 實測 0 筆），計畫也沒帶 `--output-format stream-json --verbose`；父 session 有兩筆 `result`，只取一筆會少算；沒檢查 `permission_denials` 與預算中止
   3. 輪2-R2-3、輪2-R3-3：「審查者層新舊直接比，讀得出先交 diff 檔的效果」不成立 —— 同一格同時變了 diff 檔、探索預算、派工指令、層數
 - 【採納（小事）】7 條：舊做法父 session 的參數寫明；brief 要 grep 不含答案；K 先對到快照程式碼位置；G4「讀完」判準收緊；實驗輸入收進 repo；限制段寫明父層是 `claude -p`；命中表用 `sed -n` 印原句比對

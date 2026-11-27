@@ -4,7 +4,7 @@
 
 ## 派工
 
-- 範圍：`git diff e4ec5cc`（`e4ec5cc` 是表上這段的起點，到工作目錄）。派工當下 HEAD = 8e91309，六個 commit（S7-1 的 f53d11a、S7-2 的 1b33cae、S7-3 的 d0e72b1 與它的更正 abf3d18、兩個文件補正 83c18ee 與 8e91309），工作目錄乾淨、沒有未追蹤的檔。
+- 範圍：`git diff a4d9185`（`a4d9185` 是表上這段的起點，到工作目錄）。派工當下 HEAD = 808cf87，六個 commit（S7-1 的 2c3a277、S7-2 的 7cc3289、S7-3 的 12be2fd 與它的更正 694d06c、兩個文件補正 917f4df 與 808cf87），工作目錄乾淨、沒有未追蹤的檔。
 - 步驟 3：派 `code-simplifier:code-simplifier`，範圍是 `scripts/githooks/claude-md-size.sh` 與 `scripts/githooks/pre-commit`。沒有含 `tests/test-gate.sh`：包裝器 `skills/code-simplifier/SKILL.md` 的預設是不含測試檔、使用者要求才包含。
   它交回「沒有改」，並列了四處可以改但沒改的地方（訊息字首抽成函式、`resolve_limit()` 裡判兩次 `[ -n "$tag" ]`、`--staged` 那段結尾的 `exit 0`、後段的 `rc=0 … exit $rc`）。我核對過：兩支腳本與派工前的備份 `cmp` 相同、`git status --short` 是空的。
 - 步驟 4：派 4 個 `code-reviewer`（下限是 3，不帶 model 參數），同一則訊息裡平行派出。多派一個的理由：這一段有四種性質不同的東西，各給一個審查者一個方向 ——
@@ -63,9 +63,9 @@ C 的第 1 行自己寫的是 Smells 6，實際列了 7 條。逐條的原文在
 
 ## 這一段自己犯的錯（給步驟 7）
 
-1. **帶著一個紅燈 commit**（`d0e72b1`）。本機照 ci.yml 逐 step 跑的腳本每步都印 rc、最後印「沒過的 step 數」，但整支一律回 0；我用 `&&` 把 `git commit` 接在後面，彙總印了 1 照樣 commit，訊息還寫了「全部 rc=0」。下一個 commit `abf3d18` 更正。腳本已改成有一步沒過就回非 0。
+1. **帶著一個紅燈 commit**（`12be2fd`）。本機照 ci.yml 逐 step 跑的腳本每步都印 rc、最後印「沒過的 step 數」，但整支一律回 0；我用 `&&` 把 `git commit` 接在後面，彙總印了 1 照樣 commit，訊息還寫了「全部 rc=0」。下一個 commit `694d06c` 更正。腳本已改成有一步沒過就回非 0。
 2. **那個紅燈本身**：`tests/CLAUDE.md` 的 `test-gate.sh` 那一列原本就有 2 個「→」又含 commit 與 review 兩個字，我加的說明多了一個「→」，整行被 CI「迴圈步數第五方」當成迴圈的箭頭摘要。
-3. **同一張清單寫了四處，補的時候只補一處**（C2、D2）：`83c18ee` 把「不經過 pre-commit 的 commit」補進 `scripts/githooks/CLAUDE.md`，`ci.yml` 的註解、CHANGELOG、架構文件還是只列兩種。現在另外三處只舉例並指到那一處。
+3. **同一張清單寫了四處，補的時候只補一處**（C2、D2）：`917f4df` 把「不經過 pre-commit 的 commit」補進 `scripts/githooks/CLAUDE.md`，`ci.yml` 的註解、CHANGELOG、架構文件還是只列兩種。現在另外三處只舉例並指到那一處。
 4. **機制憑印象寫**（B3、C4）：「不排序拿到最舊的 tag」沒有跑過；⑯ 的資料裡 `v0.0.0` 剛好既是最舊的、也是字典序第一個，兩種說法在那裡分不出來。
 5. **描述測試涵蓋的範圍時沒有對測試碼**（C3）：寫了「⑯ 跑這一層的三個檔」，實際上上限檔是測試自己寫的。
 6. **步驟 4 期間自己的三個失誤**，都是當場對不上才發現的：

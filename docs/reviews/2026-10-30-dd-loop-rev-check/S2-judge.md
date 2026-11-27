@@ -1,10 +1,10 @@
 # S2-judge（主對話查證）— CI 擋部署內容裡指不到東西的 ~/.claude/ 路徑
 
-段落：S1 做完後，使用者問「其他 3 條是哪些」，選了「做第 2 條」（根 CLAUDE.md「cherry-pick 上來的 commit 要重核」那條）。進度表同一份 `docs/designs/2026-10-30-dd-loop-rev-check-design.md`，段落起點 `2aeeacc`，S2-1 是 `80236ec`。中等任務，沒跑 plan-review。
+段落：S1 做完後，使用者問「其他 3 條是哪些」，選了「做第 2 條」（根 CLAUDE.md「cherry-pick 上來的 commit 要重核」那條）。進度表同一份 `docs/designs/2026-10-30-dd-loop-rev-check-design.md`，段落起點 `952ac19`，S2-1 是 `265a225`。中等任務，沒跑 plan-review。
 
 ## 派工
 
-- 審查範圍：`git diff 2aeeacc 80236ec`。diff 檔放 session 暫存目錄：整段 diff、步驟 3 並行的說明、根 CLAUDE.md 那條的舊版、已跑過的 12 種變異＋範圍全錯與預期值、66 筆的第一層分佈
+- 審查範圍：`git diff 952ac19 265a225`。diff 檔放 session 暫存目錄：整段 diff、步驟 3 並行的說明、根 CLAUDE.md 那條的舊版、已跑過的 12 種變異＋範圍全錯與預期值、66 筆的第一層分佈
 - 步驟 3 的 code-simplifier 與審查並行：沒改任何一行，沒找到行為問題
 - 派 3 個 `code-reviewer`（下限）：A 新 step 的 bash 邏輯與「repo 有 ≠ 部署有」、B 根 CLAUDE.md 改寫與「管不到的」是否屬實、C 同步點與 66 筆裡有沒有被放過的死指標
 

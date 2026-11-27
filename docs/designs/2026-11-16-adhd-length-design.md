@@ -13,7 +13,7 @@
 
 ## 動手前量到的
 
-- `output-styles/adhd.md`（起點 `7e1ff44` 那一版，48 行）全檔沒有行數或字數上限。第 7 行寫「回答不只是要短，而是要排成…」；「誰優先」寫 CLAUDE.md 的規則「位置與內容不因下面任何一條而刪掉」；規則 9 寫「需要完整時照實全列」
+- `output-styles/adhd.md`（起點 `dd6bffa` 那一版，48 行）全檔沒有行數或字數上限。第 7 行寫「回答不只是要短，而是要排成…」；「誰優先」寫 CLAUDE.md 的規則「位置與內容不因下面任何一條而刪掉」；規則 9 寫「需要完整時照實全列」
 - 2026-10-29 那批驗收的回覆長度，開風格與沒開差不多。指令：`jq -r 'select(.kind=="result")|.result|length' docs/measurements/2026-10-29-adhd-style/out/*.jsonl`，依檔名順序得 499、592、347、297（ADHD 臂的 p1-r1、p1-r2、p2-r1、p2-r2）與 550、620、313、391（default 臂同序）。那支 `check.sh` 的三條鑑別斷言沒有一條量整則的長度
 - 使用者最近三個 session 的回覆長度。來源是本機 `~/.claude/projects/` 下這個專案目錄的 jsonl（不進 repo）。判定式：主對話（`isSidechain` 不為真）的 user 訊息裡，內容是純文字、而且不是以 `<`、`Base directory`、`Another Claude`、`This session is being`、`Skill /`、`[Cross-session`、`# DD` 開頭的，算使用者親手打的一輪；每輪取下一個使用者訊息之前最後一則有文字的 assistant 訊息，數非空行與字元（python `len`）：
 
@@ -42,7 +42,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 風格檔加長度上限並實測 | DONE | — | `docs/measurements/2026-11-16-adhd-length/selftest.sh` 全部如預期；`check.sh out/batch<最後一批>` exit 0；LICENSE 引句 `grep -F` 全中；`tests/test-install.sh` 過 | 7e1ff44..2f2b1fc |
+| S1 | 風格檔加長度上限並實測 | DONE | — | `docs/measurements/2026-11-16-adhd-length/selftest.sh` 全部如預期；`check.sh out/batch<最後一批>` exit 0；LICENSE 引句 `grep -F` 全中；`tests/test-install.sh` 過 | dd6bffa..cef7f22 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -79,7 +79,7 @@
 - 第 2 批之後加的做法（2026-11-16）：第 3 批是最後一批（措辭第 3 批、環境重跑第 2 次）。先用保留題調措辭，規則寫在 `docs/measurements/2026-11-16-adhd-length/CLAUDE.md`「保留題」：最多 10 發、每發 10 行內而且 400 字內才進第 3 批、新版措辭不拿 P1 到 P3 試；另有 1 發 OLD 臂的 P3 環境檢查
 - 步驟 4 之後加的做法（2026-11-17）：審查改了風格檔的字，步驟 5 用改好的那一份再跑一批（第 4 批）。規則寫在 `docs/measurements/2026-11-16-adhd-length/CLAUDE.md`「第 4 批」：判準不動、只跑一批、不過就停下照實回報
 - 現況（2026-11-17）：步驟 3、4 做完，步驟 5 的第 4 批**不通過**（長度六發全過，一發沒過「沒講還有幾項」守門），照規則停在步驟 5，S1 留 `IN_PROGRESS`。
-  等使用者決定：接受審查後這一份（blob `8368e8d`）、退回第 3 批通過的那一份（blob `2f82e10`，`git show 49e55b4:output-styles/adhd.md`）、或另外處理。決定之後才做步驟 6 到 8。數字在量測目錄 CLAUDE.md「第 4 批的結果」
+  等使用者決定：接受審查後這一份（blob `8368e8d`）、退回第 3 批通過的那一份（blob `2f82e10`，`git show 7ef3f61:output-styles/adhd.md`）、或另外處理。決定之後才做步驟 6 到 8。數字在量測目錄 CLAUDE.md「第 4 批的結果」
   - 退回不保證那一格會過：各批 NEW 臂 P1 講「還有哪些沒列」的那一行，`2f82e10` 的兩發是「另有 I1、I2 和 4 項 Minor 不急，要看再說。」「另有 6 項（I1、I2、M1 到 M4）不急，要看再說。」，
     前一發過是因為帶了「4 項」；`8368e8d` 的兩發是「另有 6 項不急（I1、I2、M1 到 M4），細節：`review.md`。」「另有 I1、I2 與 M1 到 M4 不急，要看再說。」。各 n=2，這一格分不出兩份的差別；退回確定會丟掉的是審查的修正
   - 選退回時不能只還原 `adhd.md`：`output-styles/LICENSE.txt`（規則 4 那句、break 6 的註記）與 CHANGELOG 那一條（必留清單、哪一份過）寫的都是 `8368e8d`，要一起改回

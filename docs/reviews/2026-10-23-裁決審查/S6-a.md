@@ -24,7 +24,7 @@ diff 檔：<scratchpad>/S6-review-diff.txt（共 4517 行）。
 審查者交回的原文（逐字，從 subagent 紀錄檔的交回訊息取出）：
 
 ````text
-Critical 0 / Important 4 / Smells 0。審查範圍：S6 的 diff（git diff fb6f816，含工作目錄），重點看 templates/global/CLAUDE.md §3.9 步驟 4 與 commands/dd-init.md 蓋章區塊（52–149 行）。diff 全是規則文字、沒有新的程式結構，所以沒套 Fowler 壞味道清單。
+Critical 0 / Important 4 / Smells 0。審查範圍：S6 的 diff（git diff c8a7a19，含工作目錄），重點看 templates/global/CLAUDE.md §3.9 步驟 4 與 commands/dd-init.md 蓋章區塊（52–149 行）。diff 全是規則文字、沒有新的程式結構，所以沒套 Fowler 壞味道清單。
 
 [Important] templates/global/CLAUDE.md:291 對上 :296（diff 檔 3902、3907）。同一節對「某個審查者缺報告、又補派不回來」給了兩種結局。
   Failure：:291 寫「補不了就照實寫進報告，不能當作它沒有發現」，照這句是記一筆然後續行；:296 寫「有審查者的報告不完整又補不了 → 不算跑過步驟 4，照實說，不續行」。審查者沒回來，本身就等於報告不完整，讀的人判斷不了該續行還是停下。

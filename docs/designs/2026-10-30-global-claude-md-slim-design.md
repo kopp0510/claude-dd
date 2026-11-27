@@ -7,8 +7,8 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 新 skill dd-loop + 全域 §3.9 瘦身 | DONE | — | 全域模板行數與 bytes 下降（前後 `wc -lc`）；搬走的每一句在 `skills/dd-loop/SKILL.md` 找得到原文；`claude -p` 沙盒正例（段落開始、做到一半接手、步驟 4 前、步驟 8 前）jsonl 有 `Launching skill: dd-loop` 且 `permission_denials` 裡沒有 Skill；小改動反例不叫；§3.9 引用清單（A、B 兩組樣式）每筆都有判定；ci.yml 讀文件的 step 本機全 exit 0 | f46d4de..a34cda1 |
-| S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | DONE | S1 | `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 bash 3.2 綠（含兩個變異會紅）；ci.yml「蓋章區塊每一行都在升級清單裡」負面測試紅、還原綠；新區塊關卡五條 grep 都命中；部署後 `cmp` 三支一致；`claude -p` 跑部署版 `/dd-init`：同意才 `--apply`、輸出只有一個 rev 13 標記、拒絕時檔案不變 | f2ab54a..7db79a9 |
+| S1 | 新 skill dd-loop + 全域 §3.9 瘦身 | DONE | — | 全域模板行數與 bytes 下降（前後 `wc -lc`）；搬走的每一句在 `skills/dd-loop/SKILL.md` 找得到原文；`claude -p` 沙盒正例（段落開始、做到一半接手、步驟 4 前、步驟 8 前）jsonl 有 `Launching skill: dd-loop` 且 `permission_denials` 裡沒有 Skill；小改動反例不叫；§3.9 引用清單（A、B 兩組樣式）每筆都有判定；ci.yml 讀文件的 step 本機全 exit 0 | a2dbb9b..4cd8382 |
+| S2 | /dd-init 蓋章區塊瘦身並跳 rev 12→13 | DONE | S1 | `tests/test-dd-init-upgrade.sh` 在 ubuntu 與 bash 3.2 綠（含兩個變異會紅）；ci.yml「蓋章區塊每一行都在升級清單裡」負面測試紅、還原綠；新區塊關卡五條 grep 都命中；部署後 `cmp` 三支一致；`claude -p` 跑部署版 `/dd-init`：同意才 `--apply`、輸出只有一個 rev 13 標記、拒絕時檔案不變 | 68b4bf2..f9c1a64 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -36,7 +36,7 @@
 
 ## 假設
 
-- ⚠️ 未經審查：確認輪 3C 不通過（2 條重大），其改法未經審查：Phase 1 改以「行」對照新舊範本判、範本段落清單補標題／標記／維護小節、在地行放回同一步驟、歸零檢查只套換新範圍並改用整句識別字串、fixture 改為 rev 12／9／2(6a9addd)／8step-only(v1.1.0)／13 與機械 diff 核對；以及 3C 的小事（差異句範圍、permission_denials 判定統一、注入量判讀、檔案清單補 SKILL.md 與 UPGRADING、/tmp 改 scratchpad、正例跑 2 次、frontmatter、純文件段落步驟 3 只審不改、rental-management 手動處理）。第 3 輪（不通過，1 條重大）的改法在確認輪範圍內；其中重大 1 的原改法（結構性規則初版、三個 fixture）被確認輪推翻並改寫如上；第 3 輪的 8 條小事確認輪沒指出問題（已改進計畫（未經審查；在確認輪範圍內，確認輪沒指出問題））
+- ⚠️ 未經審查：確認輪 3C 不通過（2 條重大），其改法未經審查：Phase 1 改以「行」對照新舊範本判、範本段落清單補標題／標記／維護小節、在地行放回同一步驟、歸零檢查只套換新範圍並改用整句識別字串、fixture 改為 rev 12／9／2(b1227f7)／8step-only(v1.1.0)／13 與機械 diff 核對；以及 3C 的小事（差異句範圍、permission_denials 判定統一、注入量判讀、檔案清單補 SKILL.md 與 UPGRADING、/tmp 改 scratchpad、正例跑 2 次、frontmatter、純文件段落步驟 3 只審不改、rental-management 手動處理）。第 3 輪（不通過，1 條重大）的改法在確認輪範圍內；其中重大 1 的原改法（結構性規則初版、三個 fixture）被確認輪推翻並改寫如上；第 3 輪的 8 條小事確認輪沒指出問題（已改進計畫（未經審查；在確認輪範圍內，確認輪沒指出問題））
 
 - 新 skill 名 `dd-loop`（`ls skills/` 目前沒有同名）
 - 搬進 skill 的照原文（逐句搬，不改寫意思）；全域 §3.9 的 8 步可以各改寫成一行，關卡用原文。改寫的每一行都跟原句並排對照條件與指向（§3.10「縮短既有文字時」）
@@ -68,7 +68,7 @@
   - 與草稿不同：「規則」裡 4 條一行規則留在全域、沒搬（步驟 1、5 跑既有測試；巢狀 CLAUDE.md 逐層更新；gate 被擋時的處置；專案 CLAUDE.md 可覆蓋）。
     理由：它們不只在跑迴圈時用得到（任何 commit 都可能被 gate 擋、任何改碼都要逐層更新），而且 README 的 gate 對策段把它們寫成 §3.9 的規則；搬走只省 4 行
   - 搬走的：前言起點細節、步驟 3、4 的細則、步驟 8 的範圍指令與陷阱、步驟 7 與 8 的關係（6 條）
-  - 搬移對照（基準 `git show f46d4de:templates/global/CLAUDE.md` 的 §3.9，183 個非空行）：找不到的 3 行都是刻意改寫——
+  - 搬移對照（基準 `git show a2dbb9b:templates/global/CLAUDE.md` 的 §3.9，183 個非空行）：找不到的 3 行都是刻意改寫——
     「依序走:」→「依序走下面 8 步。」、步驟 4「例外見下」→「例外見 `dd-loop`」、步驟 8 標題行加「(指令見 `dd-loop`)」；條件與指向逐條對過沒掉。同時留在兩處的行：0
   - A 組引用判定：`ci.yml` 317/319/322/472（數 §3.9 步數）原地成立；根 CLAUDE.md「核心工作法」第 7、8 步細則那句改指 skill；手動同步觸發條件加 `skills/dd-loop/SKILL.md`；
     其餘根 CLAUDE.md（定義於 §3.9、§3.10 刻意放外面、四方一致、2026-09-12 踩雷史）原地成立；`DD_PIPELINE_ARCHITECTURE.md` 100、129 原地成立；
@@ -168,7 +168,7 @@ S2 是設計文件 `docs/designs/2026-10-30-global-claude-md-slim-design.md` 進
   - 測試 33 則 ✅：macOS `/bin/bash` 3.2＋BWK awk、docker `bash:5`＋gawk、docker `debian:stable-slim`＋mawk 三種都全綠
   - 空殼腳本（只 `exit 0`）：16 ✅／32 ❌，紅的是「沒有產生輸出檔」與各斷言的錯值
   - 變異 a（圍欄一律算範本，`tpl[nu] = 1`）：9 ❌，四版的 LOCAL5 圍欄內容不見、React 圍欄沒列進「部分行在清單中」
-  - 變異 b（終點遇到任何同級標題就停，拿掉 `!(… in L)`）：7 ❌，四版 LOCALV 跑到 `## CLAUDE.md 維護` 之後、6a9addd 與 v1.1.0 各留一行舊範本、純範本輸出不等於預期
+  - 變異 b（終點遇到任何同級標題就停，拿掉 `!(… in L)`）：7 ❌，四版 LOCALV 跑到 `## CLAUDE.md 維護` 之後、b1227f7 與 v1.1.0 各留一行舊範本、純範本輸出不等於預期
   - 11 個已蓋章專案的複本跑 `--plan`（只量測、不作驗收；內容沒印出來）全部 exit 0：
 
     | 專案 | 刪 | 留 | 相似 | 疑似改寫步驟 | 步驟 5 在地行 | 部分圍欄 | 區塊外範本行 |
@@ -269,7 +269,7 @@ S2 是設計文件 `docs/designs/2026-10-30-global-claude-md-slim-design.md` 進
 
 S2 使用者選定（2026-10-30，「照這份清單加」）：
 
-1. `tests/test-dd-init-upgrade.sh`（新增，ubuntu 與 bash32 job 都跑，照 `test-gate.sh` 的慣例）。fixture 從 git 歷史抽各版範本區塊（v1.6.12 rev 12、v1.6.4 rev 9、6a9addd rev 2、v1.1.0 只有 8step），抽出來先確認非空。各插入自編在地內容：步驟 4、8 底下各一行、步驟 5 一段縮排的圍欄專案指令、`驗證不過` 之後一行、步驟外一個在地小節、一行逐字等於清單外通用行（`---`）的在地行。新區塊用 `--template` 指向 repo 的 `commands/dd-init.md`。斷言（獨立於腳本自己的清單）：
+1. `tests/test-dd-init-upgrade.sh`（新增，ubuntu 與 bash32 job 都跑，照 `test-gate.sh` 的慣例）。fixture 從 git 歷史抽各版範本區塊（v1.6.12 rev 12、v1.6.4 rev 9、b1227f7 rev 2、v1.1.0 只有 8step），抽出來先確認非空。各插入自編在地內容：步驟 4、8 底下各一行、步驟 5 一段縮排的圍欄專案指令、`驗證不過` 之後一行、步驟外一個在地小節、一行逐字等於清單外通用行（`---`）的在地行。新區塊用 `--template` 指向 repo 的 `commands/dd-init.md`。斷言（獨立於腳本自己的清單）：
    - fixture 自編的每一行在地內容都出現在輸出，而且落在對應錨點底下
    - 該版範本的每一行（套用清單的排除條件），在新區塊以外出現 0 次（「保留但相似」列出的除外；「區塊外還有範本行」那則 fixture 不套這條，改斷言 `--plan` 列出那幾行）
    - 合併後只有一個 `dd-loop-version`、沒有重複的 `## 開發流程`

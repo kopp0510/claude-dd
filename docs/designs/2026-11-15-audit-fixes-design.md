@@ -29,13 +29,13 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 9d77062..5927484 |
-| S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | f4e15a0..0227f5b |
-| S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | 0dc3b53..575e144 |
-| S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | cf6beea..503a583 |
-| S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | DONE | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | b3b2bf9..41d98a7 |
-| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | DONE | — | 核對腳本：`bf7e654` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆（這份文件自己會提到這串字）；乾跑三臂與全新 session 補測三發的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字（56,111 → 46,424） | bf7e654..0dafca5 |
-| S7 | 根目錄 CLAUDE.md 大小上限（pre-commit 與 CI 都擋） | DONE | — | 拋棄式 repo 的情境（真的 `git commit` 經過 `scripts/githooks/pre-commit`）每一則都符合預期；變異對照表上每個變異都讓它對應的情境變 ❌（表外還有 ⑯ 抓不到的，記在 `scripts/githooks/CLAUDE.md`）；`shellcheck -S warning` 與 `/bin/bash`（3.2）都過；本機照 ci.yml 逐 step 跑全部 rc=0，新 step 的 log 印出大小、上限、上限取自哪裡；上限檔臨時改成 40000 時新 step rc≠0、還原後 rc=0；標 DONE 刪掉指路句之後 `wc -c CLAUDE.md` 是 46,424 | e4ec5cc..affb9da |
+| S1 | gate：dd.docfile 不收程式碼檔名、起點失效時的訊息、BLOCKED 申報 | DONE | — | `/bin/bash tests/test-gate.sh`（macOS 3.2）與 ubuntu:24.04 容器都 rc=0、新情境都是 ✅；變異（拿掉 dd.docfile 新檢查／起點失效訊息改回舊句／拿掉 BLOCKED 那一行訊息）各自只讓對應的新情境變紅；拋棄式 repo 實跑 `dd.docfile=main.py` 時 gate exit 1；本機照 ci.yml 逐 step 全過 | 02b53d3..d14fcc7 |
+| S2 | 流程文字：dd-loop 取不到起點的下一步、task-planner 的 BLOCKED、dd-init Phase 4 | DONE | S1 | 沙盒乾跑臂用指令核對：amend 臂交回的起點等於 gate 印的共同祖先 sha、起點檔沒被重寫；BLOCKED 臂的拋棄式 repo `git log --diff-filter=A --name-only -- docs/reviews` 有 `S1-BLOCKED.md`、之後 `--start-segment` exit 0、進度表 S1 的起點沒被改；Phase 4 三臂（值 true／false／沒有鍵）結論依序是已啟用／未啟用／未啟用；本機照 ci.yml 逐 step 全過（蓋章區塊沒動，rev 檢查照綠） | 133071e..60926a2 |
+| S3 | 安裝腳本：`--check` 看得出部署版與 repo 不同 | DONE | — | `/bin/bash tests/test-install.sh` 與 ubuntu:24.04 容器都 rc=0、T11 是 ✅；變異（把比對拿掉）→ T11 紅；真的跑 `./install-dd-pipeline.sh --check`：`plan-review` 那行印出「與 repo 不同」（本機部署版正好是舊的）、其他 skill 照舊、結束碼 0；本機照 ci.yml 逐 step 全過 | db8637e..ba09ba9 |
+| S4 | vendored 內容：self-improving-agent 死指標與評分表、agents 授權檔 | DONE | — | `grep -rn 'codex-install\|clawhub install' skills/self-improving-agent` 0 筆；`agents/memory-analyst.md` 不再有自己的分數定義、只指到 `reference/promotion-rules.md`；乾跑臂拿範例記憶照 memory-analyst.md 評分，Scope 是 2、三個分數等於照 promotion-rules.md 那張表算的；`agents/LICENSE.txt` 存在，兩份 README 與架構文件的授權段都列到它；本機照 ci.yml 逐 step 全過 | 5d9d68b..24fa564 |
+| S5 | `review` 包裝器與 `workflow-review` 退場、code-simplifier 包裝器補約束 | DONE | — | 本機照 ci.yml 逐 step 跑全部 rc=0；`tests/test-install.sh` 在 macOS `/bin/bash` 與 ubuntu:24.04 容器都 rc=0；沙盒 HOME 全新安裝後 `~/.claude/skills/review`、`~/.claude/commands/workflow-review` 都不存在、`commands/` 底下沒有子目錄；舊名的 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述；code-simplifier 的 A/B：舊 prompt 至少一發重排了 import 或把箭頭函式改成 `function`，新 prompt 每一發都沒有 | 8bb3e15..2aae361 |
+| S6 | 根目錄 CLAUDE.md 搬出 `claude -p` 實驗的做法與描述導覽段 | DONE | — | 核對腳本：`5a0d16e` 的根目錄 CLAUDE.md 照清單替換後與工作目錄那份逐位元組相同、每一塊整塊在目的檔恰好出現 1 次；本機照 ci.yml 逐 step 跑全部 rc=0；`git grep 'CLAUDE.md#殘留清理手動' -- . ':!docs/designs'` 0 筆（這份文件自己會提到這串字）；乾跑三臂與全新 session 補測三發的結果（判定見「段落與小任務」S6）；`wc -c CLAUDE.md` 前後的數字（56,111 → 46,424） | 5a0d16e..11fc8b9 |
+| S7 | 根目錄 CLAUDE.md 大小上限（pre-commit 與 CI 都擋） | DONE | — | 拋棄式 repo 的情境（真的 `git commit` 經過 `scripts/githooks/pre-commit`）每一則都符合預期；變異對照表上每個變異都讓它對應的情境變 ❌（表外還有 ⑯ 抓不到的，記在 `scripts/githooks/CLAUDE.md`）；`shellcheck -S warning` 與 `/bin/bash`（3.2）都過；本機照 ci.yml 逐 step 跑全部 rc=0，新 step 的 log 印出大小、上限、上限取自哪裡；上限檔臨時改成 40000 時新 step rc≠0、還原後 rc=0；標 DONE 刪掉指路句之後 `wc -c CLAUDE.md` 是 46,424 | a4d9185..6c46226 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -56,7 +56,7 @@
 
 ## 段落與小任務
 
-### 開工前查到的事實（2026-11-15，HEAD 0a46303，本機 macOS）
+### 開工前查到的事實（2026-11-15，HEAD 8e26e0d，本機 macOS）
 
 - `scripts/check-claude-md.sh`：`dd.docfile` 的驗證只有字元集（`*[!A-Za-z0-9._-]*|.|..|-*`），`CODE_EXT` 定義在它之後。拋棄式 repo 實跑：預設時 `a/main.py` 沒有 CLAUDE.md 的 commit 被擋；SKIP commit 之後 `--start-segment` rc=1（欠帳）；`git config --local dd.docfile main.py` 之後同一個 `--start-segment` rc=0，之後 `b/` 新增程式碼、沒有 CLAUDE.md 的正常 commit rc=0，`git status --short` 0 行
 - 同一支：`--segment-base` 失敗時只有一句「沒有可用的段落起點（沒記過，或起點已不在目前分支的歷史裡）：段落開始前先跑 … --start-segment」。拋棄式 repo 實跑：記起點 → `git commit --amend` 掉起點那個 commit → 再 commit 一筆 → `--segment-base` rc=1、stdout 空；照訊息跑 `--start-segment` 之後 `git diff <起點> --stat` 0 行
@@ -69,7 +69,7 @@
 
 ### S1 gate（動的是擋 commit 的規則，單獨一段）
 
-開工前提：跑一次 `/bin/bash tests/test-gate.sh`，記下 ✅ 數與 rc。→ 2026-11-15 HEAD 9d77062：rc=0、120 個 ✅、0 個 ❌。
+開工前提：跑一次 `/bin/bash tests/test-gate.sh`，記下 ✅ 數與 rc。→ 2026-11-15 HEAD 02b53d3：rc=0、120 個 ✅、0 個 ❌。
 
 - S1-1 拒絕把 `dd.docfile` 設成程式碼檔名
   - 檔案：`scripts/check-claude-md.sh`（`CODE_EXT` 定義之後加檢查：`DOC_FILE` 命中 `\.(CODE_EXT)$` 就印錯誤並 exit 1）、`tests/test-gate.sh`（⑫ 之後加 ⑬）、`scripts/CLAUDE.md`（「記憶檔名可設」補一句、變異表一列、擋不到的那幾類）、`tests/CLAUDE.md`
@@ -213,7 +213,7 @@ S4 的步驟 3–5（2026-11-15）：
 
 假設（S5 自己的；`plan-review` 審過）：
 
-- B1 退場 = 從 repo 刪掉 `skills/review/` 與 `commands/workflow-review/`（`git rm -r`）並從部署陣列拿掉。不另開 tag；取回用 `git checkout v1.6.14 -- skills/review commands/workflow-review`（`git diff v1.6.14 b3b2bf9 -- skills/review commands/workflow-review` 是空的，tag 已經在 origin 上）
+- B1 退場 = 從 repo 刪掉 `skills/review/` 與 `commands/workflow-review/`（`git rm -r`）並從部署陣列拿掉。不另開 tag；取回用 `git checkout v1.6.14 -- skills/review commands/workflow-review`（`git diff v1.6.14 8bb3e15 -- skills/review commands/workflow-review` 是空的，tag 已經在 origin 上）
 - B2 使用者機器上已部署的 `~/.claude/skills/review/`、`~/.claude/commands/workflow-review/` 不由安裝腳本清：`create_commands` 既有的清理迴圈（`deprecated_dd`）只認 `dd-*.md` 單檔，不涵蓋命名空間目錄與 skills 目錄，`--uninstall` 也只認現行部署清單。
   沿用 2026-08-04 的做法，在 `UPGRADING.md` 寫手動清理的指令；不擴充那個迴圈、不動 `~/.claude`
 - B3 不發版、不跳 `dd-loop-rev`；CHANGELOG 只寫進 `## 未發布`
@@ -234,7 +234,7 @@ S4 的步驟 3–5（2026-11-15）：
   - 驗證（其他方式 + 既有測試；沒有新行為可以寫成會失敗的測試，改的是部署清單）：本機逐 step 跑 ci.yml 全部 rc=0；負面測試（拋棄式副本，macOS 與 ubuntu 容器各一次）：`commands/` 多一個子目錄、`NS_COMMANDS` 多一個名字而目錄不在、`PROMOTED_SKILLS` 留著 `review` 而目錄刪掉，三個都要紅，還原回綠；
     那個 step 在沒有子目錄時 stderr 是空的（兩個平台）；`tests/test-install.sh` 整份在 macOS `/bin/bash` 與 ubuntu:24.04 容器 rc=0，容器另開一般帳號跑 `TEST_ONLY=T11`；
     沙盒 HOME 全新安裝 rc=0、輸出沒有「命名空間 Commands」那一行與 shell 錯誤、`~/.claude/commands/` 只有 `dd-init.md`，`--uninstall --yes` rc=0；
-    升級情境（沙盒 HOME 先裝 b3b2bf9 的內容、再裝新版）：兩個舊目錄還在，照 `UPGRADING.md` 新寫的指令清掉後 `--check` 正常；
+    升級情境（沙盒 HOME 先裝 8bb3e15 的內容、再裝新版）：兩個舊目錄還在，照 `UPGRADING.md` 新寫的指令清掉後 `--check` 正常；
     舊名的 `git grep`（`workflow-review`，以及濾掉 `self-improving-agent/skills/review` 的 `skills/review`；排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）：剩下的每一筆都要是「已退場」的敘述，逐筆列在下面的結果裡，不能有把它們當成還在的句子
   - commit：`chore: review 包裝器與 workflow-review 退場（S5-1）`
   - 結果（2026-11-15）：
@@ -246,12 +246,12 @@ S4 的步驟 3–5（2026-11-15）：
     - `tests/test-install.sh` 整份：macOS `/bin/bash` rc=0、行首 ❌ 0；ubuntu:24.04 容器三支測試加兩支 hook 測試都 rc=0，另開一般帳號跑 `TEST_ONLY=T11` rc=0（讀不到檔那一格有跑到）
     - T11 變異重跑（兩處 `-eq 1` 改 `-ge 1`）：rc=1「Skills 的 verification-gate 那一行應該有『無法比對』，實際：…已安裝（與 repo 不同，重跑安裝會更新）」；原版 rc=0
     - 沙盒 HOME 全新安裝 rc=0：輸出是「DD Pipeline Commands (1 個)」接「└── dd-init: 已安裝（新）」，沒有命名空間標題、shell 錯誤 0 筆；`~/.claude/commands/` 只有 `dd-init.md`、`~/.claude/skills/` 13 個目錄沒有 `review`。`--uninstall --yes` rc=0（提示印「0 個命名空間 Commands」）
-    - 升級情境：沙盒 HOME 先裝 b3b2bf9 的內容（rc=0，兩個舊目錄在）→ 新版 `--force`（rc=0，兩個舊目錄還在，`--check` 沒有提到它們）→ 照 `UPGRADING.md` 的兩行指令清掉 → `--check` rc=0、skills 13 個
+    - 升級情境：沙盒 HOME 先裝 8bb3e15 的內容（rc=0，兩個舊目錄在）→ 新版 `--force`（rc=0，兩個舊目錄還在，`--check` 沒有提到它們）→ 照 `UPGRADING.md` 的兩行指令清掉 → `--check` rc=0、skills 13 個
     - 舊名的 `git grep` 剩下的（都是「已退場」的敘述）：`CLAUDE.md`「部署清單」與「目錄結構」各一句、`DD_PIPELINE_ARCHITECTURE.md` 部署清單的歷史與授權段各一句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 一行（「`commands/` 底下沒有子目錄」那條；同檔 T11 變異那一句提的是 `review` skill，不含 `workflow-review` 這個字）；`skills/review`（濾掉 `self-improving-agent/skills/review`）0 筆
     - 計畫以外多改的：根目錄 `CLAUDE.md`「新增 Command 步驟」命名空間那條、`tests/CLAUDE.md` 各補一句「命名空間的部署程式碼現在沒有測試跑到，加回時把斷言換回來」；`UPGRADING.md` 開頭「三種升級情境」改「四種」
 - S5-2 code-simplifier 包裝器補一句約束
   - 內容：`skills/code-simplifier/SKILL.md` 的 Prompt 模板「約束：」那一行後面加一句：編碼風格只照專案 CLAUDE.md 寫明的；agent 定義裡列的偏好（import 排序、`function` 與箭頭函式的取捨）不算專案標準，專案 CLAUDE.md 沒寫就不套用，不重排 import
-    （這是第一版，63f4d6c commit 的就是它；步驟 4 的審查之後改成第二版，現行的句子以 `skills/code-simplifier/SKILL.md` 為準，見下面「第三輪」）
+    （這是第一版，fbcd1dd commit 的就是它；步驟 4 的審查之後改成第二版，現行的句子以 `skills/code-simplifier/SKILL.md` 為準，見下面「第三輪」）
   - 檔案：`skills/code-simplifier/SKILL.md`、`CHANGELOG.md` `## 未發布`
   - 驗證（行為，A/B；結果用 `diff`、`grep` 核對，不看 agent 自述）：scratchpad 的拋棄式 repo 放一個小 `.js`（import 沒排序、有箭頭函式、有一處可簡化的巢狀條件），CLAUDE.md 不寫風格規則。派包裝器實際會先試的那個 agent 類型（`code-simplifier:code-simplifier`；派之前 `cmp` 它的定義檔與 repo 這份）：舊 Prompt 模板 2 發、新的 2 發，各在自己的副本上改。
     每一發另外要它照貼 context 裡出現的 CLAUDE.md 路徑與第一行（subagent 可能帶著這個 session 的全域 CLAUDE.md，那份 §3.2 已經寫「不重排 import」，會讓舊的那一邊也不動）。
@@ -284,7 +284,7 @@ S4 的步驟 3–5（2026-11-15）：
       新句子見 `skills/code-simplifier/SKILL.md` 的 Prompt 模板。**派出前寫死的判定**：同一份第二輪素材、新句子 2 發（舊模板沒改字，沿用第二輪舊 1、舊 2 當對照）；
       每一發都要 模組出現順序與原檔相同、箭頭 4 個都還在、沒有把箭頭改成 `function`、巢狀條件已簡化、`quote()` 對同一組輸入與原檔相同 → 通過；任何一發不符 → 新句子不成立，停下回報。
       `./zones.js` 那兩行有沒有被合併只記錄、不列入判定（句子寫的是可以合併，沒有要求）
-      - 結果（判定在 6015e7b 先 commit 才派；`<scratchpad>/s5-ab2/{new3,new4}`，派工內容 `prompt-new3.txt`、`prompt-new4.txt`）：
+      - 結果（判定在 52d048d 先 commit 才派；`<scratchpad>/s5-ab2/{new3,new4}`，派工內容 `prompt-new3.txt`、`prompt-new4.txt`）：
 
         | 臂 | 模組出現順序 | import 行 | `./zones.js` 行數 | `function` 宣告 | 箭頭 | `result = null` 殘留 | `mycmp.mjs` |
         |---|---|---|---|---|---|---|---|
@@ -309,7 +309,7 @@ S5 的步驟 3–5（2026-11-15）：
   兩份 README 的 `--uninstall` 與升級指路句、根目錄 CLAUDE.md 的升級指路句補上退場元件；`tests/CLAUDE.md` 新條目搬進「此層約束」；CHANGELOG 那一條重寫；上面 S5-2 結果的兩處更正
 - 步驟 5（修完之後重跑）：照 ci.yml 逐 step 跑 26 個全部 rc=0；`/bin/bash tests/test-install.sh` macOS（bash 3.2）rc=0、21 個 ✅（輸出裡 5 行 ❌ 都是沙盒安裝印的「playwright (需要手動設定)」，步驟 1 那次也是 5 行）；
   ubuntu:24.04 容器：`test-gate.sh` rc=0（150 個 ✅）、`test-dd-init-upgrade.sh` rc=0（48 個 ✅）、`test-install.sh` rc=0（21 個 ✅）、兩支 hook 測試 rc=0、一般帳號 `TEST_ONLY=T11` rc=0；
-  `UPGRADING.md` 新寫的三行指令在沙盒 HOME（先裝 b3b2bf9 的內容、再裝新版）實跑三種情況：這個 repo 部署的印 5 與 `review.md`、不相干的同名 skill 印 0、檔不在印找不到；
+  `UPGRADING.md` 新寫的三行指令在沙盒 HOME（先裝 8bb3e15 的內容、再裝新版）實跑三種情況：這個 repo 部署的印 5 與 `review.md`、不相干的同名 skill 印 0、檔不在印找不到；
   舊名 `git grep`（排除 CHANGELOG、UPGRADING、docs/designs、docs/reviews、docs/measurements）剩下的每一筆都是「已退場」的敘述：根目錄 CLAUDE.md 兩行、`DD_PIPELINE_ARCHITECTURE.md` 兩行、兩份 README 的 `--uninstall` 那句、`install-dd-pipeline.sh` 的 `NS_COMMANDS` 註解、`tests/CLAUDE.md` 一行
 - 步驟 4 之後沒有再對真實 HOME 跑安裝；部署與清掉本機已部署的那兩個目錄由使用者自己做
 - 步驟 7：候選四條列給使用者（見 `S5-judge.md`「這一段自己犯的錯」），等同意才寫進 CLAUDE.md，這一輪沒有寫。步驟 8：範圍是根目錄 `CLAUDE.md` 與 `tests/CLAUDE.md`（`claude-md-management:claude-md-improver`，只審這兩份），這一段改到的每一句實跑核對過
@@ -322,7 +322,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 
 假設：
 
-- 「搬」= 原文逐字搬。搬的塊由腳本從 `git show bf7e654:CLAUDE.md` 依行號切出來（切之前比對每塊開頭的字），不是重打。新寫或改過的字：根目錄留下的指路句（Skill 步驟 5、6，Agent 步驟 5，「注意事項」一條）與三條約束句；根目錄的行內改字（「目錄結構」`docs/` 那行、「CI 不驗、只能手動同步的區塊」那條補的清單項與觸發時機、收編清單第 6 項的指代）；新檔的標題、開頭兩句與各節的出處註記；搬來的字裡因為換檔而改的三處（gate 段「見下方「開發本 repo」」→「見根目錄 CLAUDE.md「開發本 repo」」、迴圈步數段尾「`DD_PIPELINE_ARCHITECTURE.md` 那處」→「本檔那處」、「量測前先關掉 advisor」三行改成一條 bullet）；架構文件三段前面的銜接句；`README.zh-TW.md` 那一段的銜接句、`README.md` 的英文翻譯；兩份 measurements 子目錄 CLAUDE.md 與 `scripts/CLAUDE.md` 各一句指路；`CHANGELOG.md` 的條目（步驟 4 的審查指出原本列得比實際少，2026-11-16 補齊）
+- 「搬」= 原文逐字搬。搬的塊由腳本從 `git show 5a0d16e:CLAUDE.md` 依行號切出來（切之前比對每塊開頭的字），不是重打。新寫或改過的字：根目錄留下的指路句（Skill 步驟 5、6，Agent 步驟 5，「注意事項」一條）與三條約束句；根目錄的行內改字（「目錄結構」`docs/` 那行、「CI 不驗、只能手動同步的區塊」那條補的清單項與觸發時機、收編清單第 6 項的指代）；新檔的標題、開頭兩句與各節的出處註記；搬來的字裡因為換檔而改的三處（gate 段「見下方「開發本 repo」」→「見根目錄 CLAUDE.md「開發本 repo」」、迴圈步數段尾「`DD_PIPELINE_ARCHITECTURE.md` 那處」→「本檔那處」、「量測前先關掉 advisor」三行改成一條 bullet）；架構文件三段前面的銜接句；`README.zh-TW.md` 那一段的銜接句、`README.md` 的英文翻譯；兩份 measurements 子目錄 CLAUDE.md 與 `scripts/CLAUDE.md` 各一句指路；`CHANGELOG.md` 的條目（步驟 4 的審查指出原本列得比實際少，2026-11-16 補齊）
 - B1 的去處是新檔 `docs/measurements/CLAUDE.md`（檔名是我選的）。根目錄的指路寫「做之前先 Read」；巢狀 CLAUDE.md 什麼時候自動載入沒有實測過，不靠它
 - 「安裝 / 更新」兩段整段搬到架構文件，其中三句是改安裝輸出時要守的約束，根目錄留著（兩邊各一份）：沒有驗證測得到 B2 的指路有沒有用，約束句不離開每輪都載入的檔
 - 「核心工作法」根目錄留三段：dd-loop 與模板 §3.9 怎麼分工、§3.10 為什麼放在 §3.9 之外、task-planner 規則區塊照抄後不會跟著更新。開頭兩行與箭頭圖刪掉不搬（架構文件同名一節有自己的）；講 gate 的那段搬到架構文件同名一節的最後，與那裡既有的「配套：…」段並存、不合併
@@ -335,7 +335,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
   - 搬：「新增 Skill 步驟」第 5 步、「新增 Agent 步驟」第 5 步（兩步的第一句留在根目錄，後面接指路）、「開發本 repo」的「沙盒用 `claude -p` 測行為前…」一條、「注意事項」裡開頭是這幾串字的條目：「`claude -p` 的 stream-json 要進 repo 前先去識別」「`claude -p` 實驗的 fixture 有子目錄時」「stream-json 看不出巢狀 CLAUDE.md 有沒有被讀進去」「dontAsk 加 `Bash(ls:*)` 照樣擋 cwd 外的路徑」「用 auto mode 跑 `claude -p` 時」「`claude -p` 在父 session 最後一輪結束 10 分鐘後」「受測 session 的快照放在 scratchpad 底下時」
   - 不搬：「同一則訊息裡派的幾個 subagent 不一定同時開跑」起的那幾條與「新增 Skill 步驟」第 6 步（講怎麼寫 skill、派 subagent、測 hook）
   - 同批改指路：`docs/measurements/2026-10-30-dd-loop-trigger/CLAUDE.md`、`docs/measurements/2026-10-29-adhd-style/CLAUDE.md` 各一句；根目錄「目錄結構」`docs/` 那一行
-  - 驗證：核對腳本（根目錄與「`bf7e654` 那版照清單替換」逐位元組相同；每一塊整塊在新檔恰好出現 1 次；新檔扣掉搬來的塊只剩標題與出處註記；沒有 4 個以上空白開頭的行）
+  - 驗證：核對腳本（根目錄與「`5a0d16e` 那版照清單替換」逐位元組相同；每一塊整塊在新檔恰好出現 1 次；新檔扣掉搬來的塊只剩標題與出處註記；沒有 4 個以上空白開頭的行）
   - commit：`docs: claude -p 實驗的做法搬到 docs/measurements/CLAUDE.md（S6-1）`
 - **S6-2** B2 搬到架構文件與 README
   - 「安裝 / 更新」底下兩段 → `DD_PIPELINE_ARCHITECTURE.md`「安裝腳本」一節最後；「核心工作法」講 gate 的那段 → 同檔「核心工作法」一節最後；「注意事項」的「**迴圈步數**已有 CI 兩道防線」一條 → 同檔「CI 防線」一節最後（表格與表後引用塊之後）；「殘留清理（手動）」的表格、指令與最後一句 → `README.zh-TW.md`「清理外部殘留（手動）」，`README.md` 同一節寫英文
@@ -360,10 +360,10 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - CHANGELOG 的 45,731 是「刪掉進度指路句之後才會有」的數字，當時寫成量到的 → 改成最終版實際的大小並寫明量的是哪一版
 - 新檔開頭兩句不準（有實驗拆成兩個目錄、第一層的 `.md` 不都是彙整）→ 照 `ls docs/measurements` 的結果改寫
 
-步驟 5 乾跑的結果（2026-11-16，三臂都在步驟 4 的修正之前派出，讀的是 `69f0e65`）：
+步驟 5 乾跑的結果（2026-11-16，三臂都在步驟 4 的修正之前派出，讀的是 `e9212a4`）：
 
 - 三臂的答案都引到 `docs/measurements/CLAUDE.md` 指定的那一條，引的原句對得上：①「測 skill 會不會自己叫」的指令、判定與「每次約 US$0.4–1.6」那句 ②「已知的坑」講 auto mode 的那一條 ③「測 skill 會不會自己叫」裡「測會叫 `plan-review` 的 skill 時，`--allowedTools` 加 `Agent`…」那一句
-- **但這三臂沒測到指路**：三臂都回報開始時 context 裡的根目錄 CLAUDE.md 是舊版（搬走的內容還在裡面、沒有指路句）。同一個對話派出的 subagent 帶的是對話開始時載入的那一份，不是磁碟上改過的。三臂去讀新檔的線索都是 gitStatus 裡 `2b23dd9` 的 commit 標題（標題寫了新檔的路徑）
+- **但這三臂沒測到指路**：三臂都回報開始時 context 裡的根目錄 CLAUDE.md 是舊版（搬走的內容還在裡面、沒有指路句）。同一個對話派出的 subagent 帶的是對話開始時載入的那一份，不是磁碟上改過的。三臂去讀新檔的線索都是 gitStatus 裡 `267cb1a` 的 commit 標題（標題寫了新檔的路徑）
 - 所以這三臂只證明：新檔裡找得到搬走的內容、引文逐字對得上。指路有沒有用改用下面的做法測
 - 兩臂另外指出「測 skill 會不會自己叫」一節沒寫要不要關 advisor（那句當時在另一節）—— 跟步驟 4 的第一條修正是同一件事
 
@@ -377,7 +377,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 - 三發都過，只能寫「帶著新版根目錄 CLAUDE.md 的全新 session，被問到這三件事時拿得到搬走的內容（每題 n=1）」。沒有「拿掉指路句」的對照臂，**不證明是指路句造成的**；**不證明主對話在長對話中途做到那一步時會主動去讀**；受測 session 一讀 `docs/measurements/` 底下的檔，那份 CLAUDE.md 可能當巢狀記憶自動進 context，stream-json 看不出來（新檔「已知的坑」有這一條）
 - 有一發沒過 → 讀它的工具順序與答案，改指路句後那一題重跑一次；還是沒過就停下回報
 
-步驟 5 補測的結果（2026-11-16，快照取自 `7e5a1c2`，claude 2.1.325，三發同時跑）：
+步驟 5 補測的結果（2026-11-16，快照取自 `653e023`，claude 2.1.325，三發同時跑）：
 
 - 三發都過。答案裡指定字串的次數：Q1 `dontAsk` 2、`Launching skill` 2、`advisorModel` 3；Q2 `dontAsk` 3、`no-session-persistence` 2；Q3 `duration_api_ms` 1、`advisorModel` 1
 - 三發的第一個工具呼叫都是 Read `docs/measurements/CLAUDE.md`，之前沒有 Grep／Glob；工具呼叫數是 6、8、2，沒有指到快照以外的路徑
@@ -392,7 +392,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 步驟 7、8（2026-11-16）：
 
 - 步驟 7：候選列給使用者（見 `S6-judge.md`「這一段自己犯的錯」；其中「同一個對話派出的 subagent 帶的是對話開始時那一版 CLAUDE.md，改了 CLAUDE.md 之後不能拿它驗指路」適合放進 `docs/measurements/CLAUDE.md`「已知的坑」）。使用者 2026-11-16 回「加」，那一條寫進「已知的坑」的最後；其餘候選沒有寫
-- 步驟 8：範圍照表上的起點 `bf7e654` 算出五份（根目錄 `CLAUDE.md`、`docs/measurements/CLAUDE.md`、`docs/measurements/2026-10-29-adhd-style/CLAUDE.md`、`docs/measurements/2026-10-30-dd-loop-trigger/CLAUDE.md`、`scripts/CLAUDE.md`），用 `claude-md-management:claude-md-improver` 只審這一段改到的地方。實跑核對：指到的節名都在、架構文件「CI 防線」一節最後一段是迴圈步數那段、三條約束句引的字串在安裝腳本與設計文件裡找得到、每個日期目錄都有 CLAUDE.md、收編清單的表格 7 列完整。沒有找到要改的錯，沒有動檔
+- 步驟 8：範圍照表上的起點 `5a0d16e` 算出五份（根目錄 `CLAUDE.md`、`docs/measurements/CLAUDE.md`、`docs/measurements/2026-10-29-adhd-style/CLAUDE.md`、`docs/measurements/2026-10-30-dd-loop-trigger/CLAUDE.md`、`scripts/CLAUDE.md`），用 `claude-md-management:claude-md-improver` 只審這一段改到的地方。實跑核對：指到的節名都在、架構文件「CI 防線」一節最後一段是迴圈步數那段、三條約束句引的字串在安裝腳本與設計文件裡找得到、每個日期目錄都有 CLAUDE.md、收編清單的表格 7 列完整。沒有找到要改的錯，沒有動檔
 
 沒驗證的事：
 
@@ -403,7 +403,7 @@ B1 = 只有跑 `claude -p` 實驗才用得到的做法與坑；B2 = 描述與導
 
 ### S7 根目錄 CLAUDE.md 大小上限（pre-commit 與 CI 都擋）
 
-來源：2026-11-16 我量了根目錄 `CLAUDE.md` 的大小（`git show <commit>:CLAUDE.md | wc -c`，每列是當天最後一個 commit）：2026-08-31 12,797 → 10-30 42,290 → 11-14 48,844 → 11-15 56,111 → 11-16（S6 之後）46,424 bytes。`2bd0014..HEAD`（HEAD 當時是 `e4ec5cc`）有 68 個 commit 動到它，合計加 19,914；扣掉 S6 搬移的兩個 commit，其餘合計只減 1,786。我提了四種做法，第 1 種是「大小上限，寫成會擋的檢查」，上限誰能調高給了兩個選項：甲 = 數字寫在 repo、調高前先問使用者；乙 = 數字寫在 repo，但檢查讀的是最新發版 tag 那一版的數字。我那則訊息的最後一行是「回『乙 48000』（或『甲』加一個數字；現在是 46,424），我就動手做第 1 項」。使用者回「好」。
+來源：2026-11-16 我量了根目錄 `CLAUDE.md` 的大小（`git show <commit>:CLAUDE.md | wc -c`，每列是當天最後一個 commit）：2026-08-31 12,797 → 10-30 42,290 → 11-14 48,844 → 11-15 56,111 → 11-16（S6 之後）46,424 bytes。`f869ccd..HEAD`（HEAD 當時是 `a4d9185`）有 68 個 commit 動到它，合計加 19,914；扣掉 S6 搬移的兩個 commit，其餘合計只減 1,786。我提了四種做法，第 1 種是「大小上限，寫成會擋的檢查」，上限誰能調高給了兩個選項：甲 = 數字寫在 repo、調高前先問使用者；乙 = 數字寫在 repo，但檢查讀的是最新發版 tag 那一版的數字。我那則訊息的最後一行是「回『乙 48000』（或『甲』加一個數字；現在是 46,424），我就動手做第 1 項」。使用者回「好」。
 
 假設：
 
@@ -539,11 +539,11 @@ S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣�
     變異對照改在測試層級重跑（變異版當第二或第三個參數）：每個變異都 rc=1，⑯ 之前的輸出都沒有變，變 ❌ 的情境與 S7-1 那次情境腳本變 ❌ 的集合相同；`scripts/githooks/CLAUDE.md` 的對照表改成記「哪幾則變 ❌」。
     跟 S7-1 的表不一樣的兩處：「大小相等才離開」的 O「縮到 100 並 commit」、「`--staged` 大於改成大於等於」的 H「301」只是輸出不同，沒有斷言在看，不會紅（各自另有直接變紅的情境）。
     搬進來時改的一處：A 建第一個 commit 之後取 `HEAD` 那一行原本裸跑，建不起來時 `set -e` 靜靜結束；改成印一行 ❌ 再結束
-    更正：commit `d0e72b1` 的訊息寫「本機照 ci.yml 逐 step 跑全部 rc=0」，不對。那次有一步是 rc=1（「迴圈步數第五方」：`tests/CLAUDE.md` 的 `test-gate.sh` 那一列原本就有兩個箭頭、也有 commit 與 review 這兩個字，我加的說明又帶一個箭頭，湊滿三個就被當成迴圈的箭頭摘要）。彙總印了「rc 不是 0 的 step 數：1」，我沒有先看就接著 commit。下一個 commit 把那個箭頭改成文字，整份重跑全部 rc=0
+    更正：commit `12be2fd` 的訊息寫「本機照 ci.yml 逐 step 跑全部 rc=0」，不對。那次有一步是 rc=1（「迴圈步數第五方」：`tests/CLAUDE.md` 的 `test-gate.sh` 那一列原本就有兩個箭頭、也有 commit 與 review 這兩個字，我加的說明又帶一個箭頭，湊滿三個就被當成迴圈的箭頭摘要）。彙總印了「rc 不是 0 的 step 數：1」，我沒有先看就接著 commit。下一個 commit 把那個箭頭改成文字，整份重跑全部 rc=0
 
 要新增的測試（2026-11-16 用選單問，使用者選「收進 repo」；已補進下面測試清單的第 6 條）：`tests/test-gate.sh`（S7-3）上面情境 A–R，經過真的 `scripts/githooks/pre-commit`。
 
-步驟 3–8 照進度表規則對整段跑（範圍從 `e4ec5cc` 算）；步驟 4 的報告放 `docs/reviews/2026-11-15-audit-fixes/S7-*.md`（寫之前先 `ls`）。步驟 7 有教訓的話寫進巢狀檔，不寫根目錄。
+步驟 3–8 照進度表規則對整段跑（範圍從 `a4d9185` 算）；步驟 4 的報告放 `docs/reviews/2026-11-15-audit-fixes/S7-*.md`（寫之前先 `ls`）。步驟 7 有教訓的話寫進巢狀檔，不寫根目錄。
 
 步驟 3 的結果（2026-11-16）：code-simplifier 的範圍是 `scripts/githooks/claude-md-size.sh` 與 `scripts/githooks/pre-commit`（包裝器的預設不含測試檔），它沒有改任何檔（兩支腳本與派工前的備份 `cmp` 相同）。
 
@@ -568,9 +568,9 @@ S7-1 實跑的結果（2026-11-16）：上面每個變異都有情境不一樣�
 - 本機照 ci.yml 逐 step 跑：兩個 job 的每個 step 都 rc=0（跑的腳本在有 step 沒過時會回非 0，這次回 0）
 - 真 repo 直接跑 `scripts/githooks/claude-md-size.sh`：印 ✅、46554 bytes、上限 48000、「取自工作目錄：v1.6.14 還沒有這個檔，發下一版之後改以 tag 為準」，rc=0
 
-步驟 6（2026-11-16）：`7dd3d25`（審查修正與五份報告）。
+步驟 6（2026-11-16）：`55a33d0`（審查修正與五份報告）。
 
-步驟 7（2026-11-16，`dd803d3`）：三條寫進巢狀 CLAUDE.md，根目錄沒有加字 —— `tests/CLAUDE.md` 兩條（表格列別用箭頭符號，CI「迴圈步數第五方」會把它當成迴圈摘要；
+步驟 7（2026-11-16，`3b80cd8`）：三條寫進巢狀 CLAUDE.md，根目錄沒有加字 —— `tests/CLAUDE.md` 兩條（表格列別用箭頭符號，CI「迴圈步數第五方」會把它當成迴圈摘要；
 拿 gate 的變異版看 ⑯ 之前先確認 ⑯ 有跑到）、`scripts/githooks/CLAUDE.md` 一條（「繞得過的路」是唯一一份清單，另外三處只舉例並指到它）。
 
 步驟 8（2026-11-16）：範圍照表上的起點算出四份（根目錄 `CLAUDE.md`、`scripts/CLAUDE.md`、`scripts/githooks/CLAUDE.md`、`tests/CLAUDE.md`），用 `claude-md-improver` 只審這四份。

@@ -13,7 +13,7 @@
 
 MCP 只佔約 2.8k（這版 Claude Code 的 MCP 工具多半是延遲載入）；25 個內建工具的說明約 2.2 萬。
 
-## 限縮 code-reviewer 的工具（`d74915d` 加 `tools: Read, Grep, Glob, Bash`）
+## 限縮 code-reviewer 的工具（`01105a8` 加 `tools: Read, Grep, Glob, Bash`）
 
 全新的 `claude -p`（haiku 父 session，cwd 同上，`--allowedTools "Agent"`），派一個只回 OK 的 subagent，量 subagent 第一則訊息：
 

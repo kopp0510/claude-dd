@@ -9,7 +9,7 @@ subagent_type: code-reviewer（opus，不帶 model），方向：跨檔與內部
 > 這段做了什麼（事實）：
 > - 精煉全域規則模板 templates/global/CLAUDE.md。它會部署成 ~/.claude/CLAUDE.md，每個 Claude Code session 都會讀進來。61,706 → 55,281 bytes。
 > - 使用者的要求：意思不能變；並逐條判「這條規則還需不需要」，拿掉沒影響才刪。作者把可刪的分成「有把握（A 類 19 處）」與「沒驗證（B 類）」，使用者選「只刪 A」。另外套用了計畫附錄 A 的改寫（刪日期、故事細節，修引用；計畫審查通過過）。A 類是計畫審查之後才加的，沒有被審過，所以這一步要特別查它。
-> - 起點 316117c，4 個 commit：d75ebbb（§3.9）、58684bd（§3.10）、b0b4889（§2.6、§3.4、§4.1、§4.4、§6.7、§7.2、§7.5 與 CHANGELOG）、4069ec5（README 兩份、scripts/CLAUDE.md、設計文件的巡查結果）；工作目錄另有設計文件一處措辭修正（A13 那列）。
+> - 起點 a3c2ad7，4 個 commit：107c41d（§3.9）、de98ce7（§3.10）、b0a887e（§2.6、§3.4、§4.1、§4.4、§6.7、§7.2、§7.5 與 CHANGELOG）、92c9157（README 兩份、scripts/CLAUDE.md、設計文件的巡查結果）；工作目錄另有設計文件一處措辭修正（A13 那列）。
 > - 這段只有文件、沒有程式碼；步驟 3（code-simplifier）跳過。
 >
 > 你是審查者 b，方向「跨檔與內部引用」：
@@ -35,7 +35,7 @@ subagent_type: code-reviewer（opus，不帶 model），方向：跨檔與內部
 
 ## 發現（逐字原文）
 
-Critical 0 / Important 1 / Smell 4。範圍：S9 步驟 4，審查者 b（跨檔與內部引用），316117c..工作目錄。
+Critical 0 / Important 1 / Smell 4。範圍：S9 步驟 4，審查者 b（跨檔與內部引用），a3c2ad7..工作目錄。
 
 【發現】
 
@@ -78,13 +78,13 @@ Critical 0 / Important 1 / Smell 4。範圍：S9 步驟 4，審查者 b（跨檔
 - 巡查的 ① 指令我自己重跑過，結果跟設計文件列的一致。用被刪字句的關鍵字（Karpathy、Shift+Tab、Overseer、2.3/3、修復格式、不要重跑、閉環、時間花在哪、下詳、上述那次、空殼、佔位等）全 repo grep，沒有找到巡查清單以外的現行規則引用。docs/measurements 裡提到 §3.9 的都是當時的歷史紀錄。
 - 兩份 README 開始照抄 gate 的訊息，多了一處要跟著 gate 改的地方。根 CLAUDE.md:254 的手動巡查觸發條件「gate 行為」已經涵蓋「為什麼要巢狀」底下的 gate 對策段落，不算新漏洞。
 - 設計文件的數字：61,706 → 55,281（實際各量一次）、少 10.4%、A 類 19 處、B 類 17 處、必留 69 條（④ 已驗）、「必留清單 19 條」（舊清單 88 條、新清單 69 條，比對結果 19 條被拿掉、0 條新增）、計畫第 3 輪小事 18 條（15 條照改、3 條不用改，跟 decision.md 第 7 項一致），都對得上。
-- 進度表：S9 起點 316117c 等於 dd-segment-base 檔的內容；--start-segment 能通過，是因為 S8 範圍裡新增了 `docs/reviews/2026-10-23-裁決審查/S8-{a,b,c,judge}.md`（a01d7bb）。S7 原因格補「使用者又要先做 S9」，符合規則。四個 commit 改的檔跟 S9-1 到 S9-4 的小任務描述一致（S9-4 另外改了 CHANGELOG 一行，補「兩份 README 與 scripts/CLAUDE.md 同批改」，沒寫進小任務描述，不影響）。
+- 進度表：S9 起點 a3c2ad7 等於 dd-segment-base 檔的內容；--start-segment 能通過，是因為 S8 範圍裡新增了 `docs/reviews/2026-10-23-裁決審查/S8-{a,b,c,judge}.md`（1d2f169）。S7 原因格補「使用者又要先做 S9」，符合規則。四個 commit 改的檔跟 S9-1 到 S9-4 的小任務描述一致（S9-4 另外改了 CHANGELOG 一行，補「兩份 README 與 scripts/CLAUDE.md 同批改」，沒寫進小任務描述，不影響）。
 - 既有問題（不在 diff）：設計文件 S8 段第 90 行「「報告一律落地」那條 grep 得到（:316）」，這次精煉後已經指歪（現在是 :292）。
 
 【What I ran】
 - 審查檔 S9-review-diff.txt：每次 200 行讀完第 1–2530 行，讀到最後一行「===== diff 檔結束 =====」
-- `git status --short; git log --oneline -5` → 只有設計文件一處未 commit，HEAD 4069ec5
-- `git show 316117c:templates/global/CLAUDE.md | wc -c` → 61706；`wc -c templates/global/CLAUDE.md` → 55281
+- `git status --short; git log --oneline -5` → 只有設計文件一處未 commit，HEAD 92c9157
+- `git show a3c2ad7:templates/global/CLAUDE.md | wc -c` → 61706；`wc -c templates/global/CLAUDE.md` → 55281
 - `grep -n ... scripts/check-claude-md.sh`、`sed -n 200,240p` 與 `285,325p` → 修復格式訊息在 :299–309，「最少 3 個」在 :225，「最終 commit 必須全過」在 :10、:318
 - `grep -n '^```' commands/dd-init.md | head -2` → 52、149；`sed -n 52,149p` 讀完整個蓋章區塊；`sed -n 160,180p`、`316,326p` → :173 在 Phase 3、:323 在 Phase 6，都在區塊外
 - `grep -n ... agents/code-reviewer.md` → :14、:21、:24
@@ -96,7 +96,7 @@ Critical 0 / Important 1 / Smell 4。範圍：S9 步驟 4，審查者 b（跨檔
 - `grep -n` 新版模板的所有指代詞 → 逐條核過，結果見 Not reported 第一條
 - `grep 欠帳|豁免|追查`，新版對 base → 新版只剩 :240；base 有 :248 與 :460
 - `git show --stat` 四個 commit 與 `git diff` → 改的檔跟小任務一致；未 commit 的只有 A13 那列的措辭
-- `git log efb7931~1..316117c` 加 docs/reviews 的 name-status，再讀 dd-segment-base 檔 → S8 報告四份；起點 316117c
+- `git log 4d97f8c~1..a3c2ad7` 加 docs/reviews 的 name-status，再讀 dd-segment-base 檔 → S8 報告四份；起點 a3c2ad7
 - `grep install-dd-pipeline.sh` → create_scripts 在 :1315、create_global_claude_md 在 :1320，都在 COMMANDS_ONLY=false 底下
 - `sed -n 121,126p` 設計文件 → 「開放問題」有 A05 那句
 - `wc -l` 與 `diff`（scratchpad 的 s9-tools/must-keep.tsv 對 s9-final/must-keep.tsv）→ 88 對 69，拿掉 19 條、新增 0 條

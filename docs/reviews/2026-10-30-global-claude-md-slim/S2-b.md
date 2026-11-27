@@ -7,15 +7,15 @@
 共用指示：
 
 > 你是 code-reviewer。repo：/Users/danlio/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md，全域規則在 templates/global/CLAUDE.md）。
-> 審查範圍：段落 S2 的整段改動 = `git diff f2ab54a`（工作目錄乾淨，等於 f2ab54a..HEAD）。改動與被改檔的整檔內容都在 diff 檔：
+> 審查範圍：段落 S2 的整段改動 = `git diff 68b4bf2`（工作目錄乾淨，等於 68b4bf2..HEAD）。改動與被改檔的整檔內容都在 diff 檔：
 > /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/s2-review/diff.txt
 > （7865 行。用 Read 的 offset/limit 每次 300 行讀到最後一行 —— 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那份；沒被改到的檔照常讀 repo。）
 > diff 檔第 ④ 節是已跑過的驗證與結果，已確認、不要重跑測試／安裝／claude -p。
 >
 > 這段做了什麼（事實）：
-> - S2-1（489bf74）新增 scripts/dd-init-upgrade.sh（升級分類器：舊蓋章區塊逐行查表分成範本行／在地行，--plan/--apply/--list）與 tests/test-dd-init-upgrade.sh，CI 加進 shellcheck 清單、ubuntu 與 bash32 job。
-> - S2-2（304b0f2）commands/dd-init.md 蓋章區塊 rev 12（96 行）換成 rev 13（37 行），只在舊區塊裡的內容搬進 skills/dd-loop/SKILL.md；Phase 1 的 8step 舊版升級改用腳本；React 片段移到區塊外的 ````markdown 圍欄；CI 新增「現行蓋章區塊的每一行都在升級清單裡」；同批改 CHANGELOG、UPGRADING、根 CLAUDE.md、scripts/CLAUDE.md、tests/CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、設計文件。
-> - 7b8638a：SKILL.md 的 `US$5.13` 改成「5.13 美元」（skill 帶參數呼叫時 `$<數字>` 會被代換）。
+> - S2-1（beb5a4b）新增 scripts/dd-init-upgrade.sh（升級分類器：舊蓋章區塊逐行查表分成範本行／在地行，--plan/--apply/--list）與 tests/test-dd-init-upgrade.sh，CI 加進 shellcheck 清單、ubuntu 與 bash32 job。
+> - S2-2（dd2357f）commands/dd-init.md 蓋章區塊 rev 12（96 行）換成 rev 13（37 行），只在舊區塊裡的內容搬進 skills/dd-loop/SKILL.md；Phase 1 的 8step 舊版升級改用腳本；React 片段移到區塊外的 ````markdown 圍欄；CI 新增「現行蓋章區塊的每一行都在升級清單裡」；同批改 CHANGELOG、UPGRADING、根 CLAUDE.md、scripts/CLAUDE.md、tests/CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、設計文件。
+> - 9c052cf：SKILL.md 的 `US$5.13` 改成「5.13 美元」（skill 帶參數呼叫時 `$<數字>` 會被代換）。
 > - 舊區塊（rev 12）原文：`git show v1.6.12:commands/dd-init.md`。
 >
 > 你的職責：找漏洞，證明這段有錯。每條附證據（路徑:行 + 原文，或指令與輸出）；沒證據不算。只用手上的資料判斷，需要外部查證的列出來交回。
@@ -38,14 +38,14 @@
 
 （審查者交回的完整報告，逐字）
 
-方向 B 結論：Critical 0、Important 3、Smell 0。範圍是 f2ab54a..HEAD 裡的 scripts/dd-init-upgrade.sh 與 tests/test-dd-init-upgrade.sh。三條都用 fixture 實跑重現過。
+方向 B 結論：Critical 0、Important 3、Smell 0。範圍是 68b4bf2..HEAD 裡的 scripts/dd-init-upgrade.sh 與 tests/test-dd-init-upgrade.sh。三條都用 fixture 實跑重現過。
 
 ## Findings
 
 **Important｜scripts/dd-init-upgrade.sh 第 348 行（`shift = (startTpl ? 0 : Lv - 1)`）與第 257 行（停點判斷 `!(trim(F[i]) in L)`）｜標題被降級過的區塊，第二次升級會多出一個空的 `CLAUDE.md 維護` 標題**
 - 問題：rental 型（區塊掛在在地 `###` 底下），或專案把 `## 開發流程（…）` 改過名時，`--apply` 會把新區塊的 `## CLAUDE.md 維護` 降成 `####`（rental 型）或 `###`（改名型）。降級後的標題不在清單裡（清單只有 `## CLAUDE.md 維護`），下一次升級就把它當成在地行，錨在「驗證不過之後」留下來，再接上一份新的降級標題。原本那個標題底下的範本行被刪光，只剩一個空標題。測試「現行區塊自己跑一次結果不變」只涵蓋沒降級的情況，CI「現行蓋章區塊的每一行都在升級清單裡」也只比對沒降級的寫法，所以都擋不到。
 - 證據：
-  - rental fixture（6a9addd 區塊，標題換成 `### 工作流程（完成的定義，不可省略）`）連跑兩次 `--apply`。r1 只在第 36 行有 `#### CLAUDE.md 維護`；r2 在第 36、38 行各一個，`diff r1 r2` 顯示 `37a38,39 > #### CLAUDE.md 維護`。
+  - rental fixture（b1227f7 區塊，標題換成 `### 工作流程（完成的定義，不可省略）`）連跑兩次 `--apply`。r1 只在第 36 行有 `#### CLAUDE.md 維護`；r2 在第 36、38 行各一個，`diff r1 r2` 顯示 `37a38,39 > #### CLAUDE.md 維護`。
   - 改名型（v1.6.12 區塊，標題改成 `## 開發流程`）連跑兩次：h2 的第 34、36 行都是 `### CLAUDE.md 維護`。
   - 對 r1 跑 `--plan`，「保留的行」列出 `36 [驗證不過之後]: #### CLAUDE.md 維護`：它只被列成一般在地行，沒有任何一節提醒會重複。
 - 失敗情境：rental-management 這次升到 rev 13，下次 rev 跳 14 再跑 `/dd-init`，就會出現兩個同名標題，前一個是空的。Phase 1 第 7.3 步只用 `^[0-9]+\. ` 檢查步驟行有沒有重複，抓不到重複的標題。

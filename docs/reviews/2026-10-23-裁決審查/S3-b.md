@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 b 的派工 prompt（共用部分逐字，加上方向句）。範圍：`git diff 6e9aaf0 92eea63`。
+裁決者給審查者 b 的派工 prompt（共用部分逐字，加上方向句）。範圍：`git diff 984628d 46083de`。
 
 方向：rev 跳號、dd-init／UPGRADING／CHANGELOG 的同步規則，以及全 repo 手動同步區塊有沒有漏改（144s／10 次工具）
 
@@ -11,7 +11,7 @@
 
 ## 範圍與取檔
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S3_review_bundle.txt
-  （約 4150 行；第 1–443 行是 `git diff 6e9aaf0 HEAD`，第 444 行起是每個被改到檔案的整檔內容，帶行號，以 `----- FILE: <路徑>` 分隔）。
+  （約 4150 行；第 1–443 行是 `git diff 984628d HEAD`，第 444 行起是每個被改到檔案的整檔內容，帶行號，以 `----- FILE: <路徑>` 分隔）。
 - **被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄**。沒被改到的檔（例如 .github/workflows/ci.yml、tests/、skills/、agents/code-reviewer.md、DD_PIPELINE_ARCHITECTURE.md、diagrams/src/）照常讀 repo。
 - 專案規則：repo 根目錄 CLAUDE.md、scripts/CLAUDE.md、docs/reviews/CLAUDE.md（後兩份被改到，讀 diff 檔那份）。
 - 計畫與三輪計畫審查：docs/designs/2026-10-23-裁決審查-design.md 的 S3 一節（在 diff 檔裡）。
@@ -41,7 +41,7 @@
 
 （裁決者交回的逐字原文）
 
-Critical 0 / Important 3 / Smells 0。範圍：`git diff 6e9aaf0 HEAD`（S3，HEAD=92eea63）。重點看了 rev 跳號、同步規則，也掃了整個 repo 有沒有手動同步區塊漏改。
+Critical 0 / Important 3 / Smells 0。範圍：`git diff 984628d HEAD`（S3，HEAD=46083de）。重點看了 rev 跳號、同步規則，也掃了整個 repo 有沒有手動同步區塊漏改。
 
 **rev 跳號機械項全部到位**：
 - `dd-loop-rev` 兩處都改成 10（bundle 第 67、84 行）。
@@ -109,7 +109,7 @@ Critical 0 / Important 3 / Smells 0。範圍：`git diff 6e9aaf0 HEAD`（S3，HE
 - `git grep -nE '撈 git|一個檔一個檔…'`，加 `sed -n 105,115p docs/measurements/2026-10-23-reviewer-real-sessions.md` → 找到第一條 Important 的反證
 - `sed -n '1,60p' CHANGELOG.md` → 確認 `## 未發布` 的條目格式，沒動到 1.6.5
 - `git grep -nE 'S<段落>-a|-a\.md|-b\.md…'` → 沒有漏改的報告檔名說明
-- `sed -n '70,100p' commands/dd-init.md`，加 `git diff 6e9aaf0 HEAD --stat` → 蓋章區塊步驟 4 前後文正常
+- `sed -n '70,100p' commands/dd-init.md`，加 `git diff 984628d HEAD --stat` → 蓋章區塊步驟 4 前後文正常
 
 相關檔案：
 - /Users/danlio/project/my_project/claude-dd/templates/global/CLAUDE.md

@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s3-review-pack.txt`，627 行，沒進 repo）的組成：
-- 第 1 部分：`git diff 0dc3b53 HEAD`（表上這段的起點到 HEAD = 2276c3c），工作目錄乾淨、沒有未追蹤的檔
+- 第 1 部分：`git diff db8637e HEAD`（表上這段的起點到 HEAD = 420564e），工作目錄乾淨、沒有未追蹤的檔
 - 第 2 部分：步驟 3（code-simplifier）跑了，沒有改任何檔
 - 第 3 部分：`install-dd-pipeline.sh` 的 `check_builtin_skills`、`install_builtin_skills`、`check_builtin_agents`、`install_builtin_agents` 開頭、`--check` 的流程，與 `tests/test-install.sh` 的檔頭、`TEST_ONLY` 那一段、T11（都帶行號）
 - 第 4 部分：已跑過的驗證 V1–V7（T11 先紅後綠、macOS 與 ubuntu 整份 rc=0、8 個變異各紅在哪、對真實環境跑 `--check` 的輸出、lint、照 ci.yml 逐 step 跑）
@@ -17,7 +17,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff 0dc3b53 HEAD`（8 步開發迴圈 S3 段落，2 個 commit：64aa70b、2276c3c）。這一段做的事：
+> 審查範圍：`git diff db8637e HEAD`（8 步開發迴圈 S3 段落，2 個 commit：986bc79、420564e）。這一段做的事：
 > `./install-dd-pipeline.sh --check` 的「檢查內建 Skills」「檢查內建 Agents」兩段，原本只看目錄／檔案在不在；現在目錄／檔案在的時候再跟 repo 這份比內容
 > （skill 用 `diff -rq`、agent 用 `cmp -s`），不同就印「已安裝（與 repo 不同，重跑安裝會更新）」、段尾多一行「與 repo 不同：N」。只提示、不改檔、不影響結束碼。
 > `tests/test-install.sh` 新增 T11；兩份 README、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md`、根目錄 `CLAUDE.md`、`tests/CLAUDE.md` 跟著改。
@@ -48,7 +48,7 @@
 
 審查者交回的原文（逐字；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 1 / Smells 0 — 範圍：`git diff 0dc3b53 HEAD` 裡安裝腳本的部分，也就是 `check_builtin_skills`、`check_builtin_agents` 的新分支，以及它們和 `install_builtin_skills`、`install_builtin_agents` 是否對得上
+> Critical 0 / Important 1 / Smells 0 — 範圍：`git diff db8637e HEAD` 裡安裝腳本的部分，也就是 `check_builtin_skills`、`check_builtin_agents` 的新分支，以及它們和 `install_builtin_skills`、`install_builtin_agents` 是否對得上
 >
 > 【發現】
 > 1｜Important（只出現在權限異常這條少見的路，不是常走的路）｜部署版裡有讀不到的檔時，`--check` 照樣印「重跑安裝會更新」，但重跑安裝會中止、什麼都沒更新。

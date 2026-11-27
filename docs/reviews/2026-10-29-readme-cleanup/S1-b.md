@@ -7,7 +7,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 > 你是 8 步迴圈步驟 4 的審查者 B。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 >
 > 專案根目錄：/Users/danlio/project/my_project/claude-dd
-> 審查範圍：git diff 15e3446 07a1730（清理兩份 README，加 CHANGELOG 一條、根 CLAUDE.md 一個節名）。
+> 審查範圍：git diff 4e45b7a 818b8af（清理兩份 README，加 CHANGELOG 一條、根 CLAUDE.md 一個節名）。
 > 材料：<scratchpad>/rd-review-diff.txt。
 > 用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔讀材料裡那一份，沒改到的檔讀 repo。
 > 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
@@ -28,7 +28,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 
 ## 發現
 
-Critical 0 / Important 2 / Smells 0 — 審查 git diff 15e3446 07a1730（兩份 README、CHANGELOG、根 CLAUDE.md）。方向 B：新寫的句子是否符合它描述的來源。
+Critical 0 / Important 2 / Smells 0 — 審查 git diff 4e45b7a 818b8af（兩份 README、CHANGELOG、根 CLAUDE.md）。方向 B：新寫的句子是否符合它描述的來源。
 
 ## Findings
 [Important] README.md 安裝步驟 5（"A plugin that isn't on disk or has no readable version is skipped, with the `claude plugin install` command to run"）／README.zh-TW.md 步驟 5（「找不到 plugin 或讀不到版本時跳過，並印出該跑的 `claude plugin install` 指令」）｜兩份都寫成「plugin 不在磁碟上」時也會印安裝指令，實際上這條路徑不會印。

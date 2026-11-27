@@ -11,3 +11,4 @@ code-reviewer 改成 sonnet（加上只給 4 個工具）之後，步驟 4 的�
 
 - 發代號 `<段>-son-<序>`、`<段>-mix-<序>`；`prepare.py` 讀 `../2026-10-24-s4-inputs/briefs.txt`（相對路徑，別搬這個目錄）
 - 一次最多同時跑 2 發
+- 2026-11-28 git 歷史改寫（作者身分統一）後，`prepare.py` 的 `RANGES` 換成新的 commit 編號：每個 commit 的內容樹與改寫前相同，產生的快照與 diff 檔不變

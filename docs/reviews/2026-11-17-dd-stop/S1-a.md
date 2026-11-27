@@ -31,7 +31,7 @@ Agent 呼叫的 prompt 只有「你的完整派工內容在這個檔，先用 Re
 > 【Not reported】每條一行
 > 【需要外部查證】每條一行；沒有就寫「沒有」
 
-審查材料 `S1-diff.txt` 的四節：①`git diff 925d0b8 -- . ':!docs/measurements/2026-11-17-dd-stop/out'`（含步驟 3 還沒 commit 的改動）②步驟 3 自己改的（`git diff HEAD`）
+審查材料 `S1-diff.txt` 的四節：①`git diff 9679086 -- . ':!docs/measurements/2026-11-17-dd-stop/out'`（含步驟 3 還沒 commit 的改動）②步驟 3 自己改的（`git diff HEAD`）
 ③怎麼讀整檔（新增的檔看材料、既有的檔讀工作目錄）④已經跑過的驗證與預期值（`tests/test-dd-stop.sh` 131 個 ✅、`tests/test-gate.sh` 213 個 ✅、shellcheck 沒有輸出、`selftest-model.sh` 32 個 ✅、`tests/test-install.sh` exit 0、lint job 22 個 step、變異對照）。
 
 ## 發現

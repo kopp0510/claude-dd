@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外三個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s7/review/pack.txt`，1832 行，沒進 repo）的組成：
-- 第 1 部分：`git diff e4ec5cc`（表上這段的起點到工作目錄；HEAD = 8e91309，工作目錄乾淨、沒有未追蹤的檔）
+- 第 1 部分：`git diff a4d9185`（表上這段的起點到工作目錄；HEAD = 808cf87，工作目錄乾淨、沒有未追蹤的檔）
 - 第 2 部分：步驟 3（code-simplifier）跑了，沒有改任何檔（主對話用 `cmp` 核對過）
 - 第 3 部分：`scripts/githooks/claude-md-size.sh`、`scripts/githooks/pre-commit`、`scripts/githooks/claude-md-max-bytes` 整檔；`tests/test-gate.sh` 的檔頭到 helper 與 ⑯ 整節；
   `ci.yml` 的 ShellCheck 清單與新 step；`scripts/githooks/CLAUDE.md` 整檔；`tests/CLAUDE.md` 那一列新增的文字與「此層約束」新增的那一條（都帶行號或折行）
@@ -18,7 +18,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff e4ec5cc`（到工作目錄；8 步開發迴圈 S7 段落，HEAD = 8e91309，6 個 commit：f53d11a、1b33cae、d0e72b1、abf3d18、83c18ee、8e91309；工作目錄乾淨、沒有未追蹤的檔）。這一段做的事：
+> 審查範圍：`git diff a4d9185`（到工作目錄；8 步開發迴圈 S7 段落，HEAD = 808cf87，6 個 commit：2c3a277、7cc3289、12be2fd、694d06c、917f4df、808cf87；工作目錄乾淨、沒有未追蹤的檔）。這一段做的事：
 > 根目錄 `CLAUDE.md` 加大小上限。新腳本 `scripts/githooks/claude-md-size.sh`（本 repo 自用、不部署）有兩種跑法：帶 `--staged` 由 `scripts/githooks/pre-commit` 在每次 commit 時跑（index 那一版比 `HEAD` 那一版大、而且超過上限才擋）；不帶參數由 CI 的新 step 跑（工作目錄那一份超過上限就不通過）。
 > 上限寫在 `scripts/githooks/claude-md-max-bytes`（48000），取的是「最新 `v*` tag 那一版」的數字；那個 tag 沒有這個檔時，`--staged` 依序讀 `HEAD`、index，不帶參數讀工作目錄。現在最新的 tag `v1.6.14` 沒有這個檔。
 > `tests/test-gate.sh` 檔尾加了 ⑯（情境 A–R，在拋棄式 repo 裡經過真的 pre-commit）；`.github/workflows/ci.yml` 加一個 step、ShellCheck 清單加一行；
@@ -51,11 +51,11 @@
 
 審查者交回的原文（逐字；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 3 / Smells 0 — 範圍：`git diff e4ec5cc`（HEAD 8e91309），方向是整合、同步點、發版之後
+> Critical 0 / Important 3 / Smells 0 — 範圍：`git diff a4d9185`（HEAD 808cf87），方向是整合、同步點、發版之後
 >
 > 【發現】
 > 1｜Important｜上限的出處是「任何一個版本號最大的 `v*` tag」。腳本不檢查這個 tag 是不是 HEAD 的祖先，也不檢查它是不是真的發過版。所以「在 commit 裡調高不會生效，要等發下一版」這個保證，打一個 tag 就能繞過。「繞得過的路」那一節沒有列這一條｜`scripts/githooks/claude-md-size.sh:492` `tag=$(git tag --list 'v*' --sort=-v:refname | head -1)`，接著 `:498` 直接 `git cat-file -e "${tag}:${LIMIT_FILE}"`，中間沒有 ancestry 檢查。`scripts/githooks/CLAUDE.md:54-59` 的清單沒有這一條。我在拋棄式 repo 實跑：main 的上限檔是 100；在 side 分支把上限調成 9999、打 `v1.0.1-wip`，再切回 main。`merge-base --is-ancestor` 回 1（不是祖先），可是 main 上讓 CLAUDE.md 50→500 的 commit rc=0，印「上限 9999（取自 v1.0.1-wip）」。不帶參數那一種也 rc=0，另外印「工作目錄的上限檔寫 100，發下一版之後才生效」，這句會誤導｜發版之後，被擋下的人（或 Claude；gate-guard 不管 `git tag`）在任何分支上 commit 一個調高的上限檔，再 `git tag v1.6.99`，之後每個加字的 commit 都會放行。發版步驟（`CHANGELOG.md` 第 4 步）是 `git push origin main --tags`，這個 tag 會一起推上去，CI 也會拿它當上限｜至少把這條寫進「繞得過的路」。要擋的話，只接受 HEAD 的祖先 tag（`git describe --tags --abbrev=0 --match 'v*'`，或加 `merge-base --is-ancestor`）
-> 2｜Important｜83c18ee 把「不經過 pre-commit 的 commit」（cherry-pick、`merge --no-ff`、rebase、revert）補進了 `scripts/githooks/CLAUDE.md`，可是另外三處講同一件事的地方還是只列兩種，讀起來像完整清單｜`scripts/githooks/CLAUDE.md:58` 有四種 git 操作。`DD_PIPELINE_ARCHITECTURE.md:167` 寫「這一步補它擋不到的：`--no-verify`、沒設 `core.hooksPath` 的 clone」；`CHANGELOG.md:50` 寫「補 hook 擋不到的（`--no-verify`、沒設 `core.hooksPath` 的 clone）」；`.github/workflows/ci.yml:549` 寫「這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone）」。`git grep` 確認這三處都沒有 cherry-pick、merge、rebase 等字｜讀 CI 防線表的人會以為本機 merge 或 rebase 進來的 commit 已經被 pre-commit 擋過，其實沒有跑到（V7 實測），要等 push 時 CI 才擋｜三處都補上「不經過 pre-commit 的 commit（cherry-pick／merge --no-ff／rebase／revert）」，或改成「完整清單見 `scripts/githooks/CLAUDE.md`『繞得過的路』」
+> 2｜Important｜917f4df 把「不經過 pre-commit 的 commit」（cherry-pick、`merge --no-ff`、rebase、revert）補進了 `scripts/githooks/CLAUDE.md`，可是另外三處講同一件事的地方還是只列兩種，讀起來像完整清單｜`scripts/githooks/CLAUDE.md:58` 有四種 git 操作。`DD_PIPELINE_ARCHITECTURE.md:167` 寫「這一步補它擋不到的：`--no-verify`、沒設 `core.hooksPath` 的 clone」；`CHANGELOG.md:50` 寫「補 hook 擋不到的（`--no-verify`、沒設 `core.hooksPath` 的 clone）」；`.github/workflows/ci.yml:549` 寫「這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone）」。`git grep` 確認這三處都沒有 cherry-pick、merge、rebase 等字｜讀 CI 防線表的人會以為本機 merge 或 rebase 進來的 commit 已經被 pre-commit 擋過，其實沒有跑到（V7 實測），要等 push 時 CI 才擋｜三處都補上「不經過 pre-commit 的 commit（cherry-pick／merge --no-ff／rebase／revert）」，或改成「完整清單見 `scripts/githooks/CLAUDE.md`『繞得過的路』」
 > 3｜Important｜pre-commit 改成「先跑大小檢查、最後才 `exec` gate」之後，`/dd-init` Phase 3 的位置判定會把這支 hook 判成「gate 不在正確位置」，要求把 gate 搬到最前面。根目錄 CLAUDE.md 那句「兩者不衝突」不再成立。這一條是讀規則推出來的，沒有實跑 `/dd-init`｜`commands/dd-init.md:274-276`：「已含 → **看位置，不看有沒有這串字**：gate 呼叫在…shebang 與註解之後…才算裝好；不是…就搬到那個位置」。現在的 `scripts/githooks/pre-commit:5-7`，gate 前面多了 `top=…` 與大小檢查兩行；S7 之前 `exec` gate 緊接在註解後面，判定是「已裝好」。`CLAUDE.md:170-171`：「`/dd-init` Phase 3 會偵測此設定並改掛到 hooksPath 目錄，兩者不衝突」｜在本 repo 跑 `/dd-init`：掛載點是 `scripts/githooks/pre-commit`（進版控的檔）。照字面把 `exec …check-claude-md.sh` 搬到 shebang 與註解之後，`exec` 一執行就換掉行程，後面的大小檢查永遠跑不到，而且不報錯。如果搬的時候沒帶 `top=`，則是每個 commit 都失敗｜把根目錄那句改掉，或在 `scripts/githooks/CLAUDE.md` 寫明「本 repo 不要跑 `/dd-init` Phase 3；它的位置規則會把大小檢查變成死碼」
 >
 > 【Not reported】
@@ -78,7 +78,7 @@
 > - 讀 `commands/dd-init.md:196-280`（Phase 3 的位置規則）、`CLAUDE.md:160-175`、`CHANGELOG.md:1-20`
 > - `git tag --sort=-v:refname` → 最新是 v1.6.14；另外有 `pre-prune-2026-08-04`
 > - grep 兩份 README 與 UPGRADING 的 hooksPath、dogfood、`SKIP_DOC_CHECK` → 只講到 gate，沒有要同步的地方
-> - `git branch -a` 與 `git worktree list` → 只有 main，而且含 f53d11a
+> - `git branch -a` 與 `git worktree list` → 只有 main，而且含 2c3a277
 > - `grep -nE '^# [A-R]…' tests/test-gate.sh` → 17 行，對得上 A–R
 > - 拋棄式 repo（rc7-d/r2，`git init -b main`）放真腳本：side 分支調高上限並打 tag，main 加字 → commit rc=0、取自 v1.0.1-wip，不帶參數那一種 rc=0。第一次實驗（rc7-d/r）因為預設分支是 master 而沒切回去，只拿它的排序結果：`v2-test` 會成為最新、`v1.0.2-rc1` 排在 `v1.0.2` 前面
 >

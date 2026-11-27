@@ -3,7 +3,7 @@
 ## 派工
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數），同時派 code-simplifier 跑步驟 3。派工用一句話：「先用 Read 讀完 `<scratchpad>/s2/review/prompt-a.txt`，它就是你的完整任務說明，照裡面做。報告直接用文字交回，不要寫成檔。」下面是那個檔的全文（路徑已去識別：`<repo>`、`<scratchpad>`）。
-diff 檔（1572 行）的組成：①`git diff 58fc4ba HEAD`（HEAD = 623f61a；不含 `out/reports/` 與 `judge.txt`，這兩類直接讀 repo）②被改到檔案在 HEAD 的整檔內容（帶行號；與步驟 3 並行，所以取 HEAD 版）③已跑過的驗證與預期值 7 條。步驟 3 的改動在派工當下是空的。
+diff 檔（1572 行）的組成：①`git diff 9e473c3 HEAD`（HEAD = b66dbff；不含 `out/reports/` 與 `judge.txt`，這兩類直接讀 repo）②被改到檔案在 HEAD 的整檔內容（帶行號；與步驟 3 並行，所以取 HEAD 版）③已跑過的驗證與預期值 7 條。步驟 3 的改動在派工當下是空的。
 
 ```text
 你是 8 步開發迴圈步驟 4（code-review）的審查者 A。另外兩個審查者同時在審同一段，你們互相看不到。
@@ -11,14 +11,14 @@ diff 檔（1572 行）的組成：①`git diff 58fc4ba HEAD`（HEAD = 623f61a；
 職責：找漏洞、證明這次改動有錯。每條附證據（diff 檔行號、repo 檔案行、你跑的指令與輸出），沒證據的不算。
 只用手上的資料判斷；需要外部查證的列出來交回，不要自己上網抓。不改任何檔、不 commit、不跑 claude 指令（會花錢）。
 
-範圍：repo <repo> 的 git diff 58fc4ba HEAD（HEAD 是 623f61a），一段「審查者思考強度實驗」（量測腳本、結果文件、設計文件與兩份 CLAUDE.md 的補充）。
+範圍：repo <repo> 的 git diff 9e473c3 HEAD（HEAD 是 b66dbff），一段「審查者思考強度實驗」（量測腳本、結果文件、設計文件與兩份 CLAUDE.md 的補充）。
 diff 檔：<scratchpad>/s2/review/S2-diff.txt，共 1572 行。Read 一次讀太多會靜靜截斷、不報錯；一律用 offset／limit 每次 300 行，讀到第 1572 行為止。
 diff 檔三段：整段 diff（不含 docs/measurements/2026-11-15-reviewer-effort/out/reports/ 與 docs/measurements/2026-11-15-reviewer-effort/judge.txt，這兩類直接讀 repo）、被改到檔案的整檔內容（帶行號）、已經跑過的驗證（已確認，不要重跑）。
 同時有一個 code-simplifier 在改工作目錄裡 docs/measurements/2026-11-15-reviewer-effort 底下的 stats.py、table.py、outside.py、deid.py：這四支一律讀 diff 檔裡那一份（HEAD 版）或 git show HEAD:<路徑>，不要讀工作目錄。其他檔照常讀 repo。
 專案規則在根目錄與各層的 CLAUDE.md。回覆用繁體中文。
 
 背景事實（不是結論，請自己查證）：
-- 實驗在跑之前 commit 了方法、正確答案、判準（2b470b5）；第一發跑完、看報告之前補了洩題檢查的判法（e5c104b）；run.sh 在第一發作廢後加了一個環境變數（6903c1b）；甲的結果 61e594d；乙與結論 623f61a
+- 實驗在跑之前 commit 了方法、正確答案、判準（c7e3cb9）；第一發跑完、看報告之前補了洩題檢查的判法（d3af3fc）；run.sh 在第一發作廢後加了一個環境變數（9671749）；甲的結果 e4b6f32；乙與結論 b66dbff
 - 使用者在乙跑完第一發後選「現在停」，所以乙只有 1 發
 - 命中（哪份報告的哪一行算抓到）是寫這段 diff 的人自己人工判的
 
@@ -34,7 +34,7 @@ diff 檔三段：整段 diff（不含 docs/measurements/2026-11-15-reviewer-effo
 審查者交回的全文（去識別後，其餘一字不改）：
 
 ```text
-Critical 0 / Important 2 / Smells 0。範圍是 `git diff 58fc4ba HEAD`（623f61a），只看量測腳本的方向：stats.py、prepare.py、run.sh、table.py、outside.py、deid.py。四支被 simplifier 改動的檔都用 diff 檔裡的 HEAD 版或 `git show HEAD:`。
+Critical 0 / Important 2 / Smells 0。範圍是 `git diff 9e473c3 HEAD`（b66dbff），只看量測腳本的方向：stats.py、prepare.py、run.sh、table.py、outside.py、deid.py。四支被 simplifier 改動的檔都用 diff 檔裡的 HEAD 版或 `git show HEAD:`。
 
 ## 發現
 

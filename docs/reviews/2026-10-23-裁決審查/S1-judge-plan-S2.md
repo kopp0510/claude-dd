@@ -1,6 +1,6 @@
 # S1 驗收 — plan-review 實跑（拿 S2 計畫當題目）
 
-S1 的步驟 5 驗收：照 `skills/plan-review/SKILL.md`（commit 3a5c718 之後、補上 B6 判例之前的版本）實際跑一輪。
+S1 的步驟 5 驗收：照 `skills/plan-review/SKILL.md`（commit a343616 之後、補上 B6 判例之前的版本）實際跑一輪。
 這份不是 S1 程式碼的審查，是「新 skill 跑起來的樣子」的證據，也是 S2 計畫第 1 輪的裁決結果。
 
 ## 派工

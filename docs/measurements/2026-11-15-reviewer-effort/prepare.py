@@ -1,13 +1,13 @@
 # 產生每一發的快照 repo、diff 檔與 prompt 檔（乙部分的快照與 diff 檔做法照 ../2026-10-24-s5-inputs/prepare.py）。
 # 用法：python3 -I prepare.py <claude-dd repo> <工作目錄> <發代號>...
-# 發代號：<素材>-<臂>-<序>。素材 P = 甲部分（計畫審查，快照 b1935bb）；G2、G3 = 乙部分（步驟 4 的兩段舊 diff）。臂 med／low。
+# 發代號：<素材>-<臂>-<序>。素材 P = 甲部分（計畫審查，快照 23429eb）；G2、G3 = 乙部分（步驟 4 的兩段舊 diff）。臂 med／low。
 import os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BRIEFS = os.path.join(HERE, "..", "2026-10-24-s4-inputs", "briefs.txt")  # 範圍說明跟 2026-10-24 那兩次逐字共用
 READ1 = "先用 Read 讀完 {SELF}，它就是你的完整任務說明，照裡面做。"
-PLAN_REV = "b1935bb"   # 甲：2026-11-14 那份計畫送審時的 HEAD
-RANGES = {"G2": ("639bde7", "b66d8ae"), "G3": ("08b2576", "8514fb2")}
+PLAN_REV = "23429eb"   # 甲：2026-11-14 那份計畫送審時的 HEAD
+RANGES = {"G2": ("b1d28bd", "40b3f0a"), "G3": ("96e930e", "720f1b3")}
 EFFORT = {"med": "medium", "low": "low"}
 
 def sh(*a, cwd=None, inp=None):

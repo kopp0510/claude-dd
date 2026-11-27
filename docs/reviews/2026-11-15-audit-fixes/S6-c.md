@@ -6,13 +6,13 @@
 
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。派工 prompt 是三個審查者共用的一段加各自的方向，全文如下（`<scratchpad>` 是這個 session 的暫存目錄，沒進 repo）。
 
-審查包 `<scratchpad>/s6-review/pack.txt`（576 行）的組成：這一段做了什麼的事實、已跑過的驗證與預期值、`git diff bf7e654 69f0e65`。被改到的檔沒有另附整檔，理由在 `S6-judge.md` 的「派工」。
+審查包 `<scratchpad>/s6-review/pack.txt`（576 行）的組成：這一段做了什麼的事實、已跑過的驗證與預期值、`git diff 5a0d16e e9212a4`。被改到的檔沒有另附整檔，理由在 `S6-judge.md` 的「派工」。
 
 ````
 你是這一段改動的審查者。職責：找漏洞，每條附證據（檔案路徑＋行或原句、或指令與輸出），沒證據不算。不寫優點。
 專案：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。全程唯讀：不改檔、不 commit、不跑安裝腳本、不跑 `claude`。
 審查包：<scratchpad>/s6-review/pack.txt（576 行，最後一行是 `<<<審查包結束>>>`）。先用 Read 把它讀完：用 offset／limit 每次 150 行，讀到看見最後那一行為止（Read 一次讀太多會靜靜截斷、不報錯）。
-範圍是 `git diff bf7e654 69f0e65`（已 commit 的兩個 commit，不是未 staged 的 diff）。被改到的檔讀 `git show 69f0e65:<路徑>`，舊版讀 `git show bf7e654:<路徑>`；沒被改到的檔照常讀。
+範圍是 `git diff 5a0d16e e9212a4`（已 commit 的兩個 commit，不是未 staged 的 diff）。被改到的檔讀 `git show e9212a4:<路徑>`，舊版讀 `git show 5a0d16e:<路徑>`；沒被改到的檔照常讀。
 審查包第二節列的驗證已經跑過、結果已確認，不要重跑；可以質疑它驗的是不是該驗的。只用手上的資料判斷，需要外部查證的（要上網、要跑 `claude -p`、要跑安裝）列出來交回。
 這一段全是 Markdown，沒有程式碼。要抓的是文件裡的宣稱與指路：講錯的、指不到的、搬完意思變了的、少掉的指示。使用者對這次搬動的要求是「意思不能變；是搬家，不是刪」。
 交回格式（照抄標題）：第一行 `Critical N / Important N / Smells N — 範圍：…`；【發現】每條：編號｜級別｜內容｜證據｜會出什麼事｜建議改法；【Smells】；【Not reported】看到但判斷不報的與理由；【What I ran】讀了哪些檔、跑了哪些指令；【需要外部查證】。
@@ -24,7 +24,7 @@
 審查者交回的報告，逐字（只把暫存目錄的絕對路徑換成 `<scratchpad>`）：
 
 ````
-Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23dd9 S6-1、69f0e65 S6-2），方向 (c)：搬過去的字在新位置還對不對
+Critical 0 / Important 1 / Smells 4 — 範圍：git diff 5a0d16e e9212a4（267cb1a S6-1、e9212a4 S6-2），方向 (c)：搬過去的字在新位置還對不對
 
 文字搬得對：跟上下文有關的指代（「同一次的 probe-ls」「2026-10-30 同一次實測」「那個目錄的 outside.py」）在新檔裡仍然緊跟原來那條，順序沒變，指到的東西一樣。三個檔各改的那一句指路（方向 ④）在新位置都找得到內容。問題出在一條通用規則搬完後，從指路句走不到它。
 
@@ -35,7 +35,7 @@ Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23
 ｜建議改法：二選一。①把這段（不改字）移到「已知的坑」，「量 agent 指令本體」留一句指過去；②根目錄「已知的坑」指路句與「測 skill」那節開頭各補一句「量測前先關掉 advisor（見「量 agent 指令本體」最後一段）」。選 ① 的話，adhd-style 那句指路的節名要跟著改。
 
 【Smells】
-- S1（可能是 Duplicated Code）：`DD_PIPELINE_ARCHITECTURE.md`「安裝腳本」一節裡，搬進來的 `--check` 那段（69f0e65 L90–93）和同一節既有的行為保證 bullet（L76–77「**`--check` 看得出部署版過期（只限 skills、agents）**：…commands、scripts、output styles、全域 CLAUDE.md 不比」）講同一件事。同一節出現兩份，以後只改其中一份就會互相矛盾。
+- S1（可能是 Duplicated Code）：`DD_PIPELINE_ARCHITECTURE.md`「安裝腳本」一節裡，搬進來的 `--check` 那段（e9212a4 L90–93）和同一節既有的行為保證 bullet（L76–77「**`--check` 看得出部署版過期（只限 skills、agents）**：…commands、scripts、output styles、全域 CLAUDE.md 不比」）講同一件事。同一節出現兩份，以後只改其中一份就會互相矛盾。
 - S2：同檔「核心工作法」一節，搬進來的 gate 段（L134–140）開頭是「搭配巢狀 CLAUDE.md 堆疊維護…並由 **pre-commit gate 強制**」。這句在根目錄時「搭配」的是上文的迴圈；現在它排在 dogfood 段（L131–132）後面，而同一節 L121–124「配套：巢狀 CLAUDE.md 堆疊維護，由 **pre-commit gate**…強制 — 改碼目錄缺 CLAUDE.md…SKIP 不是豁免…」已經講過一次。讀起來像從頭再介紹 gate。設計文件說兩段並存是刻意的，不影響正確性，但缺一句跟 L121 的銜接。
 - S3：新檔開頭「每次實驗一個 `<日期>-<主題>/` 目錄，各有自己的 CLAUDE.md，另有幾份彙整的 `<日期>-<主題>.md`」講得不準，有兩處不符。
   - S4 一次實驗拆成兩個目錄（`2026-10-24-s4-inputs`、`2026-10-24-s4-outputs`，S5 也一樣）。
@@ -47,7 +47,7 @@ Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23
 
 【Not reported】
 - 方向 ③（新檔會不會被 run.sh 複製進受測目錄、gate 要求會不會變）：兩者都沒問題，不報。
-  - 沒有 run.sh 會把 `docs/measurements/` 複製進受測目錄。拋棄式目錄都是當場 `git init` 加 `printf` 產生的。security-audit-trial 用的是固定在 `9584605` 的 clone。s4、s5、reviewer-effort 的快照用的是固定的舊 rev。所以新檔不會出現在現有實驗的受測目錄。
+  - 沒有 run.sh 會把 `docs/measurements/` 複製進受測目錄。拋棄式目錄都是當場 `git init` 加 `printf` 產生的。security-audit-trial 用的是固定在 `dd8b5a9` 的 clone。s4、s5、reviewer-effort 的快照用的是固定的舊 rev。所以新檔不會出現在現有實驗的受測目錄。
   - gate 只看「含程式碼的目錄本身」有沒有 CLAUDE.md（`code_dirs_of` + `md_of` 不往上找），新檔不改變它對 `docs/measurements/<日期>/` 的要求。
 - 「fixture 有子目錄」那條寫「`run.sh` 把 fixture 複製到拋棄式目錄後跑 `find "$WORK" -mindepth 2 -name CLAUDE.md -delete`」，但 repo 裡沒有任何 run.sh 有這行（全庫 `git grep 'mindepth 2'` 只命中新檔自己）。這是原文逐字搬來的既有問題，不在這次 diff 的責任範圍。不過現在它就放在 `docs/measurements/` 底下，讀者更可能去找那支 run.sh 而找不到。
 - 「沙盒用 `claude -p` 測行為前，先 `./install-dd-pipeline.sh --force`」搬走後，跟根目錄「開發本 repo」的「gate 還沒驗證完別跑安裝」分開了。但根目錄每輪都載入，後一句仍在 context，所以不報。
@@ -60,17 +60,17 @@ Critical 0 / Important 1 / Smells 4 — 範圍：git diff bf7e654 69f0e65（2b23
 
 【What I ran】
 - Read pack.txt L1–576（分 4 次讀到 `<<<審查包結束>>>`）
-- `git ls-tree --name-only 69f0e65 docs/measurements/` 加逐目錄 `git cat-file -e …/CLAUDE.md`：12 個目錄都有，另有 6 份 `.md`
+- `git ls-tree --name-only e9212a4 docs/measurements/` 加逐目錄 `git cat-file -e …/CLAUDE.md`：12 個目錄都有，另有 6 份 `.md`
 - `printf …進度指路… | wc -c` → 130
-- `git ls-files 'docs/measurements/*.sh'`，再 `git grep -nE 'cp |rsync|git (clone|worktree|archive)|mindepth|…' 69f0e65 -- 'docs/measurements/*.sh' '*.py'`：沒有複製 repo 的 measurements 目錄，也沒有 `-name CLAUDE.md -delete`
-- `git show 69f0e65:docs/measurements/2026-11-14-security-audit-trial/run.sh`，加上它的 README L10：clone 固定在 `9584605`
-- `git show 69f0e65:scripts/check-claude-md.sh`：讀 L55–75 與 L300–355（`code_dirs_of`、`md_of`、擋 commit 的迴圈）
-- `git show 69f0e65:DD_PIPELINE_ARCHITECTURE.md` L1–180
-- `git grep -nE '根(目錄)? ?CLAUDE\.md' 69f0e65 -- …`，以及 `git grep -nE '(根|CLAUDE\.md).{0,20}(注意事項|開發本 repo|步驟」?第? ?5|核心工作法|殘留清理|安裝 / 更新)'`（排除 docs/designs、docs/reviews、CHANGELOG、out）：沒有還指著舊位置的句子
-- `git grep -n 'CLAUDE' 69f0e65 -- 'docs/measurements/*.py' '*.sh'`；`git grep` 查 dd-init-symlink、dd-init-upgrade、reviewer-effort 的 setup 有沒有複製 repo：都沒有
+- `git ls-files 'docs/measurements/*.sh'`，再 `git grep -nE 'cp |rsync|git (clone|worktree|archive)|mindepth|…' e9212a4 -- 'docs/measurements/*.sh' '*.py'`：沒有複製 repo 的 measurements 目錄，也沒有 `-name CLAUDE.md -delete`
+- `git show e9212a4:docs/measurements/2026-11-14-security-audit-trial/run.sh`，加上它的 README L10：clone 固定在 `dd8b5a9`
+- `git show e9212a4:scripts/check-claude-md.sh`：讀 L55–75 與 L300–355（`code_dirs_of`、`md_of`、擋 commit 的迴圈）
+- `git show e9212a4:DD_PIPELINE_ARCHITECTURE.md` L1–180
+- `git grep -nE '根(目錄)? ?CLAUDE\.md' e9212a4 -- …`，以及 `git grep -nE '(根|CLAUDE\.md).{0,20}(注意事項|開發本 repo|步驟」?第? ?5|核心工作法|殘留清理|安裝 / 更新)'`（排除 docs/designs、docs/reviews、CHANGELOG、out）：沒有還指著舊位置的句子
+- `git grep -n 'CLAUDE' e9212a4 -- 'docs/measurements/*.py' '*.sh'`；`git grep` 查 dd-init-symlink、dd-init-upgrade、reviewer-effort 的 setup 有沒有複製 repo：都沒有
 
 【需要外部查證】
-- 用 `--add-dir` 加進來的目錄（例如 reviewer-effort、s4 那種快照），裡面巢狀的 CLAUDE.md 會不會在受測 session 讀那裡的檔時自動載入。以後用 69f0e65 之後的 rev 重做快照實驗，`docs/measurements/CLAUDE.md` 會跟著進快照，裡面寫著實驗手法（洩題檢查、快照放哪裡），可能污染受測 session。要跑一發 `claude -p` 對照臂才能確定。
+- 用 `--add-dir` 加進來的目錄（例如 reviewer-effort、s4 那種快照），裡面巢狀的 CLAUDE.md 會不會在受測 session 讀那裡的檔時自動載入。以後用 e9212a4 之後的 rev 重做快照實驗，`docs/measurements/CLAUDE.md` 會跟著進快照，裡面寫著實驗手法（洩題檢查、快照放哪裡），可能污染受測 session。要跑一發 `claude -p` 對照臂才能確定。
 - 根目錄「做之前先 Read」那兩句指路，主對話做到那一步時會不會真的照著去讀：設計文件已寫明乾跑排在審查之後、也不證明這件事，這裡只列出來。
 ````
 

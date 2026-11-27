@@ -16,8 +16,8 @@
 ````text
 你是 claude-dd repo（<REPO>）8 步開發迴圈步驟 4 的審查者。職責：找漏洞，每條附證據（路徑:行，或指令與輸出），沒證據的不算。不寫優點、不客套。
 
-審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 6f2118a 到目前工作目錄的整段（兩個 commit aa9b162、d36e5d6，加上步驟 3 還沒 commit 的改動）。
-另有 fc2ccb0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
+審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 1239450 到目前工作目錄的整段（兩個 commit e1b1eeb、43f2c85，加上步驟 3 還沒 commit 的改動）。
+另有 dc345d0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
 
 材料：
 - diff 檔：<S>/s2-review/diff.txt（924 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**：Read 一次讀太多會靜靜截斷、不報錯。
@@ -42,7 +42,7 @@
 
 ## 發現
 
-S2-c 的結果：Critical 0、Important 2、Smell 5。範圍是 6f2118a 到工作目錄（aa9b162、d36e5d6、步驟 3 還沒 commit 的改動、fc2ccb0）。我從程式與試跑紀錄下手，最後全面看過一遍。路徑都寫成 repo 相對路徑，scratchpad 一律寫成 `<S>`。
+S2-c 的結果：Critical 0、Important 2、Smell 5。範圍是 1239450 到工作目錄（e1b1eeb、43f2c85、步驟 3 還沒 commit 的改動、dc345d0）。我從程式與試跑紀錄下手，最後全面看過一遍。路徑都寫成 repo 相對路徑，scratchpad 一律寫成 `<S>`。
 
 ## Findings
 
@@ -106,7 +106,7 @@ S2-c 的結果：Critical 0、Important 2、Smell 5。範圍是 6f2118a 到工�
 ## Not reported
 - 步驟 3 的 jq `def tool_uses($name)` 與原式等價：`|` 和 `//` 的優先序沒變。④ 前後輸出相同；我在拋棄式目錄重跑，除了上面那兩行跟路徑長度有關的差異，results.txt:1–30 逐字相同，`/bin/bash` 3.2.57 的輸出也相同。
 - check.sh:29 那句「$? 是緊鄰上一行 node 的結束碼」的註解正確。
-- README 結果表的數字我全部重算過，都對得上：花費、wall 21.7 分、各模型花費、主 session 加 4 個偵察跑 Opus 而其餘 3 個跑 Sonnet、agent 次數 7、單元 2/1/9、verdict、兩支驗證器、HEAD 9584605、拒絕 3 次。
+- README 結果表的數字我全部重算過，都對得上：花費、wall 21.7 分、各模型花費、主 session 加 4 個偵察跑 Opus 而其餘 3 個跑 Sonnet、agent 次數 7、單元 2/1/9、verdict、兩支驗證器、HEAD dd8b5a9、拒絕 3 次。
 - README:20「叫得起來」的依據成立。probe1 第一個工具呼叫就 Read 了 prompt 沒給的 `<S>/sa-plugin/skills/security-audit/HUNTING.md`，之前沒有任何搜尋。real.jsonl 裡 `Base directory for this skill` 雖然命中 1 次，但那是 subagent 讀根目錄 CLAUDE.md 的 tool_result，不是 skill 載入訊息。
 - skills/security-audit/CLAUDE.md 裡每段「」原句，我都對它被標的檔與節（Cost budget、Write isolation、Full audit setup 等）核過，全部正確。④ 只對四檔合併內容核過，抓不到這一類錯。
 - 去識別：段落新增的每一行，加上試跑目錄與 skills/security-audit/CLAUDE.md，都沒有使用者名、`/tmp/`、`-Users-`、UUID。
@@ -131,7 +131,7 @@ S2-c 的結果：Critical 0、Important 2、Smell 5。範圍是 6f2118a 到工�
 - jq 讀 findings.json 的 verdict 與 title（只讀這兩欄）
 - 重跑 check.sh（④ 列過，但我要驗它的輸出跟路徑長度有沒有關、以及 bash 3.2 下是否相同）：在 `<S>/s2c-review-tmp` 放 real.jsonl 的路徑替換副本，其餘目錄用 symlink 指回原處，跑 `bash` 與 `/bin/bash`，再和 results.txt:1–30 diff → 只有 :10、:12 不同；3.2 與 5 的輸出相同。這個目錄還留著，沒刪
 - `stat -f %SB` 看 scratchpad 各目錄的建立時間 → 全是同一秒，判斷不出先後，因此沒寫成 finding
-- `git diff 6f2118a | grep '^+' | grep -nE '<使用者名|claude-501|/tmp/|-Users-|/Users/|UUID|my_project>'` → 只命中 CLAUDE.md:18 那個樣式本身；試跑目錄與 skills/security-audit/CLAUDE.md → 0 筆
+- `git diff 1239450 | grep '^+' | grep -nE '<使用者名|claude-501|/tmp/|-Users-|/Users/|UUID|my_project>'` → 只命中 CLAUDE.md:18 那個樣式本身；試跑目錄與 skills/security-audit/CLAUDE.md → 0 筆
 - `grep` install-dd-pipeline.sh 的 node 檢查、`install_builtin_skills`、PROMOTED_SKILLS；tests/test-install.sh 的計數方式
 - `git grep` 了：自動化全面掃描、security-auditor、disable-model-invocation／user-invoked、c1c8a8c
 - commands/dd-init.md 的 `ls -l`／`ls -ld`；S1-b.md 與 S1-judge.md 的節標題；docs/reviews/CLAUDE.md 的規矩；CHANGELOG 未發布區塊的小節

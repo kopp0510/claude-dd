@@ -33,7 +33,7 @@
 【駁回】
 - 輪1-R1-1／R2-1／R3-2｜沒有在根目錄 CLAUDE.md 加指路句｜這份計畫是 task-planner 步驟 4 送審的草稿，步驟 5 本來就規定要加指路（`skills/task-planner/SKILL.md:108-109`），屬於既定流程會處理的事
 - 輪1-R1-5｜沒排 §3.9 的步驟 3、4、8｜進度表的規則區塊與 dd-loop 會管，task-planner 把小任務定為只走步驟 1、2，整段跑 3–8，不算漏
-- 輪1-R1-6／R1-7｜審查用的 checkout 的 HEAD 是 e3e9e18，和事實寫的 b1935bb 不同｜這是審查用的副本環境，不是計畫的缺失；能抽查的行（test-install.sh 87 行、各函式行為）都對得上
+- 輪1-R1-6／R1-7｜審查用的 checkout 的 HEAD 是 e3e9e18，和事實寫的 23429eb 不同｜這是審查用的副本環境，不是計畫的缺失；能抽查的行（test-install.sh 87 行、各函式行為）都對得上
 - 輪1-R3-8｜探針放在 scratchpad、不在 repo｜T2 本來就要把案例表搬進 `tests/test-install.sh`；debian 重現的問題已併進 R1-4／R3-4 那條
 - 輪1-R4-5｜self-improving-agent 的 hook 觸發條件計畫沒寫｜開工前提 3 已經要查「什麼時候會插提醒」
 - 輪1-R4-6｜「會用繁中」是靠規則，以及全域 CLAUDE.md 預設是 No｜它引的 `README.md:56` 講的是 plugin 登記，不是全域 CLAUDE.md 的預設，證據不支持

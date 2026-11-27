@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 C 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`ac8fcfe..HEAD`。
+裁決者給審查者 C 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`e9a5db5..HEAD`。
 
 ````text
 ```
@@ -14,7 +14,7 @@
 
 ### S4-rev-common.txt
 ```
-你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`ac8fcfe..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
+你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`e9a5db5..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
 
 ## 讀什麼
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S4-review-diff.txt
@@ -29,7 +29,7 @@
 - CI「迴圈步數第五方」本機跑 → 8 個 ✅、exit 0
 - simplifier 沒改任何檔
 - 實驗（14 發 claude -p）不可重跑：要花錢，快照與 log 在 session 暫存目錄已不可得。數字以 `docs/measurements/2026-10-24-s4-outputs/stats.jsonl` 為準。
-- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；db0af00/a4ed41f/ee68e72 用 git show grep 過對應句子存在。
+- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；85f921e/544ccdf/35e94a4 用 git show grep 過對應句子存在。
 
 ## 你的職責
 找漏洞、證明這次改動有錯（程式邏輯錯、數字對不上、引用指錯、宣稱說過頭、文件互相矛盾）。每條附證據（diff 檔行號或 repo 檔案行、grep / python 指令與輸出）；沒證據的不算。不要客套、不要「整體不錯」。
@@ -60,7 +60,7 @@
 審查者 C 的報告原文（逐字）：
 
 ````text
-Critical 0 / Important 4 / Smells 1 — 範圍：`ac8fcfe..HEAD` 的量測文件 `docs/measurements/2026-10-23-reviewer-real-sessions.md`「新做法對照」一節，核對命中表、參考段、結論 5、限制段的引用（方向 C）
+Critical 0 / Important 4 / Smells 1 — 範圍：`e9a5db5..HEAD` 的量測文件 `docs/measurements/2026-10-23-reviewer-real-sessions.md`「新做法對照」一節，核對命中表、參考段、結論 5、限制段的引用（方向 C）
 
 下面的行號：量測文件用 repo 檔的行號（等於 diff 檔行號 + 16），reports 用 `docs/measurements/2026-10-24-s4-outputs/reports/` 底下的檔名前綴加行號。
 
@@ -68,7 +68,7 @@ Critical 0 / Important 4 / Smells 1 — 範圍：`ac8fcfe..HEAD` 的量測文件
 - 證據：
   - ⑩ 那條在當時的正確答案裡就有：`docs/reviews/2026-10-07-review-followups/S4-a.md:59` 寫「3. ⑩ 的 `said "改從共同祖先"` 無法分辨是哪個呼叫端印的」；`S4-b.md:43` 也有。
   - 這次的舊組也看到了 ⑩，只是放進 Not reported：`G2-old-1.d1.a594bb` :21、`G2-old-2.d1.a67862` :14、`G2-old-2.d1.a0166b` :16。
-  - §3.5 新功能那條受全域規則污染，跟 K6 同一類。`docs/reviews/2026-10-18-pstack-gaps/S1-a.md:56` 寫「『新功能還沒寫時先放回錯值的空殼』是我照這個判準推出來的」，`git log -S '新功能還沒寫' -- templates/global/CLAUDE.md` 回 ee68e72。抓到它的審查者自己也承認：`G3-new-2.d2.ae16a9` :11 寫「這次對話開頭載入的全域 CLAUDE.md §3.5 已經是後來修過的版本，多了『新功能還沒寫時…』」。另外 `G3-hk-2.d2.a31c92` :3 是 haiku 組，不是新組。
+  - §3.5 新功能那條受全域規則污染，跟 K6 同一類。`docs/reviews/2026-10-18-pstack-gaps/S1-a.md:56` 寫「『新功能還沒寫時先放回錯值的空殼』是我照這個判準推出來的」，`git log -S '新功能還沒寫' -- templates/global/CLAUDE.md` 回 35e94a4。抓到它的審查者自己也承認：`G3-new-2.d2.ae16a9` :11 寫「這次對話開頭載入的全域 CLAUDE.md §3.5 已經是後來修過的版本，多了『新功能還沒寫時…』」。另外 `G3-hk-2.d2.a31c92` :3 是 haiku 組，不是新組。
 - 失敗情境：讀者會以為新做法有命中表以外的額外收穫，實際上一條舊做法也抓得到，另一條是洩題。
 - 建議：換成真的只有新組抓到、又沒被污染的例子；找不到就刪掉這個括號。
 
@@ -127,7 +127,7 @@ What I ran：
 - `grep -n '繞過②\|:337\|第 337\|by3' G3-*` 和 `grep -n 'gate 端\|三句\|range_base\|185' G3-*` → K4 0 命中
 - `grep -n 'stash\|verification-gate' G3-*`、`grep -n '3\.9\|鑑別\|第三種' G3-hk-*.d2.*`，加上 `sed -n '10,25p' G3-hk-2.d1*`、`sed -n '11,27p' G3-hk-1.d1*` → haiku 兩發的 K6 都是裁決者自查
 - `grep -n '預言\|S6 的 review' G2-*`、`grep -n '紅數\|3 紅\|7 紅\|哪幾\|N 項' G2-*` → K2、K3 各格
-- `grep -n '⑩\|改從共同祖先' docs/reviews/2026-10-07-review-followups/S4-*.md`、`grep -rn '新功能\|空殼' docs/reviews/2026-10-18-pstack-gaps/`、`git log --oneline -S '新功能還沒寫' -- templates/global/CLAUDE.md` → ⑩ 在舊答案裡有；§3.5 新功能那條源自 ee68e72
+- `grep -n '⑩\|改從共同祖先' docs/reviews/2026-10-07-review-followups/S4-*.md`、`grep -rn '新功能\|空殼' docs/reviews/2026-10-18-pstack-gaps/`、`git log --oneline -S '新功能還沒寫' -- templates/global/CLAUDE.md` → ⑩ 在舊答案裡有；§3.5 新功能那條源自 35e94a4
 - `grep -n '⑩' G2-old*`、`grep -n '新功能' G3-*` → 舊組也看到 ⑩；§3.5 新功能那條只有 G3-new-2 與 G3-hk-2 報了
 - `sed -n "<n>p"` 印量測文件 176、181、183、195、213 行 → 確認檔案行號
 
@@ -136,7 +136,7 @@ Not reported（範圍）：沒有改任何檔、沒有跑 claude；原始數字�
 
 ## 處置
 
-修正在 1e209ef。編號對到 `S4-judge.md` 的「採納」清單。
+修正在 896ff46。編號對到 `S4-judge.md` 的「採納」清單。
 
 - C1、C5（限制段舉的兩例不成立）→ 採納 6（Important）。刪掉例子，改寫「沒有找到有出處、沒受污染、只有新組抓到的例子」
 - C2（K6 蓋掉 haiku 組差異）→ 採納 5（Important）。改成審查者聯集新 2/2、haiku 0/2、舊 2/2，結論 3、5 同批補

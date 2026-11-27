@@ -16,6 +16,12 @@
 > 0.2.0 涵蓋專案初始（2025-12-15）到 2026-07-24 的所有變更，但只有 6 步迴圈改造
 > 這一項被逐條記錄；更早的細節見 git 歷史。
 
+## 未發布
+
+### Changed
+
+- **git 歷史改寫（2026-11-28）**：全部 commit 的作者與提交者、全部 tag 的 tagger 統一成同一個身分，所以每個 commit 編號都變了，tag 也跟著指到新的 commit。repo 檔案裡引用的舊編號已換成新的，只有兩處沒換：本檔已發布區塊裡的編號是改寫前的（CI 不准改已發布區塊），`templates/global/CLAUDE.md` 裡的 `f46d4de` 是範例值。改寫前就 clone 的人要重新 clone，或在沒有未 push 改動時跑 `git fetch origin --force --tags && git reset --hard origin/main`。
+
 ## 1.6.18 — 2026-11-26
 
 ### Changed

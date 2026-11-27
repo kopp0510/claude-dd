@@ -2,8 +2,8 @@
 
 ## 派工
 
-- 範圍：`git diff 3332730 HEAD -- skills/plan-review skills/task-planner skills/design-brainstorm`，加上 `git show 6962874 -- CHANGELOG.md CLAUDE.md`
-  （S7 的起點是表上的 3332730；中間插做的 S8、S9 沒碰這三份 skill）。diff 檔 810 行，放在 scratchpad 的 `s7/S7-review-diff.txt`。
+- 範圍：`git diff 47573f8 HEAD -- skills/plan-review skills/task-planner skills/design-brainstorm`，加上 `git show 17df793 -- CHANGELOG.md CLAUDE.md`
+  （S7 的起點是表上的 47573f8；中間插做的 S8、S9 沒碰這三份 skill）。diff 檔 810 行，放在 scratchpad 的 `s7/S7-review-diff.txt`。
 - 步驟 3（code-simplifier）沒跑：這段只有 SKILL.md、CHANGELOG 這類文件，沒有程式碼。
 - 派 3 個 `code-reviewer`（opus，不帶 model），在同一則訊息裡平行派出，各給一個方向：a 規則本身、b 跨檔一致、c 照做走一遍。
   只派 3 個（最低要求）的理由：diff 只有三份 SKILL.md；而且步驟 5 另外安排了修完之後的乾跑與沙盒實跑，用來補單發審查漏掉的路徑。
@@ -26,7 +26,7 @@
 - c-5：task-planner 第 3 輪那條沒寫要先問「需使用者決定」
 - a-6：確認輪的範圍句沒把標「沒改」的條目排除
 - b-4：驗收要求的「修完後乾跑」與「沙盒實跑」還沒做
-- b-5：CHANGELOG 只寫到一部分，設計文件沒提 efb7931
+- b-5：CHANGELOG 只寫到一部分，設計文件沒提 4d97f8c
 - b-7：design-brainstorm 用的字是「照改好的稿繼續」，跟其他地方不一樣
 
 每一條都回去讀三份 SKILL.md 的原文核對過，全部屬實，沒有駁回任何一條。
@@ -72,4 +72,4 @@ b 的 Not reported 裡另有兩條（design-brainstorm 第 8 步的「未經審�
 - 第二次乾跑 #7、#10，第一次乾跑 #8、#11、#15：都是措辭，或分批規則可以寫得更清楚，不影響走到的結果
 - 第一次乾跑 #7（直接用 plan-review 選「不審直接交」之後怎麼做）、#9（選「停下」之後怎麼做）：S7 之前第 5 步就是這樣寫，不在這段的範圍內
 
-**真跑確認輪**：2026-10-25 在 efb7931 之後，用 repo 版規則，拿另一個專案的一份第 3 輪不通過計畫真跑過一次（業主內容不進這個公開 repo，只記結構）：裁決者派了 4 個審查者，範圍是第 3 輪採納的 1 條重大＋13 條小事，讀檔檢查都過；採納的小事有 13 條，其中 3 條標「（範圍外）」；結論字面是「不通過（1 條重大）」，那條重大來自「需要外部查證」—— 這正是 c-1 那種情況。審查後的修正沒有重跑真跑。
+**真跑確認輪**：2026-10-25 在 4d97f8c 之後，用 repo 版規則，拿另一個專案的一份第 3 輪不通過計畫真跑過一次（業主內容不進這個公開 repo，只記結構）：裁決者派了 4 個審查者，範圍是第 3 輪採納的 1 條重大＋13 條小事，讀檔檢查都過；採納的小事有 13 條，其中 3 條標「（範圍外）」；結論字面是「不通過（1 條重大）」，那條重大來自「需要外部查證」—— 這正是 c-1 那種情況。審查後的修正沒有重跑真跑。

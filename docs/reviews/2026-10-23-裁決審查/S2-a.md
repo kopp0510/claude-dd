@@ -2,10 +2,10 @@
 
 ## 派工
 
-- 範圍：`git diff c1c45d1 0f2be2b`（16 檔；commit 5fdd67e、77aea78、dfa7a77、0f2be2b）
+- 範圍：`git diff 6ce449e 60f00ae`（16 檔；commit ee7c99b、35f40dc、521f30f、60f00ae）
 - 取檔方式：整段 diff（GIF 排除）存成 scratchpad 的 `S2.diff`（567 行）交給它，前後文讀工作目錄；派工單 `S2_review_prompt.txt`，a、b 同一份
 - 已給、標明不要重跑：本機 ci.yml 七個 step 全部 exit 0、`tests/test-install.sh` exit 0、verify-geometry 兩版通過（英文第一版溢出已縮短）、
-  GIF 重出且第 0／40 幀雜湊不同、gate 放行 0f2be2b、dfa7a77 前兩個乾跑 subagent 的發現已修但**沒有再乾跑**
+  GIF 重出且第 0／40 幀雜湊不同、gate 放行 60f00ae、521f30f 前兩個乾跑 subagent 的發現已修但**沒有再乾跑**
 - 重點：三份 SKILL.md 與 §4.1 的交接矛盾、舊說法殘留、引別處的宣稱、進度表規則區塊；只讀，最多一次重現實驗
 - a 實際約 2.8 分鐘、13 次工具（task-notification 的 `duration_ms` 167921）
 

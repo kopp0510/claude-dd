@@ -7,7 +7,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 > 你是 8 步迴圈步驟 4 的審查者 C。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 >
 > 專案根目錄：/Users/danlio/project/my_project/claude-dd
-> 審查範圍：git diff 2d436c0 86f37df（清理各層 CLAUDE.md 與全域模板，加 CHANGELOG 一條）。
+> 審查範圍：git diff a6af543 f434a5e（清理各層 CLAUDE.md 與全域模板，加 CHANGELOG 一條）。
 > 材料：<scratchpad>/cm-review-diff.txt（完整路徑：<scratchpad>/cm-review-diff.txt）。
 > 用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔讀材料裡那一份，沒改到的檔讀 repo。
 > 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
@@ -28,7 +28,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 
 ## 發現
 
-Critical 0 / Important 4 / Smells 0（範圍是 git diff 2d436c0 86f37df，以 HEAD=86f37df 為準）
+Critical 0 / Important 4 / Smells 0（範圍是 git diff a6af543 f434a5e，以 HEAD=f434a5e 為準）
 
 注意：我審到一半時工作目錄被改了（`git diff HEAD --stat` 顯示 5 個檔有改動、還沒 commit）。下面 I1、I2 這兩條，工作目錄裡已經有對應的修改；以 HEAD 來看仍然成立。
 
@@ -53,7 +53,7 @@ Critical 0 / Important 4 / Smells 0（範圍是 git diff 2d436c0 86f37df，以 H
 - 查過沒有問題：tests/test-gate.sh:355 指向「恆真」（還在，第 41 行）；test-gate.sh:304/308/338 指向 scripts/CLAUDE.md 的「不是閉環」、三條繞過路徑和變異實測（還在）；dd-init.md:97「不要把它寫成閉環」成立；模板拿掉的「沒印出這行就是沒記好」只是重複句，dd-init.md:61 仍保留，不需要跳 rev；兩份 README 和 DD_PIPELINE_ARCHITECTURE.md 都沒有引用被刪的段落；CHANGELOG 說 CI 會比對 UPGRADING 判定線（ci.yml:342）成立；「列出與現行版的差異」在判定線下一行成立；tag 存在；style-8 路徑存在；三支 .ttl 都是 40px；被改過的 Markdown 表格結構都沒壞；hooks.json 確實會自動載入。
 
 ## What I ran
-- `git diff --stat 2d436c0 86f37df`；材料分三次讀完；git grep 恆真／三組數字／不是閉環／派 Task／沒印出這行／dd-start／舊 DD Pipeline；grep dd-init.md 界線與判定線、ci.yml UPGRADING；`sed -n 77,100p DD_PIPELINE_ARCHITECTURE.md`；ls/cat self-improving-agent；git grep 腳本裡「見／記在 … CLAUDE.md」→ verify-geometry.py:344；`sed -n 678,697p verify-geometry.py`；在 scratchpad 跑 gen_loop/gen_usage 與 verify-geometry.py（loop-zh-TW 沒有溢出，其他三張各 1–2 處），跑完刪掉暫存目錄；`git tag -l 'pre-prune*'`；`git diff HEAD --stat`
+- `git diff --stat a6af543 f434a5e`；材料分三次讀完；git grep 恆真／三組數字／不是閉環／派 Task／沒印出這行／dd-start／舊 DD Pipeline；grep dd-init.md 界線與判定線、ci.yml UPGRADING；`sed -n 77,100p DD_PIPELINE_ARCHITECTURE.md`；ls/cat self-improving-agent；git grep 腳本裡「見／記在 … CLAUDE.md」→ verify-geometry.py:344；`sed -n 678,697p verify-geometry.py`；在 scratchpad 跑 gen_loop/gen_usage 與 verify-geometry.py（loop-zh-TW 沒有溢出，其他三張各 1–2 處），跑完刪掉暫存目錄；`git tag -l 'pre-prune*'`；`git diff HEAD --stat`
 
 ## 需要外部查證
 - 無

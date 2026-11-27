@@ -2,7 +2,7 @@
 
 ## 派工
 
-- 範圍：`git diff 00955e2 HEAD`（1 個 commit：44ec47a）。diff 幾乎全是文件，照 `skills/dd-loop` 的字面可以不派；但每一句都在講安裝腳本的行為或引量測數字（「有沒有引別處」那條判準），所以照樣派
+- 範圍：`git diff 9651d68 HEAD`（1 個 commit：dab3c81）。diff 幾乎全是文件，照 `skills/dd-loop` 的字面可以不派；但每一句都在講安裝腳本的行為或引量測數字（「有沒有引別處」那條判準），所以照樣派
 - 派 3 個（下限），三個方向：A 英文 README 的每一句對程式碼；B 兩份 README 一不一致、量測數字、語言那幾句；C 該寫沒寫的、因這段而過期的別處敘述
 - 步驟 3 沒有跑：這一段唯一的程式碼改動是 `show_help` 的一行字串，沒有可簡化的
 - 派工 prompt 只交事實與逐句核對表，沒有寫我對哪裡可能有錯的判斷；並寫明核對表是寫的人自己做的、要照樣質疑
@@ -23,7 +23,7 @@
 - C：安裝會刪舊指令檔；`--force` 的提示；另外三處「只移除本 repo 部署過的項目」
 
 **逐條查證**（自己重讀程式碼或重跑，不照報告的說法）
-- 舊版 hook：`git tag --contains edb6b96` 最早是 v1.3.0，前一個 tag 的 `commands/dd-init.md` 是沒有防護的單獨一行 → 屬實
+- 舊版 hook：`git tag --contains ab1b088` 最早是 v1.3.0，前一個 tag 的 `commands/dd-init.md` 是沒有防護的單獨一行 → 屬實
 - 提示漏了 `installed_plugins.json`：讀 `uninstall()` 那句 echo → 屬實；這句是 README 新段落「否則印出要你手動移除什麼」的依據，所以算這一段的事、不是範圍外
 - 全域 CLAUDE.md 的後果：模板 §3.9 有「先呼叫 Skill `dd-loop`」與「`~/.claude/scripts/check-claude-md.sh --start-segment`」，`uninstall()` 會刪這兩樣 → 屬實
 - agent 的 description：`grep -m1 '^description:' agents/*.md` → 3 個中文、1 個英文 → 屬實

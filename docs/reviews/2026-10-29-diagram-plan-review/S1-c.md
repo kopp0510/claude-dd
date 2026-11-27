@@ -6,7 +6,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 
 > 你是程式碼審查者（代號 C）。審查 claude-dd repo（/Users/danlio/project/my_project/claude-dd）一個功能段落的整段變更：讓 plan-review 在兩張流程圖（使用流程、大工作怎麼跑）各有自己的框，重出 4 張 GIF，並更新 diagrams/src/CLAUDE.md 與兩份 README 的圖說。
 >
-> 材料：<scratchpad>/dg-review-diff.txt。內容：①整段 diff（git diff 1971cf5 HEAD，不含 GIF）③被改到的三個檔的 HEAD 版整檔（附行號）④已跑過的驗證與預期值 —— ④列的已確認，不要重跑。
+> 材料：<scratchpad>/dg-review-diff.txt。內容：①整段 diff（git diff eee9340 HEAD，不含 GIF）③被改到的三個檔的 HEAD 版整檔（附行號）④已跑過的驗證與預期值 —— ④列的已確認，不要重跑。
 > **用 Read 的 offset/limit 每次 300 行讀到最後一行**（一次讀太多會被靜靜截斷）。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。
 >
 > 你的方向：文件與同步點 —— diagrams/src/CLAUDE.md 的每句宣稱在 HEAD 還成立嗎（框號、失敗項清單、節點上限、「分組標題靠右」的理由）；repo 裡還有誰描述這兩張圖的內容（git grep 框號、「交代工作」、圖說、DD_PIPELINE_ARCHITECTURE.md、CHANGELOG `## 未發布`、docs/designs 裡引用這些圖的段落）而沒跟著改；兩份 README 的圖說是否一致；根 CLAUDE.md 有沒有規定改圖要同批改的地方。
@@ -25,12 +25,12 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 
 ## 發現
 
-Critical 0 / Important 3 / Smells 0 — 審查範圍：1971cf5..HEAD（801a317），讀的是 dg-review-diff.txt 裡的 ①③④；未改動的檔讀 repo
+Critical 0 / Important 3 / Smells 0 — 審查範圍：eee9340..HEAD（ed473d1），讀的是 dg-review-diff.txt 裡的 ①③④；未改動的檔讀 repo
 
 ## Findings
 
 [Important] CHANGELOG.md:19｜`## 未發布` 沒有這次重出 4 張 GIF、加 plan-review 框的條目
-  證據：`sed -n 19,31p CHANGELOG.md` 只有 ADHD 風格那一條；`git show --stat 801a317` 沒有 CHANGELOG。前兩次只重出圖的改動都有記：CHANGELOG.md:104「「大工作怎麼跑」中英兩張 GIF 重出（副標改成「plan-review 審過才寫檔」）」、:116「「8 步開發迴圈」中英兩張 GIF 重出（④ 改成…）」。上一輪設計文件把 CHANGELOG 列為改圖要同批改的檔（docs/designs/2026-10-23-裁決審查-design.md:206「`CHANGELOG.md`（寫進 `## 未發布`）」）。
+  證據：`sed -n 19,31p CHANGELOG.md` 只有 ADHD 風格那一條；`git show --stat ed473d1` 沒有 CHANGELOG。前兩次只重出圖的改動都有記：CHANGELOG.md:104「「大工作怎麼跑」中英兩張 GIF 重出（副標改成「plan-review 審過才寫檔」）」、:116「「8 步開發迴圈」中英兩張 GIF 重出（④ 改成…）」。上一輪設計文件把 CHANGELOG 列為改圖要同批改的檔（docs/designs/2026-10-23-裁決審查-design.md:206「`CHANGELOG.md`（寫進 `## 未發布`）」）。
   失敗情境：下一版發布時，README 嵌的兩張圖從版面到內容都變了（使用流程從 7 框變 8 框、大工作圖拿掉「交代工作」），版本紀錄卻一字不提。
 
 [Important] diagrams/src/CLAUDE.md:115-117（另見 gen_usage.py:48、gen_planner.py:34 的 foot）｜來源清單沒有 plan-review，可是兩張圖現在都把它的機制畫成獨立一框
@@ -52,12 +52,12 @@ Critical 0 / Important 3 / Smells 0 — 審查範圍：1971cf5..HEAD（801a317�
 
 ## What I ran
 - Read dg-review-diff.txt 1–937（分 3 段讀到底）
-- `git log --oneline 1971cf5..HEAD; git diff --stat 1971cf5 HEAD` → 只有 801a317，9 個檔
+- `git log --oneline eee9340..HEAD; git diff --stat eee9340 HEAD` → 只有 ed473d1，9 個檔
 - `git grep -n -E 'usage-flow|task-planner\.gif|…|交代工作|Hand over the work|gen_usage|gen_planner'` → 只有 README 嵌圖、CLAUDE.md、CHANGELOG 舊條目、docs 歷史
 - `grep -n … verify-geometry.py` → :26 `LIMITS = dict(nodes=9, …)`
 - `sed -n 118,140p README.md`、`sed -n 128,145p README.zh-TW.md` → 圖說和上下文
 - `sed -n 19,31p CHANGELOG.md`、`sed -n 95,118p CHANGELOG.md`、`grep -n 'GIF|gen_…' CHANGELOG.md` → 未發布區塊沒有圖的條目；:104、:116 是前例
-- `for c in $(git log -8 -- diagrams/)…grep -c CHANGELOG` → 801a317 是 0
+- `for c in $(git log -8 -- diagrams/)…grep -c CHANGELOG` → ed473d1 是 0
 - `grep -n … DD_PIPELINE_ARCHITECTURE.md`、`grep -n … CLAUDE.md`（根）→ 沒有要同步的圖內容描述
 - `grep -n … skills/plan-review/SKILL.md`、`skills/task-planner/SKILL.md` → 核對框內文字的出處
 - `git grep -n -E '框 ?[⑤⑥⑦]|…|p65|p71|Y7'` → 沒有殘留的舊框號引用

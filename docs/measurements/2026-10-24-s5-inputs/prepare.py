@@ -6,7 +6,7 @@ import os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 S4IN = os.path.join(HERE, "..", "2026-10-24-s4-inputs")  # briefs.txt 跟 S4 逐字共用
 PARENT = "先用 Read 讀完 {SELF}，它就是你的完整任務說明，照裡面做。要整份讀完再開始。"
-RANGES = {"G2": ("639bde7", "b66d8ae"), "G3": ("08b2576", "8514fb2"), "G4": ("48de43f~1", "48de43f")}
+RANGES = {"G2": ("b1d28bd", "40b3f0a"), "G3": ("96e930e", "720f1b3"), "G4": ("dd3f72d~1", "dd3f72d")}
 
 def sh(*a, cwd=None, inp=None):
     return subprocess.run(a, cwd=cwd, input=inp, capture_output=True, check=True).stdout

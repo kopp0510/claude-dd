@@ -1,6 +1,6 @@
-# S2-judge（主對話查證）— 三條教訓搬回全域模板（`ba799a2..`）
+# S2-judge（主對話查證）— 三條教訓搬回全域模板（`2172879..`）
 
-段落 S2，起點 `ba799a2`（`check-claude-md.sh --start-segment` 記的）。這一段沒有進度表；報告和上一段放同一個目錄。
+段落 S2，起點 `2172879`（`check-claude-md.sh --start-segment` 記的）。這一段沒有進度表；報告和上一段放同一個目錄。
 
 ## 派工
 
@@ -10,7 +10,7 @@
 這段 diff 全是文件與指示文字，沒有程式碼。照樣派審查者：CHANGELOG、量測紀錄與報告處置節的敘述引了別處的 commit、行為與數字，這些沒有被機械檢查證明。
 步驟 3（code-simplifier）沒有跑：9 個檔都是 `.md`，而且搬回的三條要和 v1.6.16 的原文逐字相同，不讓它改寫。
 
-審查材料一個檔（scratchpad 的 `s2/diff-pack.md`，2553 行）：①`git diff ba799a2 HEAD`（HEAD = `73cd7a5`，工作目錄乾淨）；②步驟 3 沒跑與理由；
+審查材料一個檔（scratchpad 的 `s2/diff-pack.md`，2553 行）：①`git diff 2172879 HEAD`（HEAD = `1e23d3e`，工作目錄乾淨）；②步驟 3 沒跑與理由；
 ③被改到的 9 個檔的整檔內容（`CHANGELOG.md` 只放「未發布」一節）；④步驟 1 跑過的驗證與預期值。派工寫明用 Read 每次 300 行讀到最後一行。
 
 動手之前計畫先交 plan-review：1 輪，裁決者派 4 個審查者，結論「通過」，沒有重大；採納的小事 7 條都併進做法（CHANGELOG 不寫「淨變化只有」、照根目錄 `CLAUDE.md` 的觸發時機巡一遍、步驟 4 寫明範圍、`S1-d.md` 的處置也要補、乾跑的派工寫明 context 裡的全域檔是舊版、新 session 的檢查用整行比對、部署前先列會被覆蓋的檔）。
@@ -20,12 +20,12 @@
 讀檔檢查（每個審查者挑它引的東西自己重讀或重跑）：
 
 - A：它引的根目錄 `CLAUDE.md`「寫註解、CLAUDE.md、設計文件時的判準在全域模板 **§3.10**，刻意放在 §3.9 之外…沒跑迴圈的專案會連這些判準一起跳過」讀了，原文相同；`scripts/dd-stop.sh` 的暫停聲明「這一句優先於…全域 CLAUDE.md §3.9 的迴圈；其他規則照舊（動手前的佐證、測試要跑綠、破壞性操作先確認）」也相同
-- B：`git log --format=%h 2636b36..HEAD -- templates/global/CLAUDE.md` 印出 `73cd7a5`、`c360152`、`8dcaa73`、`3e3243a`、`3637c92`、`c0f6d33`，`8dcaa73` 確實在裡面；CHANGELOG §6.2 那一項原本沒有附 hash
-- C：`git show c360152 --stat -- README.md README.zh-TW.md DD_PIPELINE_ARCHITECTURE.md` 三個檔各一行；`README.zh-TW.md` 的「全域 §3.9 只留步驟清單與關卡，並明寫呼叫這個 skill」與 `README.md` 的 "global §3.9 keeps the step list and its gates, and calls this skill" grep 得到
+- B：`git log --format=%h 1290eb5..HEAD -- templates/global/CLAUDE.md` 印出 `1e23d3e`、`acb6d8b`、`51f736a`、`d2f2aad`、`c9b5190`、`e8bd89e`，`51f736a` 確實在裡面；CHANGELOG §6.2 那一項原本沒有附 hash
+- C：`git show acb6d8b --stat -- README.md README.zh-TW.md DD_PIPELINE_ARCHITECTURE.md` 三個檔各一行；`README.zh-TW.md` 的「全域 §3.9 只留步驟清單與關卡，並明寫呼叫這個 skill」與 `README.md` 的 "global §3.9 keeps the step list and its gates, and calls this skill" grep 得到
 
 採納、已修（都是 Smell）：
-- S2-b-s1 與 S2-c-s1（同一件）：CHANGELOG 列模板其他差異時漏了 `8dcaa73`
-- S2-c-s2（A、B 列在既有問題）：`c360152` 在英文 `README.md` 也加過那一句，CHANGELOG 與 `S1-c.md` 處置漏記
+- S2-b-s1 與 S2-c-s1（同一件）：CHANGELOG 列模板其他差異時漏了 `51f736a`
+- S2-c-s2（A、B 列在既有問題）：`acb6d8b` 在英文 `README.md` 也加過那一句，CHANGELOG 與 `S1-c.md` 處置漏記
 - C 的既有問題：兩份 README 寫「§3.9 只留步驟清單與關卡」，漏了驗證教訓
 
 屬實、查了、沒有改字：
@@ -43,7 +43,7 @@
 
 ## 處置
 
-改了的檔（步驟 2 的 `73cd7a5` 加上步驟 6 的 commit）：
+改了的檔（步驟 2 的 `1e23d3e` 加上步驟 6 的 commit）：
 - 搬回本身：`templates/global/CLAUDE.md`、`skills/dd-loop/SKILL.md`
 - 跟著改的文件：`README.md`、`README.zh-TW.md`、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md`、`docs/measurements/2026-11-20-domain-traps-pointer.md`（開頭加註）
 - 上一段報告的處置節：`docs/reviews/2026-11-19-prompt-audit/S1-c.md`、`S1-d.md`
@@ -51,8 +51,8 @@
 
 步驟 5 重測（修完之後；預期都事先寫好，結果用指令核）：
 
-1. 文字與位置。`2636b36` 版模板的 `⚠️⚠️` 換成 `⚠️` 之後抽出那三條，與現在的模板抽出的三條 `diff`：沒有輸出。兩版各抽「規則:」到「### 3.10」之前整塊 `diff`：沒有輸出。
-   `git diff ba799a2 --stat`：模板 18 行加、2 行減，dd-loop 21 行減（只少最後一節）。
+1. 文字與位置。`1290eb5` 版模板的 `⚠️⚠️` 換成 `⚠️` 之後抽出那三條，與現在的模板抽出的三條 `diff`：沒有輸出。兩版各抽「規則:」到「### 3.10」之前整塊 `diff`：沒有輸出。
+   `git diff 2172879 --stat`：模板 18 行加、2 行減，dd-loop 21 行減（只少最後一節）。
 2. 殘留。`git grep -n '領域陷阱\|domain pitfalls'` 命中的檔：`CHANGELOG.md`、`docs/measurements/2026-11-20-domain-traps-pointer.md`、`docs/reviews/2026-11-19-prompt-audit/` 的 `S1-a.md`、`S1-b.md`、`S1-c.md`、`S1-d.md`（這一組 S2 報告落地之後也會命中）；都是歷史紀錄。
    `grep -c 'read-then-write\|rebase-merge\|advisory lock' skills/dd-loop/SKILL.md`：0。
 3. CI 的每一個 `run:` 步驟在本機各跑一次（`/bin/bash` 3.2），跑了兩輪：第一輪工作目錄是修完審查發現之後的內容、這一組 S2 報告還沒寫；第二輪四份 S2 報告都在，但那四份與新的量測紀錄當時還沒進版控，用 `git ls-files`、`git grep` 列檔的步驟看不到它們（第三輪見本節最後）。兩輪都是 lint 22 步、bash32 7 步，29 步都 exit 0。GitHub 上的 CI 沒跑（沒有 push）。
@@ -61,7 +61,7 @@
    - 它卡住或要猜的六處都不是這次搬動帶進來的，沒改，轉新段落：專案沒有 `docs/reviews/` 時要不要自己建；步驟 3、4 什麼時候可以並行；模板說「例外見 dd-loop」而 dd-loop 沒有「例外」這個字眼、那一條管不管步驟 3；沒有進度表時 `S<段落>` 與子目錄叫什麼；要修掉的是全部還是採納的 Critical／Important（模板與 dd-loop 的寫法不同）；「重跑時」指什麼時候。
      另外兩處是三條本文原有的字眼：「確認 `grep` 回 0」沒寫 grep 什麼、「後面那段 rebase 判斷」指哪一段
    - 三條接得上；迴圈外它會套用，但回報那是自己推的（與 S2-a-1 同一件）
-5. 部署：部署前先列會被覆蓋的檔 —— `~/.claude/CLAUDE.md`、`~/.claude/skills/dd-loop/SKILL.md`、`~/.claude/skills/self-improving-agent/CLAUDE.md`（後者是 `ba799a2` 改的那一句）。
+5. 部署：部署前先列會被覆蓋的檔 —— `~/.claude/CLAUDE.md`、`~/.claude/skills/dd-loop/SKILL.md`、`~/.claude/skills/self-improving-agent/CLAUDE.md`（後者是 `2172879` 改的那一句）。
    `bash ./install-dd-pipeline.sh --force`，exit 0；`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同，`skills/dd-loop`、`skills/self-improving-agent` 對部署版 `diff -rq` 沒有輸出；
    部署版的全域檔與 dd-loop 裡「領域陷阱」都是 0 筆，全域檔「read-then-write」1 筆；`--check` 的輸出裡「與 repo 不同」0 行。
 6. 新 session 檢查：開一發 haiku、不給任何工具，叫它照貼 context 裡含「read-then-write」的那一行；貼出來的與 `~/.claude/CLAUDE.md` 的那一行整行相同（1 筆），0 次工具呼叫。
@@ -79,21 +79,21 @@ S2-a-1 的歸類（更正「發現」節）：那一節把它寫成「屬實、�
 - 文字缺口本身（§3.9「規則」的八條驗證教訓都沒有寫迴圈外適不適用，v1.6.16 就這樣）屬實，**轉新段落**：要補就八條一起補一句，不只這三條；記在工作區的待辦清單。
 - 審查者建議交使用者決定：沒有問，在回報裡講一行（這個改動部署後每個專案都載入）。
 
-README 那兩句：審查者 C 報告裡「與 ecfc89c 版逐行相同」是 `73cd7a5` 當時的狀態；步驟 4 之後那一行補了「驗證教訓」，現在與 `ecfc89c` 各差這一處（`git diff ecfc89c HEAD --stat -- README.md README.zh-TW.md` 各 1 行）。`DD_PIPELINE_ARCHITECTURE.md` 沒有再動。
+README 那兩句：審查者 C 報告裡「與 c74f115 版逐行相同」是 `1e23d3e` 當時的狀態；步驟 4 之後那一行補了「驗證教訓」，現在與 `c74f115` 各差這一處（`git diff c74f115 HEAD --stat -- README.md README.zh-TW.md` 各 1 行）。`DD_PIPELINE_ARCHITECTURE.md` 沒有再動。
 
-步驟 6 之後（`f70a16d` 之後補記）：
+步驟 6 之後（`8c5debd` 之後補記）：
 - 步驟 7：沒有要寫進 CLAUDE.md 的新教訓。這一段漏掉的那一句（README「核心工作法」）是根目錄 `CLAUDE.md`「觸發時機」已經規定要巡的，漏在沒照做，不是缺規則。
-- 步驟 8：範圍照 `scripts/check-claude-md.sh --segment-base`（`ba799a2`）算出 1 份，`templates/global/CLAUDE.md`；這一段在它裡面只動了搬回的三條。
+- 步驟 8：範圍照 `scripts/check-claude-md.sh --segment-base`（`2172879`）算出 1 份，`templates/global/CLAUDE.md`；這一段在它裡面只動了搬回的三條。
   能實跑的一句跑了：在拋棄式 repo 用真的 `git rebase` 做出衝突，衝突中 `git rev-parse --abbrev-ref HEAD` 印 `HEAD`、`.git/rebase-merge` 存在，`git rebase --abort` 之後印回分支名，與那一條寫的相同。
   第一次跑這個檢查時 commit 沒建起來（zsh 不把變數裡的空白拆成參數），空 repo 裡同一條指令也印 `HEAD`，看起來像通過；先印出 commit 數再跑才算數。
   沒有實跑的：Postgres 那幾句（`read committed` 是預設、`FOR UPDATE` 鎖不住不存在的列、advisory lock），沒有起資料庫驗。沒有要改的字，這一步沒有動檔。
-- 部署：`f70a16d` 之後 `--check` 的輸出裡「與 repo 不同」0 行，`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同（步驟 5 之後沒有再動會部署的檔）。
-- CI 第三輪：在 `d11b98c` 的乾淨工作目錄（所有 S2 的檔都已進版控）把 29 個 `run:` 步驟再跑一次，29 步都 exit 0，跑完工作目錄仍然乾淨。這之後只加了這一行。GitHub 上的 CI 沒跑（沒有 push）。
+- 部署：`8c5debd` 之後 `--check` 的輸出裡「與 repo 不同」0 行，`diff -q templates/global/CLAUDE.md ~/.claude/CLAUDE.md` 相同（步驟 5 之後沒有再動會部署的檔）。
+- CI 第三輪：在 `3529c05` 的乾淨工作目錄（所有 S2 的檔都已進版控）把 29 個 `run:` 步驟再跑一次，29 步都 exit 0，跑完工作目錄仍然乾淨。這之後只加了這一行。GitHub 上的 CI 沒跑（沒有 push）。
 
 ## 重疊與獨有項
 
-- 兩個都抓到：CHANGELOG 漏了 `8dcaa73`（B-s1、C-s1）
-- 三個都提到、級別不同：`c360152` 在英文 README 也加過那一句而沒記（A、B 列既有問題，C 標 Smell）
+- 兩個都抓到：CHANGELOG 漏了 `51f736a`（B-s1、C-s1）
+- 三個都提到、級別不同：`acb6d8b` 在英文 README 也加過那一句而沒記（A、B 列既有問題，C 標 Smell）
 - A 獨有：範圍句沒有跟著回來（這一段唯一的 Important；步驟 1 的驗證沒有一項查適用範圍，是它點出來的）
 - C 獨有：兩份 README「只留步驟清單與關卡」漏了驗證教訓；部署順序的風險
 - 三個都沒抓到、乾跑才列出的：dd-loop 與模板之間六處要猜的句子（都不是這一段帶進來的）

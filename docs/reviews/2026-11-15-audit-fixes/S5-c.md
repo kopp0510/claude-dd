@@ -6,14 +6,14 @@
 
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。Agent 呼叫的 prompt 只有一句「先用 Read 把這個檔整份讀完，它就是你的完整派工內容，照它寫的做」，加派工檔的路徑；派工檔全文如下（`<scratchpad>` 是這個 session 的暫存目錄，沒進 repo）。
 
-審查包 `<scratchpad>/s5-review-pack.txt`（755 行）的組成：第 1 節 `git diff b3b2bf9 HEAD`（HEAD = 63f4d6c，工作目錄乾淨）；第 2 節步驟 3 的結果（code-simplifier 看過三個檔的改動，沒有要改的）；
+審查包 `<scratchpad>/s5-review-pack.txt`（755 行）的組成：第 1 節 `git diff 8bb3e15 HEAD`（HEAD = fbcd1dd，工作目錄乾淨）；第 2 節步驟 3 的結果（code-simplifier 看過三個檔的改動，沒有要改的）；
 第 3 節被刪掉的兩個檔的原文；第 4 節已跑過的驗證 V1–V9 與預期值。被改到的檔沒有另附整檔：工作目錄與 HEAD 相同，派工寫明直接讀 repo。
 
 ````
 你是 code-reviewer，審 claude-dd 這個 repo 的一個功能段落（S5）。你的職責：找漏洞。每條發現都要附證據（`路徑:行` 加原文，或你跑的指令與輸出）；沒證據的不算。不寫優點。
 
 審查包：<scratchpad>/s5-review-pack.txt（755 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**（Read 一次讀太多會靜靜截斷、不報錯）。
-裡面有：整段 diff（`git diff b3b2bf9 HEAD`）、被刪掉的兩個檔的原文、已經跑過的驗證與預期值。
+裡面有：整段 diff（`git diff 8bb3e15 HEAD`）、被刪掉的兩個檔的原文、已經跑過的驗證與預期值。
 工作目錄與 HEAD 相同，被改到的檔直接讀 repo 裡的就是 diff 描述的那一版。repo：/Volumes/T7/home/project/my_project/claude-dd
 專案規則在根目錄與各層 CLAUDE.md；這一段的計畫、假設與結果在 `docs/designs/2026-11-15-audit-fixes-design.md` 的「### S5」一節。
 
@@ -30,7 +30,7 @@
 
 你的方向：
 **S5-2 與 UPGRADING 的指示**。`skills/code-simplifier/SKILL.md` 新加的那一句：與同一份 SKILL.md 其他段落、與 `agents/code-simplifier.md` 的原文、與全域模板 `templates/global/CLAUDE.md` §3.2 有沒有矛盾或歧義；會不會擋掉該做的簡化。
-A/B 的宣稱對不對得上證據：`CHANGELOG.md` 那一條與設計文件 S5-2「結果」裡的每一個數字與每一句結論，拿審查包 V9 列的素材檔自己 `grep`／`diff` 重量一次（那些檔可以讀）；量法本身有沒有洞（例如 `function` 的計數把新加的 helper 算進去、箭頭的樣式漏算、「巢狀條件已簡化」的判準）；結論有沒有說得比證據多（n、素材數、環境）；判定是不是派出前寫的那一套（看設計文件 S5-2 的「驗證」與 commit 758dbc9 當時的版本：`git show 758dbc9:docs/designs/2026-11-15-audit-fixes-design.md`）。
+A/B 的宣稱對不對得上證據：`CHANGELOG.md` 那一條與設計文件 S5-2「結果」裡的每一個數字與每一句結論，拿審查包 V9 列的素材檔自己 `grep`／`diff` 重量一次（那些檔可以讀）；量法本身有沒有洞（例如 `function` 的計數把新加的 helper 算進去、箭頭的樣式漏算、「巢狀條件已簡化」的判準）；結論有沒有說得比證據多（n、素材數、環境）；判定是不是派出前寫的那一套（看設計文件 S5-2 的「驗證」與 commit 8f71da4 當時的版本：`git show 8f71da4:docs/designs/2026-11-15-audit-fixes-design.md`）。
 `UPGRADING.md` 新的一節：照著做會不會出錯或誤刪（指令、路徑、取回步驟列的東西全不全），它說的安裝腳本行為是不是真的（讀 `install-dd-pipeline.sh` 確認，不要執行）。設計文件 S5 一節的假設、結果、「沒做的」有沒有與 diff 不符的地方。
 
 輸出格式（照抄這些標題）：
@@ -46,7 +46,7 @@ A/B 的宣稱對不對得上證據：`CHANGELOG.md` 那一條與設計文件 S5-
 審查者交回的報告，逐字（只把暫存目錄的絕對路徑換成 `<scratchpad>`）：
 
 ````
-Critical 0 / Important 4 / Smells 3 — 範圍：S5（b3b2bf9..63f4d6c），重點看 S5-2 新加的那一句、A/B 的宣稱與量法、UPGRADING「已退場的元件」那一節
+Critical 0 / Important 4 / Smells 3 — 範圍：S5（8bb3e15..fbcd1dd），重點看 S5-2 新加的那一句、A/B 的宣稱與量法、UPGRADING「已退場的元件」那一節
 
 【發現】
 1｜Important｜第二輪 A/B 的結論說「四發的 context 都有全域 CLAUDE.md」，可是第二輪根本沒叫 agent 照貼 context，所以這句沒有證據撐。同一份文件自己也寫「這一輪沒有叫它照貼 context」｜docs/designs/2026-11-15-audit-fixes-design.md:262「這一輪沒有叫它照貼 context」；同檔 :272「四發的 context 都有全域 CLAUDE.md（它的 §3.2 寫「不重排 import」，舊的兩發照樣重排了）」；CHANGELOG.md:157「四發的 context 裡都有全域 CLAUDE.md，沒有它的環境沒測」；審查包 V9 第 755 行「第二輪沒有要求照貼」｜讀者會以為第二輪查過 context。他們還會把「舊模板即使看得到全域 §3.2，照樣重排 import」當成量到的事實，拿來證明這一句非加不可。但第二輪的 context 是用第一輪推出來的，沒有量過｜這兩處改成「第一輪照貼過、四發都有；第二輪沒照貼，推論相同」，或把「全域 §3.2 也擋不住」這個推論拿掉
@@ -56,7 +56,7 @@ Critical 0 / Important 4 / Smells 3 — 範圍：S5（b3b2bf9..63f4d6c），重�
 
 【Smells】
 5｜Smell｜UPGRADING 說安裝腳本「只新增、覆蓋現行清單上的東西」，這句不完全對：`create_commands` 有 `deprecated_dd` 迴圈，會先備份再刪掉 dd-help、dd-docs 等五個舊指令｜UPGRADING.md:95；install-dd-pipeline.sh:1087-1093 `local deprecated_dd=(...)` … `rm "$COMMANDS_DIR/$old.md"`｜改成「只清 `deprecated_dd` 列的舊 dd-*.md，不涵蓋 skills 與命名空間目錄」，跟設計文件 B2 的說法一致
-6｜Smell｜判定式雖然是派出前寫好的，但第二輪的素材規格（「只把 import 與箭頭函式加多，其餘不變」）在看過第一輪的理由後改成「風格混用」。設計文件有揭露這件事，但 :272 寫「照派出前寫死的判定算通過」，CHANGELOG 對換素材一字沒提｜758dbc9 版 design.md:256「換一次素材（只把沒排序的 import 與箭頭函式加多，其餘不變）」對照現行 :262「與上面寫的…不同：依第一輪看到的理由改成風格混用」｜CHANGELOG 的實測那句補「第二輪素材依第一輪結果改過（不是派出前定的那一份）」
+6｜Smell｜判定式雖然是派出前寫好的，但第二輪的素材規格（「只把 import 與箭頭函式加多，其餘不變」）在看過第一輪的理由後改成「風格混用」。設計文件有揭露這件事，但 :272 寫「照派出前寫死的判定算通過」，CHANGELOG 對換素材一字沒提｜8f71da4 版 design.md:256「換一次素材（只把沒排序的 import 與箭頭函式加多，其餘不變）」對照現行 :262「與上面寫的…不同：依第一輪看到的理由改成風格混用」｜CHANGELOG 的實測那句補「第二輪素材依第一輪結果改過（不是派出前定的那一份）」
 7｜Smell｜取回步驟沒列 README 安裝步驟 6 的文字（這段 CI 不驗），也沒提醒加回來就等於重新引入沒有 LICENSE 的第三方內容，違反收編清單第 1 項｜UPGRADING.md:105-107 只列「數字與表格」與 test-install 斷言；README.md 步驟 6 現在寫「Install the `/dd-init` command into `~/.claude/commands/`」｜補上「README 兩份安裝步驟 6、授權表那一列、CHANGELOG」，再加一句「加回前先解決授權」
 
 【Not reported】
@@ -76,7 +76,7 @@ Critical 0 / Important 4 / Smells 3 — 範圍：S5（b3b2bf9..63f4d6c），重�
 - `diff prompt-old1.txt prompt-new1.txt` 等三組 → 只差範圍路徑與約束那一句
 - `node cmp.mjs ./base/src/quote.js ./<臂>/src/quote.js`（四臂）→ 都是 `bad 0`；`… | grep -cE '^(same|DIFF)'` → 13
 - 第一輪（s5-ab）同一組 grep，再加 `grep -c 'result = null'` → 四臂 import 與 base 相同、function 都是 0、null 都是 0
-- `git show 758dbc9:docs/designs/… | grep -n S5-2`；`git diff 758dbc9 63f4d6c -- docs/designs/…`
+- `git show 8f71da4:docs/designs/… | grep -n S5-2`；`git diff 8f71da4 fbcd1dd -- docs/designs/…`
 - `grep -n 'deprecated_dd\|rm -rf\|…' install-dd-pipeline.sh`；`grep -n 'NS_COMMANDS\|命名空間' install-dd-pipeline.sh`
 - `git grep -n 'workflow-review\|/review\b' -- . ':!CHANGELOG.md' ':!UPGRADING.md' ':!docs/designs' ':!docs/reviews' ':!docs/measurements' | grep -v self-improving-agent`
 - `grep -n '^## ' UPGRADING.md`；`git ls-tree -r --name-only v1.6.14 -- skills/review commands/workflow-review` → 兩個檔都在
@@ -93,7 +93,7 @@ Critical 0 / Important 4 / Smells 3 — 範圍：S5（b3b2bf9..63f4d6c），重�
 |---|---|---|---|
 | 1 | Important | 採納 | 第二輪的派工內容（`<scratchpad>/s5-ab2/prompt-*.txt`）確實沒有照貼 context 那一段。設計文件改成「第一輪四發都回報有、第二輪是推論」，並寫明「舊模板看得到 §3.2 照樣重排」沒有直接證據；CHANGELOG 那一條重寫 |
 | 2 | Important | 採納 | 我的 9 組是臨時寫在指令列裡的、沒存檔；素材目錄那支 13 組的是某一臂留下的。設計文件寫明 9 組是哪些輸入，第三輪起存成 `<scratchpad>/s5-ab2/mycmp.mjs`，五份重跑都是 `inputs 9 diffs 0` |
-| 3 | Important | 採納 | 句子改成第二版（`skills/code-simplifier/SKILL.md`）：點名 agent 那一節列的每一項、風格以被改的檔既有的寫法為準且混用時不統一、import 只合併同模組的重複行不改順序、專案 CLAUDE.md 有寫 import 規則時照它。改了字，前兩輪的證據不算它的：判定先 commit（6015e7b）再派第三輪 2 發，兩發都符合（結果在設計文件）。審查者舉的兩個情境（專案 CLAUDE.md 有寫 import 規則、規則寫在 ESLint 而全檔同一種寫法）照樣沒測，都列進 CHANGELOG 那一條的「沒有實測的」 |
+| 3 | Important | 採納 | 句子改成第二版（`skills/code-simplifier/SKILL.md`）：點名 agent 那一節列的每一項、風格以被改的檔既有的寫法為準且混用時不統一、import 只合併同模組的重複行不改順序、專案 CLAUDE.md 有寫 import 規則時照它。改了字，前兩輪的證據不算它的：判定先 commit（52d048d）再派第三輪 2 發，兩發都符合（結果在設計文件）。審查者舉的兩個情境（專案 CLAUDE.md 有寫 import 規則、規則寫在 ESLint 而全檔同一種寫法）照樣沒測，都列進 CHANGELOG 那一條的「沒有實測的」 |
 | 4 | Important | 採納 | `UPGRADING.md` 改成三行：先 `grep -c 'workflow-review' ~/.claude/skills/review/SKILL.md`、`ls ~/.claude/commands/workflow-review`，兩行都對得上才 `rm -rf`，並寫明對不上時不要刪、`rm -rf` 沒有備份。沙盒 HOME 實跑三種：本 repo 部署的印 5 與 `review.md`；不相干的同名 skill 印 0（rc=1）；檔不在印找不到 |
 | 5 | Smell | 採納 | `install-dd-pipeline.sh` 的 `deprecated_dd` 迴圈確實會刪五個舊 `dd-*.md`。`UPGRADING.md` 那句改寫 |
 | 6 | Smell | 採納 | CHANGELOG 的限制寫明「這份素材是看過第一份的結果之後換的」；設計文件的判定句改成「判定式是派出前寫的，素材不是」 |

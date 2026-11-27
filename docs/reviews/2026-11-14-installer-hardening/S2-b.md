@@ -4,7 +4,7 @@
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數）。這一段沒有跑步驟 3 的 code-simplifier（唯一的程式碼改動是 `show_help` 的一行字串）。
 給審查者的 prompt 只有一句「完整派工在 `<scratchpad>/imp/review2/prompt-b.txt`，先讀完再照做」加三句防漏；下面是那個檔的全文（路徑已去識別）。
-diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git diff 00955e2 HEAD`（HEAD = 44ec47a）②沒有跑步驟 3 的說明
+diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git diff 9651d68 HEAD`（HEAD = dab3c81）②沒有跑步驟 3 的說明
 ③兩份 README 在 HEAD 的整檔內容 ④已跑過的驗證（本機 CI 20 個 step、`tests/test-install.sh`）與逐句核對表 K1–K13（每列附指令與實際輸出）。
 
 ````text
@@ -12,7 +12,7 @@ diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git dif
 
 ## 範圍與資料
 
-- 審查範圍：repo <repo> 的 `git diff 00955e2 HEAD`（一個功能段落，1 個 commit：44ec47a）。這一段改的是兩份 README（英文 README.md、繁中 README.zh-TW.md）、CHANGELOG.md、根目錄 CLAUDE.md 的一行、設計文件，以及 install-dd-pipeline.sh 的 show_help 裡一行字串
+- 審查範圍：repo <repo> 的 `git diff 9651d68 HEAD`（一個功能段落，1 個 commit：dab3c81）。這一段改的是兩份 README（英文 README.md、繁中 README.zh-TW.md）、CHANGELOG.md、根目錄 CLAUDE.md 的一行、設計文件，以及 install-dd-pipeline.sh 的 show_help 裡一行字串
 - diff 檔：<scratchpad>/imp/review2/diff.txt（四部分：整段 diff／步驟 3 的說明／兩份 README 在 HEAD 的整檔內容／已經跑過的核對與驗證）
 - **diff 檔用 Read 的 offset／limit 每次 300 行讀到最後一行**。Read 一次讀太多會靜靜截斷、不報錯
 - 工作目錄與 HEAD 相同，沒有別的 agent 在改檔：README 以外的檔（install-dd-pipeline.sh、commands/dd-init.md、scripts/、skills/、templates/global/CLAUDE.md、docs/measurements/ 等）直接讀工作目錄
@@ -53,15 +53,15 @@ diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git dif
 審查者交回的完整報告（逐字；只把本機路徑換成 `<scratchpad>`、`<repo>`）：
 
 ````text
-Critical 0 / Important 3 / Smells 0 — `git diff 00955e2 HEAD`（44ec47a：兩份 README、CHANGELOG、根目錄 CLAUDE.md 一行、設計文件 S2、show_help 一行）
+Critical 0 / Important 3 / Smells 0 — `git diff 9651d68 HEAD`（dab3c81：兩份 README、CHANGELOG、根目錄 CLAUDE.md 一行、設計文件 S2、show_help 一行）
 
 [Important] README.md:87／README.zh-TW.md:174 寫 `--uninstall` 之後「each commit prints a warning and goes through unchecked／每次 commit 只印一行警告、不再檢查就放行」，這只對現行 gate 那行成立
-  Failure：2026-10-01（edb6b96）以前蓋章、之後沒重跑 `/dd-init` 的專案，hook 是沒有防護的 `"$HOME/.claude/scripts/check-claude-md.sh" || exit 1`。uninstall 刪掉腳本後，sh 找不到檔、exit 127，之後每次 commit 都被擋，不會放行。使用者自己在 hook 裡呼叫 gate、非 0 就讓 hook 失敗的那條分支也一樣
-  Evidence：commands/dd-init.md:277「舊版沒有防護的寫法（`"$HOME/.claude/scripts/check-claude-md.sh" || exit 1` 單獨一行）」、:268「他在自己的 hook 裡呼叫 `~/.claude/scripts/check-claude-md.sh`、非 0 就讓 hook 失敗」；`git log -S 'gate 沒執行' -- commands/dd-init.md` → edb6b96 2026-10-01。diff 檔第 4 部分的 K7 只 grep 了現行那行，沒驗到這兩種情況
+  Failure：2026-10-01（ab1b088）以前蓋章、之後沒重跑 `/dd-init` 的專案，hook 是沒有防護的 `"$HOME/.claude/scripts/check-claude-md.sh" || exit 1`。uninstall 刪掉腳本後，sh 找不到檔、exit 127，之後每次 commit 都被擋，不會放行。使用者自己在 hook 裡呼叫 gate、非 0 就讓 hook 失敗的那條分支也一樣
+  Evidence：commands/dd-init.md:277「舊版沒有防護的寫法（`"$HOME/.claude/scripts/check-claude-md.sh" || exit 1` 單獨一行）」、:268「他在自己的 hook 裡呼叫 `~/.claude/scripts/check-claude-md.sh`、非 0 就讓 hook 失敗」；`git log -S 'gate 沒執行' -- commands/dd-init.md` → ab1b088 2026-10-01。diff 檔第 4 部分的 K7 只 grep 了現行那行，沒驗到這兩種情況
 
 [Important] README.md:100／README.zh-TW.md:187 把 311 次、中位 11.8 分當成「Time per reviewer／單個審查者的耗時」，但這批樣本是在現行做法之前量的，README 沒講
-  Failure：「先準備 diff 檔」與「主對話直接派」都是 2026-10-24 才進規則的（035f4bb、72e3421），311 次樣本是 2026-10-23 從這之前約 30 天的紀錄取的。同一節第二條是現行做法：整次審查平均 269 秒，量測檔裡最慢的單一審查者也只有 139–226 秒。讀者會把 11.8 分當成現在每個審查者要等的時間，而且會看到「單個比整次還慢」這個矛盾，README 沒有解釋
-  Evidence：docs/measurements/2026-10-23-reviewer-real-sessions.md 結論 3「『派工前把整段 diff 準備成一個檔交給它』是根據結論 2 的**推論**…效果要等 S4…才算數」、S5 表 G2-dir/G3-dir「審查者層最慢」142/139/171/226s；`git log -S '先準備一個 diff 檔'` → 035f4bb 2026-10-24，`-S '直接派審查者'` → 72e3421 2026-10-24
+  Failure：「先準備 diff 檔」與「主對話直接派」都是 2026-10-24 才進規則的（9ba6836、2fbfdad），311 次樣本是 2026-10-23 從這之前約 30 天的紀錄取的。同一節第二條是現行做法：整次審查平均 269 秒，量測檔裡最慢的單一審查者也只有 139–226 秒。讀者會把 11.8 分當成現在每個審查者要等的時間，而且會看到「單個比整次還慢」這個矛盾，README 沒有解釋
+  Evidence：docs/measurements/2026-10-23-reviewer-real-sessions.md 結論 3「『派工前把整段 diff 準備成一個檔交給它』是根據結論 2 的**推論**…效果要等 S4…才算數」、S5 表 G2-dir/G3-dir「審查者層最慢」142/139/171/226s；`git log -S '先準備一個 diff 檔'` → 9ba6836 2026-10-24，`-S '直接派審查者'` → 2fbfdad 2026-10-24
 
 [Important] README.md:101／README.zh-TW.md:188 的費用那一條，講得比量測檔自己寫的還肯定
   Failure：(a) 量測檔寫明費用取父 log 最後一筆 result，「最後一輪不一定記進去，會偏低」，README 沒提。(b) 4 發各是 3.95、3.89、6.89、5.78 美元，繁中版寫「4 發平均 269 秒、每發 5.13 美元」，讀起來像每發都固定 5.13；英文版寫的是「averaged」，兩邊條件不一致。(c)「不能拿來估預算」的理由寫成「拿來比的另一種做法差了三件事」，但那是 A 對 S4 的比較限制，不是 5.13 這個絕對數字不準的原因。真正的原因是 n=4、固定的兩份測試 diff，加上 (a)
@@ -71,8 +71,8 @@ What I ran
 - Read prompt-b.txt 1–38；Read diff.txt 1–250、842–968 → 第 1、4 部分讀完（第 3 部分是 README 整檔，已改用 diff 與 grep 核對）
 - grep／sed docs/measurements/2026-10-23-reviewer-real-sessions.md（1–24、83–123、274–373）→ 311／11.8／27.7、269s、5.13、偏低、三件事都找到原句
 - grep／sed skills/dd-loop/SKILL.md 40–106、templates/global/CLAUDE.md:251、agents/code-reviewer.md:4 → 「最少 3 個」「不派」條件、`model: opus` 與 README 一致
-- `git log -S` 兩次（dd-loop 規則的引入日）→ 035f4bb、72e3421，都是 2026-10-24
-- grep commands/dd-init.md check-claude-md.sh、sed 262–280 → 看到舊式沒有防護的寫法與使用者自訂 hook 分支；`git log -S 'gate 沒執行'` → edb6b96
+- `git log -S` 兩次（dd-loop 規則的引入日）→ 9ba6836、2fbfdad，都是 2026-10-24
+- grep commands/dd-init.md check-claude-md.sh、sed 262–280 → 看到舊式沒有防護的寫法與使用者自訂 hook 分支；`git log -S 'gate 沒執行'` → ab1b088
 - sed install-dd-pipeline.sh：backup_before_overwrite／print_backup_notice（180–205）、install_builtin_skills（530–565）、json_edit、show_help、uninstall 的 plugin 清理段、grep FORCE → K1、K2、K6、K13 的說法成立
 - jq skills/*/hooks/hooks.json；grep SKILL.md／agents 的 `^hooks:` → 只有兩個 hook（PreToolUse／PostToolUse，matcher 都是 Bash）
 - grep ci.yml runs-on／tests、sed installer 315–335 → ubuntu-latest、macos-latest /bin/bash 3.2、2.1.154 只警告
@@ -91,7 +91,7 @@ Not reported
 ## 處置
 
 - **`--uninstall` 之後「hook 只警告、放行」**（Important）→ 採納，與 S2-a 第一條同一件事，處置見那裡
-- **311 次樣本量在現行派工做法之前，README 沒講**（Important）→ 採納。自己核：「先準備一個 diff 檔」「主對話直接派」兩條規則的 commit 是 035f4bb、72e3421，都是 2026-10-24。
+- **311 次樣本量在現行派工做法之前，README 沒講**（Important）→ 採納。自己核：「先準備一個 diff 檔」「主對話直接派」兩條規則的 commit 是 9ba6836、2fbfdad，都是 2026-10-24。
   那一條的標題改成「真實 session 裡單個審查者的耗時，量在現行派工做法之前」，並寫明隔天規則就改了、之後沒有再量過真實 session
 - **費用那一條講得比量測檔還肯定**（Important）→ 採納。改成：兩份固定的測試 diff（203 行與 249 行）、4 發；整發 221–327 秒（平均 269）、最慢的單一審查者 139–226 秒；
   費用每發 3.89–6.89 美元（平均 5.13），並寫上量測檔自己的註記「取自最後一筆 result、可能偏低」。「不能估預算」的理由改成樣本小、diff 固定。繁中版的「每發 5.13 美元」一併改掉（原本讀起來像每發固定）

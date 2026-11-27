@@ -4,7 +4,7 @@
 
 ## 派工
 
-同 `S1-a.md`。b 自己回報：全程 `git show 8514fb2:<路徑>`，repo 沒有寫入任何東西；做了一次重現實驗（只在 scratchpad）。
+同 `S1-a.md`。b 自己回報：全程 `git show 720f1b3:<路徑>`，repo 沒有寫入任何東西；做了一次重現實驗（只在 scratchpad）。
 
 ## 發現
 
@@ -26,7 +26,7 @@
 - **B4** [Minor] worktree-manager 的「收尾」沒有標借鑑來源（**與 A3 後半重疊**）；同一個 diff 裡 verification-gate 第 9 行有寫。
   b 另外確認掛 pstack-claude 是對的：`git log -S 'ignored:N'` → 1ea7319（Michael Denyer）。只讀加 grep
 - 交回：tdd／reflect／babysit 那幾句在上游 cursor/plugins/pstack 有沒有（clone 是 shallow，追不到來源）
-- 未列為發現：「前 61 項」寫死項數（既有）；b 的 session 啟動時載入的根目錄 CLAUDE.md 總則那段跟 8514fb2 不一樣
+- 未列為發現：「前 61 項」寫死項數（既有）；b 的 session 啟動時載入的根目錄 CLAUDE.md 總則那段跟 720f1b3 不一樣
   （b 推測是並行的 simplifier 改了工作目錄）；worktree 收尾對照 §4.2／§3.7 判定不成立（交給使用者選，依 §6.4 提醒一次即可）
 
 ## 處置
@@ -43,5 +43,5 @@
 - **B4** 採納。worktree-manager 開頭補一行：收尾第 1 步借鑑 michael-denyer/pstack-claude 的 worktree-cleanup playbook。
 - 交回的上游查證：自己做了，見 `S1-a.md` A3（reflect／babysit 是上游原文；tdd 的假紅是 port 加的）。
 - 根目錄 CLAUDE.md 的快照：自己跑 `git diff --quiet HEAD -- CLAUDE.md` → exit 0，工作目錄跟 HEAD 相同，simplifier 沒動它。
-  b 看到的措辭跟我 commit f94404b 之前的草稿一樣 —— 推論是 harness 在草稿階段讀到的快照（沒驗證）。
+  b 看到的措辭跟我 commit 1820623 之前的草稿一樣 —— 推論是 harness 在草稿階段讀到的快照（沒驗證）。
 - worktree 收尾 §3.7：沒照 b 的判斷，採 A4，理由見 `S1-a.md` 末節。

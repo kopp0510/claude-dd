@@ -5,7 +5,7 @@
 
 ## 派工
 
-- **範圍** `git diff 4fb12d8 HEAD`(commit `398d5e8`,7 檔)
+- **範圍** `git diff da9117f HEAD`(commit `398d5e8`,7 檔)
 - **取檔**一律 `git show 398d5e8:`;**可以跑 `tests/test-gate.sh`**(它只在 mktemp 的拋棄式 repo 動作)但**不要改這個 repo 的檔案**
 - **背景**明寫「這支腳本被部署到每個專案的 pre-commit,改壞它會擋住所有專案的 commit」
 - **A~E 五題**:bash 3.2 相容性(**特別問有沒有「靜默」的差異**)、繞過路徑分類、會不會誤擋(列了 merge / rebase / worktree / shallow clone / amend 五種)、測試覆蓋、**文件數字請自己跑一次確認,不要採信我的**

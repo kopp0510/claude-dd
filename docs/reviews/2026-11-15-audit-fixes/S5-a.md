@@ -6,14 +6,14 @@
 
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。Agent 呼叫的 prompt 只有一句「先用 Read 把這個檔整份讀完，它就是你的完整派工內容，照它寫的做」，加派工檔的路徑；派工檔全文如下（`<scratchpad>` 是這個 session 的暫存目錄，沒進 repo）。
 
-審查包 `<scratchpad>/s5-review-pack.txt`（755 行）的組成：第 1 節 `git diff b3b2bf9 HEAD`（HEAD = 63f4d6c，工作目錄乾淨）；第 2 節步驟 3 的結果（code-simplifier 看過三個檔的改動，沒有要改的）；
+審查包 `<scratchpad>/s5-review-pack.txt`（755 行）的組成：第 1 節 `git diff 8bb3e15 HEAD`（HEAD = fbcd1dd，工作目錄乾淨）；第 2 節步驟 3 的結果（code-simplifier 看過三個檔的改動，沒有要改的）；
 第 3 節被刪掉的兩個檔的原文；第 4 節已跑過的驗證 V1–V9 與預期值。被改到的檔沒有另附整檔：工作目錄與 HEAD 相同，派工寫明直接讀 repo。
 
 ````
 你是 code-reviewer，審 claude-dd 這個 repo 的一個功能段落（S5）。你的職責：找漏洞。每條發現都要附證據（`路徑:行` 加原文，或你跑的指令與輸出）；沒證據的不算。不寫優點。
 
 審查包：<scratchpad>/s5-review-pack.txt（755 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**（Read 一次讀太多會靜靜截斷、不報錯）。
-裡面有：整段 diff（`git diff b3b2bf9 HEAD`）、被刪掉的兩個檔的原文、已經跑過的驗證與預期值。
+裡面有：整段 diff（`git diff 8bb3e15 HEAD`）、被刪掉的兩個檔的原文、已經跑過的驗證與預期值。
 工作目錄與 HEAD 相同，被改到的檔直接讀 repo 裡的就是 diff 描述的那一版。repo：/Volumes/T7/home/project/my_project/claude-dd
 專案規則在根目錄與各層 CLAUDE.md；這一段的計畫、假設與結果在 `docs/designs/2026-11-15-audit-fixes-design.md` 的「### S5」一節。
 
@@ -46,7 +46,7 @@ ci.yml 那一行 `find … | sed 's#.*/##' | sort`：在 ubuntu 與 macOS 的行
 審查者交回的報告，逐字（只把暫存目錄的絕對路徑換成 `<scratchpad>`）：
 
 ````
-Critical 0 / Important 0 / Smells 0 — 範圍：b3b2bf9..63f4d6c 裡安裝腳本、ci.yml、tests/test-install.sh 的改動（照派工的方向）
+Critical 0 / Important 0 / Smells 0 — 範圍：8bb3e15..fbcd1dd 裡安裝腳本、ci.yml、tests/test-install.sh 的改動（照派工的方向）
 
 【發現】
 沒有夠得上門檻的發現。

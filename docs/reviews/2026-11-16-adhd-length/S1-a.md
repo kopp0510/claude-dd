@@ -10,7 +10,7 @@ Agent 呼叫的 prompt 只有一句「完整的派工說明在這個檔，先用
 >
 > ## 這一段做了什麼（事實）
 > - 使用者 2026-11-16 說：「我發現 output-style ADHD, 這個 回答一點都不適合給ADHD, 還是給我一堆字 要我閱讀一堆」
-> - 段落起點 7e1ff44。改了 output-styles/adhd.md（Claude Code 的 output style，部署到 ~/.claude/output-styles/）：新增「長度」「範例」兩節，改寫「誰優先」、規則 1、4、5、7、9、「什麼時候可以不照」第 1 點
+> - 段落起點 dd6bffa。改了 output-styles/adhd.md（Claude Code 的 output style，部署到 ~/.claude/output-styles/）：新增「長度」「範例」兩節，改寫「誰優先」、規則 1、4、5、7、9、「什麼時候可以不照」第 1 點
 > - 新增量測目錄 docs/measurements/2026-11-16-adhd-length/（run.sh、check.sh、selftest.sh、measure.sh、CLAUDE.md、out/）：用 claude -p 跑舊版與新版兩臂、三個 prompt 各 n=2，check.sh 判定。跑了三批：第 1、2 批不通過，第 3 批通過
 > - 同步了 README.md、README.zh-TW.md、output-styles/LICENSE.txt、CHANGELOG.md、DD_PIPELINE_ARCHITECTURE.md；新增設計文件 docs/designs/2026-11-16-adhd-length-design.md，根目錄 CLAUDE.md 加了一句進度指路
 > - 「一則最多 10 行」這個數字是做這段的人自己定的，使用者沒有指定數字
@@ -20,7 +20,7 @@ Agent 呼叫的 prompt 只有一句「完整的派工說明在這個檔，先用
 > ## 材料
 > 全部在這個檔：<scratchpad>/review-diff.txt（共 2364 行，最後一行是「########## 檔尾」）。
 > 用 Read 的 offset／limit 每次 300 行讀到最後一行（Read 一次讀太多會靜靜截斷、不報錯）。
-> - ① 整段 diff（git diff 7e1ff44，不含 out/ 的實測輸出）
+> - ① 整段 diff（git diff dd6bffa，不含 out/ 的實測輸出）
 > - ② 步驟 3 自己改了什麼（分開附：simplifier 有沒有改到行為也要看）
 > - ③ 被改到的檔的整檔內容；被改到的檔一律讀這一份，不讀工作目錄
 > - ④ 已經跑過的驗證與預期值：這些已確認，不要重跑。「跑過」不代表結果對，要看的是它驗的是不是該驗的東西
@@ -45,10 +45,10 @@ Agent 呼叫的 prompt 只有一句「完整的派工說明在這個檔，先用
 > 【What I ran】讀了哪些檔、跑了哪些指令
 > 【需要外部查證】
 
-diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff 7e1ff44`（不含 `out/` 的實測輸出，另附檔名清單）② 步驟 3 的改動 `git diff HEAD`
+diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff dd6bffa`（不含 `out/` 的實測輸出，另附檔名清單）② 步驟 3 的改動 `git diff HEAD`
 ③ 被改到的檔的整檔內容（`adhd.md`、`LICENSE.txt`、四支腳本、量測目錄 CLAUDE.md、設計文件；README、CHANGELOG、架構文件、根目錄 CLAUDE.md 只放 diff）與起點那一版的 `adhd.md`
 ④ 已跑過的驗證與預期值（三批的 `check.out`、自測、保留題的量測、步驟 3 的行為不變檢查、`tests/test-install.sh`、LICENSE 引句驗收、去識別掃描）。
-被審的是 `deddc75` 加上步驟 3 還沒 commit 的改動。
+被審的是 `a4a5c5c` 加上步驟 3 還沒 commit 的改動。
 
 ## 發現
 
@@ -74,7 +74,7 @@ diff 檔 `<scratchpad>/review-diff.txt`（2364 行）的組成：① `git diff 7
 > 建議改法：第 4 條的必留清單加兩項：「病因沒確認時的候選原因」，以及「CLAUDE.md 規定格式的失敗回報」。第 2 條的「不寫」清單寫明不包括會改變結論的但書。
 >
 > 4｜Important｜新版允許把任務結束回報的「變更」清單砍成 2 行加一個數量；舊版明文保證這些內容不刪。
-> 證據：新版「誰優先」寫：「任務結束回報每一節 1 到 2 行，寫不完的照「長度」第 3 條用一行交代」。第 3 條的寫法是「另有 4 項不急，要看再說」，只給數量。舊版（7e1ff44）寫：「它們的位置與內容不因下面任何一條而刪掉」。全域 §1.2 第 39 行：「程式碼變更 | 1–2 句摘要 + 變更清單」。規則 4 新加了「順便發現的其他事最多用一行帶過（`另外發現 2 件事，要看再說`）」，而全域 §3.2 第 167 行要求「任務結束時一句話提一次」那個問題本身，不是只報件數。
+> 證據：新版「誰優先」寫：「任務結束回報每一節 1 到 2 行，寫不完的照「長度」第 3 條用一行交代」。第 3 條的寫法是「另有 4 項不急，要看再說」，只給數量。舊版（dd6bffa）寫：「它們的位置與內容不因下面任何一條而刪掉」。全域 §1.2 第 39 行：「程式碼變更 | 1–2 句摘要 + 變更清單」。規則 4 新加了「順便發現的其他事最多用一行帶過（`另外發現 2 件事，要看再說`）」，而全域 §3.2 第 167 行要求「任務結束時一句話提一次」那個問題本身，不是只報件數。
 > 失敗情境：一次改了 6 個檔，結束回報的「## 變更」只列 2 個，另寫「另有 4 個檔」，讀者和後面的 reviewer 看不到改了哪些檔。順手發現的死碼只剩「另外發現 1 件事」，讀者不知道是什麼。batch3 的 p3 只動了 2 個檔，實測沒有碰到這條路。
 > 建議改法：把「變更」清單（每檔一行）加進「長度」第 4 條，或在「誰優先」寫明 §4.5 的「變更」不在 1 到 2 行之內。規則 4 的範例改成要寫出發現了什麼。
 >

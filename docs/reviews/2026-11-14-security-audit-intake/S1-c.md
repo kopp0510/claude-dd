@@ -13,7 +13,7 @@
 你是 claude-dd repo（<REPO>）S1 段落的程式碼審查者，代號 S1-c。
 你的職責：找漏洞。每條發現都要附證據（diff 檔的行號與原文、你讀到的檔案路徑:行、或你跑的指令與輸出）；沒證據的不算。不寫優點。
 
-審查範圍：S1 整段，`git diff 9584605` 起到工作目錄（3 個 commit：cf093e7 S1-1、58e3edb S1-2、a0aa58a S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
+審查範圍：S1 整段，`git diff dd8b5a9` 起到工作目錄（3 個 commit：88ae4e2 S1-1、b6e3666 S1-2、bc22fed S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
 untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，不在範圍。
 
 材料：<S>/s1-review/diff.txt
@@ -41,7 +41,7 @@ untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，
 - 只用手上的資料與唯讀指令判斷（Read、Grep、git show／log／grep、bash -n、shellcheck）。不要改檔、不要 commit、不要跑 install-dd-pipeline.sh、不要派 agent、不要開 docker
 - 需要外部查證的（要上網、要跑會寫檔的東西、要真容器）列在「需要外部查證」交回
 - 每條標級別：Critical（照做會把檔寫到專案外、或驗證是空的而宣稱有效）／Important（會錯、會誤導、規定要同步卻漏）／Smell（小事）
-- 拿不準是不是既有問題時，去看那幾行在 9584605 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
+- 拿不準是不是既有問題時，去看那幾行在 dd8b5a9 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
 
 輸出格式（照抄標題）：
 ## Findings
@@ -75,9 +75,9 @@ Bash 工具說明：「`cd` carries to the next call only in the main session, i
 
 S1-c-4｜Important｜「寫檔前」答「要」之後，Phase 1 改的是連結目標，Phase 5 卻只 `git add CLAUDE.md`（連結本身沒變）。設計裡「要」這條路主要是給 `CLAUDE.md → AGENTS.md` 用的（A16），結果蓋章靜靜地沒被 commit｜證據：`commands/dd-init.md:69`（diff 檔 1166）`使用者答「要」之後，就對連結目標的路徑用 Write、Edit 照原本的步驟寫`；`:297-304` 的 Phase 5 只對 `CLAUDE.md .gitignore` 做 add 與 diff。答「不要」那條有接 Phase 5（`:62`），答「要」那條沒有。Phase 3 第 5 步有「實際改的是連結目標 → 提醒他 commit」（`:280-281`），Phase 1 沒有對應的一句。Y 臂的 TASK 只到 Phase 1（mkprompt.sh:10），prompt.txt:9 寫「不要 commit」，所以沒測到這裡｜照做的失敗情境：Y 型專案答「要」，`AGENTS.md` 蓋了章；Phase 5 的 `git diff --cached --quiet -- CLAUDE.md` 判成沒變更，不 commit，也不提醒。Phase 6 照樣印 ✅，`AGENTS.md` 的改動一直沒進版控
 
-S1-c-5｜Important｜Phase 1、Phase 2 的「不要」是這次新加的分支，但 Phase 6 的完成訊息還是固定把 CLAUDE.md、`.screenshots/ + .gitignore` 列成「已設定」｜證據：`commands/dd-init.md:62-63`（diff 檔 1159-1160）`Phase 1 → CLAUDE.md 這次不蓋章，告知使用者`、`Phase 2 → 只跳過那個路徑對應的那一行…；告知使用者`；`:337-339`（diff 檔 1434-1436）`已設定：├── CLAUDE.md — 8 步開發迴圈…├── .screenshots/ + .gitignore（有前端時）`。Phase 6 的範本沒有任何條件分支｜照做的失敗情境：C 型（CLAUDE.md 是指到專案外的 symlink）答「不要」，Phase 1 先講了沒蓋章，Phase 6 又印「✅ 初始化完成！已設定：CLAUDE.md — 8 步開發迴圈」，前後矛盾。Phase 5 的註解（`:312`）本來就把「Phase 6 照樣印 ✅」列為要避免的壞結果。Phase 3「不裝」那條在 9584605 就是這個形狀，這次把同一個問題複製到 Phase 1 和 Phase 2
+S1-c-5｜Important｜Phase 1、Phase 2 的「不要」是這次新加的分支，但 Phase 6 的完成訊息還是固定把 CLAUDE.md、`.screenshots/ + .gitignore` 列成「已設定」｜證據：`commands/dd-init.md:62-63`（diff 檔 1159-1160）`Phase 1 → CLAUDE.md 這次不蓋章，告知使用者`、`Phase 2 → 只跳過那個路徑對應的那一行…；告知使用者`；`:337-339`（diff 檔 1434-1436）`已設定：├── CLAUDE.md — 8 步開發迴圈…├── .screenshots/ + .gitignore（有前端時）`。Phase 6 的範本沒有任何條件分支｜照做的失敗情境：C 型（CLAUDE.md 是指到專案外的 symlink）答「不要」，Phase 1 先講了沒蓋章，Phase 6 又印「✅ 初始化完成！已設定：CLAUDE.md — 8 步開發迴圈」，前後矛盾。Phase 5 的註解（`:312`）本來就把「Phase 6 照樣印 ✅」列為要避免的壞結果。Phase 3「不裝」那條在 dd8b5a9 就是這個形狀，這次把同一個問題複製到 Phase 1 和 Phase 2
 
-S1-c-6｜Important｜設計文件引用了 F3、F4、F5c、F6，整份 repo 都找不到定義，指標指到空的。S2-1 要複製的檔案清單就靠 F3｜證據：`grep -nE 'F[0-9]+[a-z]?' docs/designs/2026-11-14-security-audit-intake-design.md`，F3、F4、F5c、F6 各只出現 1 次，而且都是引用。沒有任何一行以 `- F` 開頭，也沒有 `F6：`。引用處：設計文件:35 A12 `（F5c）`、:147 `見 F6`、:155 `清單見 F3`、:157 `見 F4`（diff 檔 1495、1607、1615、1617）。另外 :147 說「部署版 … 目前與 repo HEAD 逐字相同」，現在已經不成立：`cmp ~/.claude/scripts/dd-init-upgrade.sh` 與 `commands/dd-init.md` 的部署版都等於 `9584605` 那一版，跟 HEAD 不同｜照做的失敗情境：S2 由新的 session 照進度表接手，S2-1 第一項就是「清單見 F3」，找不到清單，只能自己猜要複製哪些檔
+S1-c-6｜Important｜設計文件引用了 F3、F4、F5c、F6，整份 repo 都找不到定義，指標指到空的。S2-1 要複製的檔案清單就靠 F3｜證據：`grep -nE 'F[0-9]+[a-z]?' docs/designs/2026-11-14-security-audit-intake-design.md`，F3、F4、F5c、F6 各只出現 1 次，而且都是引用。沒有任何一行以 `- F` 開頭，也沒有 `F6：`。引用處：設計文件:35 A12 `（F5c）`、:147 `見 F6`、:155 `清單見 F3`、:157 `見 F4`（diff 檔 1495、1607、1615、1617）。另外 :147 說「部署版 … 目前與 repo HEAD 逐字相同」，現在已經不成立：`cmp ~/.claude/scripts/dd-init-upgrade.sh` 與 `commands/dd-init.md` 的部署版都等於 `dd8b5a9` 那一版，跟 HEAD 不同｜照做的失敗情境：S2 由新的 session 照進度表接手，S2-1 第一項就是「清單見 F3」，找不到清單，只能自己猜要複製哪些檔
 
 S1-c-7｜Smell｜同一個新小節裡兩句互相矛盾：第 41 行說 Write 會跟著懸空連結在專案外建檔，第 67 行說 Write、Edit 遇到 symlink 會拒絕（實測）｜證據：`commands/dd-init.md:40-41`（diff 檔 1137-1138）`Phase 0 第 3 步就會走建立模式，Write 跟著連結在專案外建檔`；`:67`（diff 檔 1164）`Write、Edit 遇到 symlink 會拒絕…（2026-11-14 Claude Code 2.1.325 實測）`。results.txt:45 裡 C2 在舊文字下是綠的，也不支持第 41 行的說法｜照做的失敗情境：維護者拿第 41 行當工具行為的依據，跟第 67 行的實測結論衝突。規則本身（要抓懸空連結）不受影響
 
@@ -86,14 +86,14 @@ S1-c-8｜Smell｜「照寫的後果」那幾條，套到 6step、7step、手寫�
 S1-c-9｜Smell｜照字面做會拿到誤導或空的結果：①第 6 步 exit 6 時用 `ls -l CLAUDE.md.dd-upgrade` 給使用者看，但腳本對目錄也回 exit 6，`ls -l` 一個目錄列的是裡面的內容、看不出它是目錄（應用 `ls -ld`）②第 3 步第 2 條「掛載點是 symlink 時一併附 `ls -l`」：印出來的路徑已經解析過，從它看不出掛載點原本是不是 symlink，文件也沒說要對哪個沒解析的路徑跑 ③`[ -L <路徑> ]` 單獨跑，一般情況就是「無輸出 + exit 1」，正是 `:319-321` 自己警告「會被誤修」的形狀｜證據：`commands/dd-init.md:99`、`:207`、`:40`；腳本的 exit 6 條件 `[ -e "$OUTFILE" ] || [ -L "$OUTFILE" ]`（scripts/dd-init-upgrade.sh:219）把目錄也算在內｜照做的失敗情境：T4 型（輸出路徑是既有目錄）時，使用者只看到 `total 0`，不知道擋住的是一個目錄
 
 ## Not reported
-- 在 linked worktree 或 submodule 裡，`--git-path hooks/pre-commit` 會落在 toplevel 外，第 2 步每次都會問：同樣的條件在 9584605 就有了，這段沒有改變它
+- 在 linked worktree 或 submodule 裡，`--git-path hooks/pre-commit` 會落在 toplevel 外，第 2 步每次都會問：同樣的條件在 dd8b5a9 就有了，這段沒有改變它
 - A3 不處理 TOCTOU：威脅模型是「事先放好的 symlink」，並行攻擊不在範圍內，設計已經明寫
 - 第 8 步備份檔 `CLAUDE.md.bak-<秒>`：要事先猜中那一秒才放得了 symlink，不可行
 - `git rev-parse --show-toplevel` 與 `pwd -P` 的比對：git 的 toplevel 來自 getcwd，本來就是實體路徑，兩邊一致
 - check.sh、mkprompt.sh、setup.sh 在步驟 3 的改動：逐項讀過，三個 case、`-z` 與 `wc -l`、`project_intro; echo` 的位元組都和原本等價
 - check.sh 的斷言：symlink 臂靠專案外的 sha、權限、清單加上「symlink 還在」，有牙；問句那兩條讀的是自述，文件已寫明；H?K 用的擋下字串 `CLAUDE.md gate：commit 已擋下` 跟 `scripts/check-claude-md.sh:295` 對得上
 - 修改都在蓋章區塊外，不必跳 `dd-loop-rev`：看了改動的行號，都不在 115-172 行內；CI step 也已經綠
-- results.txt 的 sha：58e3edb → `6afa7ca1`、a0aa58a → `de1df4bc`，跟記錄相符；設計文件沒出現在 S1-1、S1-2 的 commit 裡（A13 成立）
+- results.txt 的 sha：b6e3666 → `6afa7ca1`、bc22fed → `de1df4bc`，跟記錄相符；設計文件沒出現在 S1-1、S1-2 的 commit 裡（A13 成立）
 - 去識別：量測目錄、設計文件、CHANGELOG 掃過，唯一命中是設計文件 A20 描述掃描樣式的那一句
 
 ## 需要外部查證
@@ -110,10 +110,10 @@ S1-c-9｜Smell｜照字面做會拿到誤導或空的結果：①第 6 步 exit 
 - 讀 `install-dd-pipeline.sh` 1295-1320、1360-1400 → `--commands-only` 會跳過 `create_scripts`
 - `grep -n commands-only README*.md UPGRADING.md …` → README.md:67、README.zh-TW.md:68
 - `grep -n 'commit 已擋下' scripts/check-claude-md.sh` → 第 295 行
-- `git show <c>:commands/dd-init.md | shasum -a 256` → 58e3edb 是 6afa7ca1、a0aa58a 是 de1df4bc
-- `git log --oneline 9584605..HEAD`、`git show --name-only cf093e7 58e3edb` → 設計文件不在這兩個 commit 裡
-- `git show 9584605:commands/dd-init.md | grep …` → 9584605 的 Phase 6 範本與「使用者選擇不裝」和現在相同
-- `cmp ~/.claude/{scripts/dd-init-upgrade.sh,commands/dd-init.md}` 對 HEAD 與 9584605 → 部署版等於 9584605；部署版裡 `exit 6` 出現 0 次
+- `git show <c>:commands/dd-init.md | shasum -a 256` → b6e3666 是 6afa7ca1、bc22fed 是 de1df4bc
+- `git log --oneline dd8b5a9..HEAD`、`git show --name-only 88ae4e2 b6e3666` → 設計文件不在這兩個 commit 裡
+- `git show dd8b5a9:commands/dd-init.md | grep …` → dd8b5a9 的 Phase 6 範本與「使用者選擇不裝」和現在相同
+- `cmp ~/.claude/{scripts/dd-init-upgrade.sh,commands/dd-init.md}` 對 HEAD 與 dd8b5a9 → 部署版等於 dd8b5a9；部署版裡 `exit 6` 出現 0 次
 - `git -c core.hooksPath=/tmp rev-parse [--path-format=absolute] --git-path hooks/pre-commit` → 不加旗標印 `/tmp/pre-commit`，加了印 `/private/tmp/pre-commit`（git 2.42.0）
 - `grep -rnE '/Users/|-Users-|/private/tmp|-private-tmp-|danlio' <量測目錄> <設計文件> CHANGELOG.md` → 1 筆，是設計文件 A20 描述掃描樣式的那一句
 - `bash -n check.sh` → ok

@@ -7,7 +7,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 > 你是 8 步迴圈步驟 4 的審查者 C。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 >
 > 專案根目錄：/Users/danlio/project/my_project/claude-dd
-> 審查範圍：git diff 15e3446 07a1730（清理兩份 README，加 CHANGELOG 一條、根 CLAUDE.md 一個節名）。
+> 審查範圍：git diff 4e45b7a 818b8af（清理兩份 README，加 CHANGELOG 一條、根 CLAUDE.md 一個節名）。
 > 材料：<scratchpad>/rd-review-diff.txt。
 > 用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔讀材料裡那一份，沒改到的檔讀 repo。
 > 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
@@ -28,10 +28,10 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 
 ## 發現
 
-Critical 0 / Important 1 / Smells 0（審查者 C，範圍 git diff 15e3446 07a1730，方向：同步點）
+Critical 0 / Important 1 / Smells 0（審查者 C，範圍 git diff 4e45b7a 818b8af，方向：同步點）
 
 ## Findings
-[Important] README.md:55、README.zh-TW.md:56（07a1730 版，材料 diff 第 89／274 行）｜步驟 5 把兩條跳過路徑合成一句，說兩種情況都會印出該跑的 `claude plugin install` 指令，但「plugin 不在磁碟上」那條其實不會印
+[Important] README.md:55、README.zh-TW.md:56（818b8af 版，材料 diff 第 89／274 行）｜步驟 5 把兩條跳過路徑合成一句，說兩種情況都會印出該跑的 `claude plugin install` 指令，但「plugin 不在磁碟上」那條其實不會印
   證據：install-dd-pipeline.sh:784-787 是 `if [ ! -f "$plugin_json" ]; then echo -e "... Plugin 檔案不存在"; continue; fi`，只印紅字就 continue，不附指令。只有 :826-830 的「讀不到版本」分支會多印一行 `（若尚未安裝過，先跑 claude plugin install ...）`。舊版文字分成兩句寫（材料第 88、273 行），講的是對的。
   失敗情境：claude-md-management 沒在本機的使用者照 README 等指令出現，實際只看到「Plugin 檔案不存在」，而且 README 也沒有寫這個字串讓他對照。
   附註：我讀到工作目錄裡已經有改這兩行、還沒 commit 的修改（`git status` 是 ` M README.md`、` M README.zh-TW.md`），改法是把兩條路徑分開寫。那份修改不在我的範圍，我沒有審。
@@ -42,7 +42,7 @@ Critical 0 / Important 1 / Smells 0（審查者 C，範圍 git diff 15e3446 07a1
 - 沒列進 CHANGELOG 的改動（Language note 併入、Highlights 裡 --force 那句、zh 附加步驟「連帶擋掉」那句）屬於「重複／細節」的概括範圍，不構成描述錯誤。
 
 ## What I ran
-- 材料 1-429、966-974 行；git grep 被刪內容特徵字串（結果在 scratchpad/C-grep1.txt）；git grep README 掃各目錄；sed install-dd-pipeline.sh:775-835；CHANGELOG 標題列；design 文件 1-30、470-478、505-512；git grep 2.3/3；diagrams/src/CLAUDE.md 100-130 與 gen_*.py；兩份 README 標題與錨點；git show 15e3446 標題；git status／git diff
+- 材料 1-429、966-974 行；git grep 被刪內容特徵字串（結果在 scratchpad/C-grep1.txt）；git grep README 掃各目錄；sed install-dd-pipeline.sh:775-835；CHANGELOG 標題列；design 文件 1-30、470-478、505-512；git grep 2.3/3；diagrams/src/CLAUDE.md 100-130 與 gen_*.py；兩份 README 標題與錨點；git show 4e45b7a 標題；git status／git diff
 
 ## 需要外部查證
 - 沒有

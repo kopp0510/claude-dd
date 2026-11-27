@@ -174,7 +174,7 @@ SKIP 不是豁免：段落起點以來跳過、還沒補 CLAUDE.md 的目錄，�
 | 迴圈步數第五方（安裝腳本輸出字串 ↔ 一行式箭頭摘要） | 四方看不到的非編號文案漂移 |
 | 根目錄 CLAUDE.md 大小上限（`scripts/githooks/claude-md-size.sh`；上限取自最新 `v*` tag 那一版的 `scripts/githooks/claude-md-max-bytes`，那個 tag 還沒有這個檔時取自這次 push 的那一份） | 根目錄 CLAUDE.md 超過上限。pre-commit 跑的是同一支腳本，這一步補它擋不到的：`--no-verify`、沒設 `core.hooksPath` 的 clone、cherry-pick／merge／rebase 這類不經過 pre-commit 的 commit（清單在 `scripts/githooks/CLAUDE.md`「繞得過的路」）。先查有沒有 `v*` tag —— shallow clone 不帶 tag，上限會變成這次 push 自己寫的數字 |
 | gate 情境測試（`tests/test-gate.sh`：段落起點、SKIP 欠帳、暫停旗標 `dd.stopped`；檔尾另測本 repo 自用的 `scripts/githooks/pre-commit` 與根目錄 CLAUDE.md 大小上限） | SKIP 跳過的目錄之後被放過；暫停期間改過的目錄恢復後沒被追討、或沒暫停的 repo 被當成暫停；中文、根目錄路徑漏查；大小上限 `--staged` 那一種（pre-commit 跑的；「根目錄 CLAUDE.md 大小上限」那一步只跑不帶參數的）壞掉，或在 bash 3.2 上行為不同 |
-| dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、6a9addd、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個；`--apply` 跟著 symlink 寫到專案外。要 `fetch-depth: 0`（兩個 job 都設了） |
+| dd-init 升級分類腳本情境測試（`tests/test-dd-init-upgrade.sh`：fixture 從 v1.6.12、v1.6.4、b1227f7、v1.1.0 抽各版蓋章區塊並插入在地內容） | 升級時把專案自己加的內容刪掉或放錯步驟；舊範本行沒清乾淨；標記變兩個；`--apply` 跟著 symlink 寫到專案外。要 `fetch-depth: 0`（兩個 job 都設了） |
 | dd-stop 腳本情境測試（`tests/test-dd-stop.sh`：拋棄式 repo 配 repo 裡真的 gate） | `/dd-stop on` 之後旗標或聲明少一半；`off` 沒把 `CLAUDE.local.md` 還原成原樣（多留標記段、刪掉使用者本來就有的檔、把兩行黏在一起）；寫進 symlink 指到的檔或已進版控的檔；暫停期間欠下的 CLAUDE.md 在 `off` 時沒列出來，或起點檔壞掉時印成「沒有要補的」 |
 | Sandbox 端到端非互動安裝（`tests/test-install.sh`） | 只有執行期才會出現的安裝 bug；jq 與 python3 兩條路徑對同一份設定檔結論不同；覆蓋或清除前沒備份（含 symlink 目標）；plugin 登記寫錯或移除不乾淨；完成訊息把沒做的講成做了；`--check` 把過期的 skill、agent 印成「已安裝」。互動選單測不到 |
 | macOS `/bin/bash` 3.2 行為測試（`bash32` job：error-capture、gate-guard、gate 情境、dd-init 升級分類、dd-stop、安裝端到端） | ubuntu 的 bash 5 驗不到的 3.2 不相容（`${x,,}`、`declare -A`、`mapfile`…）。先確認 `/bin/bash` 真的是 3.2，否則直接失敗。這類錯誤常常只印一行、結果照舊，所以 gate-guard 測試看 hook 的 stderr、gate 情境測試比對輸出裡的 shell 錯誤；error-capture 與安裝測試靠 `set -e` 的非 0 中止。公開 repo 的 macOS runner 不計費 |
@@ -201,6 +201,6 @@ Root MIT（LICENSE）。vendored 內容各自附上游授權
 `skills/tech-diagram-gif/LICENSE.txt`、`skills/self-improving-agent/LICENSE`、`skills/security-audit/LICENSE.txt`（cloudflare/security-audit-skill，MIT）、`output-styles/LICENSE.txt`（i-have-adhd，MIT，只借規則，逐節去向見該檔）、
 `agents/LICENSE.txt`（anthropics/claude-plugins-official，Apache-2.0：`code-simplifier.md` 與官方檔只差 model 與一行改動說明、`code-reviewer.md` 是改過的檔，比對結果見該檔）），
 收編規則見根目錄 CLAUDE.md「第三方 Skill / Agent 收編檢查清單」。
-原本有一個例外 `commands/workflow-review/`（第三方，`7248a15` 收編，未隨附 LICENSE、上游 repo 從未記錄，不符收編檢查清單第 1 項）：
+原本有一個例外 `commands/workflow-review/`（第三方，`e5137e4` 收編，未隨附 LICENSE、上游 repo 從未記錄，不符收編檢查清單第 1 項）：
 查不出上游就不能編一個授權上去，2026-11-15 退場。
 **新增 vendored 元件時，這裡與兩份 README 的授權段落要同批更新**（沒有任何 CI 檢查會擋）。

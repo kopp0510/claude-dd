@@ -4,7 +4,7 @@
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數）。這一段沒有跑步驟 3 的 code-simplifier（唯一的程式碼改動是 `show_help` 的一行字串）。
 給審查者的 prompt 只有一句「完整派工在 `<scratchpad>/imp/review2/prompt-a.txt`，先讀完再照做」加三句防漏；下面是那個檔的全文（路徑已去識別）。
-diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git diff 00955e2 HEAD`（HEAD = 44ec47a）②沒有跑步驟 3 的說明
+diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git diff 9651d68 HEAD`（HEAD = dab3c81）②沒有跑步驟 3 的說明
 ③兩份 README 在 HEAD 的整檔內容 ④已跑過的驗證（本機 CI 20 個 step、`tests/test-install.sh`）與逐句核對表 K1–K13（每列附指令與實際輸出）。
 
 ````text
@@ -12,7 +12,7 @@ diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git dif
 
 ## 範圍與資料
 
-- 審查範圍：repo <repo> 的 `git diff 00955e2 HEAD`（一個功能段落，1 個 commit：44ec47a）。這一段改的是兩份 README（英文 README.md、繁中 README.zh-TW.md）、CHANGELOG.md、根目錄 CLAUDE.md 的一行、設計文件，以及 install-dd-pipeline.sh 的 show_help 裡一行字串
+- 審查範圍：repo <repo> 的 `git diff 9651d68 HEAD`（一個功能段落，1 個 commit：dab3c81）。這一段改的是兩份 README（英文 README.md、繁中 README.zh-TW.md）、CHANGELOG.md、根目錄 CLAUDE.md 的一行、設計文件，以及 install-dd-pipeline.sh 的 show_help 裡一行字串
 - diff 檔：<scratchpad>/imp/review2/diff.txt（四部分：整段 diff／步驟 3 的說明／兩份 README 在 HEAD 的整檔內容／已經跑過的核對與驗證）
 - **diff 檔用 Read 的 offset／limit 每次 300 行讀到最後一行**。Read 一次讀太多會靜靜截斷、不報錯
 - 工作目錄與 HEAD 相同，沒有別的 agent 在改檔：README 以外的檔（install-dd-pipeline.sh、commands/dd-init.md、scripts/、skills/、templates/global/CLAUDE.md、docs/measurements/ 等）直接讀工作目錄
@@ -54,7 +54,7 @@ diff 檔 `<scratchpad>/imp/review2/diff.txt`（968 行）的組成：①`git dif
 審查者交回的完整報告（逐字；只把本機路徑換成 `<scratchpad>`、`<repo>`）：
 
 ````text
-Critical 0 / Important 4 / Smells 0。範圍是 `git diff 00955e2 HEAD`（44ec47a），方向是英文 README 新寫的句子對程式碼實際行為。
+Critical 0 / Important 4 / Smells 0。範圍是 `git diff 9651d68 HEAD`（dab3c81），方向是英文 README 新寫的句子對程式碼實際行為。
 
 [Important] README.md:84「Those hooks stay in place, but the gate script they call is gone, so each commit prints a warning and goes through unchecked」這句在舊版 `/dd-init` 掛的 hook 上不成立。
   Failure：專案是舊版 `/dd-init` 掛的 hook，那一行是單獨的 `"$HOME/.claude/scripts/check-claude-md.sh" || exit 1`，之後沒有重跑 `/dd-init`。這時跑 `--uninstall`，腳本不見，sh 回 127，接著 `|| exit 1`，每次 commit 都被擋，不是「警告後放行」。使用者在自己 hook 裡呼叫 gate、非 0 就讓 hook 失敗的那種寫法也一樣。
@@ -95,7 +95,7 @@ Not reported：
 
 ## 處置
 
-- **`--uninstall` 之後「hook 只警告、放行」在舊版 hook 上不成立**（Important）→ 採納。自己核：`git tag --contains edb6b96` 最早是 v1.3.0；前一個 tag 的 `commands/dd-init.md` 沒有「gate 沒執行」那句、掛的是單獨一行 `… || exit 1`。
+- **`--uninstall` 之後「hook 只警告、放行」在舊版 hook 上不成立**（Important）→ 採納。自己核：`git tag --contains ab1b088` 最早是 v1.3.0；前一個 tag 的 `commands/dd-init.md` 沒有「gate 沒執行」那句、掛的是單獨一行 `… || exit 1`。
   README 的 `--uninstall` 段落改寫成條列：v1.3.0 起的 hook 印警告後放行；更早的寫法或使用者自己呼叫 gate 的 hook 會讓每次 commit 失敗，要把那一行拿掉
 - **沒有 jq 與 python3 時，手動清理的提示只講 `settings.json`**（Important）→ 採納，改的是安裝腳本那句訊息（補上 `installed_plugins.json`）。T9 加 (e)：把 jq 與 python3 都當成不存在跑 `uninstall`，斷言提示講到這個檔；改之前紅、改之後綠
 - **「不動全域 `CLAUDE.md`」沒交代後果**（Important）→ 採納。README 補上：那份如果是這個 repo 的模板，仍會要求呼叫 `dd-loop` 與執行 gate 腳本，而兩者已被移除，要自己換掉或刪掉

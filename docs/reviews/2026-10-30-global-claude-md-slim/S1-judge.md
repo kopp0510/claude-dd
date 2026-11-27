@@ -1,6 +1,6 @@
 # S1-judge：全域 CLAUDE.md 瘦身 S1 的查證
 
-範圍：`git diff f46d4de HEAD`（a30dc1a、f0e80ab、a542817），起點取自設計文件進度表 S1 的 commits 欄。
+範圍：`git diff a2dbb9b HEAD`（d3b980d、cbb59d7、a3aa5a4），起點取自設計文件進度表 S1 的 commits 欄。
 
 ## 派工
 
@@ -16,8 +16,8 @@
 
 ### 採納（Important）
 
-1. **`..` 規則只在步驟 8**（A-2、D-1）。查證：拋棄式 repo 裡 commit a→b、工作目錄再改 c，`git diff b..` 只印 b、exit 0，`git diff b.. HEAD` exit 129（D 實測；A 對 `f46d4de..` 實測 129）。task-planner 規則區塊規定 commits 欄填 `<起點>..`，所以照全域 `<起點>` 定義整格代入是常走的路
-2. **步驟 4 的 ≥3 關卡丟了「要派 agent 時」前提**（A-1）。查證：`git show f46d4de:templates/global/CLAUDE.md` 裡「最少 3 個」那句在「主對話直接派審查者」子項內，排在「沒有人工寫的程式碼就不要派 agent」之後；搬上來後是無條件句，SKILL.md 開頭又寫「兩邊講法不同時以全域 §3.9 的關卡為準」
+1. **`..` 規則只在步驟 8**（A-2、D-1）。查證：拋棄式 repo 裡 commit a→b、工作目錄再改 c，`git diff b..` 只印 b、exit 0，`git diff b.. HEAD` exit 129（D 實測；A 對 `a2dbb9b..` 實測 129）。task-planner 規則區塊規定 commits 欄填 `<起點>..`，所以照全域 `<起點>` 定義整格代入是常走的路
+2. **步驟 4 的 ≥3 關卡丟了「要派 agent 時」前提**（A-1）。查證：`git show a2dbb9b:templates/global/CLAUDE.md` 裡「最少 3 個」那句在「主對話直接派審查者」子項內，排在「沒有人工寫的程式碼就不要派 agent」之後；搬上來後是無條件句，SKILL.md 開頭又寫「兩邊講法不同時以全域 §3.9 的關卡為準」
 3. **CHANGELOG 把 context 收益寫成全面受益**（B-1、D-2）。查證：CHANGELOG `## 未發布`「每個專案、每個 session 都少載這一塊；跑迴圈時多載一次 skill」vs 全域 §3.9「每次都叫」與量測 README「總量會增加」
 4. **`inject_chars` 量錯、6,188 無法重現**（B-2③、C-1、D-3、simplifier-2）。查證：p1-start-1.jsonl 裡 user 訊息依序是 `Launching skill: dd-loop`（tool_result，24 字元）、`Base directory for this skill: …`（本文）；check.sh 只量前者
 5. **README 宣稱超出 `results.tsv`**（B-2①②、C-4）。查證：初版 check.sh 只抽 Skill 的 tool_use 與 `tool_name=="Skill"` 的 denials

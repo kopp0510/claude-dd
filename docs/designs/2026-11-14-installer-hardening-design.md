@@ -26,8 +26,8 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | DONE | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | 28663da..490f7b6 |
-| S2 | 兩份 README：陌生人裝之前該知道的事 | DONE | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | 00955e2..3371c33 |
+| S1 | 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷 | DONE | — | `/bin/bash tests/test-install.sh` 全過（含新加的各組；`/bin/bash` 是 macOS 的 3.2）；GNU 容器裡 T1 那段斷言修前紅、修後綠；等價表 92 例不一致數從 16 變 0；本機 ci.yml 20 個 step 全過 | f6179b2..84a2bcd |
+| S2 | 兩份 README：陌生人裝之前該知道的事 | DONE | S1 | 本機 ci.yml 20 個 step 全過（數字宣稱、flag 三方對照、迴圈步數）；逐句核對表每一列都附 `grep -n` 或 `sed -n` 的實際輸出；步驟 4 照樣派審查者拿新句對原始碼與量測檔 | 9651d68..1045627 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -48,7 +48,7 @@
 
 ## 段落與小任務
 
-### 開工前查到的事實（2026-11-14，HEAD b1935bb，本機 macOS）
+### 開工前查到的事實（2026-11-14，HEAD 23429eb，本機 macOS）
 
 - 安裝測試每一次安裝都是非互動、空的沙盒 HOME：`grep -c -E 'settings\.json|\.claude\.json|installed_plugins' tests/test-install.sh` 回 0；沙盒裡沒有 marketplace，`install_plugins` 對每個 plugin 都走「Plugin 檔案不存在」
 - `ask()` 用 `[ -t 0 ]` 判斷，stdin 不是終端機時一律採用預設值
@@ -63,7 +63,7 @@
 - `install_plugins` 每次都改 settings.json 的 `enabledPlugins` 與 installed_plugins.json 的 `lastUpdated`，兩個檔都不經過 `backup_before_overwrite`
 - `create_commands` 對 `deprecated_dd` 列的舊指令檔直接 `rm`；`show_completion` 無條件印「已安裝的內建 Agents」「已啟用的 Plugin」，`--commands-only` 時這兩件事都沒做
 - GitHub runner（2026-11-14 讀 actions/runner-images 的說明）：`ubuntu-latest` 對應 Ubuntu 24.04，有 jq 1.7 與 Python 3.12.3；`macos-latest` 對應 macOS 26 Arm64，有 jq 1.8.2 與 Python3 3.15.2
-- 公開版停在 2026-10-30 的 9584605（當時 CI 綠燈）；本機多出的 commit 還沒在 ubuntu job 跑過
+- 公開版停在 2026-10-30 的 dd8b5a9（當時 CI 綠燈）；本機多出的 commit 還沒在 ubuntu job 跑過
 
 ### S1 安裝腳本：碰設定檔與備份的路徑補測試、修掉查到的缺陷
 

@@ -6,7 +6,7 @@
 
 ## 方法
 
-素材:`claude-dd` 的 `48de43f`(gate 新增段落起點與 SKIP 欠帳追查,231 insertions 手寫 shell + CI),
+素材:`claude-dd` 的 `dd3f72d`(gate 新增段落起點與 SKIP 欠帳追查,231 insertions 手寫 shell + CI),
 做成只有 2 個 commit 的快照 repo,避免後續修正的 commit 洩題。兩組**同一份 review prompt**、同一個 model(opus)、
 各自獨立的快照副本,交錯執行(A、B、A、B)避免時段效應:
 

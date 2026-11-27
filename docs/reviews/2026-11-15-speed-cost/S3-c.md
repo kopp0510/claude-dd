@@ -3,12 +3,12 @@
 ## 派工
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數），同時派 code-simplifier 跑步驟 3。派工用一句話：「先用 Read 讀完 `<scratchpad>/s3/review/prompt-c.txt`（24 行），它就是你的完整任務說明，照裡面做。」下面是那個檔的全文（路徑已去識別：`<repo>`、`<scratchpad>`；回報裡引用的掃描樣式若含使用者名稱或 uid，也換成 `<USER>`、`<UID>`）。
-diff 檔（1269 行）的組成：①`git diff dd570e7 HEAD`（HEAD = 447236c；不含 `out/reports/` 底下 15 份報告，只列檔名，要看就讀 repo）②被改到檔案在 HEAD 的整檔內容（帶行號；與步驟 3 並行，所以取 HEAD 版）③已跑過的驗證與預期值 8 條。步驟 3 的改動在派工當下是空的。
+diff 檔（1269 行）的組成：①`git diff c772d96 HEAD`（HEAD = d3f995c；不含 `out/reports/` 底下 15 份報告，只列檔名，要看就讀 repo）②被改到檔案在 HEAD 的整檔內容（帶行號；與步驟 3 並行，所以取 HEAD 版）③已跑過的驗證與預期值 8 條。步驟 3 的改動在派工當下是空的。
 
 ```text
 你是 code-reviewer。你的職責：找漏洞。每一條發現都要附證據（檔名與行號、原文、或你跑的指令與輸出）；沒有證據的不算。不寫優點。
 
-範圍：repo <repo> 的一個功能段落（S3），起點 dd570e7 到 HEAD（5 個 commit）。
+範圍：repo <repo> 的一個功能段落（S3），起點 c772d96 到 HEAD（5 個 commit）。
 這一段做的事：skills/plan-review/SKILL.md 改成「主對話把計畫與事實寫成一個檔（審查包），裁決者與審查者的 prompt 只給路徑」，寫不了檔時照舊貼；
 並用三發 claude -p 真跑、幾個 subagent 乾跑驗證，結果寫在 docs/measurements/2026-11-15-plan-review-pack.md。
 
@@ -37,7 +37,7 @@ diff 檔（1269 行）的組成：①`git diff dd570e7 HEAD`（HEAD = 447236c；
 審查者交回的全文（逐字；路徑已去識別）：
 
 ```text
-Critical 0 / Important 4 / Smell 2。範圍是 S3（dd570e7..447236c）：兩支腳本、它們撐住的結論、reviewer-effort 的 timeline.py／stats.py 與方法文件。
+Critical 0 / Important 4 / Smell 2。範圍是 S3（c772d96..d3f995c）：兩支腳本、它們撐住的結論、reviewer-effort 的 timeline.py／stats.py 與方法文件。
 
 結論：沒有任何一條會推翻「採用」的判定。四條 Important 裡，一條是關卡 ② 的判定力不夠，一條是代表性的限制沒寫，兩條是文件或去識別的宣稱不對。
 
@@ -96,8 +96,8 @@ Critical 0 / Important 4 / Smell 2。範圍是 S3（dd570e7..447236c）：兩支
 - **fill.py 的 check**：`make … pack` 獨有的程式（block 替換讀檔指示、pack_sentence、half_sentence、HALF 替換、審查包內文、`{N}`、ROOT／EFFORT、parent 填寫）check 都沒蓋到。docstring「相同才代表 make 填的是範本」講過頭了，但這些是單純的字串操作，有 assert 剛好一處，加上對 P-med-6.judge.txt 的 0 處檢查與乾跑 e 臂的 diff，缺口有補上。
 - **兩處替換**：fill.py 的兩處替換跟 SKILL.md 第 2 步是同一件事：block() 的起訖正好是 `<<<計畫開始>>>` 到 `<<<事實結束>>>`，HALF 逐字對得上範本 :162。
 - **審查包內容**：順序跟第 1 步規定的一致。`{N}=body.count("\n")` 跟 `wc -l` 相同。
-- **commit 引用**：fill.py 在這個範圍內只有 2cf7aba、8633574 兩個 commit 動過；SKILL.md 只有 e3c7fd1、8633574。docstring 與 CLAUDE.md 寫的「P-med-4、P-med-5 用 2cf7aba 的 fill.py 配 e3c7fd1 的 SKILL.md」對得上。
-- **第一次修正沒列第 1 步那四處說明**：8633574 同時補了第 1 步那四處說明，「第一次修正」一節沒列。但那幾句不會進 fill.py 產生的 prompt，真跑的差別只有兩處替換與拿掉條件句，不影響比較。
+- **commit 引用**：fill.py 在這個範圍內只有 041bd22、a64b6c7 兩個 commit 動過；SKILL.md 只有 505df35、a64b6c7。docstring 與 CLAUDE.md 寫的「P-med-4、P-med-5 用 041bd22 的 fill.py 配 505df35 的 SKILL.md」對得上。
+- **第一次修正沒列第 1 步那四處說明**：a64b6c7 同時補了第 1 步那四處說明，「第一次修正」一節沒列。但那幾句不會進 fill.py 產生的 prompt，真跑的差別只有兩處替換與拿掉條件句，不影響比較。
 - **使用順序**：CLAUDE.md 寫的順序（prepare.py → fill.py make → run.sh）跑得起來。prepare.py 會建 prompts/ 與 logs/，fill.py 會蓋掉它寫的 judge 與 parent。發代號要剛好三段（stats.py:74 會擋）。
 - **數字核對**：
   - 結果表的秒數、字元範圍、裁決者結束時間，跟兩份 timeline.md 與 stats.jsonl 的 judge_s 都對得上。
@@ -113,7 +113,7 @@ Critical 0 / Important 4 / Smell 2。範圍是 S3（dd570e7..447236c）：兩支
 - Read prompt-c.txt 與 S3-diff.txt（1–1269 行，分 4 段）→ 讀完
 - `cat -n` reviewer-effort 的 timeline.py、stats.py、run.sh、parent-a.txt、outside.py、deid.py、CLAUDE.md、prepare.py → 讀完
 - `grep -n '正確答案' -A25 docs/measurements/2026-11-15-reviewer-effort.md` → 取得 M1 的定義
-- `git log --oneline dd570e7..HEAD -- fill.py readcheck.py SKILL.md`、`git diff 2cf7aba 8633574 -- fill.py`、`git diff e3c7fd1 8633574 -- SKILL.md` → 只有上面說的三個 commit；fill.py 只加了 HALF 替換
+- `git log --oneline c772d96..HEAD -- fill.py readcheck.py SKILL.md`、`git diff 041bd22 a64b6c7 -- fill.py`、`git diff 505df35 a64b6c7 -- SKILL.md` → 只有上面說的三個 commit；fill.py 只加了 HALF 替換
 - `cat reviewer-effort/out/timeline.md`、grep 舊 stats.jsonl 的 cost 與洩題欄 → 基準數字對得上；舊慣例只留筆數
 - `grep -o '/private/t…' out/stats.jsonl` → 2 筆 `/private/t`
 - grep reports 找 `claude-<UID>|<USER>|/private/|scratchpad` → 3 個檔命中，都是計畫自己的文字；`sed -n` 印出 4 處命中行 → 都講到機制 (b)
@@ -132,7 +132,7 @@ Critical 0 / Important 4 / Smell 2。範圍是 S3（dd570e7..447236c）：兩支
 
 ## 處置
 
-六條都採納，級別照審查者標的。修正在 `fd3004b`。
+六條都採納，級別照審查者標的。修正在 `7344704`。
 
 | # | 級別 | 發現 | 查證 | 做了什麼 |
 |---|---|---|---|---|

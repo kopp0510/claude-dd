@@ -4,7 +4,7 @@
 
 ## 派工
 
-- 範圍：`git diff f4e15a0`（表上這段的起點）到工作目錄。HEAD = 9afb1eb，4 個 commit（S2-1 到 S2-4），工作目錄乾淨。
+- 範圍：`git diff 133071e`（表上這段的起點）到工作目錄。HEAD = d41ba84，4 個 commit（S2-1 到 S2-4），工作目錄乾淨。
 - 步驟 3 沒有跑：這一段的 diff 全是 Markdown（三份 SKILL.md、`commands/dd-init.md`、CLAUDE.md、CHANGELOG、設計文件），沒有程式碼，code-simplifier 的範圍是空的。
 - 步驟 4 不跳過：diff 沒有程式碼，但改的是 Claude 會照著做的指令文字，裡面每一句都在講別處的行為（gate 印什麼、安裝腳本做什麼、`docs/reviews/` 怎麼放），機械檢查看不到這一類。
 - 派 3 個 `code-reviewer`（下限，不帶 model 參數），照改的三處分方向：A 起點文字對 gate、B BLOCKED 流程、C Phase 4 與文件宣稱。審查包 567 行，沒有多派。

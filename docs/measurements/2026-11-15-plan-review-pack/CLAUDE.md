@@ -4,9 +4,9 @@
 
 ## 檔案
 
-- `fill.py` —— 從 `skills/plan-review/SKILL.md` 的裁決者範本填出這次要送的裁決者 prompt。`check`：拿 `b1935bb` 的舊範本填，跟 `../2026-11-15-reviewer-effort/judge.txt` 逐位元組比（2026-11-15 相同；把輪次改填 2 會在第 1、175 行變紅）。
+- `fill.py` —— 從 `skills/plan-review/SKILL.md` 的裁決者範本填出這次要送的裁決者 prompt。`check`：拿 `23429eb` 的舊範本填，跟 `../2026-11-15-reviewer-effort/judge.txt` 逐位元組比（2026-11-15 相同；把輪次改填 2 會在第 1、175 行變紅）。
   `make … pack|paste`：讀 repo 工作目錄現在的 SKILL.md，寫 `prompts/<發代號>.judge.txt`、`.parent.txt`，`pack` 另寫審查包 `.pack.md`。
-  `pack` 照 SKILL.md 第 2 步換兩處（`P-med-6` 起；`P-med-7` 的讀檔指示比 `P-med-6` 多一句，是 `fd3004b` 的 SKILL.md）；`P-med-4`、`P-med-5` 用的是只換第一處的那一版（`git show 2cf7aba:docs/measurements/2026-11-15-plan-review-pack/fill.py`，配 `e3c7fd1` 的 SKILL.md）
+  `pack` 照 SKILL.md 第 2 步換兩處（`P-med-6` 起；`P-med-7` 的讀檔指示比 `P-med-6` 多一句，是 `7344704` 的 SKILL.md）；`P-med-4`、`P-med-5` 用的是只換第一處的那一版（`git show 041bd22:docs/measurements/2026-11-15-plan-review-pack/fill.py`，配 `505df35` 的 SKILL.md）
 - `readcheck.py` —— 每個 subagent 對審查包下的每次 Read 的 offset／limit；要的行蓋住第 1 行到最後一行、而且結果裡有結尾那一行才算從頭讀到尾，有人不算就 exit 1。
   步驟 4 審查之後改嚴的（原本只查結果裡有結尾那一行，只讀檔尾也會過）；查不到的情況寫在檔頭
 - `pubstats.py` —— 把 `stats.py` 的輸出整理成 `out/stats.jsonl`：洩題檢查那一欄的原文（工具輸入的前 200 字元，帶本機路徑、會從路徑中間截斷）換成筆數，整理完還有本機路徑字樣就不輸出、exit 1。

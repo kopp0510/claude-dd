@@ -14,8 +14,8 @@ S2 步驟 5：`./install-dd-pipeline.sh --force` 之後，用全新的 `claude -
 `<S>` 是 scratchpad，`<repo>` 是 claude-dd 根目錄。
 
 1. 在 `<repo>` 跑 `./install-dd-pipeline.sh --force`，再跑 `diff -rq skills/security-audit ~/.claude/skills/security-audit`，要沒有輸出
-2. 建拋棄式 clone：`git clone -q <repo> <S>/trig/claude-dd && git -C <S>/trig/claude-dd checkout -q 9584605`
-   （9584605 在 S2 之前，clone 裡沒有 `skills/security-audit/`，叫得起來的只有部署版）
+2. 建拋棄式 clone：`git clone -q <repo> <S>/trig/claude-dd && git -C <S>/trig/claude-dd checkout -q dd8b5a9`
+   （dd8b5a9 在 S2 之前，clone 裡沒有 `skills/security-audit/`，叫得起來的只有部署版）
 3. 建 negctrl 用的副本：`<S>/trig/ctrl-plugin/` 放 `.claude-plugin/plugin.json`（`name` 是 `sa-ctrl`）與 `skills/security-audit/`（從 repo 複製，刪掉 `CLAUDE.md`、用 `sed` 刪掉 `disable-model-invocation: true` 那行）
 4. 建 injctrl 用的 repo：`<S>/trig/injctrl/` 跑 `git init`，把 repo 的 `skills/security-audit/` 複製到 `skills/` 底下再 commit
 5. 每一臂跑一次 `ARM=<臂> ./run.sh <S>`：`pos`、`posctrl`、`d5b`、`inj`、`injctrl` 用 haiku；`neg`、`negctrl` 用 opus，兩發平行跑

@@ -7,15 +7,15 @@
 共用指示：
 
 > 你是 code-reviewer。repo：/Users/danlio/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md，全域規則在 templates/global/CLAUDE.md）。
-> 審查範圍：段落 S2 的整段改動 = `git diff f2ab54a`（工作目錄乾淨，等於 f2ab54a..HEAD）。改動與被改檔的整檔內容都在 diff 檔：
+> 審查範圍：段落 S2 的整段改動 = `git diff 68b4bf2`（工作目錄乾淨，等於 68b4bf2..HEAD）。改動與被改檔的整檔內容都在 diff 檔：
 > /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/s2-review/diff.txt
 > （7865 行。用 Read 的 offset/limit 每次 300 行讀到最後一行 —— 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那份；沒被改到的檔照常讀 repo。）
 > diff 檔第 ④ 節是已跑過的驗證與結果，已確認、不要重跑測試／安裝／claude -p。
 >
 > 這段做了什麼（事實）：
-> - S2-1（489bf74）新增 scripts/dd-init-upgrade.sh（升級分類器：舊蓋章區塊逐行查表分成範本行／在地行，--plan/--apply/--list）與 tests/test-dd-init-upgrade.sh，CI 加進 shellcheck 清單、ubuntu 與 bash32 job。
-> - S2-2（304b0f2）commands/dd-init.md 蓋章區塊 rev 12（96 行）換成 rev 13（37 行），只在舊區塊裡的內容搬進 skills/dd-loop/SKILL.md；Phase 1 的 8step 舊版升級改用腳本；React 片段移到區塊外的 ````markdown 圍欄；CI 新增「現行蓋章區塊的每一行都在升級清單裡」；同批改 CHANGELOG、UPGRADING、根 CLAUDE.md、scripts/CLAUDE.md、tests/CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、設計文件。
-> - 7b8638a：SKILL.md 的 `US$5.13` 改成「5.13 美元」（skill 帶參數呼叫時 `$<數字>` 會被代換）。
+> - S2-1（beb5a4b）新增 scripts/dd-init-upgrade.sh（升級分類器：舊蓋章區塊逐行查表分成範本行／在地行，--plan/--apply/--list）與 tests/test-dd-init-upgrade.sh，CI 加進 shellcheck 清單、ubuntu 與 bash32 job。
+> - S2-2（dd2357f）commands/dd-init.md 蓋章區塊 rev 12（96 行）換成 rev 13（37 行），只在舊區塊裡的內容搬進 skills/dd-loop/SKILL.md；Phase 1 的 8step 舊版升級改用腳本；React 片段移到區塊外的 ````markdown 圍欄；CI 新增「現行蓋章區塊的每一行都在升級清單裡」；同批改 CHANGELOG、UPGRADING、根 CLAUDE.md、scripts/CLAUDE.md、tests/CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、設計文件。
+> - 9c052cf：SKILL.md 的 `US$5.13` 改成「5.13 美元」（skill 帶參數呼叫時 `$<數字>` 會被代換）。
 > - 舊區塊（rev 12）原文：`git show v1.6.12:commands/dd-init.md`。
 >
 > 你的職責：找漏洞，證明這段有錯。每條附證據（路徑:行 + 原文，或指令與輸出）；沒證據不算。只用手上的資料判斷，需要外部查證的列出來交回。
@@ -37,7 +37,7 @@
 
 （審查者交回的完整報告，逐字）
 
-Critical 0 / Important 3 / Smells 0. 範圍：`git diff f2ab54a`（S2，到 HEAD 7b8638a），方向 A：搬家有沒有掉條件、指標有沒有懸空。
+Critical 0 / Important 3 / Smells 0. 範圍：`git diff 68b4bf2`（S2，到 HEAD 9c052cf），方向 A：搬家有沒有掉條件、指標有沒有懸空。
 
 ## Findings
 
@@ -78,7 +78,7 @@ Critical 0 / Important 3 / Smells 0. 範圍：`git diff f2ab54a`（S2，到 HEAD
 ## What I ran
 - `cat prompt-common.txt dir-a.txt` → 讀到指示
 - `grep -n` 列 diff.txt 的結構 → 拿到各檔的區段行號
-- `git diff --stat f2ab54a`；`git show v1.6.12:commands/dd-init.md > old-ddinit.md`；兩份都 `grep -n '^```'` → 舊區塊在 53–148，新區塊在 73–111，React 片段在 117–130
+- `git diff --stat 68b4bf2`；`git show v1.6.12:commands/dd-init.md > old-ddinit.md`；兩份都 `grep -n '^```'` → 舊區塊在 53–148，新區塊在 73–111，React 片段在 117–130
 - `sed -n 40,175p old-ddinit.md`、`sed -n 1,160p commands/dd-init.md`、`cat -n skills/dd-loop/SKILL.md` → 對照全文
 - `sed -n 185,300p` 設計文件 → 讀「舊區塊內容去處」和驗證 5 的判定
 - `python3 -I cmp.py`（把舊區塊切成子句，正規化後去新區塊、SKILL.md、全域模板裡找）→ 找不到的大多只是改寫，再逐條人工判

@@ -4,7 +4,7 @@
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數）與步驟 3 的 code-simplifier。
 給審查者的 prompt 只有一句「完整派工在 `<scratchpad>/imp/review/prompt-b.txt`，先讀完再照做」加三句防漏；下面是那個檔的全文（路徑已去識別）。
-diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git diff 28663da HEAD`（HEAD = 1a05146）②步驟 3 與審查同時進行的說明
+diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git diff f6179b2 HEAD`（HEAD = 072615e）②步驟 3 與審查同時進行的說明
 ③`install-dd-pipeline.sh`、`tests/test-install.sh`、`tests/CLAUDE.md` 在 HEAD 的整檔內容 ④已跑過的驗證 V1–V10 與預期值。
 
 ````text
@@ -12,7 +12,7 @@ diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git dif
 
 ## 範圍與資料
 
-- 審查範圍：repo <repo> 的 `git diff 28663da HEAD`（一個功能段落，4 個 commit：89dd118、4995b0d、61585a4、1a05146）
+- 審查範圍：repo <repo> 的 `git diff f6179b2 HEAD`（一個功能段落，4 個 commit：20680b1、cd1b1c7、3155dfb、072615e）
 - diff 檔：<scratchpad>/imp/review/diff.txt（2940 行，四部分：整段 diff／步驟 3 的說明／被改到的檔在 HEAD 的整檔內容／已經跑過的驗證）
 - **diff 檔用 Read 的 offset／limit 每次 300 行讀到最後一行**。Read 一次讀太多會靜靜截斷、不報錯
 - 被改到的檔（install-dd-pipeline.sh、tests/test-install.sh、tests/CLAUDE.md）一律讀 diff 檔第 3 部分那一份，**不要讀工作目錄**：另一個 agent（code-simplifier）正在同時改工作目錄。其餘被改到的大份文件用 `git show HEAD:<路徑>`。沒被改到的檔照常讀
@@ -55,7 +55,7 @@ diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git dif
 審查者交回的完整報告（逐字；只把本機路徑換成 `<scratchpad>`、`<repo>`）：
 
 ````text
-Critical 0 / Important 4 / Smells 0 — 範圍：`git diff 28663da HEAD`（89dd118、4995b0d、61585a4、1a05146），方向是 tests/test-install.sh 的 T1–T9
+Critical 0 / Important 4 / Smells 0 — 範圍：`git diff f6179b2 HEAD`（20680b1、cd1b1c7、3155dfb、072615e），方向是 tests/test-install.sh 的 T1–T9
 
 [Important] install-dd-pipeline.sh:220（jq_inplace 的護欄）、:651（mcp_scope 的 jq 段）：一個檔裡有好幾個 JSON 值時，jq 與 python3 兩條路徑結論不同，T2 的 92 例沒有涵蓋這一類
   Failure：settings.json 或 installed_plugins.json 的內容是 `null {}` 或 `{} {}`。`jq -e 'type == "object"'` 的回傳碼只看最後一個輸出，所以護欄放行，接著把兩份物件都寫回檔案並印「已啟用」；python3 那條在 json.load 報 Extra data 而失敗。`null {}` 這種輸入正是這段說「已經擋掉」的「頂層是 null 被改寫成物件」。~/.claude.json 是 `{"mcpServers":{"playwright":{}}} {}` 時，jq 回 `global\nnone`，落進 print_mcp_line 的 `*)` 分支印「未安裝」；python3 回 unparseable。
@@ -96,7 +96,7 @@ Not reported
 - **多個 JSON 值時兩條路徑結論不同**（Important）→ 採納，與 S1-a 的第一條是同一件事；這份多給了 `null {}` 這個輸入，已收進 T2（`s-nullobj`）。處置見 S1-a
 - **`p-entry-valid` 與 T3 重跑分不出「更新三個欄位」與「整筆新建」**（Important）→ 採納。fixture 多放 `"keepme":1`；`t2_canon` 改成只把長得像時間戳的值換成 `TS`，`"installedAt":"A"` 因此留著；
   `p-entry-valid` 另外斷言 `"installedAt": "A"` 與 `"keepme": 1`。把 `jq_register` 與 `py_register` 都改成一律走新建那一支實跑：這一例變紅（兩臂都少了這兩個欄位），還原後綠。T3 沒有另外加（這個行為由 T2 那一例守）
-- **`plugin_enabled_state` 對頂層不是物件回 `none`，被 T2 釘成正確答案**（Important）→ 採納。讀了引入它的 commit 18e8522：當時是為了讓兩條路徑對齊才回 `none`。
+- **`plugin_enabled_state` 對頂層不是物件回 `none`，被 T2 釘成正確答案**（Important）→ 採納。讀了引入它的 commit 3547796：當時是為了讓兩條路徑對齊才回 `none`。
   根目錄 CLAUDE.md 的鐵則「不確定就說不確定」與這一段給 `mcp_scope` 寫的理由都指向 `unparseable`，所以改成：頂層不是物件（或不只一個 JSON 值）→ `unparseable`；`enabledPlugins` 這個鍵型別不對 → 仍是 `none`。
   T2 的 `state.s-null`、`s-array`、`s-string`、`s-number` 預期改成 `unparseable`（改碼前紅、改碼後綠）；設計文件的假設 A4 跟著改；CHANGELOG 記下 `--check` 的畫面變化
 - **`TEST_ONLY` 打錯時一組都沒跑卻 rc=0**（Important）→ 採納。開頭加 `case` 驗值，不是 T2–T9 其中一個就 exit 2（實跑 `TEST_ONLY=t5` → rc=2）；jq 的前置檢查搬進 `want T2`，python3 的留在外面（T3 之後各組的 `t2_canon` 也要它）

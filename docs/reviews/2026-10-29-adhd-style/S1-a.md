@@ -9,7 +9,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 > 職責：找漏洞。每條發現附證據（diff 檔裡的行、或你 grep / 讀檔的結果）；沒證據不算。分級 Critical / Important / Smell。
 >
 > 材料：diff 檔 <scratchpad>/review-diff.txt（5258 行）
-> - 組成：① `git diff df7535e HEAD` 整段；③ 被改到的檔的 HEAD 版本整檔（以 `######## FILE:` 分隔）；④ 已跑過的驗證與預期值
+> - 組成：① `git diff 42dac5d HEAD` 整段；③ 被改到的檔的 HEAD 版本整檔（以 `######## FILE:` 分隔）；④ 已跑過的驗證與預期值
 > - 用 Read 的 offset/limit 每次 300 行讀到最後一行（Read 一次讀太多會靜靜截斷、不報錯）
 > - 被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄（另一個 agent 正在改工作目錄）；沒被改到的檔照常讀 repo
 > - ④ 列的驗證已確認，不要重跑
@@ -36,7 +36,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 
 （存檔時做的去識別：session 暫存目錄換成 `<scratchpad>`、Claude Code 編碼過的專案目錄名換成 `<編碼後的 scratchpad 路徑>`；其餘照原文）
 
-Critical 0 / Important 3 / Smells 0。範圍：`git diff df7535e HEAD`（94d4da2），重點看安裝腳本、測試、ci.yml 第六組。
+Critical 0 / Important 3 / Smells 0。範圍：`git diff 42dac5d HEAD`（94d4da2），重點看安裝腳本、測試、ci.yml 第六組。
 
 ## Findings
 
@@ -90,7 +90,7 @@ Critical 0 / Important 3 / Smells 0。範圍：`git diff df7535e HEAD`（94d4da2
 
 （本份「Not reported」與「What I ran」兩節是主對話存檔時略為縮寫的版本，Findings 為原文）
 
-- A1 去識別漏掉 `-Users-…` 編碼路徑：採納（Important）。原始 stream-json 不再進 repo，`run.sh` 改成只抽 init 的 `output_style` 與 result 的必要欄位；驗收 grep 加 `-Users-`、`-private-tmp-`。含洩漏的 commit 還沒推，已 amend 拿掉原始輸出（94d4da2 → 17a2408）
+- A1 去識別漏掉 `-Users-…` 編碼路徑：採納（Important）。原始 stream-json 不再進 repo，`run.sh` 改成只抽 init 的 `output_style` 與 result 的必要欄位；驗收 grep 加 `-Users-`、`-private-tmp-`。含洩漏的 commit 還沒推，已 amend 拿掉原始輸出（94d4da2 → aed2151）
 - A2 `rm -rf "$WORK"` 沒防呆：採納（Important）。`run.sh` 只接受不存在、或有 `.adhd-accept-work` 標記的目錄；實跑傳 repo 內的量測目錄 → 拒跑 exit 1
 - A3 新增風格時寫死 ADHD 的地方沒列進步驟：採納（Important）。`show_help`／`uninstall` 的名字改由陣列產生，`show_completion` 改成走訪陣列 + `case` 補說明；根 CLAUDE.md「新增 Output Style 步驟」第 2 步列出要同批手動改的地方
 - 需要外部查證三項：見 `S1-judge.md`

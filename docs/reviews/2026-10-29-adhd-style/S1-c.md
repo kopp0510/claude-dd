@@ -9,7 +9,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 > 職責：找漏洞。每條發現附證據（diff 檔裡的行、或你 grep / 讀檔的結果）；沒證據不算。分級 Critical / Important / Smell。
 >
 > 材料：diff 檔 <scratchpad>/review-diff.txt（5258 行）
-> - 組成：① `git diff df7535e HEAD` 整段；③ 被改到的檔的 HEAD 版本整檔（以 `######## FILE:` 分隔）；④ 已跑過的驗證與預期值
+> - 組成：① `git diff 42dac5d HEAD` 整段；③ 被改到的檔的 HEAD 版本整檔（以 `######## FILE:` 分隔）；④ 已跑過的驗證與預期值
 > - 用 Read 的 offset/limit 每次 300 行讀到最後一行（Read 一次讀太多會靜靜截斷、不報錯）
 > - 被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄（另一個 agent 正在改工作目錄）；沒被改到的檔照常讀 repo
 > - ④ 列的驗證已確認，不要重跑
@@ -36,7 +36,7 @@ subagent_type `code-reviewer`（agent 定義 opus），與 code-simplifier 並�
 
 （存檔時做的去識別：session 暫存目錄換成 `<scratchpad>`、Claude Code 編碼過的專案目錄名換成 `<編碼後的 scratchpad 路徑>`；其餘照原文）
 
-Critical 0 / Important 4 / Smells 0 — 範圍：`git diff df7535e HEAD`（94d4da2），從 review-diff.txt 讀；被改到的檔一律讀 diff 檔裡那一份
+Critical 0 / Important 4 / Smells 0 — 範圍：`git diff 42dac5d HEAD`（94d4da2），從 review-diff.txt 讀；被改到的檔一律讀 diff 檔裡那一份
 
 ## Findings
 

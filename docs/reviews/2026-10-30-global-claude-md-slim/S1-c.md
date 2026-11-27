@@ -4,11 +4,11 @@
 
 `subagent_type: code-reviewer`，與其他審查者同一則訊息平行派出。共用派工說明（逐字）：
 
-> 你是 code-review 審查者。審查範圍：claude-dd repo（/Users/danlio/project/my_project/claude-dd）段落 S1 的整段改動 = `git diff f46d4de HEAD`（3 個 commit：a30dc1a、f0e80ab、a542817；工作目錄乾淨）。
+> 你是 code-review 審查者。審查範圍：claude-dd repo（/Users/danlio/project/my_project/claude-dd）段落 S1 的整段改動 = `git diff a2dbb9b HEAD`（3 個 commit：d3b980d、cbb59d7、a3aa5a4；工作目錄乾淨）。
 > 段落目標：把全域模板 templates/global/CLAUDE.md §3.9 的 8 步迴圈做法細則，原文搬進新 skill skills/dd-loop/SKILL.md，全域只留 8 步清單、關卡、驗證教訓，並明寫「段落開始時、步驟 3、4、8 開始前呼叫 dd-loop」；同批改部署陣列、README×2、根 CLAUDE.md、架構文件、CHANGELOG、引用處；新增觸發實測 docs/measurements/2026-10-30-dd-loop-trigger/。設計文件：docs/designs/2026-10-30-global-claude-md-slim-design.md。
 > 
 > 資料：diff 檔 /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/S1-diff.txt（①整段 diff ②步驟 3 改動：無 ③被改到檔案的 HEAD 整檔（帶行號）④已跑過的驗證與預期值 —— ④ 已確認，不要重跑）。
-> **diff 檔用 Read 的 offset/limit 每次 300 行讀到最後一行（共 5593 行）**：Read 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。舊版可用 `git show f46d4de:<path>`。
+> **diff 檔用 Read 的 offset/limit 每次 300 行讀到最後一行（共 5593 行）**：Read 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那一份；沒被改到的檔照常讀 repo。舊版可用 `git show a2dbb9b:<path>`。
 > 
 > 你的職責：找漏洞，每條附證據（路徑:行號 + 原文，或指令與輸出），沒證據不算。只用手上的資料判斷，需要外部查證（上網、跑 claude -p 等）的列出來交回。專案規則在各層 CLAUDE.md 與全域模板 §3.10。
 > 輸出：Critical / Important / Smells 三級，每條「位置｜問題｜失敗情境｜證據｜建議」；另列 Not reported（看到但判為不報的，附理由）、What I ran（跑過的指令）、需要外部查證。
@@ -21,7 +21,7 @@
 
 （逐字原文）
 
-審查者 C 的結果：Critical 0、Important 4、Smells 1。範圍是 `git diff f46d4de HEAD` 裡的 docs/measurements/2026-10-30-dd-loop-trigger/ 全部檔案（run.sh、check.sh、README.md、CLAUDE.md、results.tsv、*.prompt.txt）。目錄在 HEAD 與工作目錄一致，直接讀 repo。
+審查者 C 的結果：Critical 0、Important 4、Smells 1。範圍是 `git diff a2dbb9b HEAD` 裡的 docs/measurements/2026-10-30-dd-loop-trigger/ 全部檔案（run.sh、check.sh、README.md、CLAUDE.md、results.tsv、*.prompt.txt）。目錄在 HEAD 與工作目錄一致，直接讀 repo。
 
 ## Important
 
@@ -87,7 +87,7 @@
 - `cat -n` 讀目錄內 10 個檔 → 內容如上
 - results.tsv cost 加總（awk）→ 3.8545
 - `printf 'Launching skill: dd-loop' | wc -m` → 24
-- 用 python 量 f46d4de 與 HEAD 的 templates/global/CLAUDE.md → 28082/56068、23040/46158
+- 用 python 量 a2dbb9b 與 HEAD 的 templates/global/CLAUDE.md → 28082/56068、23040/46158
 - 用 python 量 HEAD 的 skills/dd-loop/SKILL.md → total 6362、body 6159、description 167
 - 目錄內 `git grep` 個資樣式 → 只有 CLAUDE.md:16 的佔位
 - 在 scratchpad 用假 `claude` 跑 `run.sh work`（相對路徑）→ No such file、exit 0、out 空

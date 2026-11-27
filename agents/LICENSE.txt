@@ -23,7 +23,7 @@ agents/ 底下兩個「官方備份」的來源與授權
    只與 feature-dev 那份相同的：frontmatter 的 `model: sonnet`（2026-11-26 從 opus 改過來；pr-review-toolkit 那份是 `model: opus`）。
    與官方兩份都不同的地方：frontmatter 的 description 與 `tools:`（2026-11-26 加的 `Read, Grep, Glob, Bash`；pr-review-toolkit 那份沒有這一行，feature-dev 那份列的是另一組工具）；開頭那一行改動說明；「Scope Discipline」「Work Order」「Fowler Smell Baseline」「Severity」四節（官方兩份都沒有這幾個標題）；
    「Output Format」標題底下的內容。其中「Fowler Smell Baseline」改編自 mattpocock/skills（MIT，見 skills/writing-great-skills/LICENSE.txt）。
-   最早是哪一個 commit 從哪一份官方檔抄來的，git 紀錄裡沒有寫（`git log -- agents/code-reviewer.md` 最早一筆是 279c8a9，2026-04-24），所以這裡不寫它「源自」哪一份。
+   最早是哪一個 commit 從哪一份官方檔抄來的，git 紀錄裡沒有寫（`git log -- agents/code-reviewer.md` 最早一筆是 70d0250，2026-04-24），所以這裡不寫它「源自」哪一份。
 
 授權檔的來源：
    cmp "$M/plugins/code-simplifier/LICENSE" "$M/LICENSE"      → 相同（feature-dev、pr-review-toolkit 目錄的 LICENSE 也與它相同）

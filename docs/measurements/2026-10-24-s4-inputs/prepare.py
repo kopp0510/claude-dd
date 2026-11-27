@@ -4,7 +4,7 @@
 import os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RANGES = {"G2": ("639bde7", "b66d8ae"), "G3": ("08b2576", "8514fb2"), "G4": ("48de43f~1", "48de43f")}
+RANGES = {"G2": ("b1d28bd", "40b3f0a"), "G3": ("96e930e", "720f1b3"), "G4": ("dd3f72d~1", "dd3f72d")}
 
 def sh(*a, cwd=None, inp=None):
     return subprocess.run(a, cwd=cwd, input=inp, capture_output=True, check=True).stdout

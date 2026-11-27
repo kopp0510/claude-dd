@@ -13,7 +13,7 @@
 你是 claude-dd repo（<REPO>）S1 段落的程式碼審查者，代號 S1-d。
 你的職責：找漏洞。每條發現都要附證據（diff 檔的行號與原文、你讀到的檔案路徑:行、或你跑的指令與輸出）；沒證據的不算。不寫優點。
 
-審查範圍：S1 整段，`git diff 9584605` 起到工作目錄（3 個 commit：cf093e7 S1-1、58e3edb S1-2、a0aa58a S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
+審查範圍：S1 整段，`git diff dd8b5a9` 起到工作目錄（3 個 commit：88ae4e2 S1-1、b6e3666 S1-2、bc22fed S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
 untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，不在範圍。
 
 材料：<S>/s1-review/diff.txt
@@ -41,7 +41,7 @@ untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，
 - 只用手上的資料與唯讀指令判斷（Read、Grep、git show／log／grep、bash -n、shellcheck）。不要改檔、不要 commit、不要跑 install-dd-pipeline.sh、不要派 agent、不要開 docker
 - 需要外部查證的（要上網、要跑會寫檔的東西、要真容器）列在「需要外部查證」交回
 - 每條標級別：Critical（照做會把檔寫到專案外、或驗證是空的而宣稱有效）／Important（會錯、會誤導、規定要同步卻漏）／Smell（小事）
-- 拿不準是不是既有問題時，去看那幾行在 9584605 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
+- 拿不準是不是既有問題時，去看那幾行在 dd8b5a9 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
 
 輸出格式（照抄標題）：
 ## Findings
@@ -57,7 +57,7 @@ untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，
 （逐字原文，只換了路徑）
 
 ````text
-Critical 1 / Important 7 / Smells 3 —— S1 整段（git diff 9584605 到工作目錄，含步驟 3 還沒 commit 的改動），方向：文件與量測的宣稱
+Critical 1 / Important 7 / Smells 3 —— S1 整段（git diff dd8b5a9 到工作目錄，含步驟 3 還沒 commit 的改動），方向：文件與量測的宣稱
 
 ## Findings
 
@@ -66,7 +66,7 @@ S1-d-1｜Critical｜部署版升級腳本是舊版時，新小節把 `CLAUDE.md.
   - `commands/dd-init.md:48` `升級的輸出檔 \`CLAUDE.md.dd-upgrade\` 由升級腳本自己擋（已經存在就 exit 6）…不用檢查`
   - `commands/dd-init.md:91` 第 1 步只查腳本存不存在。Phase 3 有前例：`:195` 會 grep `--start-segment` 認出舊版 gate
   - `install-dd-pipeline.sh:1382` 的 `create_commands` 每次都跑；`:1385-1386` 的 `create_scripts` 在 `--commands-only` 時跳過。這個 flag 寫在 README.md:67
-  - `cmp` 結果：目前部署的 `~/.claude/scripts/dd-init-upgrade.sh` 和 `commands/dd-init.md` 都等於 9584605 那一版
+  - `cmp` 結果：目前部署的 `~/.claude/scripts/dd-init-upgrade.sh` 和 `commands/dd-init.md` 都等於 dd8b5a9 那一版
 - 照做的失敗情境：
   1. 前提：機器上部署的是 S1 之前的腳本，使用者跑 `git pull && ./install-dd-pipeline.sh --commands-only`。
   2. 結果是新的 dd-init.md 配上沒有 exit 6 的舊腳本。
@@ -123,7 +123,7 @@ S1-d-7｜Important｜設計文件引用 F3、F4、F5c、F6，但整份文件沒�
 - 證據：
   - 引用處：`:147` `（部署版 \`scripts/dd-init-upgrade.sh\`、\`commands/dd-init.md\` 目前與 repo HEAD 逐字相同，見 F6）`；`:155` `清單見 F3`；`:157` `見 F4`；`:35` `（F5c）`
   - 全檔 grep `\bF[0-9]+[a-z]?\b` 只命中這 4 行，都是引用
-  - `cmp`：部署版兩個檔都等於 9584605、不等於 HEAD（a0aa58a）
+  - `cmp`：部署版兩個檔都等於 dd8b5a9、不等於 HEAD（bc22fed）
 - 照做的失敗情境：S2-1 接手的人去找「清單見 F3」（要原樣複製的上游檔清單），在進 repo 的文件裡找不到。`:147` 那句寫成「目前」，S1 改過這兩個檔之後就是錯的。
 
 S1-d-8｜Important｜A3 明寫「TOCTOU 不處理」，照 A14 自己的判準算命中，卻沒有照 A14 的處置就進了公開 repo
@@ -156,10 +156,10 @@ S1-d-11｜Smell｜「H?K 會在容器裡實跑 npm install」對 H1K 不成立
 - 照做的失敗情境：照這兩句去重現 H1K 的人會跑錯工具，或在核對時找不到 npm install 的步驟。
 
 ## Not reported
-- sha 都對：6afa7ca1 是 58e3edb 的 dd-init.md；de1df4bc 是 a0aa58a 的版本，也等於工作目錄；6bd5b025 是 scratchpad 的 `m/dd-init-new.md`。第一版和定稿的 diff 剛好兩處，和 results.txt:13-14 一致
+- sha 都對：6afa7ca1 是 b6e3666 的 dd-init.md；de1df4bc 是 bc22fed 的版本，也等於工作目錄；6bd5b025 是 scratchpad 的 `m/dd-init-new.md`。第一版和定稿的 diff 剛好兩處，和 results.txt:13-14 一致
 - results.txt 說 D 的 fixture 是「rev 9」：v1.6.4 的標記確實是 `dd-loop-rev: 9`
 - `commands/dd-init.md:92` 寫「2–5 見腳本檔頭」：那句只用在 `--plan`，`--plan` 不會回 6
-- A13：設計文件只出現在 a0aa58a；S1-1、S1-2 只送了自己的檔
+- A13：設計文件只出現在 bc22fed；S1-1、S1-2 只送了自己的檔
 - 去識別：在量測目錄、設計文件、CHANGELOG 用 git grep `-Users-|-private-tmp-|/Users/|/private/tmp` 掃，只命中 A20 描述規則那一句
 - tests/CLAUDE.md 寫空殼變異 40 ❌：等於原本 36 加四則 exit 6 的 exit 碼斷言，和新增的測試結構一致（我沒重跑）
 - 「S1-2 那次同一個 check.sh 判綠」：`m/check.sh.bak` 已經有同一條 `/outside` 斷言，沒有反證
@@ -174,12 +174,12 @@ S1-d-11｜Smell｜「H?K 會在容器裡實跑 npm install」對 H1K 不成立
 
 ## What I ran
 - Read diff.txt 第 1–2942 行（每次 150 行）→ 讀完
-- `git show 58e3edb|a0aa58a:commands/dd-init.md | shasum -a 256`；`shasum commands/dd-init.md` → 6afa7ca1…、de1df4bc…、de1df4bc…
+- `git show b6e3666|bc22fed:commands/dd-init.md | shasum -a 256`；`shasum commands/dd-init.md` → 6afa7ca1…、de1df4bc…、de1df4bc…
 - `git show v1.6.4:commands/dd-init.md | grep dd-loop-rev` → rev 9
 - `grep -nE '\bF[0-9]+[a-z]?\b' <設計文件>` → 只命中 :35、:147、:155、:157，沒有定義
-- `git log --oneline -- <設計文件>`；`git show --stat` 三個 commit → 設計文件只在 a0aa58a
+- `git log --oneline -- <設計文件>`；`git show --stat` 三個 commit → 設計文件只在 bc22fed
 - `grep -n commands-only install-dd-pipeline.sh`；Read 1360–1404 → `create_commands` 每次都跑，`create_scripts` 在 commands-only 時跳過
-- `cmp` 部署版 vs repo、部署版 vs 9584605 → 不等於 HEAD，等於 9584605
+- `cmp` 部署版 vs repo、部署版 vs dd8b5a9 → 不等於 HEAD，等於 dd8b5a9
 - `grep -n CODE_EXT= scripts/check-claude-md.sh` → 含 sh
 - `git grep` `2–5|exit 5`、`dd-upgrade`、`--git-path`（排除 docs/reviews）→ 見上
 - `sed -n 52,60p skills/worktree-manager/SKILL.md` → 不加 `--path-format` 時「回的是相對路徑」

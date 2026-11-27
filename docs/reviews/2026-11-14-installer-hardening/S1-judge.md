@@ -2,7 +2,7 @@
 
 ## 派工
 
-- 範圍：`git diff 28663da HEAD`（4 個 commit：89dd118、4995b0d、61585a4、1a05146）。步驟 3 的 code-simplifier 與這次審查同時跑，所以審查者讀的是 HEAD 的版本
+- 範圍：`git diff f6179b2 HEAD`（4 個 commit：20680b1、cd1b1c7、3155dfb、072615e）。步驟 3 的 code-simplifier 與這次審查同時跑，所以審查者讀的是 HEAD 的版本
 - 派 3 個（下限）：這段的 diff 約 850 行，分三個不重疊的方向 —— A 安裝腳本的邏輯、B 測試、C 文件與註解的宣稱。沒有再加第四個：三份回來的發現互相對得上（見下方重疊項），沒有哪一塊只有一個人看
 - 派工 prompt 只交事實（改了哪些函式、已跑過的驗證與預期值），沒有寫我對哪裡可能有錯的判斷
 - 步驟 3 的結果：code-simplifier 只合併了 `show_completion` 裡兩個相鄰、條件相同的 `if`（淨刪 2 行），其餘判斷不值得改。我讀了它的 diff、重跑測試；合併後那個 `if` 的註解原本只講 agent 與 plugin 兩段，補上 output style
@@ -25,7 +25,7 @@
 - BOM：實跑 jq 對 BOM 開頭的檔 rc=0、python3 預設讀法報 `Unexpected UTF-8 BOM` → 屬實，採納
 - 登記與啟用的順序：讀 `install_plugins`，settings 的 `json_edit` 在 installed 的之前、後者失敗只 `continue` → 屬實，採納
 - `p-entry-valid`：把兩條登記敘述都改成一律新建實跑 → 修測試之前全綠（屬實），修測試之後這一例紅
-- `plugin_enabled_state`：讀 18e8522 的 commit 訊息與現在的註解 → 審查者說的不一致屬實；文件（根目錄 CLAUDE.md 的鐵則）寫明了該選哪一邊，所以不交使用者決定，直接改
+- `plugin_enabled_state`：讀 3547796 的 commit 訊息與現在的註解 → 審查者說的不一致屬實；文件（根目錄 CLAUDE.md 的鐵則）寫明了該選哪一邊，所以不交使用者決定，直接改
 - `TEST_ONLY`：讀 `want()` → 屬實，採納
 - T3 註解：`grep backup_before_overwrite` 的呼叫點不含 `install_plugins` → 屬實，採納
 - `plain`：實跑 BSD sed → 印出壞位元組之前的行後 rc=1 → 屬實，採納

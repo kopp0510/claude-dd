@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 A 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`ac8fcfe..HEAD`。
+裁決者給審查者 A 的派工 prompt（共用說明加各自的方向檔，逐字）。範圍：`e9a5db5..HEAD`。
 
 ````text
 ```
@@ -14,7 +14,7 @@
 
 ### S4-rev-common.txt
 ```
-你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`ac8fcfe..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
+你是 8 步開發迴圈步驟 4 的 code-review 審查者。repo：/Users/danlio/project/my_project/claude-dd（繁中專案）。被審範圍：`e9a5db5..HEAD`（裁決審查設計文件 S4「驗證加速與抓錯數」：一次 claude -p 實驗的輸入腳本、輸出統計、量測文件新增一節、設計文件與計畫審查報告）。
 
 ## 讀什麼
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S4-review-diff.txt
@@ -29,7 +29,7 @@
 - CI「迴圈步數第五方」本機跑 → 8 個 ✅、exit 0
 - simplifier 沒改任何檔
 - 實驗（14 發 claude -p）不可重跑：要花錢，快照與 log 在 session 暫存目錄已不可得。數字以 `docs/measurements/2026-10-24-s4-outputs/stats.jsonl` 為準。
-- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；db0af00/a4ed41f/ee68e72 用 git show grep 過對應句子存在。
+- 主對話用 sed 印過這些引用原句（原句存在；但「這句是否真的構成命中」仍可質疑）：G2 各發 K1 引用、G3-new-1 ac0356:3 與 judge:23、G3-hk-2 abe0ae:3 與 judge:11、G3-old-2 a8c1fb:3、G3-new-2 aa6177:12、G3-hk-1 a3d3dc:18；85f921e/544ccdf/35e94a4 用 git show grep 過對應句子存在。
 
 ## 你的職責
 找漏洞、證明這次改動有錯（程式邏輯錯、數字對不上、引用指錯、宣稱說過頭、文件互相矛盾）。每條附證據（diff 檔行號或 repo 檔案行、grep / python 指令與輸出）；沒證據的不算。不要客套、不要「整體不錯」。
@@ -58,7 +58,7 @@
 審查者 A 的報告原文（逐字）：
 
 ````text
-Critical 0 / Important 3 / Smells 0 — 範圍：ac8fcfe..HEAD 的程式碼部分，也就是 `docs/measurements/2026-10-24-s4-inputs/` 底下的 prepare.py、stats.py、run.sh、test_leaky.py，加上量測文件裡嵌的「讀到第幾行」腳本（diff 檔第 201–246 行）
+Critical 0 / Important 3 / Smells 0 — 範圍：e9a5db5..HEAD 的程式碼部分，也就是 `docs/measurements/2026-10-24-s4-inputs/` 底下的 prepare.py、stats.py、run.sh、test_leaky.py，加上量測文件裡嵌的「讀到第幾行」腳本（diff 檔第 201–246 行）
 
 [Important] stats.py:533（diff 檔第 533 行）｜`leaky()` 先把整個 s4 換成 `<S4>` 再比對，所以 s4 底下的所有東西都被放行。但派工單 judge.txt:309、old-reviewer.txt:351 明文禁止讀「{S4} 底下別的東西」，兩者範圍不一致。
   證據：拿 `/S4` 當 s4，`leaky()` 對這幾個輸入都回 False：`cat /S4/logs/G2-new-1.jsonl`、Read `/S4/prompts/G2-new-1.txt`、`cd .. && ls`、`git -C .. log --all`、`T=$(mktemp -d); cat ../logs/G2-new-1.jsonl`。只有帶 `../` 而且不在 mktemp 指令裡的才會抓到。原因有兩個：LEAK 只認 `../` 不認裸的 `..`；第 536 行只要同一個指令出現 mktemp 或 /tmp/，就放過 `../`。
@@ -106,7 +106,7 @@ Not reported
 
 ## 處置
 
-修正在 1e209ef。編號對到 `S4-judge.md` 的「採納」清單。
+修正在 896ff46。編號對到 `S4-judge.md` 的「採納」清單。
 
 - A1（`leaky()` 整個 `<s4>` 放行、不認 `..`）→ 裁決採納 3（Important）。`stats.py` 凍結不改；量測文件寫明缺口，補 `2026-10-24-s4-outputs/extra_checks.py` 的跨發掃描，14 發 0 筆
 - A2（工具結果掃描沒有程式）→ 採納 2（Important）。同一支的 `res` 欄，結果寫進 `extra_checks.out`

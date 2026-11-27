@@ -1,6 +1,6 @@
 # S1-judge：`/dd-init` 寫檔不跟 symlink 寫到專案外 S1 的查證
 
-範圍：`git diff 9584605` 到工作目錄（cf093e7 S1-1、58e3edb S1-2、a0aa58a S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
+範圍：`git diff dd8b5a9` 到工作目錄（88ae4e2 S1-1、b6e3666 S1-2、bc22fed S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
 起點取自設計文件 `docs/designs/2026-11-14-security-audit-intake-design.md` 進度表 S1 的 commits 欄。
 
 ## 派工
@@ -19,8 +19,8 @@
 ### 採納（Critical）
 
 1. **`--commands-only` 會留下沒有 exit 6 的舊升級腳本**（a-2、c-1、d-1）。查證：`install-dd-pipeline.sh` 的 `create_scripts` 包在 `if [ "$COMMANDS_ONLY" = false ]` 裡、`create_commands` 無條件跑；
-   `git show v1.6.14:scripts/dd-init-upgrade.sh | grep -c 'exit 6'` → 0；a0aa58a 的「寫檔前」那節把 `CLAUDE.md.dd-upgrade` 排出檢查清單、交給腳本擋。
-   實跑：AO 臂（9584605 的升級腳本）在 a0aa58a 的文字下，連結目標被 `--apply` 整份蓋掉、沒問
+   `git show v1.6.14:scripts/dd-init-upgrade.sh | grep -c 'exit 6'` → 0；bc22fed 的「寫檔前」那節把 `CLAUDE.md.dd-upgrade` 排出檢查清單、交給腳本擋。
+   實跑：AO 臂（dd8b5a9 的升級腳本）在 bc22fed 的文字下，連結目標被 `--apply` 整份蓋掉、沒問
 2. **`check.sh` 對 B 的 `.screenshots` 沒有鑑別力**（a-1、b-2、d-5）。查證：`.gitignore` 的問句本來就含 `.screenshots/`，`mkdir -p` 對已存在的連結不寫東西，
    所以「問句有 `/outside`」「問句提到 `.screenshots`」兩條都能由 `.gitignore` 那題滿足
 3. **`.screenshots` 答「不要」擋不住之後的截圖**（b-1）。查證：蓋章區塊的步驟 5「截圖一律存 `.screenshots/`」不看連結；`mkdir -p` 對指向存在目錄的連結 rc 0、什麼都不做
@@ -33,11 +33,11 @@
 - **Write 的說法自相矛盾、H3 的歸因錯**（a-4、c-7、d-3、d-4）。實跑（主對話，Claude Code 2.1.325，拋棄式目錄）：Write 對指向存在檔與懸空的 symlink 都拒絕，Edit 同樣；
   舊文字下的 H3 是直接用 Edit 改連結目標的路徑，沒有被拒絕的步驟（`results.txt`「git 與工具的行為」）
 - **父目錄檢查的裸 `cd` 在主對話會留下 cwd**（a-5、b-4、c-3）。依據：Bash 工具說明「`cd` carries to the next call only in the main session」；沙盒臂是 subagent、每次重設 cwd，量不到。主對話沒實跑
-- **答「要」之後 Phase 5 只 add 連結本身**（b-3、c-4）。實跑：Y5 臂在 a0aa58a 的文字下沒有新 commit、留下 ` M AGENTS.md`；YD 臂的 `AGENTS.md` 沒進版控
-- **懸空的 `CLAUDE.md` 答「要」之後沒寫怎麼做**（a-6）。讀檔（a0aa58a 的文字）：Phase 0 第 3 步把懸空的 symlink 算成存在 → 補充模式，補充模式用 Edit，對不存在的檔做不到
+- **答「要」之後 Phase 5 只 add 連結本身**（b-3、c-4）。實跑：Y5 臂在 bc22fed 的文字下沒有新 commit、留下 ` M AGENTS.md`；YD 臂的 `AGENTS.md` 沒進版控
+- **懸空的 `CLAUDE.md` 答「要」之後沒寫怎麼做**（a-6）。讀檔（bc22fed 的文字）：Phase 0 第 3 步把懸空的 symlink 算成存在 → 補充模式，補充模式用 Edit，對不存在的檔做不到
 - **Phase 6 固定印「已設定」**（c-5、d-10）。讀檔：Phase 6 的範本沒有條件，新加的「答「不要」」會讓它說錯
 - **`check.sh` 對 A 沒驗 `CLAUDE.md` 不變**（d-6）。讀檔：symlink 分支對 A 只驗外部檔、連結還在、問句
-- **設計文件引用沒定義的 F 編號、F6 那句已不成立**（a-8、b-7、c-6、d-7）。`grep` 設計文件沒有 F 項的定義；`cmp` 部署版等於 9584605、不等於 HEAD
+- **設計文件引用沒定義的 F 編號、F6 那句已不成立**（a-8、b-7、c-6、d-7）。`grep` 設計文件沒有 F 項的定義；`cmp` 部署版等於 dd8b5a9、不等於 HEAD
 - **Y 不在步驟 5 的重跑清單與驗收裡**（b-8）
 - **「不在 repo 裡」沒有 `/` 邊界**（a-7 Smell、b-5 Important）。讀檔：同檔的父目錄檢查有寫「專案根目錄 + `/`」，第 2 步沒有
 
@@ -79,7 +79,7 @@
 - Important 各條：照上面逐條改了 `commands/dd-init.md`（第 6 步、「寫檔前」那節、Phase 3 第 2 步、Phase 5 開頭、Phase 6）、`check.sh`、設計文件、CHANGELOG、`results.txt`、量測目錄 CLAUDE.md。
   逐條做了什麼見 `S1-a.md`…`S1-d.md` 的處置
 - Smell 各條：全部照改
-- 步驟 5（修正後的文字，逐臂見 `docs/measurements/2026-11-14-dd-init-symlink/results.txt`）：舊文字或 a0aa58a 的文字下紅過的九臂（B C D G G2 H3 AO Y5 YD）各 3 次；
+- 步驟 5（修正後的文字，逐臂見 `docs/measurements/2026-11-14-dd-init-symlink/results.txt`）：舊文字或 bc22fed 的文字下紅過的九臂（B C D G G2 H3 AO Y5 YD）各 3 次；
   只有 B 的一次判紅，紅在回報標題打成「【問問使用者的問題】」，改正標題的副本重判是綠。其他臂與對照臂各 1 次綠（pre-commit 對照臂 H1K 第 1 次回報沒貼 YAML、驗不到；換新 fixture 重跑，第 2 次先判紅，紅在 `check.sh` 自己的兩個錯，修好重判綠）。
   `tests/test-dd-init-upgrade.sh`：`bash` 與 `/bin/bash`（3.2.57）各 48 ✅；空殼腳本 24 ✅、40 ❌
 - 步驟 5 期間又改了兩次文字：補「原本用 Write、Edit 的照樣用」（Y5 有兩次改用 `cat >>`）、後果清單補「搬位置／換寫法、`chmod`」；各自再跑了會走到的臂

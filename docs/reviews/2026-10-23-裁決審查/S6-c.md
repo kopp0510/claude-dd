@@ -24,7 +24,7 @@ diff 檔：<scratchpad>/S6-review-diff.txt（共 4517 行）。
 審查者交回的原文（逐字，從 subagent 紀錄檔的交回訊息取出）：
 
 ````text
-Critical 0 / Important 3 / Smells 0. 範圍是 S6 整段，也就是 diff 檔 1–360 行（git diff fb6f816 加上 simplifier 自己改的部分）。對照的資料：repo 的 v1.6.5 tag、docs/measurements/2026-10-23-reviewer-real-sessions.md、docs/designs/2026-10-23-裁決審查-design.md。
+Critical 0 / Important 3 / Smells 0. 範圍是 S6 整段，也就是 diff 檔 1–360 行（git diff c8a7a19 加上 simplifier 自己改的部分）。對照的資料：repo 的 v1.6.5 tag、docs/measurements/2026-10-23-reviewer-real-sessions.md、docs/designs/2026-10-23-裁決審查-design.md。
 
 [Important] commands/dd-init.md:46，「列出與現行版的差異」那一串還寫著舊的裁決結構，沒有改。
   失敗情境：已發布的 v1.6.5 是 rev 9（`git show v1.6.5:commands/dd-init.md` 的第 39、54 行都是 `dd-loop-rev: 9`），所以實際會遇到升級的專案都是 rev 9 以前的。升級對話框會告訴它們「rev 9 … 缺『先備 diff 檔、由裁決者派最少 3 個審查者並逐條查證』」，rev 5 那條也還附著「（rev 10 已由裁決結構取代）」。但現行的 rev 11 已經不用裁決者了，使用者看到的是一個已經不存在的版本差異。
@@ -50,7 +50,7 @@ Critical 0 / Important 3 / Smells 0. 範圍是 S6 整段，也就是 diff 檔 1�
 
 What I ran：
 - Read diff 檔第 1–364 行，再用 tail 看第 4505 行以後 → 讀到 ① ② 的全部內容和 ④
-- `git status --short; git log --oneline fb6f816..HEAD` → 4 個 S6 commit，另有 2 個工作目錄的修改
+- `git status --short; git log --oneline c8a7a19..HEAD` → 4 個 S6 commit，另有 2 個工作目錄的修改
 - `git show v1.6.5:commands/dd-init.md | grep -n dd-loop-rev` → 第 39、54 行都是 rev 9
 - `git grep -n 'rev 1[01]|…' -- CHANGELOG.md UPGRADING.md commands/ .github/` → rev 必改的幾處都已更新
 - `git grep -n -E '裁決|judge' -- <7 檔> | grep -v -- '-judge\.md'` → 命中 README.zh-TW:130、:219、dd-init:86、模板 :297–300、:321

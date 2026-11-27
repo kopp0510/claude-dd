@@ -16,7 +16,7 @@
 | 審查者 | 裁決者派的 general-purpose、`model: "haiku"`，人數由裁決者定（最少 3） | 父 session 派的 `code-reviewer`（定義檔 `model: opus`），剛好 3 個 |
 | 中間層 | 裁決者：general-purpose、opus、明寫 `effort: "medium"`（兩臂相同） | 沒有 |
 | 父 session | haiku，只派工、不審 | haiku，只派工、不審、不查證 |
-| 素材 | 2026-11-14 一份計畫的第 1 輪裁決者 prompt（`judge.txt`）＋ repo 在 `b1935bb` 的快照 | 2026-10-24 用過的 G2（`639bde7`→`b66d8ae`，4 檔）、G3（`08b2576`→`8514fb2`，8 檔）兩段舊 diff |
+| 素材 | 2026-11-14 一份計畫的第 1 輪裁決者 prompt（`judge.txt`）＋ repo 在 `23429eb` 的快照 | 2026-10-24 用過的 G2（`b1d28bd`→`40b3f0a`，4 檔）、G3（`96e930e`→`720f1b3`，8 檔）兩段舊 diff |
 | 發數 | 每臂 2 發，共 4 發，交錯跑（med、low、med、low） | 每份素材每臂 2 發，共 8 發；先跑完 G2 再跑 G3，各自交錯 |
 | 命中怎麼看 | 審查者報告的聯集（另記裁決者採納、裁決者自己補上的） | 三份審查者報告的聯集（父 session 不查證，沒有採納欄） |
 | 比的時間 | 裁決者整發秒數（裁決者紀錄檔第一筆，到它與所有審查者最後一筆） | 最慢審查者秒數 |
@@ -33,7 +33,7 @@
 洩題檢查怎麼判（2026-11-15 補，第一發 `P-med-1` 跑完、還沒看任何一份報告有沒有命中之前寫的）：
 `P-med-1` 有一個審查者用 Bash 讀了部署在家目錄的 `~/.claude/skills/task-planner/SKILL.md` 與 `~/.claude/CLAUDE.md`（甲的裁決者 prompt 是當時的原文，沒有「只准讀這些路徑」那一節，
 被審的計畫又是在講安裝到 `~/.claude`）。原本只寫「真的讀到外面才算」，沒分讀到的是什麼。定成：讀到的東西可能含答案、或比快照新，才算洩題 ——
-①真的 repo 工作目錄 ②`~/.claude/projects/`（對話紀錄）③別發的快照、prompt、diff ④內容跟 `b1935bb` 對應檔不同的部署檔。
+①真的 repo 工作目錄 ②`~/.claude/projects/`（對話紀錄）③別發的快照、prompt、diff ④內容跟 `23429eb` 對應檔不同的部署檔。
 讀到「跟快照對應檔逐字相同」的部署檔不算（它從快照裡讀得到一樣的內容），但每一筆照樣記在結果裡，連同比對結果。
 
 預算：估計總額超過 30 美元先停下問使用者；累計（含探針與作廢的發）到 30 美元就不再開新的一發。
@@ -60,8 +60,8 @@
 
 ### 3. 洩題檢查（比內容）
 
-受測 session 會載入的部署檔，對 `b1935bb` 裡的對應檔做 `diff -q`：`~/.claude/CLAUDE.md` 對 `templates/global/CLAUDE.md`、`~/.claude/skills/plan-review/SKILL.md`、`~/.claude/skills/dd-loop/SKILL.md`、`~/.claude/agents/code-reviewer.md` 各對 repo 裡同名的檔 —— 四份都相同。無污染，甲那條重大照常計分。
-`b1935bb` 的樹裡沒有那份計畫後來寫成的設計文件（`git ls-tree -r b1935bb --name-only | grep -c installer-hardening` 回 0）。
+受測 session 會載入的部署檔，對 `23429eb` 裡的對應檔做 `diff -q`：`~/.claude/CLAUDE.md` 對 `templates/global/CLAUDE.md`、`~/.claude/skills/plan-review/SKILL.md`、`~/.claude/skills/dd-loop/SKILL.md`、`~/.claude/agents/code-reviewer.md` 各對 repo 裡同名的檔 —— 四份都相同。無污染，甲那條重大照常計分。
+`23429eb` 的樹裡沒有那份計畫後來寫成的設計文件（`git ls-tree -r 23429eb --name-only | grep -c installer-hardening` 回 0）。
 乙沿用 2026-10-24 判過的：只算 K1、K4、K5。
 
 ## 正確答案（跑之前寫死）
@@ -167,7 +167,7 @@ M1 的命中（位置是 `out/reports/` 底下的檔名前綴與行號）：
 
 判準以外看到的（不改結論）：
 - low 臂的審查者確實想得比較少：思考 token 合計 medium 79,368、82,629，low 30,947、37,802；最慢審查者 medium 229、189 秒，low 84、158 秒（`P-low-3` 有一個審查者跑了 11 次工具、158 秒，跟 medium 臂差不多）
-- 第 4 個審查者開跑時，整發已經過了一半以上（第 312 秒，佔 455–614 秒的 51–69%），兩臂一樣（這一點在 `623f61a` 寫錯過，步驟 4 的兩個審查者各自用時間戳抓到，下面是改過的）。
+- 第 4 個審查者開跑時，整發已經過了一半以上（第 312 秒，佔 455–614 秒的 51–69%），兩臂一樣（這一點在 `b66dbff` 寫錯過，步驟 4 的兩個審查者各自用時間戳抓到，下面是改過的）。
   審查者不是同時開跑的：裁決者在同一則訊息裡派 4 個，每個 Agent 呼叫的 prompt 約 1.48 萬字元（範本要它把計畫與事實貼進每一份），寫完才出現在紀錄檔，一個隔約 75 秒。
   以裁決者第一筆紀錄為 0 秒（`python3 -I timeline.py <工作目錄> P-med-2 P-low-2 P-med-3 P-low-3` 的輸出，存在 `out/timeline.md`）：
 
@@ -207,7 +207,7 @@ M1 的命中（位置是 `out/reports/` 底下的檔名前綴與行號）：
   審查者「輪1-R3」`cd` 到工作目錄的上兩層，`find . -maxdepth 4 \( -name '*probe*' -o -name '*equiv*' \)`、再到其中一個目錄 `ls -la` 與 `grep -rl 'command_exists' .`，要找計畫事實 F6 提到的探針腳本。
   兩條指令的輸出我逐字看過：只有 10 個檔名與一份目錄清單（這次實驗開工前提那三發探針的檔），`grep -rl` 沒有輸出（它會掃那個目錄裡檔案的內容，但沒有任何內容進到輸出）；沒有用 Read／cat 讀任何檔，當時的裁決報告（答案）不在它列出的檔名裡。
   照前面補的判法，讀到的東西不含答案，不算洩題；`P-med-3` 照常計分（它的 M1 是「輪1-R4」講到的，不是這個審查者）
-- `P-med-1`（作廢）另有一個審查者讀了部署檔 `~/.claude/skills/task-planner/SKILL.md` 與 `~/.claude/CLAUDE.md`：兩份都跟 `b1935bb` 的對應檔 `diff -q` 相同
+- `P-med-1`（作廢）另有一個審查者讀了部署檔 `~/.claude/skills/task-planner/SKILL.md` 與 `~/.claude/CLAUDE.md`：兩份都跟 `23429eb` 的對應檔 `diff -q` 相同
 
 ### 乙：步驟 4 的 opus 審查者
 

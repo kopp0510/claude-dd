@@ -1,13 +1,13 @@
 # security-audit 試跑（2026-11-14）
 
 問題：[cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)（上游 `c1c8a8c`，MIT）在 Claude Code 裡實際跑起來怎樣、花多少、產出什麼。
-這份是部署清單（使用率盤點制）要的實證紀錄；skill 已於 2026-11-14 收進 repo（`skills/security-audit/`，aa9b162）。
+這份是部署清單（使用率盤點制）要的實證紀錄；skill 已於 2026-11-14 收進 repo（`skills/security-audit/`，e1b1eeb）。
 
 ## 跑法
 
 1. 把上游 `skills/security-audit/` 複製到 `<scratchpad>/sa-plugin/skills/security-audit/`，在 SKILL.md frontmatter 的 `name:` 下一行加 `disable-model-invocation: true`（收編時打算這樣改），
    再寫 `<scratchpad>/sa-plugin/.claude-plugin/plugin.json`（`name: sa-trial`）。用 `--plugin-dir` 載入，不碰 `~/.claude/`
-2. 目標是 claude-dd 的拋棄式 clone：`git clone <本 repo> <scratchpad>/target/claude-dd`（HEAD `9584605`）
+2. 目標是 claude-dd 的拋棄式 clone：`git clone <本 repo> <scratchpad>/target/claude-dd`（HEAD `dd8b5a9`）
 3. 把 `*.prompt.txt` 的 `<scratchpad>` 換成絕對路徑，放到 `<scratchpad>/runs/`（`probe2` 那份放成 `probe.prompt.txt`），再 `MODE=probe|real ./run.sh <scratchpad>`。兩次探針都寫進 `runs/probe.jsonl`：probe1 跑完先改名成 `runs/probe1.jsonl` 再跑 probe2
 4. `./check.sh <scratchpad>` → `results.txt`（只抽判定欄位與計數；原始 stream-json 與稽核產物都不進 repo）
 

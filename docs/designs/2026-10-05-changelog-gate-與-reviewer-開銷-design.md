@@ -7,9 +7,9 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | CHANGELOG 已發布區塊防線 | DONE | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | a94f678..effb51a |
-| S2 | 查清 code-reviewer 慢在哪 | DONE | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | 788b6cb..5130cfe |
-| S3 | CI 列檔案補 quotePath | DONE | — | 建一個中文檔名的 .md、裡面故意寫錯步數 → 第五方檢查要紅燈（現在是靜默跳過、exit 0） | 03e27b3..685064b |
+| S1 | CHANGELOG 已發布區塊防線 | DONE | — | 往 `## 1.2.0` 插一行 → 該 CI step 紅燈；還原 → 綠燈；模擬發版（新增一個版本區塊）不誤擋 | 7e93a22..549932a |
+| S2 | 查清 code-reviewer 慢在哪 | DONE | — | 拿出「Task 派送 vs headless」的 api/wall/工具數對照，結論寫進文件 | 0887ec4..4a75574 |
+| S3 | CI 列檔案補 quotePath | DONE | — | 建一個中文檔名的 .md、裡面故意寫錯步數 → 第五方檢查要紅燈（現在是靜默跳過、exit 0） | 68d7c4f..8bc66c3 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -34,8 +34,8 @@
 
 - **S1 的病因有第一手證據**：插入 CHANGELOG 條目的 python 索引差一位（`n>=36` 跳過 0-based 35 的
   `### Changed`），兩條本輪變更被寫進已發布的 `## 1.2.0 — 2026-09-12` 區塊。`git diff` 看起來正常、
-  CI 全綠，是使用者問「發版有什麼風險」才翻出來（已修：`fa251a3`）。現有 CI 沒有任何 step 看 CHANGELOG 的區塊歸屬
-- **S2 的已知數據**：同一段 diff（`48de43f`）跑六發 `claude -p --agent`，`duration_api_ms` 都是 58–84s，
+  CI 全綠，是使用者問「發版有什麼風險」才翻出來（已修：`848d0ef`）。現有 CI 沒有任何 step 看 CHANGELOG 的區塊歸屬
+- **S2 的已知數據**：同一段 diff（`dd3f72d`）跑六發 `claude -p --agent`，`duration_api_ms` 都是 58–84s，
   但 wall 93–258s，非模型開銷 35–170s。但那是 headless session，不是 Task 派出的 subagent；
   使用者原本遇到的 20–25 分鐘是後者
 
@@ -45,7 +45,7 @@
 - S1 需要 CI 拿得到 tag：目前 `actions/checkout@v4` 沒設 `fetch-depth`（已讀 `.github/workflows/ci.yml:14`），
   是 shallow、沒有 tag，所以 S1-1 要一起加 `fetch-depth: 0`
 - S2 若量出根因不在 DD pipeline 可控範圍（例如純屬 harness 的派送開銷），S2-2 退化成只寫一句紀錄、不動規則
-- S2 的素材重建自 `48de43f~1`/`48de43f` 的 `git archive`，不依賴上個 session 的 scratchpad
+- S2 的素材重建自 `dd3f72d~1`/`dd3f72d` 的 `git archive`，不依賴上個 session 的 scratchpad
 
 ## 段落與小任務
 

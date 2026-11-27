@@ -3,12 +3,12 @@
 ## 派工
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數），同時派 code-simplifier 跑步驟 3。下面是給這個審查者的 prompt 全文（路徑已去識別：`<repo>`、`<scratchpad>`）。
-diff 檔（3014 行）的組成：①`git diff 60239e7 HEAD`（HEAD = ded7c0b）②步驟 3 的改動（並行，派工當下是空的）③`install-dd-pipeline.sh` 與 `tests/test-install.sh` 在 HEAD 的整檔內容 ④已跑過的驗證與預期值 11 條。
+diff 檔（3014 行）的組成：①`git diff 750c8db HEAD`（HEAD = 3fe579d）②步驟 3 的改動（並行，派工當下是空的）③`install-dd-pipeline.sh` 與 `tests/test-install.sh` 在 HEAD 的整檔內容 ④已跑過的驗證與預期值 11 條。
 
 ````text
 你是 code reviewer。唯一的職責：找這段改動的漏洞。每條發現都要附證據（diff 檔的行號加原文，或你實際跑的唯讀指令與輸出）；沒證據的不算。不寫優點。
 
-審查範圍：repo `<repo>` 的 `git diff 60239e7 HEAD`（兩個 commit：S1-1 安裝腳本的環境檢查多一行報「自動壓縮視窗」有沒有設，連同測試；S1-2 量測檔、兩份 README、CHANGELOG）。
+審查範圍：repo `<repo>` 的 `git diff 750c8db HEAD`（兩個 commit：S1-1 安裝腳本的環境檢查多一行報「自動壓縮視窗」有沒有設，連同測試；S1-2 量測檔、兩份 README、CHANGELOG）。
 
 材料都在這個 diff 檔（3014 行）：
 <scratchpad>/s1/review/S1-diff.txt
@@ -34,7 +34,7 @@ diff 檔（3014 行）的組成：①`git diff 60239e7 HEAD`（HEAD = ded7c0b）
 審查者交回的報告全文（路徑已去識別，其餘逐字）。
 
 ````text
-Critical 0 / Important 1 / Smell 1 — `git diff 60239e7 HEAD`，看的是測試這條線（T2 `acw`、T10、`utf8_ok`、`TEST_ONLY`、`tests/CLAUDE.md`）
+Critical 0 / Important 1 / Smell 1 — `git diff 750c8db HEAD`，看的是測試這條線（T2 `acw`、T10、`utf8_ok`、`TEST_ONLY`、`tests/CLAUDE.md`）
 
 這輪沒找到空通過的斷言。設計文件「要新增的測試清單」列的案例都寫進去了。發現有兩條：
 

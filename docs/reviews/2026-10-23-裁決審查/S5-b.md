@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者交回的派工 prompt（四人共用部分加各自方向，逐字；路徑換成 `<scratchpad>`）。範圍：`9798edc..HEAD`。
+裁決者交回的派工 prompt（四人共用部分加各自方向，逐字；路徑換成 `<scratchpad>`）。範圍：`8187b6e..HEAD`。
 
 ````text
 # 派工 prompt（裁決者給審查者，共用部分 + 各自方向）
@@ -12,12 +12,12 @@
 
 ## 共用部分（四人相同）
 
-你是 code-reviewer，審查專案 /Users/danlio/project/my_project/claude-dd 的段落 S5「拿掉裁決者的對照」（範圍 9798edc..HEAD）。這段大多是量測文件、實驗腳本（python/bash）與設計文件，沒有產品程式碼。
+你是 code-reviewer，審查專案 /Users/danlio/project/my_project/claude-dd 的段落 S5「拿掉裁決者的對照」（範圍 8187b6e..HEAD）。這段大多是量測文件、實驗腳本（python/bash）與設計文件，沒有產品程式碼。
 
 ### diff 檔（必讀）
 <scratchpad>/S5-review-diff.txt（2187 行，約 208 KB）。
 **Read 不指定範圍會在約 47 KB 靜靜截斷、不報錯，一律用 offset/limit 每次 300 行讀，讀到第 2187 行為止。**
-四段：① 第 1–563 行 整段 diff（排除機器輸出）② 第 564–593 行 步驟 3 code-simplifier 的改動（commit 66d4314，只動 1 行）③ 第 594–2112 行 被改到檔案的整檔內容（HEAD 版，帶行號）④ 第 2113–2187 行 機器輸出全文（S5 的 stats.jsonl、checks.out、sec1.out）與報告檔名清單。
+四段：① 第 1–563 行 整段 diff（排除機器輸出）② 第 564–593 行 步驟 3 code-simplifier 的改動（commit 36102fb，只動 1 行）③ 第 594–2112 行 被改到檔案的整檔內容（HEAD 版，帶行號）④ 第 2113–2187 行 機器輸出全文（S5 的 stats.jsonl、checks.out、sec1.out）與報告檔名清單。
 被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄。
 
 ### 可以讀的
@@ -49,7 +49,7 @@
 重點：checks.py、sec1.py（新檔），以及改過的 stats.py、prepare.py、run.sh。逐行讀 diff 檔 ③ 的整檔內容：邏輯錯誤、邊界（空輸入、找不到時靜默回 0、檔名含中文/空白、glob 漏抓）、計數口徑（例如把「描述它的那句話」也算進去）、兩份腳本對同一件事的判法不一致、S4 版與 S5 版的差異是否引入偏差。拿原始紀錄實跑腳本（唯讀、輸出寫到你的 tmp 目錄）驗證你的懷疑，並和 diff 檔 ④ 的輸出比對。特別留意：輸出為 0 / 無差異時，先懷疑腳本自己沒跑到。
 
 ### B：量測文件與設計文件的數字核對
-重點：docs/measurements/2026-10-23-reviewer-real-sessions.md 新增的 S5 段落、docs/designs/2026-10-23-裁決審查-design.md 的 S5 段落、兩個 s5-inputs/s5-outputs 的 CLAUDE.md。把每一個數字（時間、token、工具次數、費用、行數、發數、比例、平均）逐條對原始紀錄（s5/stats.jsonl、s5/logs、~/.claude/projects/*scratchpad-s5-* 的 jsonl、s4 對應資料）重算。特別核 commit 4e47492「修正 S5 對照的時間量法並標出實跑落差」後的時間量法：口徑是否一致、S4 與 S5 是否用同一口徑比較、「實跑落差」標得對不對。命中位置不是你的主責（C 管），但數字裡若有命中數就要核。
+重點：docs/measurements/2026-10-23-reviewer-real-sessions.md 新增的 S5 段落、docs/designs/2026-10-23-裁決審查-design.md 的 S5 段落、兩個 s5-inputs/s5-outputs 的 CLAUDE.md。把每一個數字（時間、token、工具次數、費用、行數、發數、比例、平均）逐條對原始紀錄（s5/stats.jsonl、s5/logs、~/.claude/projects/*scratchpad-s5-* 的 jsonl、s4 對應資料）重算。特別核 commit a4b7ee0「修正 S5 對照的時間量法並標出實跑落差」後的時間量法：口徑是否一致、S4 與 S5 是否用同一口徑比較、「實跑落差」標得對不對。命中位置不是你的主責（C 管），但數字裡若有命中數就要核。
 
 ### C：命中判定複核
 重點：量測文件「五組並排」底下的命中位置／命中數，以及任何「某發抓到／沒抓到某個已知錯誤」的宣稱。答案（已知真錯誤）定義在哪裡要先找到（設計文件、s5-inputs 的 CLAUDE.md、或 S4 的量測段），然後逐份讀 s5/reports/ 的 8 份報告（以及需要比較時 s4/reports/），獨立判定每一發對每一個已知錯誤是命中、部分命中、還是沒中，給出報告原文引用。和量測文件的判定逐格比對，列出不一致處。注意：命中判定不能只看關鍵字 grep —— 提到同一段落但結論相反、或把真錯誤判成「既有問題」丟進 Not reported 的，要分清楚。
@@ -69,11 +69,11 @@
 
 ---
 
-審查者 B（量測文件與設計文件的數字核對）報告，範圍 9798edc..HEAD
+審查者 B（量測文件與設計文件的數字核對）報告，範圍 8187b6e..HEAD
 
 Critical 1 / Important 3 / Smells 2
 
-數字本身大致抄得對：stats.jsonl 對原始數字表 8 列逐格相符；A 平均 269、B 427、S4 的 154/350/346、費用平均 5.13/4.03/1.31/3.83/1.57、合計 36.6、快約 23%、貴約 3.9 倍、「整發減審查者層最慢」A 82–122、S4 132–297、舊 17–23、15 個裡 13 個、777–2684、sec1 的 9/13 全部重算吻合。S4 與 S5 的 whole_s 定義相同（兩份 stats.py 的 t0、stamps 寫法逐字一樣），所以 4e47492 改成「整發減審查者層最慢」後，S4 與 S5 用的是同一口徑。問題出在這些數字底下混進了沒有記錄的成分，以及有幾處標籤貼錯。
+數字本身大致抄得對：stats.jsonl 對原始數字表 8 列逐格相符；A 平均 269、B 427、S4 的 154/350/346、費用平均 5.13/4.03/1.31/3.83/1.57、合計 36.6、快約 23%、貴約 3.9 倍、「整發減審查者層最慢」A 82–122、S4 132–297、舊 17–23、15 個裡 13 個、777–2684、sec1 的 9/13 全部重算吻合。S4 與 S5 的 whole_s 定義相同（兩份 stats.py 的 t0、stamps 寫法逐字一樣），所以 a4b7ee0 改成「整發減審查者層最慢」後，S4 與 S5 用的是同一口徑。問題出在這些數字底下混進了沒有記錄的成分，以及有幾處標籤貼錯。
 
 [Critical] docs/measurements/2026-10-23-reviewer-real-sessions.md S5「結論」第 4 條，以及「原始數字」作廢那條的「模型斷言全過」
   問題：B 組有 2 發的父 session 叫了 advisor 工具，用的是第三個模型 claude-fable-5-1，文件完全沒提（`git grep -i 'advisor\|fable' -- docs/` 0 筆）。B「最慢」「收尾 43–304s」「只比 A 便宜約 20%」這三個結論都被它撐大了。
@@ -85,7 +85,7 @@ Critical 1 / Important 3 / Smells 2
   建議改法：作廢或限制那節寫明 advisor 介入了哪幾發、多少秒、多少錢；結論 4 改寫，或附上扣掉 advisor 後的數字。也可以考慮在下次實驗的 run.sh 用 disallowedTools 把 advisor 關掉。
 
 [Important] 同一份文件的結論 3，以及設計文件 S5 一節第 2 行（「新組與 haiku 組 132–297s」）
-  問題：297s 這個上限來自 S4 的 G3-hk-1（455 減 158）。那一發的裁決者也叫了 advisor（約 116s），所以裁決者那一層的上限被 advisor 撐大了，這是 4e47492 新寫進兩份文件的數字。
+  問題：297s 這個上限來自 S4 的 G3-hk-1（455 減 158）。那一發的裁決者也叫了 advisor（約 116s），所以裁決者那一層的上限被 advisor 撐大了，這是 a4b7ee0 新寫進兩份文件的數字。
   證據：s4 G3-hk-1 的 modelUsage 有 claude-fable-5-1，1.41 美元；裁決者紀錄 agent-a44a086a3ceeffd02.jsonl 的 server_tool_use 在 18:38:16，advisor_tool_result 在 18:40:12。
   建議改法：註明這一發有 advisor 介入；或區間只列沒有 advisor 的發（新組 135–167、haiku 組 132–197）。S4 haiku 組的平均 346s／1.57 美元也含這一發，並排表要加註。
 
@@ -117,7 +117,7 @@ Not reported
 What I ran
 - sed 讀 diff 檔第 1–160、1940–2187 行 → 讀到 S5 段落、stats.py、run.sh、④ 機器輸出
 - cat s4/stats_all.jsonl → 取 S4 三組的 whole、rev_max、cost
-- git show 4e47492 → 看時間量法改了什麼（只有措辭與口徑，S4、S5 都改成 整發−rev_max）
+- git show a4b7ee0 → 看時間量法改了什麼（只有措辭與口徑，S4、S5 都改成 整發−rev_max）
 - diff S4 與 S5 stats.py 從 run_stats 到檔尾 → whole_s 與 t0 定義相同
 - jq 讀 8 發 result 的 cost／api／dur → 多筆 result 的 cost 是累計，最後一筆正確
 - tmp-B/win.py → 每發的起訖時間（證實分批方式，A、B 沒有交錯）

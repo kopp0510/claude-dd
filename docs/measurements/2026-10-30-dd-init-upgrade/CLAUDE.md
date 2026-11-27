@@ -6,7 +6,7 @@
 ## 檔案
 
 - `setup.sh` —— 建 8 個拋棄式 repo（`OUT` 指定目錄，預設暫存目錄）：rev 12 區塊加在地行（同意／拒絕／React／CLI）、
-  `### 工作流程` 底下的 6a9addd 區塊（rental 型）、步驟 6 前有 curl 指令的、已是 rev 13 的、沒有 CLAUDE.md 的
+  `### 工作流程` 底下的 b1227f7 區塊（rental 型）、步驟 6 前有 curl 指令的、已是 rev 13 的、沒有 CLAUDE.md 的
 - `run.sh <案例> <同意|拒絕>` —— 跑 `claude -p "/dd-init …"`；沒有 AskUserQuestion，prompt 直接告訴它升級題的答案
 - `check.sh` —— 從 jsonl 抽工具呼叫順序與最終 CLAUDE.md 的計數
 - `results.txt` —— 2026-10-30 那一次的 `check.sh` 輸出（路徑換成 `<OUT>`）；8 例合計 US$5.08

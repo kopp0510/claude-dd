@@ -112,5 +112,5 @@ rm -rf ~/.claude/skills/review ~/.claude/commands/workflow-review   # 上面兩�
   把 `"review"` 加回 `PROMOTED_SKILLS`、`"workflow-review"` 加回 `NS_COMMANDS`，並把這幾處改回來：
   兩份 README（安裝步驟第 2、6 步、指令一覽那一列、Promoted Skills 標題與那一列、授權表那一列、`--uninstall` 與升級那兩句）、
   根目錄 CLAUDE.md（目錄結構的兩個數字）、`DD_PIPELINE_ARCHITECTURE.md`（部署清單那句與授權段）、`tests/test-install.sh` 開頭的斷言、`CHANGELOG.md`。
-  CI 只擋數字與陣列不一致，其餘要自己對（`git show 758dbc9` 是退場那個 commit，照它反著改）。
+  CI 只擋數字與陣列不一致，其餘要自己對（`git show 8f71da4` 是退場那個 commit，照它反著改）。
   ⚠️ 加回來等於重新收進一份沒有 LICENSE、查不出上游的第三方內容（收編檢查清單第 1 項不過）：先解決授權再加

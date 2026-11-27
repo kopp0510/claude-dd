@@ -2,7 +2,7 @@
 
 ## 派工
 
-裁決者給審查者 c 的派工 prompt（共用部分逐字，加上方向句）。範圍：`git diff 6e9aaf0 92eea63`。
+裁決者給審查者 c 的派工 prompt（共用部分逐字，加上方向句）。範圍：`git diff 984628d 46083de`。
 
 方向：gate 提示、`docs/reviews/CLAUDE.md`、`scripts/CLAUDE.md`、兩份 README、設計文件的宣稱成不成立，以及全 repo 有沒有殘留（173s／11 次工具）
 
@@ -11,7 +11,7 @@
 
 ## 範圍與取檔
 - diff 檔：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4e4927d5-72bb-4910-b6a4-f0ff595356ac/scratchpad/S3_review_bundle.txt
-  （約 4150 行；第 1–443 行是 `git diff 6e9aaf0 HEAD`，第 444 行起是每個被改到檔案的整檔內容，帶行號，以 `----- FILE: <路徑>` 分隔）。
+  （約 4150 行；第 1–443 行是 `git diff 984628d HEAD`，第 444 行起是每個被改到檔案的整檔內容，帶行號，以 `----- FILE: <路徑>` 分隔）。
 - **被改到的檔一律讀 diff 檔裡那一份，不讀工作目錄**。沒被改到的檔（例如 .github/workflows/ci.yml、tests/、skills/、agents/code-reviewer.md、DD_PIPELINE_ARCHITECTURE.md、diagrams/src/）照常讀 repo。
 - 專案規則：repo 根目錄 CLAUDE.md、scripts/CLAUDE.md、docs/reviews/CLAUDE.md（後兩份被改到，讀 diff 檔那份）。
 - 計畫與三輪計畫審查：docs/designs/2026-10-23-裁決審查-design.md 的 S3 一節（在 diff 檔裡）。
@@ -41,7 +41,7 @@
 
 （裁決者交回的逐字原文）
 
-Critical 1 / Important 4 / Smells 0。審查範圍：`git diff 6e9aaf0 HEAD`（HEAD=92eea63）。被改到的檔讀 S3_review_bundle.txt 裡那一份；沒被改到的檔讀 repo（tests/、agents/、docs/measurements/）。
+Critical 1 / Important 4 / Smells 0。審查範圍：`git diff 984628d HEAD`（HEAD=46083de）。被改到的檔讀 S3_review_bundle.txt 裡那一份；沒被改到的檔讀 repo（tests/、agents/、docs/measurements/）。
 
 Fowler 壞味道基準這次沒套用：diff 全是文件和提示字串，沒有新增的程式結構。
 
@@ -98,7 +98,7 @@ What I ran：
 - 用 `sed -n '1,443p'` 讀 bundle 的 diff 部分 → 讀完整段 diff
 - `grep -n '^----- FILE\|reviews_miss\|S\[0-9\]' bundle` → 定位各檔與比對式
 - `sed -n '3120,3180p;2690,2742p' bundle` → 讀 reviews_missing 與 docs/reviews/CLAUDE.md 全檔
-- `git rev-parse --short HEAD; git status --short` → 92eea63，工作目錄乾淨
+- `git rev-parse --short HEAD; git status --short` → 46083de，工作目錄乾淨
 - `git grep -nE '兩個 reviewer|取聯集|兩份報告|two reviewers|…|\{a,b\}|S<段落>-a|兩發…'`（排除 CHANGELOG 與歷史報告）→ 結果如上，沒有現行規則殘留
 - `grep -n 'said\|聯集\|reviewer\|-b.md\|兩條路…' tests/test-gate.sh`；`sed -n 245,265p tests/test-gate.sh` → 沒有斷言舊提示
 - `grep -n '^model\|^name' agents/code-reviewer.md` → model: opus

@@ -1,6 +1,6 @@
 # 全域模板 §7.2 改過的兩列會不會照新寫法觸發（2026-11-20）
 
-`c0f6d33` 改了全域模板 §7.2 兩列：`claude-md-improver` 只接 `CLAUDE.md`（原本是任何 `.md` 檔），`self-improving-agent` 拿掉「優化 skill」。
+`e8bd89e` 改了全域模板 §7.2 兩列：`claude-md-improver` 只接 `CLAUDE.md`（原本是任何 `.md` 檔），`self-improving-agent` 拿掉「優化 skill」。
 這裡各開一個全新的 session 測一發。**每個 prompt 只有一發**，只能說「這一發是這樣」，不是比例。
 
 ## 做法

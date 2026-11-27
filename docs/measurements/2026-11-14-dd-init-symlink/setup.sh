@@ -1,6 +1,6 @@
 #!/bin/bash
 # /dd-init 寫檔不跟 symlink 的沙盒臂 fixture（Y、Y5、YD 是答「要」的臂：CLAUDE.md 指向專案裡的 AGENTS.md，YD 的 AGENTS.md 還不存在；
-# AO 同 A，另放 9584605 那版沒有 exit 6 的升級腳本 <BASE>/AO/old-upgrade.sh）。用法：setup.sh <臂> <BASE> <claude-dd repo 根目錄>
+# AO 同 A，另放 dd8b5a9 那版沒有 exit 6 的升級腳本 <BASE>/AO/old-upgrade.sh）。用法：setup.sh <臂> <BASE> <claude-dd repo 根目錄>
 # 建 <BASE>/<臂>/repo（拋棄式專案）與 <BASE>/<臂>/outside（專案外的假檔，建好就 chmod 644），
 # 最後在 <BASE>/<臂>/before.txt 記下專案外每個檔的 sha 與權限，給 check.sh 比對。
 set -eu
@@ -20,7 +20,7 @@ NOTE='# CLAUDE.md gate — 由 /dd-init 安裝；規則：改碼目錄需有 CLA
 case "$ARM" in
   A|AO) gitinit; pkg_plain; old_block > "$R/CLAUDE.md"; commit
       printf '專案外的檔\n' > "$X/target.md"; ln -s "$X/target.md" "$R/CLAUDE.md.dd-upgrade"
-      [ "$ARM" = A ] || { git -C "$DD" show 9584605:scripts/dd-init-upgrade.sh > "$D/old-upgrade.sh"; chmod +x "$D/old-upgrade.sh"; } ;;
+      [ "$ARM" = A ] || { git -C "$DD" show dd8b5a9:scripts/dd-init-upgrade.sh > "$D/old-upgrade.sh"; chmod +x "$D/old-upgrade.sh"; } ;;
   B)  gitinit; pkg_react; commit
       printf 'node_modules/\n' > "$X/gitignore"; mkdir "$X/shots"
       ln -s "$X/gitignore" "$R/.gitignore"; ln -s "$X/shots" "$R/.screenshots" ;;

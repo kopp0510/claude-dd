@@ -21,7 +21,8 @@
 
 ## 約束
 
-- **凍結**：量測文件的數字是用這一版輸入跑出來的；要改實驗就另開新目錄。例外一個：`run.sh` 在第一次跑（`P-med-1`，作廢）之後加了 `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`，算數的每一發都是用加了之後的版本跑的。分析用的 `stats.py`、`outside.py` 跑完之後改過（步驟 3 的簡化；`stats.py` 另補兩個作廢檢查），算數的 5 發重跑輸出逐位元組相同，細節在量測文件「限制」
+- **凍結**：量測文件的數字是用這一版輸入跑出來的；要改實驗就另開新目錄。例外兩個（另一個在本條最後）：`run.sh` 在第一次跑（`P-med-1`，作廢）之後加了 `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`，算數的每一發都是用加了之後的版本跑的。分析用的 `stats.py`、`outside.py` 跑完之後改過（步驟 3 的簡化；`stats.py` 另補兩個作廢檢查），算數的 5 發重跑輸出逐位元組相同，細節在量測文件「限制」。
+  另一個例外：2026-11-28 git 歷史改寫（作者身分統一）後，`prepare.py` 的 `PLAN_REV`、`RANGES` 與 `judge.txt` 裡的 commit 編號換成新編號：每個 commit 的內容樹與改寫前相同，產生的快照與 diff 檔不變；`judge.txt` 因此跟當時實際送出的 prompt 差在這個編號
 - 發代號是 `<素材>-<臂>-<序>`：素材 `P`（甲）、`G2`、`G3`（乙）；臂 `med`、`low`（例如 `G3-low-2`）
 - 工作目錄（快照、prompt 檔、stream-json）放 scratchpad，不進 repo；`prepare.py` 填好的 prompt 檔含本機絕對路徑，也不進 repo
 - 乙的三個重點檔案由 `prepare.py` 的 `split3()` 照 `git diff --name-only` 的順序平均切，不看已知錯誤在哪個檔

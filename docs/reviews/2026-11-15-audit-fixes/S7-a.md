@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外三個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s7/review/pack.txt`，1832 行，沒進 repo）的組成：
-- 第 1 部分：`git diff e4ec5cc`（表上這段的起點到工作目錄；HEAD = 8e91309，工作目錄乾淨、沒有未追蹤的檔）
+- 第 1 部分：`git diff a4d9185`（表上這段的起點到工作目錄；HEAD = 808cf87，工作目錄乾淨、沒有未追蹤的檔）
 - 第 2 部分：步驟 3（code-simplifier）跑了，沒有改任何檔（主對話用 `cmp` 核對過）
 - 第 3 部分：`scripts/githooks/claude-md-size.sh`、`scripts/githooks/pre-commit`、`scripts/githooks/claude-md-max-bytes` 整檔；`tests/test-gate.sh` 的檔頭到 helper 與 ⑯ 整節；
   `ci.yml` 的 ShellCheck 清單與新 step；`scripts/githooks/CLAUDE.md` 整檔；`tests/CLAUDE.md` 那一列新增的文字與「此層約束」新增的那一條（都帶行號或折行）
@@ -18,7 +18,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff e4ec5cc`（到工作目錄；8 步開發迴圈 S7 段落，HEAD = 8e91309，6 個 commit：f53d11a、1b33cae、d0e72b1、abf3d18、83c18ee、8e91309；工作目錄乾淨、沒有未追蹤的檔）。這一段做的事：
+> 審查範圍：`git diff a4d9185`（到工作目錄；8 步開發迴圈 S7 段落，HEAD = 808cf87，6 個 commit：2c3a277、7cc3289、12be2fd、694d06c、917f4df、808cf87；工作目錄乾淨、沒有未追蹤的檔）。這一段做的事：
 > 根目錄 `CLAUDE.md` 加大小上限。新腳本 `scripts/githooks/claude-md-size.sh`（本 repo 自用、不部署）有兩種跑法：帶 `--staged` 由 `scripts/githooks/pre-commit` 在每次 commit 時跑（index 那一版比 `HEAD` 那一版大、而且超過上限才擋）；不帶參數由 CI 的新 step 跑（工作目錄那一份超過上限就不通過）。
 > 上限寫在 `scripts/githooks/claude-md-max-bytes`（48000），取的是「最新 `v*` tag 那一版」的數字；那個 tag 沒有這個檔時，`--staged` 依序讀 `HEAD`、index，不帶參數讀工作目錄。現在最新的 tag `v1.6.14` 沒有這個檔。
 > `tests/test-gate.sh` 檔尾加了 ⑯（情境 A–R，在拋棄式 repo 裡經過真的 pre-commit）；`.github/workflows/ci.yml` 加一個 step、ShellCheck 清單加一行；
@@ -51,7 +51,7 @@
 
 審查者交回的原文（逐字；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 1 / Smells 2 — 範圍：`git diff e4ec5cc`（HEAD 8e91309）；我只看了 `scripts/githooks/claude-md-size.sh`、`scripts/githooks/pre-commit` 的邏輯，以及 `scripts/githooks/CLAUDE.md` 裡講這兩支行為的段落。
+> Critical 0 / Important 1 / Smells 2 — 範圍：`git diff a4d9185`（HEAD 808cf87）；我只看了 `scripts/githooks/claude-md-size.sh`、`scripts/githooks/pre-commit` 的邏輯，以及 `scripts/githooks/CLAUDE.md` 裡講這兩支行為的段落。
 >
 > 【發現】
 >

@@ -2,8 +2,8 @@
 
 ## 派工
 
-- 範圍：`git diff 08b2576 8514fb2`（8 檔、5 個 commit：0396115、f94404b、2c6b9d1、3c3e5ed、8514fb2），
-  一律 `git show 8514fb2:<路徑>` 取檔（與 code-simplifier 並行），行號以 8514fb2 為準
+- 範圍：`git diff 96e930e 720f1b3`（8 檔、5 個 commit：2c4c5bb、1820623、7c83413、ae6928b、720f1b3），
+  一律 `git show 720f1b3:<路徑>` 取檔（與 code-simplifier 並行），行號以 720f1b3 為準
 - 已給、標明不要重跑的驗證：`tests/test-gate.sh` 在 bash 3.2.57 與 docker bash 5.3.20 各 105 ✅、0 ❌；shellcheck 乾淨；
   加新區塊前的 baseline（90 ✅）比對；變異 m1（包 amend 之前停在 76 行、之後 105 行與整份 ❌ 原文）、m3、m3b 各只紅一則；
   本機照 ci.yml lint job 跑 16 個 step 全部 exit 0；`git worktree remove` 在 git 2.42.0 與 2.54.0 的行為；

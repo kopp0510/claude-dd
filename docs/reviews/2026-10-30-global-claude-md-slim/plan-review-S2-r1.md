@@ -11,7 +11,7 @@
 【讀檔檢查】
 - R1：過。抽查 ci.yml 的 bash32 job，`actions/checkout@v4` 確實沒帶 fetch-depth；ubuntu job 第 14–18 行有 `fetch-depth: 0`。
 - R2：過。抽查 scripts/CLAUDE.md:167–170，「新腳本要有行為測試並加進那個 job，才算有驗 3.2」原文對得上。
-- R3：過。抽查 `git show 125ad44:commands/dd-init.md`：`dd-loop-version` 0 筆，第 202、221、222 行是 `## DD Pipeline 設定`、`### 測試設定`、`- 最大重試次數：3`。
+- R3：過。抽查 `git show c5017eb:commands/dd-init.md`：`dd-loop-version` 0 筆，第 202、221、222 行是 `## DD Pipeline 設定`、`### 測試設定`、`- 最大重試次數：3`。
 - R4：過。抽查 ci.yml 的 bash32 job，測試是逐檔寫死的 `run: /bin/bash tests/test-gate.sh` 這類 step。
 - R5：過。抽查 commands/dd-init.md:37「無 `## 開發流程` 區塊 → 用 **Edit** 在末尾加入」，原文對得上。
 有效審查者 5 個。

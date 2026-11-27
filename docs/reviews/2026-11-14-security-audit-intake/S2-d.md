@@ -21,8 +21,8 @@
 ````text
 你是 claude-dd repo（<REPO>）8 步開發迴圈步驟 4 的審查者。職責：找漏洞，每條附證據（路徑:行，或指令與輸出），沒證據的不算。不寫優點、不客套。
 
-審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 6f2118a 到目前工作目錄的整段（兩個 commit aa9b162、d36e5d6，加上步驟 3 還沒 commit 的改動）。
-另有 fc2ccb0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
+審查範圍：段落 S2「收編 cloudflare/security-audit-skill 為 user-invoked promoted skill」從 1239450 到目前工作目錄的整段（兩個 commit e1b1eeb、43f2c85，加上步驟 3 還沒 commit 的改動）。
+另有 dc345d0（S1 的審查處置更新，docs/reviews/ 兩份與設計文件）也在範圍內。
 
 材料：
 - diff 檔：<S>/s2-review/diff.txt（924 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**：Read 一次讀太多會靜靜截斷、不報錯。

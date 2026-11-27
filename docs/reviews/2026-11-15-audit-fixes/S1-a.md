@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s1-review-pack.txt`，1596 行，沒進 repo）的組成：
-- 第 1 部分：`git diff 9d77062`（起點）到工作目錄的整段 diff，HEAD = 5ec112d，含步驟 3 還沒 commit 的改動
+- 第 1 部分：`git diff 02b53d3`（起點）到工作目錄的整段 diff，HEAD = 8e63a18，含步驟 3 還沒 commit 的改動
 - 第 2 部分：步驟 3（code-simplifier）自己改了什麼（`git diff HEAD`：`scripts/check-claude-md.sh` 一處註解，+3 −2 行；沒有未追蹤的新檔）
 - 第 3 部分：`scripts/check-claude-md.sh`、`tests/test-gate.sh`、`docs/reviews/CLAUDE.md` 的整檔（帶行號）
 - 第 4 部分：已跑過的驗證 V1–V8（macOS 與 ubuntu:24.04 的 `tests/test-gate.sh` 都是 rc=0、146 個 ✅；shellcheck；本機照 ci.yml 逐 step 跑 26 個 rc=0；四個變異各自紅在哪；拋棄式 repo 實跑 `dd.docfile=main.py`；rebase、換分支、reset 三種的 `git rev-list` 比對；同一段第二次先停）
@@ -20,7 +20,7 @@
 >
 > Repo：/Volumes/T7/home/project/my_project/claude-dd（專案規則在根目錄與各層的 CLAUDE.md；本段相關的是 scripts/CLAUDE.md、tests/CLAUDE.md、docs/reviews/CLAUDE.md）。
 >
-> 審查範圍：`git diff 9d77062` 到工作目錄（5 個 commit 加上步驟 3 還沒 commit 的一處註解改動）。這一段改的是 pre-commit gate `scripts/check-claude-md.sh` 的三處行為、它的情境測試 `tests/test-gate.sh`，以及說明這些行為的文件。
+> 審查範圍：`git diff 02b53d3` 到工作目錄（5 個 commit 加上步驟 3 還沒 commit 的一處註解改動）。這一段改的是 pre-commit gate `scripts/check-claude-md.sh` 的三處行為、它的情境測試 `tests/test-gate.sh`，以及說明這些行為的文件。
 >
 > 審查包：/private/tmp/claude-501/-Volumes-T7-home-project-my-project-claude-dd/f691d75a-d904-4c64-916c-d3b4d3714db8/scratchpad/s1-review-pack.txt
 > （共 1596 行。用 Read 的 offset/limit 每次 300 行讀到最後一行：Read 一次讀太多會靜靜截斷、不報錯。）
@@ -48,7 +48,7 @@
 
 審查者交回的原文（逐字）：
 
-> Critical 0 / Important 0 / Smells 1 — 範圍 `git diff 9d77062` 到工作目錄，只看 `scripts/check-claude-md.sh` 改到的三處（方向 A：gate 腳本本身對不對）
+> Critical 0 / Important 0 / Smells 1 — 範圍 `git diff 02b53d3` 到工作目錄，只看 `scripts/check-claude-md.sh` 改到的三處（方向 A：gate 腳本本身對不對）
 >
 > 這三處沒有找到會放行該擋的、擋下該放的，或弄壞資料、歷史的地方。
 >

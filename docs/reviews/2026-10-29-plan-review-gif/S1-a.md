@@ -6,9 +6,9 @@
 你是 8 步迴圈步驟 4 的審查者 A。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 
 專案根目錄：/Users/danlio/project/my_project/claude-dd
-審查範圍：git diff f46b73b 6a2bdd3（新增 plan-review 流程圖：產生器 diagrams/src/gen_review.py、兩張 GIF、README 嵌入、diagrams/src/CLAUDE.md 與根 CLAUDE.md 同步、CHANGELOG、進度表）。
+審查範圍：git diff 4dd9386 e214b32（新增 plan-review 流程圖：產生器 diagrams/src/gen_review.py、兩張 GIF、README 嵌入、diagrams/src/CLAUDE.md 與根 CLAUDE.md 同步、CHANGELOG、進度表）。
 材料：<scratchpad>/pg-review-diff.txt（完整路徑：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/pg-review-diff.txt）。
-用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show 6a2bdd3:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
+用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show e214b32:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
 
 背景（事實）：使用者要一張專門畫 plan-review 怎麼運作的圖。圖的結構（8 框、9 條線、3 組）、框 ① 寫「推測要標明」、「無法判定」從讀檔檢查拉出，都是使用者決定的，不要建議改結構；但框裡的字若與 SKILL.md 原文意思不符，照報。計畫審過 2 輪。
@@ -30,7 +30,7 @@ Critical N / Important N / Smells N
 
 Critical 0 / Important 4 / Smells 0
 
-範圍：`git diff f46b73b 6a2bdd3`。只查一個方向：`gen_review.py`（6a2bdd3 版）的 ZH／EN 兩個 dict，逐句對 `skills/plan-review/SKILL.md`。這段範圍內 SKILL.md 沒有改過，所以我讀的是 repo 版。
+範圍：`git diff 4dd9386 e214b32`。只查一個方向：`gen_review.py`（e214b32 版）的 ZH／EN 兩個 dict，逐句對 `skills/plan-review/SKILL.md`。這段範圍內 SKILL.md 沒有改過，所以我讀的是 repo 版。
 
 ## Findings
 [Important] diagrams/src/gen_review.py:27、:50｜邊標籤「有效審查者不足 3 個」／"under 3 valid reviewers" 比原文寬：原文要先補派，補完還不足 3 個才是「無法判定」，圖上把補派省掉了
@@ -39,7 +39,7 @@ Critical 0 / Important 4 / Smells 0
 
 [Important] diagrams/src/gen_review.py:30、:53-54｜註解「什麼算重大」比原文窄：漏了第 ① 條的例外，也漏了第 ② 條的一個分支
   證據：SKILL.md:173「①常走的路…；金額、權限、刪資料不管多少見都算」；:174「②照做會壞、會錯，或會跳過使用者的決定」。圖上只寫「常走的路、照做會錯、後面的關卡也抓不到」，EN 同樣。
-  失敗情境：讀者照圖判斷「很少走的刪資料路徑」或「照做會跳過使用者決定」都不算重大。原文這兩種都算。這正是 f46b73b 剛加進 §3.10 的那條「縮短既有文字時，條件最容易被改掉」。
+  失敗情境：讀者照圖判斷「很少走的刪資料路徑」或「照做會跳過使用者決定」都不算重大。原文這兩種都算。這正是 4dd9386 剛加進 §3.10 的那條「縮短既有文字時，條件最容易被改掉」。
 
 [Important] diagrams/src/gen_review.py:20、:43（以及 legend :32、:56）｜讀檔檢查框寫「每人抽一處」／"one cited line per reviewer"，把原文的「至少」拿掉了；「對不上就重派」也漏了「最多重派一次」
   證據：SKILL.md:189「每個審查者**至少**抽一處它引用的 `路徑:行`」；:192「每個代號的位置**最多重派一次**（回錯誤或沒過讀檔檢查都算這一次）…重派還是不行，它不算有效審查者」。另外 legend「重派：讀檔檢查沒過的審查者」也比原文窄，原文回錯誤一樣會重派。
@@ -59,9 +59,9 @@ Critical 0 / Important 4 / Smells 0
 
 ## What I ran
 - Read scratchpad/pg-rev-prompt-A.txt → 派工內容
-- `git show 6a2bdd3:diagrams/src/gen_review.py | cat -n` → 拿 ZH／EN dict 的行號
+- `git show e214b32:diagrams/src/gen_review.py | cat -n` → 拿 ZH／EN dict 的行號
 - Read skills/plan-review/SKILL.md 全文（235 行）
-- `git diff --stat f46b73b 6a2bdd3 -- skills/` → 空輸出，範圍內 SKILL.md 沒改
+- `git diff --stat 4dd9386 e214b32 -- skills/` → 空輸出，範圍內 SKILL.md 沒改
 - Read pg-review-diff.txt 1-300、300-457 → 讀完全份，含 ④ 對照表
 
 ## 需要外部查證

@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s4-review-pack.txt`，763 行，沒進 repo）的組成：
-- 第 1 部分：`git diff cf6beea HEAD`（表上這段的起點到 HEAD = a2954f7），工作目錄乾淨、沒有未追蹤的檔；`agents/LICENSE.txt` 只放前 40 行，後面 202 行是 Apache-2.0 全文
+- 第 1 部分：`git diff 5d9d68b HEAD`（表上這段的起點到 HEAD = 6ea3552），工作目錄乾淨、沒有未追蹤的檔；`agents/LICENSE.txt` 只放前 40 行，後面 202 行是 Apache-2.0 全文
 - 第 2 部分：步驟 3（code-simplifier）沒有跑，這一段的 diff 全是 Markdown 與純文字
 - 第 3 部分：`skills/self-improving-agent/` 被改到的四個檔與 `reference/promotion-rules.md` 在派工當下的整檔內容（帶行號）
 - 第 4 部分：已跑過的驗證 V1–V6（兩條 grep 驗收、S4-2 的乾跑與預期、與本機官方副本的比對輸出、照 ci.yml 逐 step 跑、CHANGELOG 與 tag 的差異）
@@ -17,7 +17,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff cf6beea HEAD`（8 步開發迴圈 S4 段落，3 個 commit：14c9e8b、b90303a、a2954f7）。這一段沒有程式碼，改的是文字：
+> 審查範圍：`git diff 5d9d68b HEAD`（8 步開發迴圈 S4 段落，3 個 commit：90cfe4c、0d2125d、6ea3552）。這一段沒有程式碼，改的是文字：
 > - S4-1：`skills/self-improving-agent/` 的 `SKILL.md`、`README.md` 刪掉「OpenClaw」「Codex CLI」兩個安裝小節與 Platform Support 表對應的兩列。
 > - S4-2：`skills/self-improving-agent/agents/memory-analyst.md`「### 4. Score each entry」自己的分數定義拿掉，改成指到 `reference/promotion-rules.md` 的 Scoring Guide（這是行為改變）。
 > - S4-3：新增 `agents/LICENSE.txt`（兩個官方備份 agent 與官方檔的比對結果，後面附 Apache-2.0 全文）；兩份 README 的授權表、`DD_PIPELINE_ARCHITECTURE.md` 的授權段、根目錄 `CLAUDE.md`、`CHANGELOG.md` 的 `## 未發布` 跟著改。
@@ -50,23 +50,23 @@
 
 逐字原文（交回的訊息；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 1 / Smells 3 — `git diff cf6beea HEAD`（S4：14c9e8b、b90303a、a2954f7）裡文件之間對不對得上、有沒有照規則同步
+> Critical 0 / Important 1 / Smells 3 — `git diff 5d9d68b HEAD`（S4：90cfe4c、0d2125d、6ea3552）裡文件之間對不對得上、有沒有照規則同步
 >
 > 【發現】
-> 1｜Important｜評分改動的行為變化寫得不完整：CHANGELOG 與 skill 的 CLAUDE.md 都只寫 Scope 從 3 變 2，但 Durability、Impact 的評法也一起變了。拿來舉例的 8 → 6 有 1 分不是 Scope 造成的，而且 6 分沒有跌破門檻｜`CHANGELOG.md:136`「⚠️ 行為改變：整個專案適用的條目 Scope 從 3 變 2，總分可能跌破「≥ 6 才建議升級」的門檻（同一條記憶乾跑：新版 2／2／2 = 6、舊版 3／2／3 = 8）。」；`skills/self-improving-agent/CLAUDE.md:91-92`「This changes results: a project-wide entry scores Scope 2 instead of 3」。舊版 `git show cf6beea:skills/self-improving-agent/agents/memory-analyst.md` 的 Durability／Impact 只有一句問句（「Will this still be true in a month?」），沒有刻度；新版改照 promotion-rules.md 的表打分。設計文件 `docs/designs/2026-11-15-audit-fixes-design.md:180` 自己寫了「Durability 差的 1 分是舊版沒有刻度、它自己說是猜的」，CHANGELOG 把這句限定拿掉了｜讀 CHANGELOG 的人會以為一條記憶因為這次改動少 2 分，或以為只有 Scope 會變。之後有人回報「Durability 分數跟以前不一樣」，查 CLAUDE.md 的「Differences from upstream」查不到這一項。另外舉的例子是 6，仍然 ≥ 6，示範不出「跌破門檻」｜CHANGELOG 補半句「Durability、Impact 也改照表上的刻度打分（舊版沒有刻度）；例子裡 Scope 的定義只造成 1 分差距」。CLAUDE.md 的 Differences 那條也補上 Durability／Impact
+> 1｜Important｜評分改動的行為變化寫得不完整：CHANGELOG 與 skill 的 CLAUDE.md 都只寫 Scope 從 3 變 2，但 Durability、Impact 的評法也一起變了。拿來舉例的 8 → 6 有 1 分不是 Scope 造成的，而且 6 分沒有跌破門檻｜`CHANGELOG.md:136`「⚠️ 行為改變：整個專案適用的條目 Scope 從 3 變 2，總分可能跌破「≥ 6 才建議升級」的門檻（同一條記憶乾跑：新版 2／2／2 = 6、舊版 3／2／3 = 8）。」；`skills/self-improving-agent/CLAUDE.md:91-92`「This changes results: a project-wide entry scores Scope 2 instead of 3」。舊版 `git show 5d9d68b:skills/self-improving-agent/agents/memory-analyst.md` 的 Durability／Impact 只有一句問句（「Will this still be true in a month?」），沒有刻度；新版改照 promotion-rules.md 的表打分。設計文件 `docs/designs/2026-11-15-audit-fixes-design.md:180` 自己寫了「Durability 差的 1 分是舊版沒有刻度、它自己說是猜的」，CHANGELOG 把這句限定拿掉了｜讀 CHANGELOG 的人會以為一條記憶因為這次改動少 2 分，或以為只有 Scope 會變。之後有人回報「Durability 分數跟以前不一樣」，查 CLAUDE.md 的「Differences from upstream」查不到這一項。另外舉的例子是 6，仍然 ≥ 6，示範不出「跌破門檻」｜CHANGELOG 補半句「Durability、Impact 也改照表上的刻度打分（舊版沒有刻度）；例子裡 Scope 的定義只造成 1 分差距」。CLAUDE.md 的 Differences 那條也補上 Durability／Impact
 >
 > 2｜Smells｜`agents/LICENSE.txt` 有一句說「根目錄 CLAUDE.md 列為自製」，但根目錄 CLAUDE.md 沒有點名說這兩個 agent 是自製｜`agents/LICENSE.txt:4-5`「另外兩個（senior-devops.md、security-auditor.md）根目錄 CLAUDE.md 列為自製」；`CLAUDE.md:41` 只寫「+ senior-devops、security-auditor」，沒有標「自製」。`CLAUDE.md:113`「自製 agent 用 `inherit`」只能間接推出這件事；`install-dd-pipeline.sh:60` 把它們寫成「實證用過」｜這個檔自稱「只寫查得到的事實」，有人照指標去 CLAUDE.md 找「列為自製」那一句會找不到｜改成「不在本檔範圍（它們不是官方 plugin 的檔）」，或改寫成指到 `CLAUDE.md` 的「新增 Agent 步驟」第 1 步
 >
 > 3｜Smells｜授權檔那條 CHANGELOG 放在 `### Fixed`，前例是放 `### Added`｜這次的三條在 `## 未發布` 的 `### Fixed` 底下（`CHANGELOG.md:65` 起，條目在 :133–:141）。前例：1.6.13 的 output-styles 與它的 `LICENSE.txt` 記在 `### Added`（`CHANGELOG.md:203`、`:210`）｜看 Added 找「這版新增了哪些檔」的人會漏看 `agents/LICENSE.txt`｜不急；要對齊前例就把那條移到 `### Added`
 >
-> 4｜Smells｜計畫與實際做的不完全一樣：S4-3 的檔案清單沒有根目錄 `CLAUDE.md`，實際上改了｜`docs/designs/2026-11-15-audit-fixes-design.md:184` S4-3 的「檔案：」只列 `agents/LICENSE.txt`、兩份 README、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md`；`git show --stat a2954f7` 多了 `CLAUDE.md | 2 +-`｜改的內容本身沒問題（「目錄結構」本來就要記這類檔，前例是 `output-styles/LICENSE.txt` 那行）。只是接手的人拿計畫對 commit 時會對不上｜步驟 8 或標 DONE 時在 S4-3 的檔案清單補上 `CLAUDE.md`
+> 4｜Smells｜計畫與實際做的不完全一樣：S4-3 的檔案清單沒有根目錄 `CLAUDE.md`，實際上改了｜`docs/designs/2026-11-15-audit-fixes-design.md:184` S4-3 的「檔案：」只列 `agents/LICENSE.txt`、兩份 README、`DD_PIPELINE_ARCHITECTURE.md`、`CHANGELOG.md`；`git show --stat 6ea3552` 多了 `CLAUDE.md | 2 +-`｜改的內容本身沒問題（「目錄結構」本來就要記這類檔，前例是 `output-styles/LICENSE.txt` 那行）。只是接手的人拿計畫對 commit 時會對不上｜步驟 8 或標 DONE 時在 S4-3 的檔案清單補上 `CLAUDE.md`
 >
 > 【Not reported】
 > - CHANGELOG 其他句子都對得上 diff：舊版的 Scope 定義（3／1／0）、Scoring Guide（0／1／2／3）、「`./scripts/` 不在這個目錄」（`ls skills/self-improving-agent` 沒有 scripts）、`clawhub publish` 那兩處還在（`SKILL.md:126`、`skills/extract/SKILL.md:153`）、「這個檔不部署」（`install_builtin_agents` 只複製 `agents/$agent.md`）。三條都在 `## 未發布` 底下，已發布的區塊沒動（`git diff v1.6.14 -- CHANGELOG.md` 沒有任何刪除行）
 > - 根目錄 `CLAUDE.md:41`：CI 的 `grep -oE "agents/\` — [0-9]+ 個 Agents"`（`ci.yml:144`）只讀「4 個 Agents」這幾個字，加在分號後面的內容不影響比對
 > - 兩份 README 的授權表、`DD_PIPELINE_ARCHITECTURE.md` 的授權段都加了 `agents/LICENSE.txt`，中英兩份內容一致，有照收編清單第 7 條（「三處授權段」）做
-> - 開工前提的結果：`git show cf6beea:skills/self-improving-agent/CLAUDE.md | grep '上游\|差異\|upstream'` rc=1，跟設計文件寫的「0 筆」一致。開工前提的結果跟第一個小任務的 commit（14c9e8b）一起送，照規則
-> - 進度表 S4 是 `IN_PROGRESS`、commits 欄是 `cf6beea..`：現在在步驟 4，還不到標 DONE 的時候，這個狀態是對的
+> - 開工前提的結果：`git show 5d9d68b:skills/self-improving-agent/CLAUDE.md | grep '上游\|差異\|upstream'` rc=1，跟設計文件寫的「0 筆」一致。開工前提的結果跟第一個小任務的 commit（90cfe4c）一起送，照規則
+> - 進度表 S4 是 `IN_PROGRESS`、commits 欄是 `5d9d68b..`：現在在步驟 4，還不到標 DONE 的時候，這個狀態是對的
 > - A1（`clawhub publish` 不動）、A10（code-reviewer 寫明是改過的檔）、A11（Scope 3 變 2）都照做了。A11 本身也只寫了 Scope（理由同發現 1），沒有另外列
 > - `skills/self-improving-agent/settings.json:8` 仍然列 `openclaw`、`codex`：這次 diff 已經在 CLAUDE.md:86-87 寫明刻意保留，A1 也沒要求改
 > - `CLAUDE.md:113`「官方備份維持上游的 `opus`」：官方 feature-dev 版的 code-reviewer 是 `sonnet`、pr-review-toolkit 版是 `opus`。這句是既有的，這次 diff 沒動
@@ -80,7 +80,7 @@
 > - `grep -n` CHANGELOG 的標題與 LICENSE、`git tag` → 最新 tag 是 v1.6.14；未發布的 Added 在 :21、Changed 在 :45、Fixed 在 :65；1.6.13 的 Added 在 :203
 > - `grep -n agents .github/workflows/ci.yml` → :144 的正規式
 > - `git grep -n -i 'openclaw\|codex'`、`git grep -n '官方備份|本地備份…'`、`git grep -n '自製'`、`git grep -n LICENSE` 掃 README、架構文件、CLAUDE.md、UPGRADING → 結果見上
-> - `git show --stat` 看 3 個 commit；`git show cf6beea:` 看舊版 CLAUDE.md（grep rc=1）與舊版 memory-analyst.md 46–53 行
+> - `git show --stat` 看 3 個 commit；`git show 5d9d68b:` 看舊版 CLAUDE.md（grep rc=1）與舊版 memory-analyst.md 46–53 行
 > - `grep -c '' agents/code-reviewer.md` → 117；`git diff v1.6.14 -- CHANGELOG.md | grep '^-'` → 0
 > - `grep '^model'` agents 與官方副本 → feature-dev 的 code-reviewer 是 sonnet，其他是 opus
 > - `head -12 agents/senior-devops.md agents/security-auditor.md`；`ls agents skills/self-improving-agent`；install-dd-pipeline.sh 的 `install_builtin_agents` 段

@@ -82,14 +82,14 @@ It is registered automatically by `hooks/hooks.json` — do not add it to `setti
 
 This list starts on 2026-11-15 and is not complete: earlier local changes (memory-directory path encoding,
 the hooks' stdin interface and timeout, `$HOME` hook paths, renamed commands, and others) are not listed here.
-For those, read `git log -- skills/self-improving-agent`; the earliest commit of this directory is `7248a15`.
+For those, read `git log -- skills/self-improving-agent`; the earliest commit of this directory is `e5137e4`.
 
 - 2026-11-15: removed the `### OpenClaw` and `### Codex CLI` install subsections and the matching two
   rows of the Platform Support table from `SKILL.md` and `README.md`. The Codex one pointed at
   an install script under `./scripts/` that is not in this directory, and neither route is deployed by claude-dd.
   The upstream credit links and the two `clawhub publish` mentions are unchanged; `settings.json`
   still lists `openclaw` and `codex` under `platforms` (left as upstream wrote it).
-- 2026-11-15: `agents/memory-analyst.md` no longer carries its own score definitions. The copy in `7248a15`
+- 2026-11-15: `agents/memory-analyst.md` no longer carries its own score definitions. The copy in `e5137e4`
   (the earliest commit of this directory) had two definitions that disagreed: the agent listed Scope 3 = project-wide, 1 = one file, 0 = one-time,
   and gave Durability and Impact one question each with no scale; `reference/promotion-rules.md` has a table
   (Scope 0 = one file, 1 = one directory, 2 = entire project, 3 = all your projects, and a 0-3 scale for the other two).
@@ -99,11 +99,11 @@ For those, read `git log -- skills/self-improving-agent`; the earliest commit of
   and Durability and Impact now follow the table instead of the agent's own reading of a question.
   Totals can move either way, and some entries will drop below the `≥ 6` promotion threshold.
   One dry run on 2026-11-15 (one entry, one run per version): old wording 3/2/3 = 8, new wording 2/2/2 = 6.
-- 2026-11-18 (`3637c92`, `31dd5bb`, from a prompt audit): `skills/remember/SKILL.md` description no longer says
+- 2026-11-18 (`c9b5190`, `6758536`, from a prompt audit): `skills/remember/SKILL.md` description no longer says
   "with timestamp and context" (the body says timestamps are not needed); `agents/memory-analyst.md` and
   `agents/skill-extractor.md` got `name` / `description` frontmatter (upstream had none); `skills/extract/SKILL.md`
   says "Agent tool" instead of "Task tool".
-- 2026-11-18 (same audit, `43373fe`): `skills/remember/SKILL.md` Step 3 writes a topic file plus one index line when
+- 2026-11-18 (same audit, `6b46c96`): `skills/remember/SKILL.md` Step 3 writes a topic file plus one index line when
   `MEMORY.md` is an index, and its cross-project line points at `claude-dd/templates/global/CLAUDE.md`;
   `skills/promote/SKILL.md` and `reference/promotion-rules.md` do the same for global rules and ask the user first
   (`install-dd-pipeline.sh --force` overwrites `~/.claude/CLAUDE.md` from that template);

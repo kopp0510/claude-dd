@@ -2,7 +2,7 @@
 
 ## 派工
 
-- 範圍：`git diff 93dd5b7 608caa9`（6 檔），一律 `git show 608caa9:<路徑>` 取檔（與 code-simplifier 並行）
+- 範圍：`git diff 76fab71 a9a2889`（6 檔），一律 `git show a9a2889:<路徑>` 取檔（與 code-simplifier 並行）
 - 已給、標明不要重跑的驗證：新測試 × 新 hook 兩種 locale 30/30；新測試 × 舊 hook 兩種 locale 只有 4 個大輸出情境逾時失敗；
   長度提早退出的變異只讓 2 個「最後一行才是錯誤」失敗；docker bash:5.3 跑舊 hook 30/30；shellcheck 乾淨
 - 重點：新舊空白判斷語意差異、perl/alarm 包裝誤報或卡住、註解/文件的假宣稱、diff 改變的事實在別處是否還被宣稱；最多一次重現實驗

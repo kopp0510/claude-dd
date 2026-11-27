@@ -10,7 +10,7 @@
   只算主對話（`isSidechain` 的不算），時間範圍 `2026-11-13T17:42:47Z` → `2026-11-14T10:30:08Z`。
   找是哪一份：`grep -l '2026-11-13T17:42:47' ~/.claude/projects/*/*.jsonl`（當天只命中一份）
 - 指令：`python3 -I session_cost.py <transcript>.jsonl 2026-11-13T17:42:47 2026-11-14T10:30:08`（腳本在下面）
-- 行數另外用 `git diff --numstat 9584605..58ae9b0` 依路徑分類
+- 行數另外用 `git diff --numstat dd8b5a9..139bc41` 依路徑分類
 - session 一開始的輸入量（**不套上面的時間範圍**，取的是整份 transcript 的第一個請求，時間是 `2026-11-13T12:54:31Z`）：`jq -r 'select(.type=="assistant" and (.isSidechain|not)) | (.message.usage | (.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens))' <transcript>.jsonl | head -1`
 - 引用數字前先重跑。transcript 只在本機、會被清掉；清掉之後這些數字就重算不了
 
@@ -139,7 +139,7 @@ print("## 主對話 token（依 message.id 去重）請求 %d 次，輸出 %d" %
   Agent 的啟動回覆 181,512、完成通知 140,225
 - 整個 session 的第一個請求（還沒做任何事，`2026-11-13T12:54`，在上面的時間範圍之前）輸入 97,571 token。
   這個數字來自「方法」節那條 jq，不在「當天輸出」裡；這件工作開始時 context 已經不是空的（3 分多鐘後就第一次壓縮）
-- 行數（`9584605..58ae9b0`，來自「方法」節的 `git diff --numstat`，不在「當天輸出」裡）：`scripts/`、`commands/`、`tests/`、`agents/`、安裝腳本合計 +101／−13；`docs/reviews/` +1,626；
+- 行數（`dd8b5a9..139bc41`，來自「方法」節的 `git diff --numstat`，不在「當天輸出」裡）：`scripts/`、`commands/`、`tests/`、`agents/`、安裝腳本合計 +101／−13；`docs/reviews/` +1,626；
   `docs/measurements/` +860；`docs/designs/` +229；`skills/security-audit/CLAUDE.md` +189；其他文件 +76／−10；照抄上游的檔 +5,300。
   審查報告是逐字存的，行數不等於花的工夫
 

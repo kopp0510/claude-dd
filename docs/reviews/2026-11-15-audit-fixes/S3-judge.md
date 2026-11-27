@@ -4,7 +4,7 @@
 
 ## 派工
 
-- 範圍：`git diff 0dc3b53`（表上這段的起點）到工作目錄。HEAD = 2276c3c，2 個 commit（S3-1、S3-2），工作目錄乾淨。
+- 範圍：`git diff db8637e`（表上這段的起點）到工作目錄。HEAD = 420564e，2 個 commit（S3-1、S3-2），工作目錄乾淨。
 - 步驟 3：派了 `code-simplifier`，範圍是這段在 `install-dd-pipeline.sh` 與 `tests/test-install.sh` 的改動。它沒有改任何檔（三條驗證指令都 exit 0）。
 - 步驟 4：派 3 個 `code-reviewer`（下限，不帶 model 參數），照改動分方向：A 安裝腳本的邏輯、B T11 測試、C 文件裡的宣稱。這段的程式碼改動約 40 行、測試約 70 行，沒有多派。
 - 派工 prompt 只交事實（做了什麼、審查包的組成、已跑過的驗證與預期值），沒有寫我對哪裡可能有錯的判斷。

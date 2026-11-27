@@ -2,7 +2,7 @@
 name: frontend-design
 description: 前端視覺設計專家，建立獨特、生產級的前端介面。當提到視覺風格設計、UI 介面建立、頁面視覺設計、切版、版面樣式時自動啟用。不適用於純框架實作或設計系統 token 建置。
 license: Complete terms in LICENSE.txt
-modifications: "改自 Anthropic frontend-design(Apache-2.0)。本地修改:description 已在地化為繁體中文(配合 DD pipeline 繁中觸發),內文是 2026-06-23 同步的上游版(claude-dd 自己的 commit a372fe3,不是上游的 hash),之後沒再同步;2026-11-19 比對時上游內文已改寫,兩邊不同。"
+modifications: "改自 Anthropic frontend-design(Apache-2.0)。本地修改:description 已在地化為繁體中文(配合 DD pipeline 繁中觸發),內文是 2026-06-23 同步的上游版(claude-dd 自己的 commit 7278dec,不是上游的 hash),之後沒再同步;2026-11-19 比對時上游內文已改寫,兩邊不同。"
 ---
 
 # Frontend Design

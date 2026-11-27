@@ -6,7 +6,7 @@
 
 - 派 3 個 `code-reviewer`（下限 3），同一則訊息平行派出，派完主對話自己讀 diff 檔第 1–361 行。
   數量理由：這段只有規則文字與兩行 echo，分三個方向就涵蓋了改動的三類檔 —— a 模板與蓋章版、b 跨檔一致與殘留（gate、`docs/reviews/CLAUDE.md`、兩份 README、全 repo 掃描）、c rev 跳號、CHANGELOG、設計文件
-- diff 檔：`<scratchpad>/S6-review-diff.txt`（4517 行）。① 第 1–323 行 `git diff fb6f816`（含工作目錄，未追蹤新檔 0 個）② 第 324–360 行 步驟 3 code-simplifier 的改動（`git diff HEAD`，2 檔 3 句）③ 第 361 行起 被改到檔案的整檔內容（工作目錄版本，帶行號）④ 第 4511 行起 已跑過的驗證與預期值
+- diff 檔：`<scratchpad>/S6-review-diff.txt`（4517 行）。① 第 1–323 行 `git diff c8a7a19`（含工作目錄，未追蹤新檔 0 個）② 第 324–360 行 步驟 3 code-simplifier 的改動（`git diff HEAD`，2 檔 3 句）③ 第 361 行起 被改到檔案的整檔內容（工作目錄版本，帶行號）④ 第 4511 行起 已跑過的驗證與預期值
 - 三份報告回來後都從 subagent 紀錄檔的交回訊息逐字取出，存進 `<scratchpad>/S6-review/a.md`、`b.md`、`c.md`；派工 prompt 同樣取出存成 `prompt-*.txt`
 
 ## 發現

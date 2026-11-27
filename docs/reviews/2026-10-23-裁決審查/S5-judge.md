@@ -5,11 +5,11 @@
 主對話給裁決者的派工說明（逐字；路徑換成 `<scratchpad>`）。
 
 ````text
-你是 8 步開發迴圈步驟 4（code-review）的**裁決者**。專案：/Users/danlio/project/my_project/claude-dd（段落 S5「拿掉裁決者的對照」，範圍 9798edc..HEAD）。
+你是 8 步開發迴圈步驟 4（code-review）的**裁決者**。專案：/Users/danlio/project/my_project/claude-dd（段落 S5「拿掉裁決者的對照」，範圍 8187b6e..HEAD）。
 
 ## diff 檔
 <scratchpad>/S5-review-diff.txt（2187 行，約 208 KB）。Read 不指定範圍會在約 47 KB 靜靜截斷、不報錯，**一律用 offset/limit 每次 300 行讀到第 2187 行**；派審查者時把這句轉達。
-四段：① 整段 diff（排除機器輸出）② 步驟 3 code-simplifier 的改動（66d4314，只動 1 行）③ 被改到檔案的整檔內容（HEAD 版，帶行號）④ 機器輸出全文與報告檔名清單。
+四段：① 整段 diff（排除機器輸出）② 步驟 3 code-simplifier 的改動（36102fb，只動 1 行）③ 被改到檔案的整檔內容（HEAD 版，帶行號）④ 機器輸出全文與報告檔名清單。
 被改到的檔一律讀 diff 檔裡那一份。
 
 ## 可以讀的
@@ -44,7 +44,7 @@
 ````text
 # S5 code-review 裁決報告（裁決者）
 
-範圍：9798edc..HEAD（段落 S5「拿掉裁決者的對照」）。審查者完整報告：同目錄 S5-a.md、S5-b.md、S5-c.md、S5-d.md；派工 prompt：prompt.md。
+範圍：8187b6e..HEAD（段落 S5「拿掉裁決者的對照」）。審查者完整報告：同目錄 S5-a.md、S5-b.md、S5-c.md、S5-d.md；派工 prompt：prompt.md。
 
 ## 【派工】
 派 4 個 code-reviewer（不帶 model）。理由：主對話建議三個方向，但「命中判定」是主對話自己 grep 判、明寫要複核的東西，要逐份讀 8 發報告，跟「數字核對」（stats.jsonl、logs、session jsonl）是兩種原始資料，拆開避免兩邊都只抽樣。
@@ -59,13 +59,13 @@
 
 1. A-C1、B-Critical｜**Critical**｜B 組 `G2-dhk-1`、`G3-dhk-1` 的父 session 各叫了一次 advisor（模型 `claude-fable-5-1`），量測文件完全沒提。「模型斷言全過」雖然字面成立（stats.py 只看 assistant 的 `message.model`），但第三個模型參與了；結論 4 的「平均最慢 427s」「收尾 43–304s 是在查 haiku 的報告」「費用只比 A 少約 20%」都被它撐大｜我實跑 `jq '.modelUsage'` 讀 s5/logs 最後一筆 result：G2-dhk-1 opus 1.636＋haiku 0.376＋**fable 2.095**（總 4.107）、G3-dhk-1 opus 2.998＋haiku 0.591＋**fable 2.899**（總 6.488），其餘 6 發沒有 fable。父 session jsonl 的 `server_tool_use advisor`／`advisor_tool_result` 相對秒數：G2-dhk-1 193→414（最後一個審查者 326 結束，所以收尾 177s 中有 88s 純等 advisor）；G3-dhk-1 291→493（審查者 224 結束，收尾 304s 中有 202s 純等 advisor）。扣掉 fable 費用 B 平均 ≈ (2.01+1.97+3.59+3.53)/4 ≈ 2.78（比 A 5.13 少約 46%）；扣掉純等 advisor 的秒數，B 整發平均 ≈ 355s。advisor 回傳是加密的，看不出有沒有影響父 session 的判定（含 K6「父 session 自己查到」那句，G3-dhk-1 的父報告寫在問完 advisor 之後）｜量測文件「原始數字」作廢那段補一條：哪兩發叫了 advisor、各多少秒、多少錢；結論 4 改寫（命中 2/6 最少這點不受影響，時間與費用的歸因要改或附扣掉 advisor 後的數字，並寫明扣法是近似）；K6 那句註明 G3-dhk-1 的父 session 問過 advisor。stats.py 是凍結輸入不改；作廢檢查讀 `modelUsage` 的鍵或查 `server_tool_use` 這條，記進限制／下次實驗的待辦
 
-2. B-Important1、A-C1 末段｜Important｜S4 `G3-hk-1` 的裁決者也叫了 advisor（fable 1.41 美元），結論 3 與設計文件 S5 一節第 2 行（4e47492 新寫進去的）「新組與 haiku 組 132–297s」的上限 297 就是這一發（455−158），S4 haiku 組平均 346s／1.57 美元也含它｜`jq` 讀 s4/logs/G3-hk-1.jsonl 的 modelUsage：haiku 0.291、opus 0.969、**fable 1.414**；該發 session 目錄有 2 筆 `server_tool_use`。297 = 455−158 照 S4 表核過｜兩處 132–297 加註「上限那發的裁決者叫了 advisor」，或區間另列不含它的值；五組並排 S4 haiku 那列加註
+2. B-Important1、A-C1 末段｜Important｜S4 `G3-hk-1` 的裁決者也叫了 advisor（fable 1.41 美元），結論 3 與設計文件 S5 一節第 2 行（a4b7ee0 新寫進去的）「新組與 haiku 組 132–297s」的上限 297 就是這一發（455−158），S4 haiku 組平均 346s／1.57 美元也含它｜`jq` 讀 s4/logs/G3-hk-1.jsonl 的 modelUsage：haiku 0.291、opus 0.969、**fable 1.414**；該發 session 目錄有 2 筆 `server_tool_use`。297 = 455−158 照 S4 表核過｜兩處 132–297 加註「上限那發的裁決者叫了 advisor」，或區間另列不含它的值；五組並排 S4 haiku 那列加註
 
 3. A-I2、B-Important2、D-I5｜Important｜結論 3「A 82–122s（派工前 23–34s ＋收尾 38–52s ＋開機）」的「開機」標錯：whole 從父 session 第一個時間戳起算、派工前也從那裡起算，開機已經不在剩下那段裡；剩下的是審查者**依序**開跑的錯開時間｜我實跑相對秒數：G2-dir-1 審查者開始 27／40／53、G3-dir-1 28／43／59／74（間隔約 13–15s，direct.txt 第 19 行要求的是「同一則訊息裡平行」）。A 四發 整發−最慢−派工前−收尾 = 14、16、46、29s，三位審查者獨立算出同一組數｜「＋開機」改成「＋審查者依序開跑的錯開時間（14–46s）」，並註明這段在 A 做法裡照樣存在
 
 4. A-I1、B-Important3 問題 2、D-I6｜Important｜`G3-dhk-2` 的第 4 個審查者 `a534fa`（「審查者 C2：補完 C 未讀段」）是第一波回來後才補派的，文件沒寫；表上「審查者層最慢 111s／收尾 43s」只是 C2 自己的耗時，這一發審查者層實際從 29s 跑到 316s｜我實跑：C 在 58→154、C2 在 205→316；父報告 `reports/G3-dhk-2.d0.parent.md:11` 寫補派 C2（D 引用）｜原始數字表該列加註「第 4 個是補派」；結論 4 的 B 組歸因加上這一項；「審查者層最慢」明寫是最慢的單一審查者
 
-5. D-I1、B-Smell2｜Important｜結論 5「父 session 是 opus 並讀完整份 diff 檔」與 checks.out 不符：`G3-dir-2` 的父 session 缺 1700/3024 行。設計文件 4e47492 已補上這件事，量測文件沒跟著改（改一半）｜diff 檔 ④ checks.out：`G3-dir-2 read: ['parent Read7次 缺1700/3024行' …]`；設計文件 diff 第 40 行有「`G3-dir-2` 的父 session 也缺 1700 行」｜結論 5 改成實際狀況；「diff 檔讀了多少」第二段那條補上父 session
+5. D-I1、B-Smell2｜Important｜結論 5「父 session 是 opus 並讀完整份 diff 檔」與 checks.out 不符：`G3-dir-2` 的父 session 缺 1700/3024 行。設計文件 a4b7ee0 已補上這件事，量測文件沒跟著改（改一半）｜diff 檔 ④ checks.out：`G3-dir-2 read: ['parent Read7次 缺1700/3024行' …]`；設計文件 diff 第 40 行有「`G3-dir-2` 的父 session 也缺 1700 行」｜結論 5 改成實際狀況；「diff 檔讀了多少」第二段那條補上父 session
 
 6. D-I2｜Important｜結論 5 解釋 A 比 S4 新組貴的理由不成立：S4 的費用是父 log 最後一筆累計 `total_cost_usd`、含 opus 裁決者讀 diff 與查證的錢，不是「S4 沒算進去」｜量測文件 S4 段原始數字說明（repo 檔 :143）寫明費用是累計、含子代理；`s4-inputs/judge.txt` 第 13 行裁決者第 1 步「先讀 diff 檔」｜改成「差額的來源沒拆；S4 的費用已含 opus 裁決者的讀 diff 與查證」，「原本就會花在主對話上」若保留要標成推測
 

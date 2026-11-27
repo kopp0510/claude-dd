@@ -20,14 +20,14 @@
 
 ## 動手前量到的
 
-- `scripts/check-claude-md.sh`（起點 `925d0b8` 那一版）的 `owed_dirs` 算的是起點到 HEAD 之間所有改了程式碼而沒更新該目錄記憶檔的 commit，不分那個 commit 有沒有用 SKIP；`case "$1" in` 只有 `--start-segment`、`--segment-base` 兩支，沒有預設分支
+- `scripts/check-claude-md.sh`（起點 `9679086` 那一版）的 `owed_dirs` 算的是起點到 HEAD 之間所有改了程式碼而沒更新該目錄記憶檔的 commit，不分那個 commit 有沒有用 SKIP；`case "$1" in` 只有 `--start-segment`、`--segment-base` 兩支，沒有預設分支
 - 拋棄式 repo 直接呼叫 repo 這份 gate（2026-11-17，macOS，`/bin/bash`；探針腳本在做這件事的 session 暫存區，沒進 repo）：
   - 沒有起點檔：一個改 `a/x.js` 不補文件的 commit 之後，staged 改 `b/`（有補 `b/CLAUDE.md`）→ rc=0、沒有輸出
   - 有起點檔（先跑 `--start-segment`）：同樣的事 → rc=1，「未同步更新：a/CLAUDE.md（段落起點之後有 commit 跳過檢查改了這裡的程式碼，CLAUDE.md 到現在還沒補）」；沒有任何 staged 時也是 rc=1；`--start-segment` rc=1
   - 接上一條，刪掉起點檔 → gate rc=0；`--start-segment` rc=0
   - 這一版 gate 收到不認得的參數（`--pause`、`--status`，沒有 staged）→ rc=0、沒有輸出
 - `git grep -nE 'dd\.paused|dd\.pause|暫停迴圈|暫停 8 步' -- . ':!docs/reviews' ':!docs/measurements'` 在起點那一版是 0 筆：repo 裡沒有既有的暫停機制
-- `dd-stop` 這個名字以前用過：`commands/dd-stop.md` 在 `30c8399` 加入、`c247c01`（2026-04 精簡）刪除；`install-dd-pipeline.sh` 的 `create_commands()` 把它列在 `deprecated_dd`，每次安裝先備份再刪 `~/.claude/commands/dd-stop.md`，兩份 README「同名的檔會被換掉」那一條也點名它（計畫審查第 2 輪查到）
+- `dd-stop` 這個名字以前用過：`commands/dd-stop.md` 在 `f8d8b72` 加入、`9a81d07`（2026-04 精簡）刪除；`install-dd-pipeline.sh` 的 `create_commands()` 把它列在 `deprecated_dd`，每次安裝先備份再刪 `~/.claude/commands/dd-stop.md`，兩份 README「同名的檔會被換掉」那一條也點名它（計畫審查第 2 輪查到）
 - `wc -c CLAUDE.md` = 47014；`scripts/githooks/claude-md-max-bytes` 是 48000
 - 官方文件（由 claude-code-guide subagent 讀 https://code.claude.com/docs/en/memory.md 後轉述，主對話沒有自己讀）：「For private per-project preferences that shouldn't be checked into version control, create a `CLAUDE.local.md` at the project root. It loads alongside `CLAUDE.md` and is treated the same way.」
 
@@ -83,7 +83,7 @@
 
 | ID | 段落 | 狀態 | 依賴 | 驗收（步驟 5 要看到什麼） | commits |
 |---|---|---|---|---|---|
-| S1 | `/dd-stop` 指令、腳本與 gate 的暫停旗標 | DONE | — | `/bin/bash tests/test-gate.sh` 與 `/bin/bash tests/test-dd-stop.sh` 全綠、變異對照如表；`tests/test-install.sh` 全綠；`shellcheck -S warning` 過；CI lint job 本機逐 step 全過；S1-4 兩組的結果照實寫；根目錄 CLAUDE.md 不超過 48000 bytes | 925d0b8..083ef82 |
+| S1 | `/dd-stop` 指令、腳本與 gate 的暫停旗標 | DONE | — | `/bin/bash tests/test-gate.sh` 與 `/bin/bash tests/test-dd-stop.sh` 全綠、變異對照如表；`tests/test-install.sh` 全綠；`shellcheck -S warning` 過；CI lint job 本機逐 step 全過；S1-4 兩組的結果照實寫；根目錄 CLAUDE.md 不超過 48000 bytes | 9679086..a9b53b7 |
 
 - 狀態只有 `TODO`、`IN_PROGRESS`、`BLOCKED`、`DONE`；同一時間最多一段 `IN_PROGRESS`
 - 下一段：由上往下第一個 `TODO`，而且它依賴的段落都已 `DONE`。有段落 `BLOCKED` 時先停下來問使用者，不自己跳去做別段
@@ -133,7 +133,7 @@
       最後加的兩句（補帳的 commit 不算功能段落、沒被擋就是補齊了）沒有再乾跑。
     - 乾跑提了、沒有處理的：第 1 步用 `-x` 判斷，檔在而沒有執行權限時也印「不在」；「claude-dd 的 clone」在哪裡沒給找法；補帳時上層 CLAUDE.md 要不要一起看；
       暫停期間做到一半的工作，恢復後 `<起點>` 怎麼算（只寫了再跑 `--start-segment` 時照常查欠帳）。
-    - ②模型層第 1 批三臂都通過（每臂 2 發，`claude-fable-5-2`），判準在跑之前 commit（`65e1fb9`）。數字與這一批證明不了的事寫在 `docs/measurements/2026-11-17-dd-stop/CLAUDE.md`「結果」。
+    - ②模型層第 1 批三臂都通過（每臂 2 發，`claude-fable-5-2`），判準在跑之前 commit（`7efdfa7`）。數字與這一批證明不了的事寫在 `docs/measurements/2026-11-17-dd-stop/CLAUDE.md`「結果」。
       跟上面計畫不一樣的地方：pre-commit 呼叫的不是 repo 路徑上的 gate，是 `run-model.sh` 當場複製到拋棄式專案 `.git/dd/` 的那一份（內容相同；恢復臂的 `dd-stop.sh off` 要在 cwd 裡才跑得了，兩支放在一起）；
       對照與恢復兩臂一出現判定要的工具呼叫就停掉那一發，沒有等花費上限。
       被停掉的那四發沒有 result：骨架寫的「每一發的 `permission_denials` 都是 0」只有暫停臂兩發查得到，另外四發沒有查就判通過
@@ -141,13 +141,13 @@
       模型層的判準被審查找到幾個洞（同一發有權限被擋時違規會被歸成無效再被補跑蓋掉、「gate 暫停中」不管出自哪個指令、`--start-segment` 是子字串比對、換入口驗不到、advisor 只看工具呼叫），
       手造輸入各重現過一次。判準沒有改（改了第 1 批就不算它的）。第 1 批對得出來的是前三個沒有踩到；「換入口」在 `stopped-2` 對不出來（它的 Read、Edit 對象沒有留），advisor 在被停掉的四發對不出來。
       洞的清單與「跑第 2 批之前要先補」寫在量測目錄 CLAUDE.md。要不要補判準、花錢跑第 2 批，留給使用者決定（最壞 22 美元）
-      第 1 批測的是 `65e1fb9` 版的 `dd-stop.sh`，之後步驟 3、4 改過的版本模型層沒有重跑
+      第 1 批測的是 `7efdfa7` 版的 `dd-stop.sh`，之後步驟 3、4 改過的版本模型層沒有重跑
 - 步驟 3、4（2026-11-17）：步驟 3 的 code-simplifier 改了 `scripts/dd-stop.sh`（`begin_line` 的 grep、`do_off` 印欠帳那一段的分支順序）與 `tests/test-dd-stop.sh`（抽出 `line_of`）。
   步驟 4 派 4 個審查者，報告與查證在 `docs/reviews/2026-11-17-dd-stop/S1-*.md`：Critical 0；Important 修掉三條 ——
   `off` 寫不進 `CLAUDE.local.md` 時永遠重跑、`on` 先設旗標而寫聲明失敗時旗標留著（兩個審查者都報）、本檔寫「都有測試」而「不是一般檔」那一支沒有測試。
   模型層判準的五條 Important：文件講得比判準實際擋的多的地方改掉了；判準本身沒有改，等使用者決定要不要補了重跑（理由在 `S1-judge.md`）。
   修完拿 HEAD 版（步驟 3、4 之前）與現行版的 `dd-stop.sh` 跑同一串沒有寫檔失敗的情境（`status`、`on`、重跑 `on`、暫停中 commit、有欠帳的 `off`、同目錄沒有 gate 的 `off`），輸出逐位元組相同
-- 步驟 5 到 8（2026-11-17）：步驟 5 的結果在 `docs/reviews/2026-11-17-dd-stop/S1-judge.md` 的處置與 `083ef82` 的訊息。步驟 7 沒有另外寫：這一輪學到的（`if !` 裡的函式不套用 `set -e`、`on` 的順序、root 跑不到 M2）已經隨修正寫進 `scripts/CLAUDE.md` 與 `tests/CLAUDE.md`。
+- 步驟 5 到 8（2026-11-17）：步驟 5 的結果在 `docs/reviews/2026-11-17-dd-stop/S1-judge.md` 的處置與 `a9b53b7` 的訊息。步驟 7 沒有另外寫：這一輪學到的（`if !` 裡的函式不套用 `set -e`、`on` 的順序、root 跑不到 M2）已經隨修正寫進 `scripts/CLAUDE.md` 與 `tests/CLAUDE.md`。
   步驟 8 的範圍是四份（根目錄、`scripts/`、`tests/`、`docs/measurements/2026-11-17-dd-stop/` 的 CLAUDE.md），只看這一段改的段落：檔案清單、取代號的指令、第 1 批的回合數與費用、`check.out` 重跑、
   gate 暫停旗標那張變異表（用加了新斷言的 `tests/test-gate.sh` 重跑五個變異）都對得上，沒有要改的
 - 留給使用者的：部署（`./install-dd-pipeline.sh --force`，裝了之後 `/dd-stop` 才用得到）、push、模型層判準要不要補了再跑一批

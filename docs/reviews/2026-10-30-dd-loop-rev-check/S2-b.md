@@ -2,9 +2,9 @@
 
 ## 派工
 
-> 你是 code-reviewer，代號 B。審查範圍：git diff 2aeeacc 80236ec（claude-dd repo，/Users/danlio/project/my_project/claude-dd）。新增一個 CI step：掃部署內容裡的 ~/.claude/ 路徑，指向本 repo 不部署的地方、或部署目錄裡 repo 沒有的檔，就紅燈；同批把根 CLAUDE.md 那條「cherry-pick 後自己 grep」改成指向這道檢查，補 DD_PIPELINE_ARCHITECTURE.md CI 防線表、CHANGELOG、進度表 S2。
+> 你是 code-reviewer，代號 B。審查範圍：git diff 952ac19 265a225（claude-dd repo，/Users/danlio/project/my_project/claude-dd）。新增一個 CI step：掃部署內容裡的 ~/.claude/ 路徑，指向本 repo 不部署的地方、或部署目錄裡 repo 沒有的檔，就紅燈；同批把根 CLAUDE.md 那條「cherry-pick 後自己 grep」改成指向這道檢查，補 DD_PIPELINE_ARCHITECTURE.md CI 防線表、CHANGELOG、進度表 S2。
 > 
-> 材料：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/dp-diff.txt。用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷）。被改到的檔用 git show 80236ec:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。材料 ④ 的驗證已確認，不要重跑。
+> 材料：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/dp-diff.txt。用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷）。被改到的檔用 git show 265a225:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。材料 ④ 的驗證已確認，不要重跑。
 > 
 > 你的方向：根 CLAUDE.md 那條改寫：拿材料 ③ 舊版逐句對新版，找出被拿掉或改寬改窄的條件、出處、指令；新句「它管不到的」兩項是否屬實且完整（例如 CLAUDE.md 自己、README、docs/ 不在掃描範圍）；CHANGELOG 條目與 DD_PIPELINE_ARCHITECTURE.md 新列是否描述了 step 的實際行為（讀 ci.yml 新 step 逐句對）
 > 
@@ -14,12 +14,12 @@
 
 ## 發現
 
-Critical 0 / Important 1 / Smells 0 — 審查範圍 git diff 2aeeacc 80236ec（根 CLAUDE.md 改寫、CHANGELOG 條目、DD_PIPELINE_ARCHITECTURE.md 新列，逐句對照 ci.yml 新 step）
+Critical 0 / Important 1 / Smells 0 — 審查範圍 git diff 952ac19 265a225（根 CLAUDE.md 改寫、CHANGELOG 條目、DD_PIPELINE_ARCHITECTURE.md 新列，逐句對照 ci.yml 新 step）
 
 ## Findings
 
-[Important] CLAUDE.md:192-193（80236ec 版，即 diff 的新行「它管不到的：在這些目錄**以外**的路徑，以及指向本機其他地方（不在 `~/.claude/` 底下）的死指標 —— 那兩種還是要自己顧」）｜「管不到」只列兩項，讀起來像其他情況 CI 都會擋。實際上掃描範圍**之內**還有五類會直接綠燈放過。CHANGELOG:23-24 寫「指向本 repo 不部署的地方…就紅燈」，同樣說得比實際寬。
-- 證據：我把 80236ec 的 tree `git archive` 到 scratchpad，抽出 step 的 run 段（路徑檔改寫到 scratchpad），每次在 `scripts/check-claude-md.sh` 尾端附加一行註解，用 `/bin/bash -e` 跑：
+[Important] CLAUDE.md:192-193（265a225 版，即 diff 的新行「它管不到的：在這些目錄**以外**的路徑，以及指向本機其他地方（不在 `~/.claude/` 底下）的死指標 —— 那兩種還是要自己顧」）｜「管不到」只列兩項，讀起來像其他情況 CI 都會擋。實際上掃描範圍**之內**還有五類會直接綠燈放過。CHANGELOG:23-24 寫「指向本 repo 不部署的地方…就紅燈」，同樣說得比實際寬。
+- 證據：我把 265a225 的 tree `git archive` 到 scratchpad，抽出 step 的 run 段（路徑檔改寫到 scratchpad），每次在 `scripts/check-claude-md.sh` 尾端附加一行註解，用 `/bin/bash -e` 跑：
   - `~/.claude/output-styles/LICENSE.txt` → exit 0 ✅。step 只用 `[ -e "$rel" ]` 檢查檔案在 repo 裡存不存在。但安裝腳本只部署 `DD_OUTPUT_STYLES`（install-dd-pipeline.sh:92-94 只有 `adhd.md`），根 CLAUDE.md 自己也寫 LICENSE.txt「不部署」。所以「repo 有、部署後沒有」這類，在 scripts/ 以外的部署目錄都驗不到。
   - `~/.claude/projects/-Users-x%2Fproj/memory/MEMORY.md` → exit 0 ✅。`projects` 落在 `continue` 那個 case（ci.yml 新 step `''|CLAUDE.md|settings.json|settings.local.json|projects|plugins) continue`），後面的路徑完全不驗。根 CLAUDE.md 收編清單 #3 記的 self-improving-agent「`%2F` 編碼算出的記憶體目錄從來不存在」正是這一類，CI 擋不到。
   - `~/.claude/plugins/nope/x` → exit 0 ✅，理由同上。
@@ -37,10 +37,10 @@ Critical 0 / Important 1 / Smells 0 — 審查範圍 git diff 2aeeacc 80236ec（
 ## What I ran
 - `wc -l` + Read dp-diff.txt（162 行，全部讀完）→ 讀完
 - `grep -nE '^(PROMOTED_|DD_|NS_|BUILTIN)'`、`sed -n 86,96p / 1020,1050p / 930,960p install-dd-pipeline.sh` → 確認 output-styles 只部署 DD_OUTPUT_STYLES（adhd.md）
-- `git show 80236ec:.github/workflows/ci.yml > scratchpad/B-ci.yml` → 取得新 step
-- 在 80236ec 上 `git grep -noE <step 的 regex>`，統計第一層分佈 → 和材料 ④ 一致
-- 在 80236ec 上 `git grep -nE '\.claude/'` 排除 regex 能抓到的寫法 → 剩下的都是專案相對的 `.claude/rules/`（self-improving-agent），不是 home 路徑
-- 在 scratchpad/B-exp（git archive 80236ec）用 `/bin/bash -e step.sh` 跑 7 個變異 → output-styles/LICENSE.txt、projects/%2F、plugins/nope、`<名字>`/SKILLL.md、scripts/中文.sh、"$HOME"/.claude/rules 都是 exit 0；commands/workflow-review/NOPE.md 是 exit 1（對照組）
+- `git show 265a225:.github/workflows/ci.yml > scratchpad/B-ci.yml` → 取得新 step
+- 在 265a225 上 `git grep -noE <step 的 regex>`，統計第一層分佈 → 和材料 ④ 一致
+- 在 265a225 上 `git grep -nE '\.claude/'` 排除 regex 能抓到的寫法 → 剩下的都是專案相對的 `.claude/rules/`（self-improving-agent），不是 home 路徑
+- 在 scratchpad/B-exp（git archive 265a225）用 `/bin/bash -e step.sh` 跑 7 個變異 → output-styles/LICENSE.txt、projects/%2F、plugins/nope、`<名字>`/SKILLL.md、scripts/中文.sh、"$HOME"/.claude/rules 都是 exit 0；commands/workflow-review/NOPE.md 是 exit 1（對照組）
 
 ## 需要外部查證
 - 無

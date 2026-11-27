@@ -4,7 +4,7 @@
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數）與步驟 3 的 code-simplifier。
 給審查者的 prompt 只有一句「完整派工在 `<scratchpad>/imp/review/prompt-c.txt`，先讀完再照做」加三句防漏；下面是那個檔的全文（路徑已去識別）。
-diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git diff 28663da HEAD`（HEAD = 1a05146）②步驟 3 與審查同時進行的說明
+diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git diff f6179b2 HEAD`（HEAD = 072615e）②步驟 3 與審查同時進行的說明
 ③`install-dd-pipeline.sh`、`tests/test-install.sh`、`tests/CLAUDE.md` 在 HEAD 的整檔內容 ④已跑過的驗證 V1–V10 與預期值。
 
 ````text
@@ -12,7 +12,7 @@ diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git dif
 
 ## 範圍與資料
 
-- 審查範圍：repo <repo> 的 `git diff 28663da HEAD`（一個功能段落，4 個 commit：89dd118、4995b0d、61585a4、1a05146）
+- 審查範圍：repo <repo> 的 `git diff f6179b2 HEAD`（一個功能段落，4 個 commit：20680b1、cd1b1c7、3155dfb、072615e）
 - diff 檔：<scratchpad>/imp/review/diff.txt（2940 行，四部分：整段 diff／步驟 3 的說明／被改到的檔在 HEAD 的整檔內容／已經跑過的驗證）
 - **diff 檔用 Read 的 offset／limit 每次 300 行讀到最後一行**。Read 一次讀太多會靜靜截斷、不報錯
 - 被改到的檔（install-dd-pipeline.sh、tests/test-install.sh、tests/CLAUDE.md）一律讀 diff 檔第 3 部分那一份，**不要讀工作目錄**：另一個 agent（code-simplifier）正在同時改工作目錄。其餘被改到的大份文件用 `git show HEAD:<路徑>`。沒被改到的檔照常讀
@@ -57,7 +57,7 @@ diff 檔 `<scratchpad>/imp/review/diff.txt`（2940 行）的組成：①`git dif
 審查者交回的完整報告（逐字；只把本機路徑換成 `<scratchpad>`、`<repo>`）：
 
 ````text
-Critical 0 / Important 3 / Smells 0 — `git diff 28663da HEAD`（89dd118、4995b0d、61585a4、1a05146），只審文件與註解裡的宣稱
+Critical 0 / Important 3 / Smells 0 — `git diff f6179b2 HEAD`（20680b1、cd1b1c7、3155dfb、072615e），只審文件與註解裡的宣稱
 
 [Important] DD_PIPELINE_ARCHITECTURE.md「失敗不半套」新加的那句：「兩條路徑對同一份檔案的結論相同（`tests/test-install.sh` 的 T2）」寫成了全稱宣稱，但它不成立
   Failure: settings.json 開頭有 UTF-8 BOM（Windows 編輯器常見）或是兩份 JSON 黏在一起（`{}{}`）時，`jq -e 'type == "object"'` 回 0，jq 那條寫入並印「已啟用」（`{}{}` 會寫回兩個物件）；python3 的 `json.load` 丟 JSONDecodeError，印「更新失敗」。`mcp_scope` 在同樣情況下 jq 回 `none`，python3 回 `unparseable`。T2 的 92 例裡沒有這兩種，所以它守不到。根目錄 CLAUDE.md 新加的「等價靠 T2 守」也一樣。
@@ -79,14 +79,14 @@ Critical 0 / Important 3 / Smells 0 — `git diff 28663da HEAD`（89dd118、4995
 - tests/CLAUDE.md 變異對照跟 V6 的 14 列逐項一致
 - docker 指令：假 claude 由測試檔自己放（第 19–23 行），iconv、cmp 在 ubuntu 基底映像就有，引號與 `|| exit 3` 的優先順序都對
 - 兩份 README 的退化表說法一致
-- 設計文件進度表：IN_PROGRESS、`28663da..`、四個 commit 訊息與小任務逐字相同，狀態改動跟第一個小任務 89dd118 一起送；根目錄 CLAUDE.md 的指路有加
+- 設計文件進度表：IN_PROGRESS、`f6179b2..`、四個 commit 訊息與小任務逐字相同，狀態改動跟第一個小任務 20680b1 一起送；根目錄 CLAUDE.md 的指路有加
 - 「7 個寫穿連結的呼叫點」數過，對得上
 
 What I ran
 - Read diff.txt 第 1–900、1001–1300、1480–1779、2298–2392、2907–2941 行 → 取得 diff、腳本、測試檔與 V1–V10
 - `git show HEAD:docs/designs/2026-11-14-installer-hardening-design.md | sed -n '1,120p'` → 進度表與小任務
 - `git grep`（HEAD，排除 docs/reviews、docs/measurements）找備份、unparseable、完成訊息、test-install 的相關敘述 → 沒找到因這段而過期的敘述
-- `git show HEAD:CHANGELOG.md | grep -n '^## '`、`git log 28663da..HEAD -- <文件>` → 新條目在 `## 未發布`；設計文件在 89dd118、其餘文件在 1a05146
+- `git show HEAD:CHANGELOG.md | grep -n '^## '`、`git log f6179b2..HEAD -- <文件>` → 新條目在 `## 未發布`；設計文件在 20680b1、其餘文件在 072615e
 - c/ 裡用 jq 與 python3 跑 `{}{}`、BOM、NaN 三個檔 → cat 與 bom 兩邊結論不同，NaN 兩邊都成功
 - c/ 裡 `jq -e 'type=="object"' 空檔` → rc=4；/bin/bash 3.2 跑 set -e 加 `||` 的三種寫法 → 函式與子 shell 的 set -e 都失效、子行程 rc=1
 - c/ 裡 BSD sed 吃壞位元組 → 印出第 1 行後 rc=1

@@ -13,7 +13,7 @@
 - **B3** [Minor] design-brainstorm 硬閘門只寫「經 plan-review 審過」一個出口；第 3 輪不通過選繼續、沒跑成選不審直接交時照字面不能往下走
 - **B4** [Minor] S2 驗收列「批准／要修改」會誤判。**與 A5 重疊**
 - **B5** [Minor] 設計文件字樣與實作不一致（照現稿開工、英文字串）。**與 A6 重疊**
-- **B6** [Minor] `plan-S2-r3.md`、`plan-S2-r4.md` 引用的 plan-review `:84–86` 在 0f2be2b 已指到「問使用者的分批」那節
+- **B6** [Minor] `plan-S2-r3.md`、`plan-S2-r4.md` 引用的 plan-review `:84–86` 在 60f00ae 已指到「問使用者的分批」那節
 - **B7** [Minor] design-brainstorm 第 5 步要求含預估 N，第 6 步結構沒有。**與 A3 重疊**
 - 需要外部查證：再乾跑一次；「題目會印成文字」要實跑核對
 - Not reported：全域模板 §7.2 觸發表沒有 plan-review 的列（S1 留下的，不在 S2 diff 內）

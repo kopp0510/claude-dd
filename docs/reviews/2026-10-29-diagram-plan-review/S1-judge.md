@@ -1,10 +1,10 @@
 # S1-judge（主對話查證）— plan-review 流程圖
 
-段落：使用者指出 plan-review 沒有出現在流程圖裡，選了「兩張圖都給它自己的框」。沒有進度表（單段），段落起點 `1971cf5`。
+段落：使用者指出 plan-review 沒有出現在流程圖裡，選了「兩張圖都給它自己的框」。沒有進度表（單段），段落起點 `eee9340`。
 
 ## 派工
 
-- 審查範圍：`git diff 1971cf5 801a317`（不含 GIF）。diff 檔放 session 暫存目錄，組成：整段 diff、三個被改到的檔的 HEAD 版整檔、已跑過的驗證與預期值（幾何檢查、getBBox、GIF 幀與接點 PSNR）
+- 審查範圍：`git diff eee9340 ed473d1`（不含 GIF）。diff 檔放 session 暫存目錄，組成：整段 diff、三個被改到的檔的 HEAD 版整檔、已跑過的驗證與預期值（幾何檢查、getBBox、GIF 幀與接點 PSNR）
 - 派 3 個 `code-reviewer`（下限）：A 圖上文字宣稱、B 產生器程式碼、C 文件與同步點。改動只有兩支產生器的字串與座標、一份 CLAUDE.md、兩句 README 圖說，三個方向就涵蓋了
 - 與步驟 3 的 code-simplifier 並行。simplifier 沒有改任何檔（判斷改動都是座標與清單資料，沒有可以合併的邏輯），並核對了新註解裡的數字（間距 80、68px→1.44、88px→1.8、9 個節點）
 

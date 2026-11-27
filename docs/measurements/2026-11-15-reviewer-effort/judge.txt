@@ -125,7 +125,7 @@ S2 依賴 S1：README 要寫的是 S1 改完之後的安裝行為（備份、完
 - 不要再提議把全域 CLAUDE.md 拆成 skill 或縮短；精煉規則文件要逐條判必要性、分三類交他選
 - 全域 §3.5：不主動新增測試；使用者要求或修 bug 時例外。task-planner 步驟 4 的「測試清單題」選定的清單就是使用者要求加的測試
 
-## 今天實跑的結果（repo 在 HEAD b1935bb，本機 macOS）
+## 今天實跑的結果（repo 在 HEAD 23429eb，本機 macOS）
 
 - F1 本機照 `.github/workflows/ci.yml` 逐 step 跑：20 個 step 全部 exit 0。`tests/test-gate.sh`、`tests/test-dd-init-upgrade.sh`、`tests/test-install.sh` 各自 rc=0
 - F2 `tests/test-install.sh`（87 行）每一次安裝都是 `HOME=<沙盒> ./install-dd-pipeline.sh … < /dev/null`；`grep -c -E 'settings\.json|\.claude\.json|installed_plugins' tests/test-install.sh` 回 0。沙盒裡沒有 `plugins/marketplaces/…/plugin.json`，所以 `install_plugins` 對每個 plugin 都走「Plugin 檔案不存在」那個 `continue`
@@ -148,7 +148,7 @@ S2 依賴 S1：README 要寫的是 S1 改完之後的安裝行為（備份、完
 - F12 `install_builtin_skills` 在內容不同時：`backup_before_overwrite "skills" "$target"`、`rm -rf "$target"`、`cp -r "$source" "$target"`，不看 `$FORCE`（`$FORCE` 只影響印出的字樣）
 - F13 `validate_skill_hooks` 用 `find "$SCRIPT_DIR/skills" -name hooks.json` 找檔，發現相對路徑時 `exit 1`
 - F14 `.github/workflows/ci.yml` 兩個 job：`lint`（`runs-on: ubuntu-latest`，20 個 step）與 macOS 那個（`runs-on: macos-latest`，含「確認 /bin/bash 是 3.2」）。兩個 job 都有「Sandbox 端到端安裝測試」跑 `tests/test-install.sh`。ShellCheck 的檔案清單是逐檔寫死的
-- F15 公開版（origin/main）停在 2026-10-30 的 9584605，GitHub 上最後 5 次 CI 都是 success。本機比它多 34 個 commit，ubuntu 那個 job 沒有跑過這 34 個
+- F15 公開版（origin/main）停在 2026-10-30 的 dd8b5a9，GitHub 上最後 5 次 CI 都是 success。本機比它多 34 個 commit，ubuntu 那個 job 沒有跑過這 34 個
 - F16 `README.md` 現有的句子（逐字）：
   - 第 19 行結尾：`The rule text, skill definitions and installer output are in Traditional Chinese; the mechanisms are language-independent, and translating the global template is the one change needed to adopt it in another language.`
   - 第 67 行：`./install-dd-pipeline.sh --force             # reinstall, overwriting existing files`

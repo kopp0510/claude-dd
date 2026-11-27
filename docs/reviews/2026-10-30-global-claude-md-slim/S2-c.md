@@ -7,15 +7,15 @@
 共用指示：
 
 > 你是 code-reviewer。repo：/Users/danlio/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md，全域規則在 templates/global/CLAUDE.md）。
-> 審查範圍：段落 S2 的整段改動 = `git diff f2ab54a`（工作目錄乾淨，等於 f2ab54a..HEAD）。改動與被改檔的整檔內容都在 diff 檔：
+> 審查範圍：段落 S2 的整段改動 = `git diff 68b4bf2`（工作目錄乾淨，等於 68b4bf2..HEAD）。改動與被改檔的整檔內容都在 diff 檔：
 > /private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/s2-review/diff.txt
 > （7865 行。用 Read 的 offset/limit 每次 300 行讀到最後一行 —— 一次讀太多會靜靜截斷、不報錯。被改到的檔一律讀 diff 檔裡那份；沒被改到的檔照常讀 repo。）
 > diff 檔第 ④ 節是已跑過的驗證與結果，已確認、不要重跑測試／安裝／claude -p。
 >
 > 這段做了什麼（事實）：
-> - S2-1（489bf74）新增 scripts/dd-init-upgrade.sh（升級分類器：舊蓋章區塊逐行查表分成範本行／在地行，--plan/--apply/--list）與 tests/test-dd-init-upgrade.sh，CI 加進 shellcheck 清單、ubuntu 與 bash32 job。
-> - S2-2（304b0f2）commands/dd-init.md 蓋章區塊 rev 12（96 行）換成 rev 13（37 行），只在舊區塊裡的內容搬進 skills/dd-loop/SKILL.md；Phase 1 的 8step 舊版升級改用腳本；React 片段移到區塊外的 ````markdown 圍欄；CI 新增「現行蓋章區塊的每一行都在升級清單裡」；同批改 CHANGELOG、UPGRADING、根 CLAUDE.md、scripts/CLAUDE.md、tests/CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、設計文件。
-> - 7b8638a：SKILL.md 的 `US$5.13` 改成「5.13 美元」（skill 帶參數呼叫時 `$<數字>` 會被代換）。
+> - S2-1（beb5a4b）新增 scripts/dd-init-upgrade.sh（升級分類器：舊蓋章區塊逐行查表分成範本行／在地行，--plan/--apply/--list）與 tests/test-dd-init-upgrade.sh，CI 加進 shellcheck 清單、ubuntu 與 bash32 job。
+> - S2-2（dd2357f）commands/dd-init.md 蓋章區塊 rev 12（96 行）換成 rev 13（37 行），只在舊區塊裡的內容搬進 skills/dd-loop/SKILL.md；Phase 1 的 8step 舊版升級改用腳本；React 片段移到區塊外的 ````markdown 圍欄；CI 新增「現行蓋章區塊的每一行都在升級清單裡」；同批改 CHANGELOG、UPGRADING、根 CLAUDE.md、scripts/CLAUDE.md、tests/CLAUDE.md、DD_PIPELINE_ARCHITECTURE.md、設計文件。
+> - 9c052cf：SKILL.md 的 `US$5.13` 改成「5.13 美元」（skill 帶參數呼叫時 `$<數字>` 會被代換）。
 > - 舊區塊（rev 12）原文：`git show v1.6.12:commands/dd-init.md`。
 >
 > 你的職責：找漏洞，證明這段有錯。每條附證據（路徑:行 + 原文，或指令與輸出）；沒證據不算。只用手上的資料判斷，需要外部查證的列出來交回。
@@ -37,7 +37,7 @@
 
 （審查者交回的完整報告，逐字）
 
-Critical 0 / Important 3 / Smells 1。範圍：S2 的 `git diff f2ab54a`（方向 C：dd-init.md 的 Phase 0／1、ci.yml、DD_PIPELINE_ARCHITECTURE.md 的 CI 防線表）
+Critical 0 / Important 3 / Smells 1。範圍：S2 的 `git diff 68b4bf2`（方向 C：dd-init.md 的 Phase 0／1、ci.yml、DD_PIPELINE_ARCHITECTURE.md 的 CI 防線表）
 
 ## Findings
 
@@ -85,7 +85,7 @@ Critical 0 / Important 3 / Smells 1。範圍：S2 的 `git diff f2ab54a`（方�
   - `rev_on_line` 讀判定線：dd-init.md:40 與 UPGRADING.md:82 都讀到 13。
   - rev 唯一性：只有 `dd-loop-rev: 13` 一種。
   - `~/.claude/scripts/dd-init-upgrade.sh` 已在 DD_SCRIPTS 裡，會部署。
-  - 防線表新的兩列（fixture 來源 v1.6.12／v1.6.4／6a9addd／v1.1.0、兩個 job 都設 `fetch-depth: 0`）與 ci.yml、測試檔逐句對得上。
+  - 防線表新的兩列（fixture 來源 v1.6.12／v1.6.4／b1227f7／v1.1.0、兩個 job 都設 `fetch-depth: 0`）與 ci.yml、測試檔逐句對得上。
 
 ## 需要外部查證（我沒有去查）
 - `grep -c 'dd-loop-version' <rental-management 等專案>/CLAUDE.md`：如果結果 ≥2，Phase 1 對這些專案是死路（exit 4 之後沒有退路），上面那條就該升成 Important。
@@ -99,7 +99,7 @@ Critical 0 / Important 3 / Smells 1。範圍：S2 的 `git diff f2ab54a`（方�
 - `scripts/dd-init-upgrade.sh --list | LC_ALL=C sort -c` → sorted
 - `sed -n 286,290p CLAUDE.md` → 界線那句沒包含 React 片段
 - `git show v1.6.12:commands/dd-init.md | grep -n 'React\|^```'` → 舊版 React 在第 52–149 行的區塊內
-- `grep -nE 'git show|v1\.|6a9addd' tests/test-dd-init-upgrade.sh; grep -n fetch-depth ci.yml` → 與防線表一致
+- `grep -nE 'git show|v1\.|b1227f7' tests/test-dd-init-upgrade.sh; grep -n fetch-depth ci.yml` → 與防線表一致
 - `sed -n 160,182p tests/test-dd-init-upgrade.sh` → React 圍欄部分保留（1/2）的測試
 
 ## 處置

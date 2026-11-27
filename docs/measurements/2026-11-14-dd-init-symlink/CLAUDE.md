@@ -13,6 +13,7 @@
 - `mkprompt.sh <臂> <BASE> <dd-init.md 路徑>` —— 用 `prompt.txt` 填出 subagent 的 prompt（Agent 工具，general-purpose，model sonnet）
 - `check.sh <臂> <BASE> <回報檔>` —— 判定；H?K 會在容器裡真的 commit 一次（H2K、H3K 先 `npm install`，H1K 先把回報的 YAML 加進設定、`pre-commit install`），同一個臂只能核一次
 - `results.txt` —— 2026-11-14 那一次的結果與工具版本（路徑換成 `<BASE>`；subagent 回報原文不進 repo）
+- `setup.sh`、`results.txt` 裡的 commit 編號是 2026-11-28 git 歷史改寫（作者身分統一）後的新編號；每個 commit 的內容樹與改寫前相同，`git show <編號>:<檔>` 拿到的內容不變
 - 腳本裡的 `stat -f` 是 macOS 版：GNU `stat -f` 印的是檔案系統資訊，在 Linux 上 `before.txt` 會是錯的，只在 macOS 跑（`shasum` 在 node:22-bookworm 也有，不是限制）
 
 ## 此層慣例

@@ -22,7 +22,7 @@ BATCH="${2:?用法：run.sh <拋棄式工作目錄> <批次編號>}"
 OUT="$HERE/out/batch$BATCH"
 PROJ="$WORK/proj"
 MARK=.dd-sandbox
-BASE=7e1ff44
+BASE=dd6bffa
 
 if [ -e "$WORK" ] && [ ! -f "$WORK/$MARK" ]; then
     echo "❌ ${WORK} 已存在且不是本腳本建的（沒有 ${MARK}），拒跑：每發之前會整個刪掉它" >&2

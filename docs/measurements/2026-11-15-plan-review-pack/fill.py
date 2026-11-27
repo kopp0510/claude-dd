@@ -3,14 +3,14 @@
 
 用法：
   python3 -I fill.py check <claude-dd repo>
-      拿 b1935bb 的範本照「貼」的填法填 2026-11-14 那份素材，跟 ../2026-11-15-reviewer-effort/judge.txt 逐位元組比。
+      拿 23429eb 的範本照「貼」的填法填 2026-11-14 那份素材，跟 ../2026-11-15-reviewer-effort/judge.txt 逐位元組比。
       相同代表 make 也會用到的那幾步（切出範本、填共同欄位、貼的填法）填的是範本、不是我另外寫的 prompt。
       pack 獨有的部分（兩處替換、審查包的內容）這裡比不到，靠 pack() 裡的 assert 與對填出來的檔做的檢查。
   python3 -I fill.py make <claude-dd repo> <工作目錄> pack|paste <發代號>…
       先用 ../2026-11-15-reviewer-effort/prepare.py 建好快照。讀 repo 工作目錄現在這份 SKILL.md。
       pack：寫審查包 prompts/<發代號>.pack.md，照 SKILL.md 第 2 步換兩處：計畫與事實那一段換成讀檔指示，
             「派審查者」的「《計畫與事實》貼上面兩組標記之間的內容（連標記一起）」換成「貼那一段讀檔指示」
-            （P-med-4、P-med-5 那一版只換第一處，範本裡另有一條條件句；那一版的 fill.py 在 2cf7aba）
+            （P-med-4、P-med-5 那一版只換第一處，範本裡另有一條條件句；那一版的 fill.py 在 041bd22）
       paste：照舊貼在標記之間
       兩種都重寫 prompts/<發代號>.judge.txt 與 .parent.txt
 
@@ -85,7 +85,7 @@ def pack(t, skill, path, plan, facts):
     return t.replace(HALF, half_sentence(skill))
 
 def check(repo):
-    old = subprocess.run(["git", "-C", repo, "show", "b1935bb:skills/plan-review/SKILL.md"], capture_output=True, check=True).stdout.decode()
+    old = subprocess.run(["git", "-C", repo, "show", "23429eb:skills/plan-review/SKILL.md"], capture_output=True, check=True).stdout.decode()
     judge = read(os.path.join(OLD, "judge.txt"))
     got = paste(fill_common(template(old)), *material(judge))
     if got == judge:

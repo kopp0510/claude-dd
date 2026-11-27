@@ -2,7 +2,7 @@
 
 ## 派工
 
-- 範圍：`git diff 7a3d085 HEAD`（S10 起點 7a3d085，一個 commit 04fa095），diff 檔 632 行，放在 scratchpad 的 `s10/S10-review-diff.txt`。
+- 範圍：`git diff 51a9085 HEAD`（S10 起點 51a9085，一個 commit 030bb5c），diff 檔 632 行，放在 scratchpad 的 `s10/S10-review-diff.txt`。
 - 步驟 3（code-simplifier）沒跑：這段只改 SKILL.md、CHANGELOG、設計文件，沒有程式碼。
 - 派 3 個 `code-reviewer`（opus，不帶 model），在同一則訊息裡平行派出，方向分別是：a 規則本身、b 跨檔一致、c 照做走一遍。
   只派最低要求的 3 個，理由：diff 只動到兩份 SKILL.md；步驟 5 另外排了修完後的乾跑。三份報告都完整交回，沒有重派。

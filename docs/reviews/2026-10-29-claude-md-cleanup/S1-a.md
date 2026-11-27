@@ -7,7 +7,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 > 你是 8 步迴圈步驟 4 的審查者 A。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 >
 > 專案根目錄：/Users/danlio/project/my_project/claude-dd
-> 審查範圍：git diff 2d436c0 86f37df（清理各層 CLAUDE.md 與全域模板，加 CHANGELOG 一條）。
+> 審查範圍：git diff a6af543 f434a5e（清理各層 CLAUDE.md 與全域模板，加 CHANGELOG 一條）。
 > 材料：<scratchpad>/cm-review-diff.txt（完整路徑：<scratchpad>/cm-review-diff.txt）。
 > 用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔讀材料裡那一份，沒改到的檔讀 repo。
 > 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
@@ -28,7 +28,7 @@ subagent_type `code-reviewer`（agent 定義 opus），三個同一則訊息平�
 
 ## 發現
 
-Critical 0 / Important 4 / Smells 0 — 範圍是 git diff 2d436c0 86f37df（審查者 A，看規則有沒有被一起刪掉）
+Critical 0 / Important 4 / Smells 0 — 範圍是 git diff a6af543 f434a5e（審查者 A，看規則有沒有被一起刪掉）
 
 ## Findings
 [Important] diagrams/src/CLAUDE.md:51｜原本記的是一次觀察結果，縮短後變成了沒有出處的通過門檻
@@ -58,7 +58,7 @@ Critical 0 / Important 4 / Smells 0 — 範圍是 git diff 2d436c0 86f37df（審
 - grep 部署清單、閉環、SKIP_DOC_CHECK、S6-a/b、2026-10-24、派 Task、12px → 找到兩組 S6-a.md；`派 Task` 已無殘留
 - grep A2/B2 於四份 S6-a/b → 兩組各自的 A2/B2 內容不同（行號見上）
 - grep 12px／溢出 於 tech-diagram-gif；sed verify-geometry.py:678–697 → 溢出判定沒有 12px 門檻
-- git show 2d436c0:diagrams/src/CLAUDE.md | grep getBBox → 舊文是觀察句「2026-09-11 四張都 ≥12px」
+- git show a6af543:diagrams/src/CLAUDE.md | grep getBBox → 舊文是觀察句「2026-09-11 四張都 ≥12px」
 - grep ci.yml 的 UPGRADING／判定為舊版 → 有比對（:332–342）
 - grep 閉環 於 dd-init.md → :97 有寫
 - sed DD_PIPELINE_ARCHITECTURE.md 77–100 → 有日期，tech-diagram-gif 沒有實證來源

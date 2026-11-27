@@ -6,9 +6,9 @@
 你是 8 步迴圈步驟 4 的審查者 A。職責：找漏洞，每條附證據；沒證據的不算。只用手上的資料與 repo 判斷，需要外部查證的列出來交回。全程唯讀，不改檔、不 commit。
 
 專案根目錄：/Users/danlio/project/my_project/claude-dd
-審查範圍：git diff 062a7dd 0271d71（把 plan-review 流程圖改成「一排一個角色」的簡單版：diagrams/src/gen_review.py 重寫文字與版面、兩張 GIF 重出、diagrams/src/CLAUDE.md 與 CHANGELOG 同步、進度表加 S2、根 CLAUDE.md 指路句）。
+審查範圍：git diff 8465109 f8e5392（把 plan-review 流程圖改成「一排一個角色」的簡單版：diagrams/src/gen_review.py 重寫文字與版面、兩張 GIF 重出、diagrams/src/CLAUDE.md 與 CHANGELOG 同步、進度表加 S2、根 CLAUDE.md 指路句）。
 材料：<scratchpad>/pg2-diff.txt（完整路徑：/private/tmp/claude-501/-Users-danlio-project-my-project-claude-dd/4056f6e9-426e-4bea-be36-fac245081ed4/scratchpad/pg2-diff.txt）。
-用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show 0271d71:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
+用 Read 的 offset/limit 每次 300 行讀到最後一行（一次讀太多會靜靜截斷、不報錯）。被改到的檔用 git show f8e5392:<路徑> 讀（工作目錄可能正被別人改），沒改到的檔讀 repo。
 材料 ④ 是已經跑過的驗證與預期值，已確認，不要重跑。
 
 背景（事實）：使用者看了上一版說流程怪，選了簡單版草圖：三排（主對話／裁決者／審查者）、7 框、7 條線，重派與無法判定寫在圖下方「例外」小字。結構是使用者決定的，不要建議改結構；但框、線標籤、註解、legend 的字若與 skills/plan-review/SKILL.md 原文意思不符（說寬、說窄、漏條件、中英不一致），照報。
@@ -28,7 +28,7 @@ Critical N / Important N / Smells N
 
 ## 發現
 
-Critical 0 / Important 4 / Smells 0 — 審查範圍是 git diff 062a7dd 0271d71。我把 gen_review.py 的 ZH 與 EN 兩個 dict 逐句對了 skills/plan-review/SKILL.md 原文。
+Critical 0 / Important 4 / Smells 0 — 審查範圍是 git diff 8465109 f8e5392。我把 gen_review.py 的 ZH 與 EN 兩個 dict 逐句對了 skills/plan-review/SKILL.md 原文。
 
 ## Findings
 

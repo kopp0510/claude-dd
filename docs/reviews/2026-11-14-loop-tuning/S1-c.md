@@ -16,7 +16,7 @@
 ````text
 你是 claude-dd repo（<REPO>）8 步開發迴圈步驟 4 的審查者。職責：找漏洞，每條附證據（路徑:行，或指令與輸出），沒證據的不算。不寫優點、不客套。
 
-審查範圍：段落 S1「照 2026-11-14 的量測調整三條規則」從 58ae9b0 到目前工作目錄的整段（五個 commit）。全部是文件與規則文字，沒有產品程式碼。
+審查範圍：段落 S1「照 2026-11-14 的量測調整三條規則」從 139bc41 到目前工作目錄的整段（五個 commit）。全部是文件與規則文字，沒有產品程式碼。
 
 材料：
 - diff 檔：<S>/tune-review/diff.txt（834 行）。**用 Read 的 offset/limit 每次 300 行讀到最後一行**：Read 一次讀太多會靜靜截斷、不報錯。
@@ -39,7 +39,7 @@
 
 ## 發現
 
-S1-c 審查：段落 S1，範圍 58ae9b0..91b4614，五個 commit。結果 Critical 0、Important 4、Smell 0。
+S1-c 審查：段落 S1，範圍 139bc41..69c528d，五個 commit。結果 Critical 0、Important 4、Smell 0。
 
 **[Important]｜CLAUDE.md「新增 Skill 步驟」第 3 步（diff ③-a 384–392 行）｜新例外沒有回指到第 3 步**
 - 問題：新加的「照原文收」例外放在收編清單表格後面（③-a 726 行）。它改的是第 3 步的回報內容，但第 3 步本文一字沒改，還寫著「逐條引用原文回報哪一句讓它卡住、只能用猜的、或兩句互相矛盾」，也沒有指向例外的字。
@@ -67,7 +67,7 @@ S1-c 審查：段落 S1，範圍 58ae9b0..91b4614，五個 commit。結果 Criti
 
 **Not reported**（看過，判斷不是問題）
 - 進度表規則區塊：與 `skills/task-planner/SKILL.md` 的規則區塊用 `diff` 比，逐字相同；表頭也相同。
-- 根目錄指路：寫法與位置合 §4.4（在第一個 `##` 之前）。58ae9b0 那時沒有指路，因為 security-audit-intake 的 S1、S2 都已標 DONE、指路已刪，所以不會有兩條並存。
+- 根目錄指路：寫法與位置合 §4.4（在第一個 `##` 之前）。139bc41 那時沒有指路，因為 security-audit-intake 的 S1、S2 都已標 DONE、指路已刪，所以不會有兩條並存。
 - 審查報告放 `docs/reviews/2026-11-14-loop-tuning/`：合 `docs/reviews/CLAUDE.md` 的子目錄慣例，gate 的樣式 `(^|/)S[0-9]` 也比對得到。
 - 去識別：量測檔、設計文件、CLAUDE.md、CHANGELOG 用 `-Users-`、`-private-tmp-`、`/private/tmp/`、`/Users/`、`scratchpad/`、UUID 掃過，只命中描述掃描樣式的句子。
 - 「10 條、除了兩條」：S2-judge.md「採納（Important）」逐條數過，確實是 10 條，兩條例外的文字對得上。
@@ -78,7 +78,7 @@ S1-c 審查：段落 S1，範圍 58ae9b0..91b4614，五個 commit。結果 Criti
 
 **What I ran**
 - Read prompt-common.txt；diff.txt 分三次讀完 1–835 行。
-- `git status` / `git log` / `sed -n 1,8p CLAUDE.md` / `git show 58ae9b0:CLAUDE.md` → 工作目錄乾淨；58ae9b0 那時沒有指路。
+- `git status` / `git log` / `sed -n 1,8p CLAUDE.md` / `git show 139bc41:CLAUDE.md` → 工作目錄乾淨；139bc41 那時沒有指路。
 - `grep` security-audit-intake 設計文件的狀態 → S1、S2 都是 DONE。
 - 用 `sed` 抽出 task-planner 與 loop-tuning 設計文件的規則區塊，再 `diff` → 相同。
 - `grep -n 'tests/' .github/workflows/ci.yml` → 測試逐檔寫死（34–36、549–594 行）。

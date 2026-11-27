@@ -6,7 +6,7 @@
 
 ## 派工
 
-- **範圍**:`git diff 639bde7 HEAD`(單一 commit `b66d8ae`,4 檔)。並行派送 → 明寫**一律用 `git show HEAD:`**。
+- **範圍**:`git diff b1d28bd HEAD`(單一 commit `40b3f0a`,4 檔)。並行派送 → 明寫**一律用 `git show HEAD:`**。
 - **探索預算**:最多一次重現實驗;要外部查證的列出來交回。
 - **附上已跑過的驗證**:`test-gate.sh` 90 綠(基準 81)、`test-install.sh` 8 綠、`bash -n`、
   shellcheck clean、重構前後各一輪變異測試的紅數。

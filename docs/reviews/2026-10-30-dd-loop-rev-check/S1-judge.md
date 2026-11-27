@@ -1,10 +1,10 @@
 # S1-judge（主對話查證）— CI 擋蓋章區塊改了沒跳 dd-loop-rev
 
-段落：使用者看了 mattpocock/skills 的 `/retro`（有固定樣子的錯做成自動檢查，再縮短文字規則），選了先做這一條。進度表 `docs/designs/2026-10-30-dd-loop-rev-check-design.md`，段落起點 `2bd0014`，S1-1 是 `848ea70`。中等任務（一個 CI step 加文件），沒跑 plan-review。
+段落：使用者看了 mattpocock/skills 的 `/retro`（有固定樣子的錯做成自動檢查，再縮短文字規則），選了先做這一條。進度表 `docs/designs/2026-10-30-dd-loop-rev-check-design.md`，段落起點 `f869ccd`，S1-1 是 `55207ea`。中等任務（一個 CI step 加文件），沒跑 plan-review。
 
 ## 派工
 
-- 審查範圍：`git diff 2bd0014 848ea70`。diff 檔放 session 暫存目錄：整段 diff、步驟 3 並行的說明、根 CLAUDE.md 那段的舊版全文、已跑過的 8 種變異與預期值
+- 審查範圍：`git diff f869ccd 55207ea`。diff 檔放 session 暫存目錄：整段 diff、步驟 3 並行的說明、根 CLAUDE.md 那段的舊版全文、已跑過的 8 種變異與預期值
 - 步驟 3 的 code-simplifier 與審查並行：沒改任何一行；另回報一個行為問題（見下表 S1）
 - 派 3 個 `code-reviewer`（下限）：A 新 step 的 bash 邏輯、B 根 CLAUDE.md 縮短時掉的條件、C 同步點。這段有 CI 腳本也有縮短既有規則，§3.10 說後者最容易掉條件，所以 B 單獨一個方向
 
@@ -13,10 +13,10 @@
 | 項 | 查證 | 判定 |
 |---|---|---|
 | S1／A2 `rev_of` 零命中時 `set -e` 靜默中止，「抓不到 rev 標記」那句永遠印不出來 | 主對話 `/bin/bash -e -c '…old=$(rev_of norev.md); echo reached'` → exit=1、reached 沒印 | 採納 Important |
-| A1／B1／C1 「同一次發版改好幾次區塊，只要跳一次號」放寬了舊規則 | 舊文「動到…就必須同步跳」；主對話逐 commit 列出 v1.6.0 以來改到區塊的 commit：S3（1299d45 9→10、8d5796c 不跳）、S6（0233de6 10→11、88deff5 不跳）、S8（dbf4a2f 不跳、a01d7bb 11→12），都在 v1.6.10 前 —— 前例是一段跳一次，不是一版一次 | 採納 Important（B 標 Critical，降級：新 step 沒有讓任何東西比以前更不安全，錯的是我寫的那句規則文字；改回去就好） |
-| A3／B2／C2 ④ 的「`UPGRADING.md` 寫死的 rev」就是 ② 那條判定線，「④ CI 不驗」不對 | `git show 848ea70:UPGRADING.md \| grep -n rev` 只有 :82「判定為舊版」那行，ci.yml 四方 step 有驗 | 採納 Important |
+| A1／B1／C1 「同一次發版改好幾次區塊，只要跳一次號」放寬了舊規則 | 舊文「動到…就必須同步跳」；主對話逐 commit 列出 v1.6.0 以來改到區塊的 commit：S3（b5d47b4 9→10、56c7d6b 不跳）、S6（804e494 10→11、bbec6c5 不跳）、S8（9d8ee38 不跳、1d2f169 11→12），都在 v1.6.10 前 —— 前例是一段跳一次，不是一版一次 | 採納 Important（B 標 Critical，降級：新 step 沒有讓任何東西比以前更不安全，錯的是我寫的那句規則文字；改回去就好） |
+| A3／B2／C2 ④ 的「`UPGRADING.md` 寫死的 rev」就是 ② 那條判定線，「④ CI 不驗」不對 | `git show 55207ea:UPGRADING.md \| grep -n rev` 只有 :82「判定為舊版」那行，ci.yml 四方 step 有驗 | 採納 Important |
 | B3 「同批要改這四處」是數量，子項自己又有「兩處」「各一處」 | 讀那段 | 採納 Important（§3.10 列舉不要數） |
-| B4 拿掉「開頭是 `## 開發流程`」，step 也沒驗區塊第一行 | `git show 848ea70:commands/dd-init.md` :52 是唯一的 ```markdown、:53 是 `## 開發流程`；C 在 Not reported 判不需要，理由是 `head -2` 定界夠用 —— 但那只對「現在」成立，前面多一個 ```markdown 範例時 stamp() 會改抓範例而永遠綠 | 採納 Important（C 的駁回理由不成立） |
+| B4 拿掉「開頭是 `## 開發流程`」，step 也沒驗區塊第一行 | `git show 55207ea:commands/dd-init.md` :52 是唯一的 ```markdown、:53 是 `## 開發流程`；C 在 Not reported 判不需要，理由是 `head -2` 定界夠用 —— 但那只對「現在」成立，前面多一個 ```markdown 範例時 stamp() 會改抓範例而永遠綠 | 採納 Important（C 的駁回理由不成立） |
 | B Not reported：CHANGELOG「以前只靠 code-review 抓（漏過一次）」讀起來像 code-review 漏了 | 舊文是「CI 全綠，靠 code-review 才抓到」 | 採納 Smell |
 
 駁回：無。

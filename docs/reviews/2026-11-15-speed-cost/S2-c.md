@@ -3,7 +3,7 @@
 ## 派工
 
 同一則訊息裡平行派出 3 個 `code-reviewer`（不帶 model 參數），同時派 code-simplifier 跑步驟 3。派工用一句話：「先用 Read 讀完 `<scratchpad>/s2/review/prompt-c.txt`，它就是你的完整任務說明，照裡面做。報告直接用文字交回，不要寫成檔。」下面是那個檔的全文（路徑已去識別：`<repo>`、`<scratchpad>`）。
-diff 檔（1572 行）的組成：①`git diff 58fc4ba HEAD`（HEAD = 623f61a；不含 `out/reports/` 與 `judge.txt`，這兩類直接讀 repo）②被改到檔案在 HEAD 的整檔內容（帶行號；與步驟 3 並行，所以取 HEAD 版）③已跑過的驗證與預期值 7 條。步驟 3 的改動在派工當下是空的。
+diff 檔（1572 行）的組成：①`git diff 9e473c3 HEAD`（HEAD = b66dbff；不含 `out/reports/` 與 `judge.txt`，這兩類直接讀 repo）②被改到檔案在 HEAD 的整檔內容（帶行號；與步驟 3 並行，所以取 HEAD 版）③已跑過的驗證與預期值 7 條。步驟 3 的改動在派工當下是空的。
 
 ```text
 你是 8 步開發迴圈步驟 4（code-review）的審查者 C。另外兩個審查者同時在審同一段，你們互相看不到。
@@ -11,14 +11,14 @@ diff 檔（1572 行）的組成：①`git diff 58fc4ba HEAD`（HEAD = 623f61a；
 職責：找漏洞、證明這次改動有錯。每條附證據（diff 檔行號、repo 檔案行、你跑的指令與輸出），沒證據的不算。
 只用手上的資料判斷；需要外部查證的列出來交回，不要自己上網抓。不改任何檔、不 commit、不跑 claude 指令（會花錢）。
 
-範圍：repo <repo> 的 git diff 58fc4ba HEAD（HEAD 是 623f61a），一段「審查者思考強度實驗」（量測腳本、結果文件、設計文件與兩份 CLAUDE.md 的補充）。
+範圍：repo <repo> 的 git diff 9e473c3 HEAD（HEAD 是 b66dbff），一段「審查者思考強度實驗」（量測腳本、結果文件、設計文件與兩份 CLAUDE.md 的補充）。
 diff 檔：<scratchpad>/s2/review/S2-diff.txt，共 1572 行。Read 一次讀太多會靜靜截斷、不報錯；一律用 offset／limit 每次 300 行，讀到第 1572 行為止。
 diff 檔三段：整段 diff（不含 docs/measurements/2026-11-15-reviewer-effort/out/reports/ 與 docs/measurements/2026-11-15-reviewer-effort/judge.txt，這兩類直接讀 repo）、被改到檔案的整檔內容（帶行號）、已經跑過的驗證（已確認，不要重跑）。
 同時有一個 code-simplifier 在改工作目錄裡 docs/measurements/2026-11-15-reviewer-effort 底下的 stats.py、table.py、outside.py、deid.py：這四支一律讀 diff 檔裡那一份（HEAD 版）或 git show HEAD:<路徑>，不要讀工作目錄。其他檔照常讀 repo。
 專案規則在根目錄與各層的 CLAUDE.md。回覆用繁體中文。
 
 背景事實（不是結論，請自己查證）：
-- 實驗在跑之前 commit 了方法、正確答案、判準（2b470b5）；第一發跑完、看報告之前補了洩題檢查的判法（e5c104b）；run.sh 在第一發作廢後加了一個環境變數（6903c1b）；甲的結果 61e594d；乙與結論 623f61a
+- 實驗在跑之前 commit 了方法、正確答案、判準（c7e3cb9）；第一發跑完、看報告之前補了洩題檢查的判法（d3af3fc）；run.sh 在第一發作廢後加了一個環境變數（9671749）；甲的結果 e4b6f32；乙與結論 b66dbff
 - 使用者在乙跑完第一發後選「現在停」，所以乙只有 1 發
 - 命中（哪份報告的哪一行算抓到）是寫這段 diff 的人自己人工判的
 
@@ -34,7 +34,7 @@ diff 檔三段：整段 diff（不含 docs/measurements/2026-11-15-reviewer-effo
 審查者交回的全文（去識別後：路徑換成佔位，掃描樣式裡的 `claude-<uid>` 原文是實際的數字；其餘一字不改）：
 
 ```text
-Critical 0 / Important 4 / Smells 2：審了 `git diff 58fc4ba HEAD`（HEAD 623f61a），範圍照指定的方向：跨文件一致性、去識別、註解與程式碼是否對得上。
+Critical 0 / Important 4 / Smells 2：審了 `git diff 9e473c3 HEAD`（HEAD b66dbff），範圍照指定的方向：跨文件一致性、去識別、註解與程式碼是否對得上。
 
 **發現**
 
@@ -53,15 +53,15 @@ Critical 0 / Important 4 / Smells 2：審了 `git diff 58fc4ba HEAD`（HEAD 623f
 **Not reported**
 - 數字一致性：甲、乙兩張表的 token 合計、平均、80.5%、385/353/371/318、費用加總 18.88 都對得上。`out/stats.jsonl` 和工作目錄的 `logs/*.stats.json` 除了 notes 以外每個鍵都相同，notes 的筆數也是 4/4/4/4/3。
 - 去識別：27 份報告、`judge.txt`、`parent-*.txt`、量測文件與目錄裡的 CLAUDE.md 都乾淨。我用不分大小寫的帳號名、`/Users/`、`-Users-`、`claude-<uid>`、`/private/tmp`、`/tmp/claude`、email、UUID 掃，0 個檔命中。整段 45 個檔改用 `core.quotePath=false` 重掃一次，也沒有命中；剩下的命中只出現在描述規則或掃描樣式的文字裡。報告裡唯一殘留的是 `<暫存區>/s2/probe` 這個佔位。
-- 凍結：`judge.txt`、`parent-*`、`reviewer-b.txt`、`prepare.py`、`stats.py` 只有 2b470b5 一個 commit，`run.sh` 只多 6903c1b，跟目錄 CLAUDE.md 寫的「例外一個」一致。2b470b5 版的 `run.sh` 沒有 CEILING（grep -c 0）。量測文件的方法、正確答案、判準三節在 2b470b5 之後只多了 e5c104b 那段判法。
+- 凍結：`judge.txt`、`parent-*`、`reviewer-b.txt`、`prepare.py`、`stats.py` 只有 c7e3cb9 一個 commit，`run.sh` 只多 9671749，跟目錄 CLAUDE.md 寫的「例外一個」一致。c7e3cb9 版的 `run.sh` 沒有 CEILING（grep -c 0）。量測文件的方法、正確答案、判準三節在 c7e3cb9 之後只多了 d3af3fc 那段判法。
 - `judge.txt` 寫「只改兩處」，屬實：拿暫存區的 `imp/judge-r1.txt` 把路徑換成 `{ROOT}` 後 diff，只有 :170 和 :173 兩處不同。
 - 10 分鐘那條：stderr 原文、父 log 有 `subtype: success` 的 result、2.1.325 都有依據（7 份 log 的 init 都是 2.1.325）。
 - 4300 位：本機 Python 3.13.2 實測，4301 位會 ValueError，4300 位 OK。`install-dd-pipeline.sh`、`tests/test-install.sh`、`tests/CLAUDE.md` 的註解都跟 `hasattr` 護欄和 T2 案例對得上。`git grep '3\.11'` 只剩費用 3.11 美元，沒有殘留舊寫法。
 - 設計文件的 S1 `outofrange`、`none` 兩列，與 `install-dd-pipeline.sh:401–411` 的實際字串一致。
 - 目錄 CLAUDE.md 的檔案清單和 `git ls-tree` 逐項對得上。dump 有 28 份、reports 有 27 份，少的那份是 `P-med-1` 的裁決者，跟「作廢的 P-med-1 只有審查者的報告」一致。設計文件 `:180` 的「進 repo 的東西」沒列 `table.py`、`outside.py`、`deid.py`、`judge.txt`、`reviewer-b.txt`，但實際只多不少，不報。
-- M1 與 K1 引的行號，我逐行印出來看過，都講到該機制。`P-low-3.d2.ab9ac0:13` 標成 (a)，依據是 dd-loop 的 SKIP 路徑（b1935bb 的 `SKILL.md:93`），算 (a) 有爭議，但那份報告同時有 (b)，命中不變。
-- 量測文件說 P-med-3 那個審查者「沒有讀任何檔的內容」，字面上不精確：`grep -rl` 會讀檔案內容，只是沒有輸出。照 e5c104b 的判法，那個目錄不屬於四類可能含答案的東西，結論不變，所以不另報。
-- `4ae9e59`（S1 收尾）落在 S2 的範圍、不在 S1 的 commits 欄 `60239e7..fd96d69` 裡。它已經在這次範圍內被審到，不另報。
+- M1 與 K1 引的行號，我逐行印出來看過，都講到該機制。`P-low-3.d2.ab9ac0:13` 標成 (a)，依據是 dd-loop 的 SKIP 路徑（23429eb 的 `SKILL.md:93`），算 (a) 有爭議，但那份報告同時有 (b)，命中不變。
+- 量測文件說 P-med-3 那個審查者「沒有讀任何檔的內容」，字面上不精確：`grep -rl` 會讀檔案內容，只是沒有輸出。照 d3af3fc 的判法，那個目錄不屬於四類可能含答案的東西，結論不變，所以不另報。
+- `faaef7e`（S1 收尾）落在 S2 的範圍、不在 S1 的 commits 欄 `750c8db..867939e` 裡。它已經在這次範圍內被審到，不另報。
 
 **需要外部查證**
 - 使用者 2026-11-15 選了「留著」（設計 `:57`）、選了「現在停」（設計 `:199`）：對話紀錄不在我手上，核不到。
@@ -70,7 +70,7 @@ Critical 0 / Important 4 / Smells 2：審了 `git diff 58fc4ba HEAD`（HEAD 623f
 
 **What I ran**
 - `Read` prompt-c.txt；`Read` S2-diff.txt 的 1–900 行與 1565–1572 行。901–1564 行是同一批新檔帶行號的整檔副本，前段 diff 裡已整檔讀過，沒有逐行再讀 → 以前段 diff 內容為準
-- `git log --oneline 58fc4ba..HEAD`；`git ls-tree -r --name-only HEAD docs/measurements/2026-11-15-reviewer-effort` → 6 個 commit、檔案清單
+- `git log --oneline 9e473c3..HEAD`；`git ls-tree -r --name-only HEAD docs/measurements/2026-11-15-reviewer-effort` → 6 個 commit、檔案清單
 - `grep -n 'outofrange|…' install-dd-pipeline.sh`；`sed -n 398,412p install-dd-pipeline.sh` → 實際印出的字串
 - `python3 --version` → 3.13.2；python 跑 `json.loads` 4301 位與 4300 位 → ValueError 與 ok
 - 用 grep 從 P-med-3 subagent 紀錄找 probe 與 command_exists 的指令 → `cd <暫存區> && find …`、`cd <暫存區>/s2/probe && ls -la …`
@@ -78,12 +78,12 @@ Critical 0 / Important 4 / Smells 2：審了 `git diff 58fc4ba HEAD`（HEAD 623f
 - python 解析 P-low-1、P-med-1 的 result → 兩筆都是 success，費用 0.848 與 2.864
 - `sed -n` 讀設計文件 138–212 行
 - 逐行印出 M1 與 K1 引用的報告行（16 處）→ 都講到該機制
-- `git show b1935bb:skills/dd-loop/SKILL.md` 的 43–47 行與 88–96 行
+- `git show 23429eb:skills/dd-loop/SKILL.md` 的 43–47 行與 88–96 行
 - 對 45 個改動檔做去識別 grep（`core.quotePath=false`，不分大小寫）→ 規則文字以外 0 筆；對工作目錄的 out/、judge.txt 等做 `grep -ril` → 0 個檔
 - `comm` 比對 dump 與 reports → 只差 P-med-1 的裁決者報告
 - python 比對 out/stats.jsonl 與 logs/*.stats.json → 除了 notes，diff keys 全空
-- 對每個凍結檔跑 `git log 58fc4ba..HEAD -- <檔>`；`git diff 2b470b5 HEAD -- 量測文件` → 只有 run.sh 多一個 commit；方法三節只多了判法那段
-- `git show 2b470b5:…/run.sh | grep -c CEILING` → 0
+- 對每個凍結檔跑 `git log 9e473c3..HEAD -- <檔>`；`git diff c7e3cb9 HEAD -- 量測文件` → 只有 run.sh 多一個 commit；方法三節只多了判法那段
+- `git show c7e3cb9:…/run.sh | grep -c CEILING` → 0
 - grep 其他 docs/measurements/*/run*.sh 的 stderr 導向 → 有兩支把 stderr 另存
 - `git grep -n '3\.11' HEAD` → 只剩費用數字
 - 把暫存區 `imp/judge-r1.txt` 的路徑換成 `{ROOT}` 後與 `judge.txt` diff → 只有 :170、:173 兩處不同

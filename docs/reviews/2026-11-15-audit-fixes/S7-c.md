@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外三個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s7/review/pack.txt`，1832 行，沒進 repo）的組成：
-- 第 1 部分：`git diff e4ec5cc`（表上這段的起點到工作目錄；HEAD = 8e91309，工作目錄乾淨、沒有未追蹤的檔）
+- 第 1 部分：`git diff a4d9185`（表上這段的起點到工作目錄；HEAD = 808cf87，工作目錄乾淨、沒有未追蹤的檔）
 - 第 2 部分：步驟 3（code-simplifier）跑了，沒有改任何檔（主對話用 `cmp` 核對過）
 - 第 3 部分：`scripts/githooks/claude-md-size.sh`、`scripts/githooks/pre-commit`、`scripts/githooks/claude-md-max-bytes` 整檔；`tests/test-gate.sh` 的檔頭到 helper 與 ⑯ 整節；
   `ci.yml` 的 ShellCheck 清單與新 step；`scripts/githooks/CLAUDE.md` 整檔；`tests/CLAUDE.md` 那一列新增的文字與「此層約束」新增的那一條（都帶行號或折行）
@@ -18,7 +18,7 @@
 > 你是程式碼審查者。職責：找漏洞、每條附證據；沒證據的不算。不寫優點、不客套。
 >
 > repo：/Volumes/T7/home/project/my_project/claude-dd（規則在根目錄與各層 CLAUDE.md）。
-> 審查範圍：`git diff e4ec5cc`（到工作目錄；8 步開發迴圈 S7 段落，HEAD = 8e91309，6 個 commit：f53d11a、1b33cae、d0e72b1、abf3d18、83c18ee、8e91309；工作目錄乾淨、沒有未追蹤的檔）。這一段做的事：
+> 審查範圍：`git diff a4d9185`（到工作目錄；8 步開發迴圈 S7 段落，HEAD = 808cf87，6 個 commit：2c3a277、7cc3289、12be2fd、694d06c、917f4df、808cf87；工作目錄乾淨、沒有未追蹤的檔）。這一段做的事：
 > 根目錄 `CLAUDE.md` 加大小上限。新腳本 `scripts/githooks/claude-md-size.sh`（本 repo 自用、不部署）有兩種跑法：帶 `--staged` 由 `scripts/githooks/pre-commit` 在每次 commit 時跑（index 那一版比 `HEAD` 那一版大、而且超過上限才擋）；不帶參數由 CI 的新 step 跑（工作目錄那一份超過上限就不通過）。
 > 上限寫在 `scripts/githooks/claude-md-max-bytes`（48000），取的是「最新 `v*` tag 那一版」的數字；那個 tag 沒有這個檔時，`--staged` 依序讀 `HEAD`、index，不帶參數讀工作目錄。現在最新的 tag `v1.6.14` 沒有這個檔。
 > `tests/test-gate.sh` 檔尾加了 ⑯（情境 A–R，在拋棄式 repo 裡經過真的 pre-commit）；`.github/workflows/ci.yml` 加一個 step、ShellCheck 清單加一行；
@@ -51,12 +51,12 @@
 
 審查者交回的原文（逐字；暫存目錄的絕對路徑寫成 `<scratchpad>`）：
 
-> Critical 0 / Important 3 / Smells 6 — 範圍：`git diff e4ec5cc`（HEAD 8e91309，S7 段落），只審文件裡的宣稱（githooks/CLAUDE.md 整檔、tests/CLAUDE.md ⑯ 與此層約束、scripts/CLAUDE.md、架構文件、CHANGELOG、腳本與上限檔註解、ci.yml 註解、test-gate.sh 註解、設計文件 S7）
+> Critical 0 / Important 3 / Smells 6 — 範圍：`git diff a4d9185`（HEAD 808cf87，S7 段落），只審文件裡的宣稱（githooks/CLAUDE.md 整檔、tests/CLAUDE.md ⑯ 與此層約束、scripts/CLAUDE.md、架構文件、CHANGELOG、腳本與上限檔註解、ci.yml 註解、test-gate.sh 註解、設計文件 S7）
 >
 > 【發現】
 > 1｜Important｜「繞得過的路」漏了一條：在本機打一個 `v*` tag，pre-commit 就改讀新上限。「調高要等發下一版才生效」這句因此不成立：本機打 tag 不必發版就能生效｜`scripts/githooks/claude-md-size.sh:492` `tag=$(git tag --list 'v*' --sort=-v:refname | head -1)` 只看本機有哪些 tag。`scripts/githooks/CLAUDE.md:44`「走第 1 條時，改了要等發下一版才生效」、第 54–59 行「繞得過的路」都沒寫到這條。拋棄式 repo 實跑：v1.0.0 上限 100 → 50→150 被擋（「取自 v1.0.0」）；接著 commit 上限 500，再 `git tag v1.0.1-tmp` → 同樣的 50→150 印「上限 500（取自 v1.0.1-tmp）」，rc=0，commit `grow2` 進了歷史｜失敗情境：commit 被擋 → `git tag v1.6.15-x`（不必 push）→ 下一個加字的 commit 放行，而且沒有任何警告。push tag 之後 CI 也照新 tag 的上限算｜建議：把這條補進「繞得過的路」與「第 1 條」的說明（hook 本身不防本機 tag）；CHANGELOG 那句「要等發下一版」改成「要等有新的 `v*` tag」
 >
-> 2｜Important｜「hook 擋不到、由 CI 補的」這張清單，四處講法不一致。83c18ee 在 githooks/CLAUDE.md 補了「不經過 pre-commit 的 commit」，另外三處還是只列兩種｜`scripts/githooks/CLAUDE.md:58` 列了 cherry-pick、`merge --no-ff`、rebase、revert；但 `.github/workflows/ci.yml:549`「這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone）」、`CHANGELOG.md:50`「補 hook 擋不到的（`--no-verify`、沒設 `core.hooksPath` 的 clone）」、`DD_PIPELINE_ARCHITECTURE.md:167`「這一步補它擋不到的：`--no-verify`、沒設 `core.hooksPath` 的 clone」都只列兩種，寫法也像是完整清單。同一檔的 `scripts/githooks/CLAUDE.md:26` 括號「（上限被調低，或超過的那個 commit 是用 `--no-verify` 進來的）」也漏了這一類｜失敗情境：讀架構文件或 ci.yml 的人，以為 cherry-pick、rebase 上來的 commit 本機會擋 → 實際上 V7 那四種都讓 HEAD 變成 150 bytes、大小檢查沒跑到｜建議：三處補上，或改成指到 githooks/CLAUDE.md「繞得過的路」，不要各自列舉
+> 2｜Important｜「hook 擋不到、由 CI 補的」這張清單，四處講法不一致。917f4df 在 githooks/CLAUDE.md 補了「不經過 pre-commit 的 commit」，另外三處還是只列兩種｜`scripts/githooks/CLAUDE.md:58` 列了 cherry-pick、`merge --no-ff`、rebase、revert；但 `.github/workflows/ci.yml:549`「這裡補 hook 擋不到的（--no-verify、沒設 core.hooksPath 的 clone）」、`CHANGELOG.md:50`「補 hook 擋不到的（`--no-verify`、沒設 `core.hooksPath` 的 clone）」、`DD_PIPELINE_ARCHITECTURE.md:167`「這一步補它擋不到的：`--no-verify`、沒設 `core.hooksPath` 的 clone」都只列兩種，寫法也像是完整清單。同一檔的 `scripts/githooks/CLAUDE.md:26` 括號「（上限被調低，或超過的那個 commit 是用 `--no-verify` 進來的）」也漏了這一類｜失敗情境：讀架構文件或 ci.yml 的人，以為 cherry-pick、rebase 上來的 commit 本機會擋 → 實際上 V7 那四種都讓 HEAD 變成 150 bytes、大小檢查沒跑到｜建議：三處補上，或改成指到 githooks/CLAUDE.md「繞得過的路」，不要各自列舉
 >
 > 3｜Important｜「改完先跑 test-gate.sh，⑯ 跑這一層的三個檔」不對：⑯ 從來沒有用到 repo 裡真的 `claude-md-max-bytes`｜`scripts/githooks/CLAUDE.md:75`「所以改完先跑 `/bin/bash tests/test-gate.sh`（⑯ 在拋棄式 repo 裡跑這一層的三個檔）再 commit」，這一節標題是「改這三個檔之前」，三個檔含上限檔。第 84 行也寫「（`scripts/githooks/` 三個檔…）」。但 `tests/test-gate.sh:687-689` 只複製 `$HOOK`、`$SIZE_CHECK`、`$GATE`，上限檔由 `lim()`（第 697 行）自己寫。而且第 27 行明寫 pre-commit 不查上限檔本身｜失敗情境：把真的上限檔改成 `48,000` 或 13 位數 → commit 放行（只改上限檔時 pre-commit 什麼都不印），`test-gate.sh` 全綠 → 照這段做的人以為驗過了，要等 push 時 CI 的不帶參數模式才紅｜建議：寫明改上限檔時要驗的是直接跑 `scripts/githooks/claude-md-size.sh`（不帶參數），test-gate.sh 只涵蓋 hook 與大小檢查腳本
 >
@@ -108,7 +108,7 @@
 - **1（Important，本機打一個 `v*` tag）**：採納，級別沿用。與 `S7-a.md` 的 1 是同一件事，實跑的證據與改了什麼寫在那裡。它建議 CHANGELOG 那句改成「要等有新的 `v*` tag」：照改。
 - **2（Important，「hook 擋不到、由 CI 補的」四處講法不一致）**：採納，級別沿用。與 `S7-d.md` 的 2 是同一件事。`git grep` 確認三處（`ci.yml` 新 step 的註解、`CHANGELOG.md` 未發布那一條、`DD_PIPELINE_ARCHITECTURE.md` CI 防線表那一列）都只列兩種。
   三處都改成「…、cherry-pick／merge／rebase 這類不經過 pre-commit 的 commit；清單在 `scripts/githooks/CLAUDE.md`「繞得過的路」」，不各自列完整清單；
-  `scripts/githooks/CLAUDE.md`「已經超過上限時」的括號改成「超過的那個 commit 沒經過這支 hook —— 見下面『繞得過的路』」。這是我在 `83c18ee` 只補一處造成的，記在 `S7-judge.md`「這一段自己犯的錯」。
+  `scripts/githooks/CLAUDE.md`「已經超過上限時」的括號改成「超過的那個 commit 沒經過這支 hook —— 見下面『繞得過的路』」。這是我在 `917f4df` 只補一處造成的，記在 `S7-judge.md`「這一段自己犯的錯」。
 - **3（Important，「⑯ 跑這一層的三個檔」不對）**：採納，級別沿用。讀 `tests/test-gate.sh` ⑯ 開頭確認：複製進拋棄式 repo 的是 `$HOOK`、`$SIZE_CHECK`、`$GATE`，上限檔由 `lim()` 自己寫，repo 裡那一份沒有用到。
   `scripts/githooks/CLAUDE.md`「改這三個檔之前」那句改成「⑯ 跑的是 `pre-commit` 與 `claude-md-size.sh`；上限檔是測試自己寫的」，另加一條「改上限檔之後直接跑一次不帶參數的 `claude-md-size.sh`」；「情境與變異對照」開頭講配置的括號也改成分開講哪些是複製的、哪個是測試寫的。
 - **4（Smells，不排序的機制寫錯）**：採納。與 `S7-b.md` 的 3 是同一件事，實跑與改法寫在那裡。

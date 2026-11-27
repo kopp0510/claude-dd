@@ -13,7 +13,7 @@
 你是 claude-dd repo（<REPO>）S1 段落的程式碼審查者，代號 S1-b。
 你的職責：找漏洞。每條發現都要附證據（diff 檔的行號與原文、你讀到的檔案路徑:行、或你跑的指令與輸出）；沒證據的不算。不寫優點。
 
-審查範圍：S1 整段，`git diff 9584605` 起到工作目錄（3 個 commit：cf093e7 S1-1、58e3edb S1-2、a0aa58a S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
+審查範圍：S1 整段，`git diff dd8b5a9` 起到工作目錄（3 個 commit：88ae4e2 S1-1、b6e3666 S1-2、bc22fed S1-3，加上步驟 3 code-simplifier 還沒 commit 的改動）。
 untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，不在範圍。
 
 材料：<S>/s1-review/diff.txt
@@ -41,7 +41,7 @@ untracked 的 docs/measurements/2026-11-14-security-audit-trial/ 屬下一段，
 - 只用手上的資料與唯讀指令判斷（Read、Grep、git show／log／grep、bash -n、shellcheck）。不要改檔、不要 commit、不要跑 install-dd-pipeline.sh、不要派 agent、不要開 docker
 - 需要外部查證的（要上網、要跑會寫檔的東西、要真容器）列在「需要外部查證」交回
 - 每條標級別：Critical（照做會把檔寫到專案外、或驗證是空的而宣稱有效）／Important（會錯、會誤導、規定要同步卻漏）／Smell（小事）
-- 拿不準是不是既有問題時，去看那幾行在 9584605 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
+- 拿不準是不是既有問題時，去看那幾行在 dd8b5a9 是不是已經長這樣；這段把同一個錯寫法複製到新地方，也算這段的問題
 
 輸出格式（照抄標題）：
 ## Findings
@@ -94,7 +94,7 @@ S1-b-4｜Important｜父目錄檢查的指令是裸的 `cd`。/dd-init 在主對
 S1-b-5｜Important｜第 2 步「不在 repo 裡」現在擋著 E、F、G、G2、H1、H2 這幾條分支，卻只寫「在 toplevel 底下」。新小節特地寫明的「專案根目錄 + `/`」邊界，這裡沒有。｜證據：
 - dd-init.md:205（diff.txt 1302）`「不在 repo 裡」看的是上面那行指令**印出來的路徑**在不在 `git rev-parse --show-toplevel` 底下`
 - 對照 dd-init.md:42 `等於專案根目錄、或以「專案根目錄 + `/`」開頭`
-- 舊文字（9584605:163）就是這個寫法，但 S1 改寫了這條，並把它變成主要的防線。
+- 舊文字（dd8b5a9:163）就是這個寫法，但 S1 改寫了這條，並把它變成主要的防線。
 
 ｜照做的失敗情境：toplevel 是 `/home/u/app`，`.git/hooks/pre-commit -> /home/u/app-shared/pre-commit`。印出來的路徑以字串 `/home/u/app` 開頭，照字串前綴比會判成「在 repo 裡」，於是不問就 Edit 插入、`chmod +x`，改到專案外的 hook。
 
@@ -135,7 +135,7 @@ Smell S1-b-10｜results.txt:10 寫「問句一律答「不要」，A、D 的「�
 - `--apply` 的輸出路徑只查它本身、不查父目錄：/dd-init 唯一的呼叫點是專案根目錄的固定檔名 `CLAUDE.md.dd-upgrade`（dd-init.md:97），父目錄就是 cwd，走不到這條。
 - 腳本本身：exit 6 放在 `[ -f TARGET ]`、`[ -f TEMPLATE ]` 之後、建 WORK 之前。寫法 `{ [ -e ] || [ -L ]; }` 在 bash 3.2 與 `set -e` 下都沒問題。T1–T4 都包在 `run()`（`set +e … set -e`）裡。T4 對未修版拿到 exit 2，不等於 6，算有牙。
 - tests/CLAUDE.md 的「空殼 → 40 ❌」等於原本 36 加四則 exit 碼，「拿掉檢查 → 七則」跟 ④ 的七行對得上。
-- results.txt 的兩個 sha：58e3edb 是 `6afa7ca1…`，a0aa58a 與工作目錄都是 `de1df4bc…`，已核對。D 臂「rev 9」也核過：v1.6.4 的標記是 `dd-loop-rev: 9`。
+- results.txt 的兩個 sha：b6e3666 是 `6afa7ca1…`，bc22fed 與工作目錄都是 `de1df4bc…`，已核對。D 臂「rev 9」也核過：v1.6.4 的標記是 `dd-loop-rev: 9`。
 - 蓋章區塊沒動到，不必跳 rev：diff 的 hunk 都在 ```markdown 區塊外（dd-init.md:115–153），CI step 也已跑過。
 - `commands/dd-init.md` 沒有 `$<數字>`（grep rc=1）。量測目錄的去識別掃描（`/Users/`、`-Users-`、`/private/tmp`、`-private-tmp-`）回 0 筆。
 - step 3 的 simplifier 改動：check.sh（`!= control`、`-z`）、mkprompt.sh（case 合併）、setup.sh（`project_intro` + `echo`）讀過，和舊版等價。
@@ -156,12 +156,12 @@ Smell S1-b-10｜results.txt:10 寫「問句一律答「不要」，A、D 的「�
 
 - Read diff.txt 第 1–2942 行，每次 150 行 → 全部讀完
 - `grep -nE '\bF[0-9]+[a-z]?\b'` 設計文件、`git grep` 找 F3/F4/F5c/F6 → 只有 :35、:147、:155、:157 引用，repo 裡沒有定義
-- `git show 58e3edb:commands/dd-init.md | shasum -a 256`、`git show a0aa58a:… | shasum -a 256`、`shasum -a 256 commands/dd-init.md` → `6afa7ca1…`、`de1df4bc…`、`de1df4bc…`
+- `git show b6e3666:commands/dd-init.md | shasum -a 256`、`git show bc22fed:… | shasum -a 256`、`shasum -a 256 commands/dd-init.md` → `6afa7ca1…`、`de1df4bc…`、`de1df4bc…`
 - `git show v1.6.4:commands/dd-init.md | grep -n dd-loop-rev` → rev 9
 - `grep -n '\$[0-9]' commands/dd-init.md` → 無輸出，rc=1
 - `git grep -n -- '--apply'`、`git grep -nE 'dd-upgrade|2–5|exit 5'` → 沒有別的呼叫端會對已存在的輸出路徑跑 `--apply`
 - `grep -nE 'hooksPath|掛載點|symlink|…'` README.md、README.zh-TW.md、UPGRADING.md → 沒有變過期的句子
-- `git show 9584605:commands/dd-init.md | grep -n '不在 repo 裡'` → :163，舊寫法是「（toplevel 之外）」
+- `git show dd8b5a9:commands/dd-init.md | grep -n '不在 repo 裡'` → :163，舊寫法是「（toplevel 之外）」
 - `grep -rnE '/Users/|-Users-|/private/tmp|-private-tmp-|danlio'` 量測目錄 → 0 筆
 - `grep -nE … F(3|4|5c|6)` scratchpad 的 plan-facts-r*.md → plan-facts-r1.md:15、16、19、23
 - 讀 scratchpad 的 m/new{1..4}/B/report.txt 問句段落與 check.txt → 四次都 PASS；`.gitignore` 問句含 `.screenshots/`；new3 自己指出「mkdir -p 不改連結目標、之後截圖寫到專案外」
@@ -177,7 +177,7 @@ Smell S1-b-10｜results.txt:10 寫「問句一律答「不要」，A、D 的「�
 - S1-b-2（Important）採納：同 S1-a-1
 - S1-b-3（Important）採納：「答「要」」那條寫明 Phase 5 要 commit 的是連結目標（目標在專案裡就把指令區塊裡的路徑換成目標；在專案外就拿掉並告知），
   用升級腳本升級的例外另寫（第 8 步的 `mv` 之後 `CLAUDE.md` 已經是一般檔）；Phase 5 開頭指回那一節。
-  加臂 Y5（同 Y、做到 Phase 5）：a0aa58a 的文字下紅（`git add CLAUDE.md` 等於沒加，留下 ` M AGENTS.md`），修正後的文字下 3/3 綠，commit 的是 `AGENTS.md`
+  加臂 Y5（同 Y、做到 Phase 5）：bc22fed 的文字下紅（`git add CLAUDE.md` 等於沒加，留下 ` M AGENTS.md`），修正後的文字下 3/3 綠，commit 的是 `AGENTS.md`
 - S1-b-4（Important）採納：同 S1-a-5
 - S1-b-5（Important）採納：同 S1-a-7
 - S1-b-6（Important）採納：同 S1-a-3。後半（git ≤2.30 印旗標字串加沒解析的路徑、exit 0）已實測成立

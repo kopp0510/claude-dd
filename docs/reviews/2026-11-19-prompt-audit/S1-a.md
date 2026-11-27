@@ -1,4 +1,4 @@
-# S1-a（審查者 A：self-improving-agent 給模型照著做的指示與 shell）— 2026-11 提示文字稽核的改動（`2636b36..`）
+# S1-a（審查者 A：self-improving-agent 給模型照著做的指示與 shell）— 2026-11 提示文字稽核的改動（`1290eb5..`）
 
 ## 派工
 
@@ -21,7 +21,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 >
 > ## 範圍
 > repo：<repo>（它的上一層不是 git repo；git 指令用 `git -C <repo>`）
-> 要審的是 `git diff 2636b36`（到工作目錄；工作目錄 = HEAD `ecfc89c`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
+> 要審的是 `git diff 1290eb5`（到工作目錄；工作目錄 = HEAD `c74f115`，沒有未 commit 的改動，沒有未追蹤的新檔）。共 31 個檔、17 個 commit。
 > 步驟 3（code-simplifier）跑過了，沒有改任何檔。
 >
 > ## 審查材料（只有這一個檔）
@@ -44,7 +44,7 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 > - 來源是 2026-11 對提示文字做的三輪稽核（目標模型 Claude Fable 5.2）：收斂強調記號、更正過期或互相矛盾的句子、把全域模板的「領域陷阱」搬到 `skills/dd-loop/SKILL.md`、改全域 §6.2「不做：自動重試」的寫法、修 `skills/self-improving-agent`。
 > - `skills/self-improving-agent` 是收編的第三方 skill；本地改動逐條記在 `skills/self-improving-agent/CLAUDE.md` 的「Differences from upstream」。repo 根 `CLAUDE.md` 規定：改過的 skill 部署前要由 subagent 乾跑；說上游「沒寫」某件事之前要對過該 skill 目錄的每個 `.md`。
 > - 全域 §6.2 的新舊寫法做過行為量測，紀錄在 `docs/measurements/2026-11-19-global-6.2-retry.md`。
-> - 這段範圍裡先前的 16 個 commit（`c0f6d33` 到 `3ed8a01`）當時都沒有走過審查，這次是第一次審。
+> - 這段範圍裡先前的 16 個 commit（`e8bd89e` 到 `b5e9f96`）當時都沒有走過審查，這次是第一次審。
 >
 > ## 要找的（文件與指示文字的錯，比照程式碼的 bug）
 > 1. 照字面做會做錯、做不出來，或兩種讀法會得出不同結果的句子（寫出兩種讀法各會怎樣）。
@@ -75,9 +75,9 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 
 ## 發現
 
-審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `ecfc89c`。
+審查者交回的報告，逐字（只把絕對路徑換成 `<scratchpad>`、`<repo>`）。行號是審查材料 `diff-pack.md` 的行號，凍結在 `c74f115`。
 
-審查者 S1-a 報告（範圍 `git diff 2636b36`..ecfc89c，重點是 self-improving-agent 的指示文字）
+審查者 S1-a 報告（範圍 `git diff 1290eb5`..c74f115，重點是 self-improving-agent 的指示文字）
 
 結果：Critical 0、Important 4、Smell 7。
 
@@ -184,15 +184,15 @@ Agent 呼叫的 prompt 如下（絕對路徑換成 `<scratchpad>`、`<repo>`，�
 | 發現 | 級別 | 處置 |
 |---|---|---|
 | S1-a-1 promote、extract 的搜尋加了 `2>/dev/null`，目錄算錯時不出聲 | Important | 採納，已修。promote、extract、remember、status 四個檔的「資料夾在不在」從註解改成會執行的一行，不在就印 `Memory directory not found: <路徑>` 再用 `find` 列候選。查證：四個指令區塊在 zsh 與 bash 各跑一次、資料夾不在，都印那一行；步驟 5 乾跑裡資料夾不在的每一發，報告都貼了這一行原樣輸出。 |
-| S1-a-2 公式跟著 shell 的 cwd 走，不是 session 的專案 | Important | 屬實，沒在這一段改，交使用者決定。查證：在子 repo 根目錄，`2636b36` 的公式（`pwd -P`）與現行公式算出同一個資料夾（存在）；在子 repo 的子目錄，舊公式算出不存在的 `…-claude-dd-skills/memory`、現行公式算出子 repo 那一份（存在）。所以審查者說的情境在這一段之前就有，這一段把它擴大到子目錄。要修得先決定記憶跟 session 開的專案走、還是跟 shell 所在的 repo 走（skill 的指令拿不到 session 開在哪）；現況寫在 `skills/self-improving-agent/CLAUDE.md`「Reported by the same review and not changed here」。 |
-| S1-a-3 「會載入的 CLAUDE.md」漏掉上層目錄與 `CLAUDE.local.md` | Important | 採納，已修（與 S1-b-2 同一件）。review 第 4 步與 memory-analyst 第 2 步改成三種檔名（`CLAUDE.md`、`CLAUDE.local.md`、`.claude/CLAUDE.md`）在 checkout 根目錄與以上每一層都找，加 `~/.claude/CLAUDE.md`。依據：code.claude.com/docs/en/memory.md（2026-11-20 讀）。乾跑（材料 C，上一層有 `CLAUDE.md`、根目錄有 `CLAUDE.local.md`）：現行版 review 與 memory-analyst 都把寫在那兩個檔的兩條判成「已寫入、建議從記憶移除」；`ecfc89c` 版兩發都把它們列成候選。 |
-| S1-a-4 status 把 `~/…` 與 URL 判成過期 | Important → 既有問題 | 屬實，沒在這一段改，轉新段落。調級的理由：抽路徑的 regex 與「不存在就印 STALE」在 `2636b36` 就是這樣。拿同一份三行的 `MEMORY.md`（一個 `~/` 路徑、一個 URL、一個存在的相對路徑）跑 `2636b36` 的那幾行與現行版，兩邊都只印 `STALE (path): /.claude/notes/a.md`、`STALE (path): /example.com/docs/a.md`。這一段對這個迴圈的改動是相對路徑改從 `$PROJ` 起算。要修得換掉抽路徑的方式，是新規則。 |
+| S1-a-2 公式跟著 shell 的 cwd 走，不是 session 的專案 | Important | 屬實，沒在這一段改，交使用者決定。查證：在子 repo 根目錄，`1290eb5` 的公式（`pwd -P`）與現行公式算出同一個資料夾（存在）；在子 repo 的子目錄，舊公式算出不存在的 `…-claude-dd-skills/memory`、現行公式算出子 repo 那一份（存在）。所以審查者說的情境在這一段之前就有，這一段把它擴大到子目錄。要修得先決定記憶跟 session 開的專案走、還是跟 shell 所在的 repo 走（skill 的指令拿不到 session 開在哪）；現況寫在 `skills/self-improving-agent/CLAUDE.md`「Reported by the same review and not changed here」。 |
+| S1-a-3 「會載入的 CLAUDE.md」漏掉上層目錄與 `CLAUDE.local.md` | Important | 採納，已修（與 S1-b-2 同一件）。review 第 4 步與 memory-analyst 第 2 步改成三種檔名（`CLAUDE.md`、`CLAUDE.local.md`、`.claude/CLAUDE.md`）在 checkout 根目錄與以上每一層都找，加 `~/.claude/CLAUDE.md`。依據：code.claude.com/docs/en/memory.md（2026-11-20 讀）。乾跑（材料 C，上一層有 `CLAUDE.md`、根目錄有 `CLAUDE.local.md`）：現行版 review 與 memory-analyst 都把寫在那兩個檔的兩條判成「已寫入、建議從記憶移除」；`c74f115` 版兩發都把它們列成候選。 |
+| S1-a-4 status 把 `~/…` 與 URL 判成過期 | Important → 既有問題 | 屬實，沒在這一段改，轉新段落。調級的理由：抽路徑的 regex 與「不存在就印 STALE」在 `1290eb5` 就是這樣。拿同一份三行的 `MEMORY.md`（一個 `~/` 路徑、一個 URL、一個存在的相對路徑）跑 `1290eb5` 的那幾行與現行版，兩邊都只印 `STALE (path): /.claude/notes/a.md`、`STALE (path): /example.com/docs/a.md`。這一段對這個迴圈的改動是相對路徑改從 `$PROJ` 起算。要修得換掉抽路徑的方式，是新規則。 |
 | S1-a-s1 備援找到的是專案資料夾、不是記憶資料夾 | Smell | 採納，已修。註解寫明候選是專案資料夾、記憶在它底下的 `memory/`，那個目錄存在才採用。步驟 5 乾跑發現 promote、remember、extract 沒寫「沒有候選／好幾個候選」怎麼辦（那幾發是照派工訊息停下的），補了一句：promote、remember 回報後停，extract 講明後只用使用者的描述。乾跑：一個候選、兩個候選、沒有候選三種情況，promote、remember、extract 各一發，停下或不搜的那幾發報告引的依據都是新加的那一句。 |
 | S1-a-s2 review 寫「as status does」，status 沒說要列候選 | Smell | 採納，已修（與 S1-b 的 Smell「review 1 對 status」同一件）。status 改成回報「Memory directory not found」加候選後停下。 |
 | S1-a-s3 status 數 rules 只數第一層 | Smell | 轉新段落，沒改。 |
 | S1-a-s4 沒有任何地方檢查 25KB | Smell | 轉新段落，沒改。 |
 | S1-a-s5 status 寫 review「may report fewer」，只對一個方向 | Smell | 採納，已修：改成「may report a different number」，兩個方向的原因都寫出來。 |
-| S1-a-s6 `find -path` 沒處理開頭的 `./` | Smell | 採納，已修（與 S1-b-3 同一件）：搜尋前去掉開頭的 `./` 與結尾的 `/`、拆開 `{a,b}`、在 `[`、`]`、`*`、`?` 前加反斜線。乾跑（材料 C）：現行版兩發都找到 `app/[id]/page.tsx` 與 `./src/server.ts`；`ecfc89c` 版 review 那一發把這兩個存在的檔列成 Stale。 |
+| S1-a-s6 `find -path` 沒處理開頭的 `./` | Smell | 採納，已修（與 S1-b-3 同一件）：搜尋前去掉開頭的 `./` 與結尾的 `/`、拆開 `{a,b}`、在 `[`、`]`、`*`、`?` 前加反斜線。乾跑（材料 C）：現行版兩發都找到 `app/[id]/page.tsx` 與 `./src/server.ts`；`c74f115` 版 review 那一發把這兩個存在的檔列成 Stale。 |
 | S1-a-s7 memory-analyst 沒有找記憶資料夾的步驟 | Smell | 沒改，轉新段落。它由呼叫的一方給路徑；單獨派出去時怎麼算沒寫，乾跑的幾發也都把這句列為卡住。 |
 
 既有問題三項：`--target` 沒帶 `--paths`、extract 第 7 步的範本，轉新段落；promote 第 5 步「超過 200 行就建議改用 rules」不採納，審查者自己寫明不會壞東西。

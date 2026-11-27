@@ -7,7 +7,7 @@
 `code-reviewer`，不帶 model 參數，與另外兩個審查者在同一則訊息裡派出。
 
 審查包（scratchpad 的 `s2-review-pack.txt`，567 行，沒進 repo）的組成：
-- 第 1 部分：`git diff f4e15a0`（起點）到工作目錄的整段 diff，HEAD = 9afb1eb，工作目錄乾淨
+- 第 1 部分：`git diff 133071e`（起點）到工作目錄的整段 diff，HEAD = d41ba84，工作目錄乾淨
 - 第 2 部分：步驟 3 沒有跑（這一段的 diff 全是 Markdown，沒有程式碼）
 - 第 3 部分：`skills/dd-loop/SKILL.md`、`skills/code-simplifier/SKILL.md`、`skills/task-planner/SKILL.md` 的整檔與 `commands/dd-init.md` 的 Phase 4（帶行號）
 - 第 4 部分：已跑過的驗證 V1–V9（三組乾跑的做法、預期與指令核對的結果；`claude plugin --help` 列的子指令；`jq` 的 `//` 實測；本機照 ci.yml 逐 step 跑 26 個 rc=0；`$<數字>` 自查 0 筆；dd-loop 認的四串字在 gate 裡的命中數）
@@ -20,7 +20,7 @@
 >
 > Repo：/Volumes/T7/home/project/my_project/claude-dd（專案規則在根目錄與各層的 CLAUDE.md；本段相關的是根目錄 CLAUDE.md、scripts/CLAUDE.md、docs/reviews/CLAUDE.md）。
 >
-> 審查範圍：`git diff f4e15a0` 到工作目錄（4 個 commit，工作目錄乾淨）。這一段沒有改程式碼，改的是 Claude 會照著做的指令文字：`skills/dd-loop/SKILL.md`、`skills/code-simplifier/SKILL.md`、`skills/task-planner/SKILL.md`、`commands/dd-init.md` 的 Phase 4，以及說明它們的文件（scripts/CLAUDE.md 一句、CHANGELOG.md、docs/designs/2026-11-15-audit-fixes-design.md）。
+> 審查範圍：`git diff 133071e` 到工作目錄（4 個 commit，工作目錄乾淨）。這一段沒有改程式碼，改的是 Claude 會照著做的指令文字：`skills/dd-loop/SKILL.md`、`skills/code-simplifier/SKILL.md`、`skills/task-planner/SKILL.md`、`commands/dd-init.md` 的 Phase 4，以及說明它們的文件（scripts/CLAUDE.md 一句、CHANGELOG.md、docs/designs/2026-11-15-audit-fixes-design.md）。
 >
 > 審查包：/private/tmp/claude-501/-Volumes-T7-home-project-my-project-claude-dd/f691d75a-d904-4c64-916c-d3b4d3714db8/scratchpad/s2-review-pack.txt
 > （共 567 行。用 Read 的 offset/limit 每次 300 行讀到最後一行：Read 一次讀太多會靜靜截斷、不報錯。）
@@ -33,7 +33,7 @@
 > 1. dd-loop「段落起點與 `<起點>`」：新增一段，寫 `--segment-base` exit 非 0 之後的下一步（有進度表用表上的起點；沒有進度表照 gate 印在 stderr 的那一句分情況；不要重跑 `--start-segment`；取到之後步驟 3、4、8 用同一個值）。步驟 8 結尾那句補上「照上方那段取到起點，把 `base=` 換掉再跑」。code-simplifier「取不到起點」那句同步。
 > 2. task-planner 進度表規則區塊的 `BLOCKED` 那條：補上專案有 `docs/reviews/`、這段已經有 commit 時要加 `docs/reviews/S<段落>-BLOCKED.md`（第二次先停另建 `-BLOCKED-2.md`），回頭做完時步驟 4 照跑。dd-loop「報告一律落地」底下新增一條講同一件事。
 > 3. dd-init Phase 4 第 1 項：從「`enabledPlugins` 是否含」改成解析 JSON 看值是不是 `true`；提示從「`./install-dd-pipeline.sh --force`（腳本會裝）或 `claude plugin install`」改成停用給 `claude plugin enable`、沒有鍵給 `claude plugin install`、不提示跑安裝腳本。
-> gate 這三處對應的行為是上一段（S1，commit 9d77062..5927484）改的，說明在 scripts/CLAUDE.md。
+> gate 這三處對應的行為是上一段（S1，commit 02b53d3..d14fcc7）改的，說明在 scripts/CLAUDE.md。
 >
 > 你的方向：dd-loop 與 code-simplifier 的新文字對不對得上 gate 的實際行為。逐一拿 `scripts/check-claude-md.sh --segment-base` 的每一種結果（成功、四種失敗、`dd.docfile` 不合法時的提早結束）與「有／沒有進度表」的組合，照文字走一遍：有沒有哪一種組合文字沒講、講錯、或照做會讓步驟 3、4、8 的範圍漏掉這一段的 commit。也看新段落跟同一份 SKILL.md 其他段落（忘了記起點、從沒跑過 `--start-segment` 的專案、有進度表時、步驟 8 的指令）有沒有互相矛盾，以及全域模板 `templates/global/CLAUDE.md` §3.9 講 `<起點>` 的那幾句（這一段刻意沒改它）跟新文字有沒有打架。
 >
@@ -49,7 +49,7 @@
 
 審查者交回的原文（逐字；C 那份交回時 harness 在最前面加了一行說明，沒有收進來）：
 
-> Critical 0 / Important 1 / Smells 1。範圍：`git diff f4e15a0`，只看 dd-loop 與 code-simplifier 的新文字跟 gate `--segment-base` 的實際行為對不對得上。
+> Critical 0 / Important 1 / Smells 1。範圍：`git diff 133071e`，只看 dd-loop 與 code-simplifier 的新文字跟 gate `--segment-base` 的實際行為對不對得上。
 >
 > 【發現】
 > 1｜Important｜code-simplifier「取不到起點」那一支叫人去問「範圍不明」那一題，但那一題問的不是起點，而且它的預設答案會把範圍縮窄。dd-loop 這次新加了「3、4、8 用同一個值」，這一題交不出那個值，兩份 skill 在同一個情況下要人問的題目不一樣。

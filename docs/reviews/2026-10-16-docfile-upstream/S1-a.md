@@ -1,8 +1,8 @@
 # S1-a — dd.docfile 推上游的文件同步
 
 段落：S1（無進度表，日期子目錄，編號重新起算）
-範圍：`git diff 21ca5ed 29726db`，branch `main`，被審 commit `29726db`
-（`dd.docfile` 的程式碼與測試由 `fbf2ab4`／`0710481` cherry-pick 進 `main`，在段落起點之前，
+範圍：`git diff e7a76c1 d44d423`，branch `main`，被審 commit `d44d423`
+（`dd.docfile` 的程式碼與測試由 `95e319a`／`2d72fdb` cherry-pick 進 `main`，在段落起點之前，
 不在本次範圍 —— 它們自己的審查報告在 `docs/reviews/2026-10-16-gate-docfile/`）
 
 ## 派工
@@ -10,7 +10,7 @@
 - 範圍是**純文件同步**：兩份 README 的「CLAUDE.md 維護規則」各加一條、`DD_PIPELINE_ARCHITECTURE.md` 的 gate 段加兩行、`CHANGELOG.md` 的 `## 未發布` 新增 `### Added`、`scripts/CLAUDE.md` 把「上游文件刻意不同步」改寫成「已同步」
 - 五項重點：①文件宣稱逐條核 `scripts/check-claude-md.sh` ②兩份 README 對等（CI 不驗散文）③改寫段的理由站不站得住 ④專案 CLAUDE.md「CI 不驗、只能手動同步的區塊」有沒有漏巡 ⑤CHANGELOG 的節序與已發布區塊
 - 明寫已跑過不要重跑：`tests/test-gate.sh` 103 ✅ / 0 ❌、CHANGELOG 已發布區塊 `shasum` 相同、diff 無步數宣稱
-- 取檔一律 `git show 29726db:<路徑>`；預算最多一次重現實驗
+- 取檔一律 `git show d44d423:<路徑>`；預算最多一次重現實驗
 
 ## 發現
 
@@ -38,4 +38,4 @@ Not reported：CHANGELOG「檔名寫死在 `md_of()`」是動機敘述的簡寫�
 - **Not reported 的「範圍外」那條照樣修**（上游讀者點不到本機路徑）：gate 檔頭與 `scripts/CLAUDE.md` 改成不指向任何本機檔的說法（「只准放某個固定檔名的 repo，例如記憶檔一律叫 `GEMINI.md` 的團隊」）。它雖然來自 cherry-pick 的那兩筆，但**這批就是要送上游**，不修等於把一個點不到的指標推出去
 - **CI 防線表不補**：兩份報告都判斷那個括號是標籤而非窮舉（既有的 S4、S6 情境也沒列），補了反而製造「它是窮舉」的假判例
 
-修正落在 `64806e3`。
+修正落在 `2928b24`。

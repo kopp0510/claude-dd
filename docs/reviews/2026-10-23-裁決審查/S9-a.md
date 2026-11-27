@@ -9,7 +9,7 @@ subagent_type: code-reviewer（opus，不帶 model），方向：全面（意思
 > 這段做了什麼（事實）：
 > - 精煉全域規則模板 templates/global/CLAUDE.md。它會部署成 ~/.claude/CLAUDE.md，每個 Claude Code session 都會讀進來。61,706 → 55,281 bytes。
 > - 使用者的要求：意思不能變；並逐條判「這條規則還需不需要」，拿掉沒影響才刪。作者把可刪的分成「有把握（A 類 19 處）」與「沒驗證（B 類）」，使用者選「只刪 A」。另外套用了計畫附錄 A 的改寫（刪日期、故事細節，修引用；計畫審查通過過）。A 類是計畫審查之後才加的，沒有被審過，所以這一步要特別查它。
-> - 起點 316117c，4 個 commit：d75ebbb（§3.9）、58684bd（§3.10）、b0b4889（§2.6、§3.4、§4.1、§4.4、§6.7、§7.2、§7.5 與 CHANGELOG）、4069ec5（README 兩份、scripts/CLAUDE.md、設計文件的巡查結果）；工作目錄另有設計文件一處措辭修正（A13 那列）。
+> - 起點 a3c2ad7，4 個 commit：107c41d（§3.9）、de98ce7（§3.10）、b0a887e（§2.6、§3.4、§4.1、§4.4、§6.7、§7.2、§7.5 與 CHANGELOG）、92c9157（README 兩份、scripts/CLAUDE.md、設計文件的巡查結果）；工作目錄另有設計文件一處措辭修正（A13 那列）。
 > - 這段只有文件、沒有程式碼；步驟 3（code-simplifier）跳過。
 >
 > 你是審查者 a，方向「全面」：
@@ -110,7 +110,7 @@ subagent_type: code-reviewer（opus，不帶 model），方向：全面（意思
 
 - Read 審查檔 S9-review-diff.txt：第 1–2530 行，分段讀到「===== diff 檔結束 =====」（1–200、201–400、401–600、601–800、801–1000、1001–1200、1201–1400、1401–1600、1601–1800、1801–2000、2001–2200、2201–2420、2421–2530）
 - `grep -n` 審查檔的分節標記 → ①–⑤ 的位置，總長 2530 行
-- `git status --short; git rev-parse --short HEAD` → 只有設計文件是 M，HEAD 4069ec5
+- `git status --short; git rev-parse --short HEAD` → 只有設計文件是 M，HEAD 92c9157
 - `sed -n 180,330p scripts/check-claude-md.sh` → 讀了 reviews_missing、`--start-segment`、`--segment-base`、擋下時的訊息
 - `cat docs/reviews/CLAUDE.md`；`grep docs/reviews commands/dd-init.md`；`grep -rn docs/reviews/CLAUDE` → 命名慣例只寫在 docs/reviews/CLAUDE.md，蓋章版沒有指向它
 - `sed -n 1,60p agents/code-reviewer.md` → Scope Discipline 與 Work Order 第 4 點
